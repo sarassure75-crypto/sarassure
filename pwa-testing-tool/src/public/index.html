@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#007bff">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <title>🚀 PWA Testing Tool</title>
+</head>
+<body>
+    <header>
+        <h1>🚀 PWA Testing Tool</h1>
+        <p>Testez votre application sur navigateur et mobile</p>
+    </header>
+
+    <main>
+        <section class="card">
+            <h2>📱 Bienvenue!</h2>
+            <p>Cet outil vous permet de visualiser et tester votre application PWA sur différents appareils et navigateurs.</p>
+        </section>
+
+        <section class="card">
+            <h2>✨ Fonctionnalités disponibles</h2>
+            <ul>
+                <li>✅ Test des fonctions tactiles (tap, swipe, pinch)</li>
+                <li>✅ Responsive design sur tous les appareils</li>
+                <li>✅ Installation en tant qu'application</li>
+                <li>✅ Mode offline après installation</li>
+                <li>✅ Performance et métriques</li>
+            </ul>
+        </section>
+
+        <section class="card">
+            <h2>📊 État du PWA</h2>
+            <div id="pwa-status">
+                <p>Détection en cours...</p>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>🎮 Tests interactifs</h2>
+            <div class="test-buttons">
+                <button onclick="testTouch()">Tester le tactile</button>
+                <button onclick="testOrientation()">Orientation</button>
+                <button onclick="testGeolocation()">Géolocalisation</button>
+                <button onclick="testStorage()">Stockage</button>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>📲 Accès mobile</h2>
+            <p>Depuis votre téléphone sur le même réseau WiFi:</p>
+            <code id="mobile-url">Détection de l'adresse IP...</code>
+            <p class="hint">💡 Cherchez votre adresse IPv4 avec: <code>ipconfig</code></p>
+        </section>
+
+        <section class="card">
+            <h2>📝 Console de débogage</h2>
+            <div id="debug-console" class="console"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Version 1.0.0 | PWA Testing Tool</p>
+    </footer>
+
+    <script>
+        // Initialize PWA status
+        function initPWA() {
+            const statusDiv = document.getElementById('pwa-status');
+            const isHttps = window.location.protocol === 'https:';
+            const hasServiceWorker = 'serviceWorker' in navigator;
+            
+            statusDiv.innerHTML = `
+                <p>🔒 HTTPS: <strong>${isHttps ? '✅ Activé' : '❌ Non disponible'}</strong></p>
+                <p>⚙️ Service Worker: <strong>${hasServiceWorker ? '✅ Supporté' : '❌ Non supporté'}</strong></p>
+                <p>📱 Plateforme: <strong>${navigator.platform}</strong></p>
+                <p>🌐 User Agent: <strong>${navigator.userAgentData?.platform || 'Détection...'}</strong></p>
+            `;
+
+            // Try to install service worker
+            if (hasServiceWorker) {
+                navigator.serviceWorker.register('sw.js').catch(e => {
+                    console.log('Service Worker registration not available');
+                });
+            }
+        }
+
+        // Get local IP address
+        function getLocalIP() {
+            const mobileUrlDiv = document.getElementById('mobile-url');
+            const protocol = window.location.protocol;
+            const hostname = window.location.hostname;
+            const port = window.location.port || (protocol === 'https:' ? 443 : 80);
+            
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                mobileUrlDiv.textContent = 'http://<YOUR_IP_ADDRESS>:' + port;
+            } else {
+                mobileUrlDiv.textContent = protocol + '//' + hostname + ':' + port;
+            }
+        }
+
+        // Test functions
+        function logDebug(message) {
+            const console = document.getElementById('debug-console');
+            const timestamp = new Date().toLocaleTimeString();
+            const p = document.createElement('p');
+            p.textContent = `[${timestamp}] ${message}`;
+            console.appendChild(p);
+            console.scrollTop = console.scrollHeight;
+        }
+
+        function testTouch() {
+            logDebug('🎯 Test tactile activé - Touchez l\'écran');
+            document.addEventListener('touchstart', (e) => {
+                logDebug(`👆 Touch détecté: ${e.touches.length} doigt(s)`);
+            }, { once: true });
+        }
+
+        function testOrientation() {
+            if (window.DeviceOrientationEvent) {
+                window.addEventListener('deviceorientation', (event) => {
+                    logDebug(`📐 Orientation - Alpha: ${Math.round(event.alpha)}°, Beta: ${Math.round(event.beta)}°, Gamma: ${Math.round(event.gamma)}°`);
+                }, { once: true });
+                logDebug('📐 Orientation activée - Bougez votre appareil');
+            } else {
+                logDebug('❌ DeviceOrientation non supporté');
+            }
+        }
+
+        function testGeolocation() {
+            if (navigator.geolocation) {
+                logDebug('📍 Demande de géolocalisation...');
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude.toFixed(4);
+                        const lng = position.coords.longitude.toFixed(4);
+                        logDebug(`✅ Position: ${lat}, ${lng}`);
+                    },
+                    (error) => {
+                        logDebug(`❌ Erreur: ${error.message}`);
+                    }
+                );
+            } else {
+                logDebug('❌ Géolocalisation non supportée');
+            }
+        }
+
+        function testStorage() {
+            try {
+                const testKey = 'pwa-test-' + Date.now();
+                localStorage.setItem(testKey, 'test-value');
+                const value = localStorage.getItem(testKey);
+                localStorage.removeItem(testKey);
+                logDebug(`✅ localStorage fonctionne (${(navigator.storage?.estimate?.usage || 0) / 1024 / 1024 | 0}MB utilisés)`);
+            } catch (e) {
+                logDebug(`❌ Erreur localStorage: ${e.message}`);
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            initPWA();
+            getLocalIP();
+            logDebug('✅ PWA Testing Tool chargé avec succès');
+        });
+    </script>
+</body>
+</html>

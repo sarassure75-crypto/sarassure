@@ -1,0 +1,69 @@
+@tailwind base;
+    @tailwind components;
+    @tailwind utilities;
+
+    @layer base {
+      :root {
+        --background: 200 15% 97%; /* #F5F8F7 */
+        --foreground: 152 18% 23%; /* #344E41 */
+
+        --card: 200 15% 97%;
+        --card-foreground: 152 18% 23%;
+
+        --popover: 200 15% 97%;
+        --popover-foreground: 152 18% 23%;
+
+        --primary: 148 22% 30%; /* #3A5A40 */
+        --primary-foreground: 0 0% 100%; /* White */
+
+        --secondary: 128 20% 42%; /* #588157 */
+        --secondary-foreground: 0 0% 100%; /* White */
+
+        --muted: 90 15% 80%; /* #C8CEC2 */
+        --muted-foreground: 152 10% 45%; /* #6A7A6D */
+
+        --accent: 88 18% 60%; /* #A3B18A */
+        --accent-foreground: 152 18% 23%; /* #344E41 */
+
+        --destructive: 0 72.2% 50.6%;
+        --destructive-foreground: 0 0% 98%;
+
+        --border: 120 10% 80%; /* #C9D1C9 */
+        --input: 120 10% 80%;
+        --ring: 148 22% 30%; /* Primary color for ring */
+
+        --radius: 0.5rem;
+      }
+
+      .dark {
+        /* Define dark mode colors if needed, or adjust existing ones */
+        /* For now, we'll stick to a light theme as per the logo's feel */
+      }
+    }
+
+    @layer base {
+      * {
+        @apply border-border;
+      }
+      body {
+        @apply bg-background text-foreground;
+        font-feature-settings: "rlig" 1, "calt" 1;
+      }
+    }
+
+    /* Custom scrollbar for a more modern look */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: hsl(var(--background) / 0.5);
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: hsl(var(--muted));
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: hsl(var(--secondary));
+    }

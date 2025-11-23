@@ -1,0 +1,30 @@
+
+{
+  "name": "SARASSURE - Apprentissage Numérique",
+  "short_name": "SARASSURE",
+  "description": "Apprenez à utiliser votre smartphone facilement et en toute confiance.",
+  "start_url": "/?mode=pwa",
+  "display": "standalone",
+  "background_color": "#F5F8F7",
+  "theme_color": "#3A5A40",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/logo.jpg",
+      "sizes": "any",
+      "type": "image/jpeg"
+    }
+  ]
+}
+      "src": "/logo_maskable_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

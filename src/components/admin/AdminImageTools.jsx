@@ -1,0 +1,210 @@
+
+import React, { useState, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Crop, Minimize, ImageDown as UploadIcon } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/lib/supabaseClient';
+import { v4 as uuidv4 } from 'uuid';
+
+const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
+  const { toast } = useToast();
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [targetWidth, setTargetWidth] = useState(800);
+  const [compressionQuality, setCompressionQuality] = useState(0.8);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(categories && categories.length > 0 ? (categories.includes('default') ? 'default' : categories[0]) : 'default');
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+      setIsDialogOpen(true);
+    }
+  };
+
+  const processAndUploadImage = async (category = 'default') => {
+    if (!selectedFile || !imagePreview) {
+      toast({ title: "Aucune image", description: "Veuillez sélectionner une image.", variant: "destructive" });
+      return;
+    }
+    setIsProcessing(true);
+
+    const img = new Image();
+    img.onload = async () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+
+      if (width > targetWidth) {
+        height = (targetWidth / width) * height;
+        width = targetWidth;
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(async (blob) => {
+        if (blob) {
+          const fileExtension = selectedFile.name.split('.').pop() || 'jpg';
+          const fileName = `${uuidv4()}.${fileExtension}`;
+          const filePath = `public/${fileName}`;
+          
+          const processedFile = new File([blob], fileName, {
+            type: `image/${fileExtension === 'png' ? 'png' : 'jpeg'}`,
+            lastModified: Date.now(),
+          });
+
+          try {
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('images')
+              .upload(filePath, processedFile, {
+                cacheControl: '3600',
+                upsert: false, 
+              });
+
+            if (uploadError) throw uploadError;
+            
+            onImageProcessedAndUploaded(filePath, {
+              originalName: selectedFile.name,
+              newWidth: width,
+              newHeight: height,
+              quality: compressionQuality,
+              size: processedFile.size,
+              mimeType: processedFile.type
+            }, category);
+            toast({ title: "Image traitée et téléversée", description: `L'image a été ajoutée à la galerie.` });
+            resetState();
+
+          } catch (error) {
+             console.error("Upload error: ", error);
+             toast({ title: "Erreur de téléversement", description: error.message || "Impossible de téléverser l'image.", variant: "destructive" });
+             setIsProcessing(false);
+          }
+        } else {
+          toast({ title: "Erreur de traitement", description: "Impossible de convertir l'image (blob).", variant: "destructive" });
+          setIsProcessing(false);
+        }
+      }, `image/${selectedFile.name.split('.').pop() === 'png' ? 'png' : 'jpeg'}`, compressionQuality);
+    };
+    img.onerror = () => {
+        toast({ title: "Erreur de chargement", description: "Impossible de charger l'image pour traitement.", variant: "destructive" });
+        setIsProcessing(false);
+    };
+    img.src = imagePreview;
+  };
+  
+  const resetState = () => {
+    setSelectedFile(null);
+    setImagePreview(null);
+    setTargetWidth(800);
+    setCompressionQuality(0.8);
+    setIsDialogOpen(false);
+    setIsProcessing(false);
+    if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+    }
+  };
+
+  return (
+    <>
+      <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isProcessing}>
+        <UploadIcon className="mr-2 h-4 w-4" /> {isProcessing ? "Traitement..." : "Redimensionner Image"}
+      </Button>
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept="image/png, image/jpeg, image/webp"
+        onChange={handleFileChange}
+        className="hidden"
+        disabled={isProcessing}
+      />
+
+      <Dialog open={isDialogOpen} onOpenChange={(isOpen) => { if(!isOpen) resetState(); else setIsDialogOpen(true);}}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Redimensionner & Compresser</DialogTitle>
+            <DialogDescription>
+              Ajustez la taille et la compression de votre image avant de l'ajouter à la galerie.
+            </DialogDescription>
+          </DialogHeader>
+          {imagePreview && (
+            <div className="my-4 flex justify-center max-h-[300px] overflow-hidden rounded-md border">
+              <img src={imagePreview} alt="Aperçu" className="max-h-full object-contain" />
+            </div>
+          )}
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="targetWidth" className="flex items-center">
+                <Crop className="mr-2 h-4 w-4" /> Largeur maximale (px)
+              </Label>
+              <Input
+                id="targetWidth"
+                type="number"
+                value={targetWidth}
+                onChange={(e) => setTargetWidth(parseInt(e.target.value, 10) || 300)}
+                min="100"
+                max="4000"
+                step="50"
+                disabled={isProcessing}
+              />
+            </div>
+            <div>
+              <Label htmlFor="compressionQuality" className="flex items-center">
+                <Minimize className="mr-2 h-4 w-4" /> Qualité de compression
+              </Label>
+              <div className="flex items-center space-x-2">
+                <Slider
+                  id="compressionQuality"
+                  min={0.1}
+                  max={1}
+                  step={0.05}
+                  value={[compressionQuality]}
+                  onValueChange={(value) => setCompressionQuality(value[0])}
+                  disabled={isProcessing}
+                />
+                <span className="text-sm text-muted-foreground w-12 text-right">{compressionQuality.toFixed(2)}</span>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="upload-category" className="flex items-center">Catégorie</Label>
+              <select
+                id="upload-category"
+                name="category"
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                disabled={isProcessing}
+              >
+                {(categories || []).filter(c => c !== 'all').map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <DialogFooter className="mt-6">
+            <Button type="button" variant="outline" onClick={resetState} disabled={isProcessing}>Annuler</Button>
+            <Button type="button" onClick={() => processAndUploadImage(selectedCategory)} disabled={isProcessing}>
+                {isProcessing ? "En cours..." : "Traiter et Téléverser"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
+
+export default AdminImageTools;
