@@ -1,0 +1,39 @@
+# Activer la réécriture d'URL
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  
+  # Ne pas rediriger les fichiers existants
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  
+  # Rediriger vers index.html pour React Router
+  RewriteRule ^ /index.html [L]
+</IfModule>
+
+# Autoriser l'accès aux fichiers PWA
+<FilesMatch "\.(json|js|png|jpg|svg|ico|css|woff2?)$">
+  Header set Access-Control-Allow-Origin "*"
+  Header set Access-Control-Allow-Methods "GET, OPTIONS"
+</FilesMatch>
+
+# Configuration Service Worker
+<FilesMatch "^sw\.js$">
+  Header set Service-Worker-Allowed "/"
+  Header set Cache-Control "no-cache, no-store, must-revalidate"
+</FilesMatch>
+
+# Configuration Manifest
+<FilesMatch "^manifest\.json$">
+  Header set Cache-Control "no-cache, no-store, must-revalidate"
+  Header set Content-Type "application/manifest+json"
+</FilesMatch>
+
+# Empêcher l'accès aux fichiers sensibles
+<FilesMatch "^\.">
+  Order allow,deny
+  Deny from all
+</FilesMatch>
+
+# Autoriser l'accès depuis n'importe où (PWA)
+Options -Indexes
