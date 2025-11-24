@@ -21,6 +21,7 @@ import { USER_ROLES } from '@/data/users';
 import PwaHomePage from '@/pages/PwaHomePage';
 import { AdminProvider } from '@/contexts/AdminContext';
 import DashboardRedirector from '@/pages/DashboardRedirector';
+import PwaInstallButton from '@/components/PwaInstallButton';
 
 function AppContent() {
   const location = useLocation();
@@ -84,7 +85,12 @@ function AppContent() {
 }
 
 function App(){
-  return <AppContent />;
+  return (
+    <>
+      <AppContent />
+      <PwaInstallButton />
+    </>
+  );
 }
 
 export default App;
