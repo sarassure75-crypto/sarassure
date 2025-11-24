@@ -23,7 +23,9 @@ const PwaHomePage = () => {
       transition={{ duration: 0.5 }}
       className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-sky-100 via-indigo-50 to-purple-100 p-4 text-center"
     >
-      <img src={LOGO_URL} alt="SARASSURE Logo" className="h-48 w-48 mb-8 rounded-full shadow-lg border-2 border-white" />
+      <div className="h-48 w-48 mb-8 flex items-center justify-center">
+        <img src={LOGO_URL} alt="SARASSURE Logo" className="max-h-full max-w-full object-contain" />
+      </div>
       <h1 className="text-4xl font-bold text-primary mb-8">SARASSURE</h1>
 
       {isAuthenticated && currentUser ? (
