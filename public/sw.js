@@ -1,6 +1,6 @@
 
 /* eslint-env serviceworker */
-const CACHE_NAME = 'sarassure-pwa-cache-v3';
+const CACHE_NAME = 'sarassure-pwa-cache-v4';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -41,15 +41,44 @@ this.addEventListener('fetch', (event) => {
     return;
   }
   
-  // For API calls (supabase), try network first, then fail
+  // For API calls (supabase), try network first, then cache fallback
   if (request.url.includes('supabase.co')) {
     event.respondWith(
-      fetch(request).catch(() => {
-        return new Response(JSON.stringify({ error: "Offline: Could not reach Supabase API." }), {
-          headers: { 'Content-Type': 'application/json' },
-          status: 503
-        });
-      })
+      fetch(request)
+        .then((response) => {
+          // Clone the response before caching
+          const responseToCache = response.clone();
+          
+          // Only cache successful responses (200-299)
+          if (response.ok) {
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseToCache);
+            });
+          }
+          
+          return response;
+        })
+        .catch(() => {
+          // Network failed, try cache
+          return caches.match(request).then((cachedResponse) => {
+            if (cachedResponse) {
+              console.log('Serving from cache (offline):', request.url);
+              return cachedResponse;
+            }
+            
+            // No cache available, return offline error
+            return new Response(
+              JSON.stringify({ 
+                error: "Offline: Impossible de charger les données. Veuillez vous connecter à Internet.",
+                offline: true 
+              }), 
+              {
+                headers: { 'Content-Type': 'application/json' },
+                status: 503
+              }
+            );
+          });
+        })
     );
     return;
   }

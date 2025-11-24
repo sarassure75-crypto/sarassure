@@ -22,6 +22,7 @@ import PwaHomePage from '@/pages/PwaHomePage';
 import { AdminProvider } from '@/contexts/AdminContext';
 import DashboardRedirector from '@/pages/DashboardRedirector';
 import PwaInstallButton from '@/components/PwaInstallButton';
+import OfflineIndicator from '@/components/OfflineIndicator';
 
 function AppContent() {
   const location = useLocation();
@@ -89,6 +90,7 @@ function App(){
     <>
       <AppContent />
       <PwaInstallButton />
+      <OfflineIndicator />
     </>
   );
 }

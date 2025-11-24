@@ -80,3 +80,18 @@
     .animate-bounce-slow {
       animation: bounce-slow 3s ease-in-out infinite;
     }
+
+    @keyframes slide-down {
+      from {
+        transform: translate(-50%, -100%);
+        opacity: 0;
+      }
+      to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+      }
+    }
+    
+    .animate-slide-down {
+      animation: slide-down 0.5s ease-out;
+    }
