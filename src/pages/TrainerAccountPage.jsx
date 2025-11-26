@@ -3,19 +3,16 @@ import React, { useState, useEffect, useCallback } from 'react';
     import { getLearnersByTrainer, assignTrainerToLearner, unassignTrainerFromLearner, getLearnerByCode, USER_ROLES } from '@/data/users';
     import { supabase } from '@/lib/supabaseClient';
     import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-    import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-    import { ScrollArea } from '@/components/ui/scroll-area';
     import { Button } from '@/components/ui/button';
     import { Input } from '@/components/ui/input';
     import { Label } from '@/components/ui/label';
     import { useToast } from '@/components/ui/use-toast';
-    import { Users, UserPlus, Link2, Copy, Trash2, Loader2, RefreshCw, Lock, Shield, ChevronDown, ChevronUp, ShoppingCart } from 'lucide-react';
+    import { Users, UserPlus, Link2, Trash2, Loader2, RefreshCw, ChevronDown, ChevronUp, ShoppingCart, Lock, Copy, HelpCircle } from 'lucide-react';
     import { motion } from 'framer-motion';
-    import { getCategoriesWithLicenseStatus } from '@/data/licenses';
-    import { Badge } from '@/components/ui/badge';
     import LearnerLicensesManager from '@/components/LearnerLicensesManager';
     import PurchaseLicensesModal from '@/components/PurchaseLicensesModal';
     import PurchaseHistory from '@/components/PurchaseHistory';
+    import TrainerLicensesOverview from '@/components/TrainerLicensesOverview';
 
     const TrainerAccountPage = () => {
       const { currentUser } = useAuth();
@@ -24,11 +21,7 @@ import React, { useState, useEffect, useCallback } from 'react';
       const [isLoadingLearners, setIsLoadingLearners] = useState(true);
       const [learnerCode, setLearnerCode] = useState('');
       const [isLinking, setIsLinking] = useState(false);
-      const [categories, setCategories] = useState([]);
-      const [isLoadingCategories, setIsLoadingCategories] = useState(true);
-      const [newPassword, setNewPassword] = useState('');
-      const [confirmPassword, setConfirmPassword] = useState('');
-      const [isChangingPassword, setIsChangingPassword] = useState(false);
+
       const [expandedLearner, setExpandedLearner] = useState(null);
       const [activeTab, setActiveTab] = useState('learners');
 
@@ -45,23 +38,9 @@ import React, { useState, useEffect, useCallback } from 'react';
         }
       }, [currentUser, toast]);
 
-      const fetchCategories = useCallback(async () => {
-        if (!currentUser) return;
-        setIsLoadingCategories(true);
-        try {
-          const data = await getCategoriesWithLicenseStatus(currentUser.id);
-          setCategories(data);
-        } catch (error) {
-          toast({ title: "Erreur", description: "Impossible de charger les licences.", variant: "destructive" });
-        } finally {
-          setIsLoadingCategories(false);
-        }
-      }, [currentUser, toast]);
-
       useEffect(() => {
         fetchLearners();
-        fetchCategories();
-      }, [fetchLearners, fetchCategories]);
+      }, [fetchLearners]);
 
       const handleLinkLearner = async (e) => {
         e.preventDefault();
@@ -100,49 +79,6 @@ import React, { useState, useEffect, useCallback } from 'react';
         navigator.clipboard.writeText(text);
         toast({ title: "Copié !", description: "Le code a été copié dans le presse-papiers."});
       }
-
-      const handleChangePassword = async (e) => {
-        e.preventDefault();
-        
-        if (!newPassword || !confirmPassword) {
-          toast({ title: "Champs requis", description: "Veuillez remplir tous les champs.", variant: "destructive" });
-          return;
-        }
-
-        if (newPassword.length < 6) {
-          toast({ title: "Mot de passe trop court", description: "Le mot de passe doit contenir au moins 6 caractères.", variant: "destructive" });
-          return;
-        }
-
-        if (newPassword !== confirmPassword) {
-          toast({ title: "Erreur", description: "Les mots de passe ne correspondent pas.", variant: "destructive" });
-          return;
-        }
-
-        setIsChangingPassword(true);
-        try {
-          const { error } = await supabase.auth.updateUser({
-            password: newPassword
-          });
-
-          if (error) throw error;
-
-          toast({ 
-            title: "Mot de passe modifié !", 
-            description: "Votre mot de passe a été mis à jour avec succès." 
-          });
-          setNewPassword('');
-          setConfirmPassword('');
-        } catch (error) {
-          toast({ 
-            title: "Erreur", 
-            description: error.message || "Impossible de modifier le mot de passe.", 
-            variant: "destructive" 
-          });
-        } finally {
-          setIsChangingPassword(false);
-        }
-      };
 
       if (!currentUser || currentUser.role !== USER_ROLES.TRAINER) {
         return <p className="p-4 text-center text-destructive">Accès non autorisé.</p>;
@@ -189,12 +125,20 @@ import React, { useState, useEffect, useCallback } from 'react';
               Acheter des licences
             </Button>
             <Button 
-              variant={activeTab === 'settings' ? 'default' : 'outline'}
-              onClick={() => setActiveTab('settings')}
+              variant={activeTab === 'licenses-management' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('licenses-management')}
               className="flex items-center gap-2"
             >
               <Lock className="h-4 w-4" />
-              Paramètres
+              Gestion des licences
+            </Button>
+            <Button 
+              variant={activeTab === 'faq' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('faq')}
+              className="flex items-center gap-2"
+            >
+              <HelpCircle className="h-4 w-4" />
+              FAQ Formateurs
             </Button>
           </div>
 
@@ -306,85 +250,57 @@ import React, { useState, useEffect, useCallback } from 'react';
             </div>
           )}
 
-          {activeTab === 'settings' && (
+          {activeTab === 'licenses-management' && (
             <div className="grid md:grid-cols-1 gap-6">
-              <div className="md:col-span-1">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-xl flex items-center">
-                      <Lock className="mr-2 h-5 w-5"/>
-                      Changer mon mot de passe
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handleChangePassword} className="space-y-4">
-                      <div>
-                        <Label htmlFor="newPassword">Nouveau mot de passe</Label>
-                        <Input 
-                          id="newPassword"
-                          type="password"
-                          value={newPassword} 
-                          onChange={(e) => setNewPassword(e.target.value)} 
-                          placeholder="Minimum 6 caractères"
-                          disabled={isChangingPassword}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-                        <Input 
-                          id="confirmPassword"
-                          type="password"
-                          value={confirmPassword} 
-                          onChange={(e) => setConfirmPassword(e.target.value)} 
-                          placeholder="Retapez le mot de passe"
-                          disabled={isChangingPassword}
-                        />
-                      </div>
-                      <Button type="submit" className="w-full" disabled={isChangingPassword}>
-                        {isChangingPassword ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                        ) : (
-                          <Lock className="mr-2 h-4 w-4"/>
-                        )}
-                        Modifier
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
-              </div>
+              <TrainerLicensesOverview trainerId={currentUser.id} />
+            </div>
+          )}
 
-              <div className="md:col-span-1">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-xl flex items-center">
-                      <Shield className="mr-2 h-5 w-5"/>
-                      Mes Licences
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="h-[246px]">
-                      {isLoadingCategories ? (
-                        <p className="text-sm text-muted-foreground text-center py-4">Chargement...</p>
-                      ) : (
-                        <div className="space-y-2">
-                          {categories.map(cat => (
-                            <div key={cat.id} className="flex items-center justify-between p-2 border rounded">
-                              <span className="text-sm font-medium">{cat.name}</span>
-                              {cat.name?.toLowerCase() === 'tactile' ? (
-                                <Badge variant="secondary" className="text-xs">Gratuit</Badge>
-                              ) : cat.hasLicense ? (
-                                <Badge className="text-xs bg-green-600">Actif</Badge>
-                              ) : (
-                                <Badge variant="outline" className="text-xs">Non actif</Badge>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </ScrollArea>
-                  </CardContent>
-                </Card>
-              </div>
+          {activeTab === 'faq' && (
+            <div className="grid md:grid-cols-1 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <HelpCircle className="h-5 w-5" />
+                    FAQ Formateurs
+                  </CardTitle>
+                  <CardDescription>
+                    Questions fréquemment posées pour les formateurs
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <h3 className="font-semibold">Comment créer un apprenant?</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Allez dans l'onglet "Apprenants" et cliquez sur "Créer un apprenant". Remplissez le prénom de l'apprenant. Un code unique sera généré automatiquement.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="font-semibold">Comment lier un apprenant existant?</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Allez dans l'onglet "Apprenants" et cliquez sur "Lier un apprenant". Entrez le code apprenant de l'utilisateur. Vous pouvez le trouver dans son profil "Espace Apprenant".
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="font-semibold">Comment acheter des licences?</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Allez dans l'onglet "Acheter des licences" et sélectionnez le nombre de licences que vous souhaitez pour chaque catégorie. Les paiements se font en ligne.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="font-semibold">Comment attribuer une licence à un apprenant?</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Allez dans l'onglet "Gestion des licences". Vous y verrez un résumé de vos licences achetées et une liste de vos apprenants avec les catégories auxquelles ils ont accès.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="font-semibold">Que faire si j'ai besoin d'aide?</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Consultez la page FAQ complète ou contactez notre support via le formulaire de contact disponible sur le site.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           )}
         </motion.div>

@@ -10,6 +10,7 @@ const DashboardRedirector = () => {
 
   useEffect(() => {
     if (!loading) {
+      console.log('🔍 DashboardRedirector - User:', currentUser); // DEBUG
       if (currentUser) {
         switch (currentUser.role) {
           case USER_ROLES.ADMIN:
@@ -21,7 +22,11 @@ const DashboardRedirector = () => {
           case USER_ROLES.LEARNER:
             navigate('/taches');
             break;
+          case USER_ROLES.CONTRIBUTOR:
+            navigate('/contributeur');
+            break;
           default:
+            console.log('⚠️ Rôle inconnu:', currentUser.role); // DEBUG
             navigate('/');
             break;
         }

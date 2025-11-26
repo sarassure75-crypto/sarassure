@@ -1,12 +1,11 @@
 import { supabase } from '@/lib/supabaseClient';
 
-    export const USER_ROLES = {
-      ADMIN: 'administrateur',
-      TRAINER: 'formateur',
-      LEARNER: 'apprenant',
-    };
-
-    export const fetchAllUsers = async () => {
+export const USER_ROLES = {
+  ADMIN: 'administrateur',
+  TRAINER: 'formateur',
+  LEARNER: 'apprenant',
+  CONTRIBUTOR: 'contributor',
+};    export const fetchAllUsers = async () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -162,7 +161,11 @@ import { supabase } from '@/lib/supabaseClient';
             console.error("Failed to update password to learner_code:", updateError);
         }
 
-        const { data: fullProfile, error: fullProfileError } = await getUserById(signUpData.user.id);
+        const { data: fullProfile, error: fullProfileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', signUpData.user.id)
+            .single();
         if (fullProfileError) throw fullProfileError;
 
         return fullProfile;

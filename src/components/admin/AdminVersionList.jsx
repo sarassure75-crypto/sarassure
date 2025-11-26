@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { PlusCircle, Edit, Trash2, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { creationStatuses } from '@/data/tasks';
 import { useAdmin } from '@/contexts/AdminContext';
@@ -15,6 +16,7 @@ const AdminVersionList = ({ task }) => {
   const { toast } = useToast();
   const [editingVersion, setEditingVersion] = useState(null);
   const [selectedVersionId, setSelectedVersionId] = useState(null); // State to manage which version's steps are shown
+  const [deleteConfirmVersion, setDeleteConfirmVersion] = useState(null); // State for delete confirmation
 
   const getStatusInfo = (statusId) => {
     return creationStatuses.find(s => s.id === statusId) || { label: 'Inconnu', color: 'bg-gray-400' };
@@ -54,6 +56,7 @@ const AdminVersionList = ({ task }) => {
       toast({ title: "Version supprimée", description: "La version a été supprimée." });
       if (editingVersion?.id === versionId) setEditingVersion(null);
       if (selectedVersionId === versionId) setSelectedVersionId(null);
+      setDeleteConfirmVersion(null);
     } catch (error) {
       toast({ title: "Erreur", description: "Impossible de supprimer la version.", variant: "destructive" });
     }
@@ -75,6 +78,7 @@ const AdminVersionList = ({ task }) => {
   }
 
   return (
+    <>
     <Card className="mt-6">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
@@ -107,7 +111,13 @@ const AdminVersionList = ({ task }) => {
                       <Button variant="ghost" size="icon" onClick={() => handleEditVersion(version)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteVersion(version.id)} disabled={isLoading}>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="text-destructive hover:text-destructive" 
+                        onClick={() => setDeleteConfirmVersion(version)}
+                        disabled={isLoading}
+                      >
                         {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => toggleVersionSteps(version.id)} title="Gérer les étapes">
@@ -132,6 +142,32 @@ const AdminVersionList = ({ task }) => {
         )}
       </CardContent>
     </Card>
+
+    {/* Alert Dialog for delete confirmation */}
+    <AlertDialog open={!!deleteConfirmVersion} onOpenChange={(open) => !open && setDeleteConfirmVersion(null)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Êtes-vous sûr(e) ?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Vous vous apprêtez à supprimer la version "<strong>{deleteConfirmVersion?.name || 'Nouvelle Version'}</strong>" et toutes ses étapes. Cette action ne peut pas être annulée.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={() => {
+              if (deleteConfirmVersion) {
+                handleDeleteVersion(deleteConfirmVersion.id);
+              }
+            }}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Oui, supprimer
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 };
 

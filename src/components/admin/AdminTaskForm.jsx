@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Save, Trash2, XCircle, List } from 'lucide-react';
 import { useAdmin } from '@/contexts/AdminContext';
 import { creationStatuses } from '@/data/tasks';
@@ -21,6 +22,7 @@ const toPascalCase = (str) => {
 const AdminTaskForm = ({ task: initialTask, onSave, onCancel, onDelete }) => {
   const [task, setTask] = useState(initialTask);
   const { categories, images, isLoading } = useAdmin();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const imageArray = images instanceof Map ? Array.from(images.values()) : [];
 
   useEffect(() => {
@@ -121,7 +123,13 @@ const AdminTaskForm = ({ task: initialTask, onSave, onCancel, onDelete }) => {
           </div>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button type="button" variant="destructive" size="sm" onClick={() => onDelete(task.id)} disabled={isLoading || task.isNew}>
+          <Button 
+            type="button" 
+            variant="destructive" 
+            size="sm" 
+            onClick={() => setShowDeleteConfirm(true)}
+            disabled={isLoading || task.isNew}
+          >
             <Trash2 className="mr-2 h-4 w-4" /> Supprimer
           </Button>
           <div className="flex items-center gap-2">
@@ -130,6 +138,30 @@ const AdminTaskForm = ({ task: initialTask, onSave, onCancel, onDelete }) => {
           </div>
         </CardFooter>
       </form>
+
+      {/* Confirmation de suppression */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Êtes-vous sûr(e) ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Vous vous apprêtez à supprimer la tâche "<strong>{task.title}</strong>". Cette action la déplacera dans la corbeille mais elle pourra être restaurée.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                onDelete(task.id);
+                setShowDeleteConfirm(false);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Oui, supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };

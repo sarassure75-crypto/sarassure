@@ -1,7 +1,7 @@
-import React from 'react';
-import { NavLink, Route, Routes, useLocation, Navigate } from 'react-router-dom';
+import React, { useNavigate } from 'react';
+import { Route, Routes, useLocation, Navigate, useNavigate as useNavigateRouter } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import AdminTaskManager from '@/components/admin/AdminTaskManager';
 import AdminImageGallery from '@/components/admin/AdminImageGallery';
 import AdminFaqManager from '@/components/admin/AdminFaqManager';
@@ -10,22 +10,33 @@ import AdminErrorReportViewer from '@/components/admin/AdminErrorReportViewer';
 import AdminContactManager from '@/components/admin/AdminContactManager';
 import AdminTrash from '@/components/admin/AdminTrash';
 import AdminCategoryManager from '@/components/admin/AdminCategoryManager';
-import { Home, Image, ListTodo, Users, MessageSquare, AlertTriangle, Mail, Trash, LayoutGrid } from 'lucide-react';
+import AdminImageValidation from './AdminImageValidation';
+import AdminExerciseValidation from './AdminExerciseValidation';
+import AdminExerciseValidationDebug from './AdminExerciseValidationDebug';
+import AdminTabNavigation from '@/components/admin/AdminTabNavigation';
+import { useAdminCounters } from '@/hooks/useAdminCounters';
+import { Home, Image, ListTodo, Users, MessageSquare, AlertTriangle, Mail, Trash, LayoutGrid, CheckCircle, DollarSign } from 'lucide-react';
 
 const AdminPage = () => {
     const location = useLocation();
-    const currentTab = location.pathname.split('/admin/')[1] || 'dashboard';
-
-    const navItems = [
-        { id: 'dashboard', label: 'Tâches', icon: ListTodo, path: '/admin/dashboard' },
-        { id: 'categories', label: 'Catégories', icon: LayoutGrid, path: '/admin/categories' },
-        { id: 'images', label: 'Images', icon: Image, path: '/admin/images' },
-        { id: 'users', label: 'Utilisateurs', icon: Users, path: '/admin/users' },
-        { id: 'faq', label: 'FAQ', icon: MessageSquare, path: '/admin/faq' },
-        { id: 'errors', label: 'Rapports', icon: AlertTriangle, path: '/admin/errors' },
-        { id: 'trash', label: 'Corbeille', icon: Trash, path: '/admin/trash' },
-        { id: 'contact', label: 'Messages', icon: Mail, path: '/admin/contact' },
-    ];
+    const navigate = useNavigateRouter();
+    const pathSegment = location.pathname.split('/admin/')[1] || 'dashboard';
+    
+    // Convertir les chemins en IDs d'onglet
+    let currentTab = 'dashboard';
+    if (pathSegment === 'dashboard') currentTab = 'dashboard';
+    else if (pathSegment === 'categories') currentTab = 'categories';
+    else if (pathSegment === 'images') currentTab = 'images';
+    else if (pathSegment === 'validation/images') currentTab = 'validation-images';
+    else if (pathSegment === 'validation/exercices') currentTab = 'validation-exercices';
+    else if (pathSegment === 'revenus') currentTab = 'revenus';
+    else if (pathSegment === 'users') currentTab = 'users';
+    else if (pathSegment === 'faq') currentTab = 'faq';
+    else if (pathSegment === 'errors') currentTab = 'errors';
+    else if (pathSegment === 'trash') currentTab = 'trash';
+    else if (pathSegment === 'contact') currentTab = 'contact';
+    
+    const { counters } = useAdminCounters();
 
     return (
         <div className="container mx-auto p-4">
@@ -39,33 +50,26 @@ const AdminPage = () => {
                 </CardHeader>
             </Card>
 
-            <Tabs value={currentTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-4 md:grid-cols-4 lg:grid-cols-8 mb-6">
-                    {navItems.map(item => (
-                        <NavLink to={item.path} key={item.id} className="w-full">
-                             <TabsTrigger value={item.id} className="w-full">
-                                <item.icon className="mr-2 h-4 w-4"/> {item.label}
-                            </TabsTrigger>
-                        </NavLink>
-                    ))}
-                </TabsList>
+            {/* Navigation Buttons */}
+            <AdminTabNavigation counters={counters} />
                 
-                <Card>
-                    <CardContent className="p-2 sm:p-4 md:p-6">
-                         <Routes>
-                            <Route path="dashboard" element={<AdminTaskManager />} />
-                            <Route path="categories" element={<AdminCategoryManager />} />
-                            <Route path="images" element={<AdminImageGallery />} />
-                            <Route path="users" element={<AdminUserManagement />} />
-                            <Route path="faq" element={<AdminFaqManager />} />
-                            <Route path="errors" element={<AdminErrorReportViewer />} />
-                            <Route path="trash" element={<AdminTrash />} />
-                            <Route path="contact" element={<AdminContactManager />} />
-                            <Route index element={<Navigate to="dashboard" replace />} />
-                        </Routes>
-                    </CardContent>
-                </Card>
-            </Tabs>
+            <Card>
+                <CardContent className="p-2 sm:p-4 md:p-6">
+                    <Routes>
+                        <Route path="dashboard" element={<AdminTaskManager />} />
+                        <Route path="categories" element={<AdminCategoryManager />} />
+                        <Route path="images" element={<AdminImageGallery />} />
+                        <Route path="validation/images" element={<AdminImageValidation />} />
+                        <Route path="validation/exercices" element={<AdminExerciseValidation />} />
+                        <Route path="users" element={<AdminUserManagement />} />
+                        <Route path="faq" element={<AdminFaqManager />} />
+                        <Route path="errors" element={<AdminErrorReportViewer />} />
+                        <Route path="trash" element={<AdminTrash />} />
+                        <Route path="contact" element={<AdminContactManager />} />
+                        <Route index element={<Navigate to="dashboard" replace />} />
+                    </Routes>
+                </CardContent>
+            </Card>
         </div>
     );
 };

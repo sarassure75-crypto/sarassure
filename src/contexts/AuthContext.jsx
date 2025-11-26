@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }) => {
     return () => {
       subscription?.unsubscribe();
     };
-  }, [fetchProfile]);
+  }, []); // Retirer la dépendance fetchProfile pour éviter les re-renders inutiles
 
   const loginWithLearnerCode = async (learnerCode) => {
     const { data: profile, error: profileError } = await supabase

@@ -23,10 +23,13 @@ const AuthRedirect = ({ children }) => {
           redirectTo = '/taches';
           break;
         case USER_ROLES.TRAINER:
-          redirectTo = '/formateur';
+          redirectTo = '/compte-formateur';
           break;
         case USER_ROLES.ADMIN:
           redirectTo = '/admin/dashboard';
+          break;
+        case USER_ROLES.CONTRIBUTOR:
+          redirectTo = '/contributeur';
           break;
         default:
           redirectTo = '/';

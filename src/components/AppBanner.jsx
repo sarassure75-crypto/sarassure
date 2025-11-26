@@ -1,15 +1,23 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { X, Menu, Home, BookOpen, User, LogOut, Shield, UserCog, MessageSquare as MessageSquareQuestion, BarChart3, Bug } from 'lucide-react';
+import { X, Menu, Home, BookOpen, User, LogOut, Shield, UserCog, MessageSquare, BarChart3, Bug, Mail, Users, CreditCard, ListTodo, LayoutGrid, Image as ImageIcon, CheckCircle, DollarSign, AlertTriangle, Trash, Upload } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { USER_ROLES } from '@/data/users';
+import { useAdminCounters } from '@/hooks/useAdminCounters';
 
-const NavLink = ({ to, icon: Icon, children, onClick }) => (
-  <Link to={to} onClick={onClick} className="flex items-center p-3 text-lg rounded-md hover:bg-primary/10 transition-colors">
-    <Icon className="mr-4 h-6 w-6 text-primary" />
-    <span>{children}</span>
+const NavLink = ({ to, icon: Icon, children, onClick, count = 0 }) => (
+  <Link to={to} onClick={onClick} className="flex items-center justify-between p-3 text-lg rounded-md hover:bg-primary/10 transition-colors relative">
+    <span className="flex items-center">
+      <Icon className="mr-4 h-6 w-6 text-primary" />
+      <span>{children}</span>
+    </span>
+    {count > 0 && (
+      <span className="ml-2 inline-flex items-center justify-center h-6 w-6 rounded-full bg-red-500 text-white text-xs font-bold">
+        {count > 9 ? '9+' : count}
+      </span>
+    )}
   </Link>
 );
 
@@ -18,6 +26,7 @@ const AppBanner = () => {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
+  const { counters } = useAdminCounters();
 
   if (!isVisible) return null;
 
@@ -47,15 +56,29 @@ const AppBanner = () => {
       case USER_ROLES.ADMIN:
         return (
           <>
-            <NavLink to="/admin/dashboard" icon={Shield} onClick={closeSheet}>Dashboard Admin</NavLink>
+            <NavLink to="/admin/dashboard" icon={ListTodo} onClick={closeSheet}>Tâches</NavLink>
+            <NavLink to="/admin/categories" icon={LayoutGrid} onClick={closeSheet}>Catégories</NavLink>
+            <NavLink to="/admin/images" icon={ImageIcon} onClick={closeSheet}>Images</NavLink>
+            <NavLink to="/admin/validation/images" icon={CheckCircle} onClick={closeSheet} count={counters.pendingImages}>Valider Images</NavLink>
+            <NavLink to="/admin/validation/exercices" icon={CheckCircle} onClick={closeSheet} count={counters.pendingContributions}>Valider Exercices</NavLink>
+            <NavLink to="/admin/revenus" icon={DollarSign} onClick={closeSheet}>Revenus</NavLink>
+            <NavLink to="/admin/users" icon={Users} onClick={closeSheet}>Utilisateurs</NavLink>
+            <NavLink to="/admin/faq" icon={MessageSquare} onClick={closeSheet} count={counters.pendingFaq}>FAQ</NavLink>
+            <NavLink to="/admin/errors" icon={AlertTriangle} onClick={closeSheet}>Rapports</NavLink>
+            <NavLink to="/admin/trash" icon={Trash} onClick={closeSheet}>Corbeille</NavLink>
+            <NavLink to="/admin/contact" icon={Mail} onClick={closeSheet} count={counters.pendingMessages}>Messages</NavLink>
             <NavLink to="/taches" icon={BookOpen} onClick={closeSheet}>Liste des Tâches</NavLink>
           </>
         );
       case USER_ROLES.TRAINER:
         return (
           <>
-            <NavLink to="/formateur/faq" icon={MessageSquareQuestion} onClick={closeSheet}>FAQ Formateurs</NavLink>
-            <NavLink to="/compte-formateur" icon={User} onClick={closeSheet}>Mon Compte</NavLink>
+            <NavLink to="/compte-formateur" icon={Home} onClick={closeSheet}>Dashboard Formateur</NavLink>
+            <NavLink to="/formateur/apprenants" icon={Users} onClick={closeSheet}>Apprenants</NavLink>
+            <NavLink to="/formateur/acheter-licences" icon={CreditCard} onClick={closeSheet}>Acheter des Licences</NavLink>
+            <NavLink to="/formateur/gestion-licences" icon={CreditCard} onClick={closeSheet}>Gestion Licences</NavLink>
+            <NavLink to="/formateur/faq" icon={MessageSquare} onClick={closeSheet}>FAQ Formateurs</NavLink>
+            <NavLink to="/formateur/profil" icon={UserCog} onClick={closeSheet}>Mon Profil</NavLink>
           </>
         );
       case USER_ROLES.LEARNER:
@@ -65,6 +88,16 @@ const AppBanner = () => {
             <NavLink to="/mon-suivi" icon={BarChart3} onClick={closeSheet}>Mon Suivi</NavLink>
             <NavLink to="/report-error" icon={Bug} onClick={closeSheet}>Signaler une erreur</NavLink>
             <NavLink to="/compte-apprenant" icon={User} onClick={closeSheet}>Mon Compte</NavLink>
+          </>
+        );
+      case USER_ROLES.CONTRIBUTOR:
+        return (
+          <>
+            <NavLink to="/contributeur" icon={Home} onClick={closeSheet}>Dashboard</NavLink>
+            <NavLink to="/contributeur/nouvelle-contribution" icon={Upload} onClick={closeSheet}>Créer un exercice</NavLink>
+            <NavLink to="/contributeur/bibliotheque" icon={ImageIcon} onClick={closeSheet}>Bibliothèque d'images</NavLink>
+            <NavLink to="/contributeur/mes-contributions" icon={BookOpen} onClick={closeSheet}>Mes contributions</NavLink>
+            <NavLink to="/contributeur/profil" icon={UserCog} onClick={closeSheet}>Mon Profil</NavLink>
           </>
         );
       default:
@@ -113,13 +146,18 @@ const AppBanner = () => {
                 <SheetTitle className="text-2xl">Menu</SheetTitle>
               </SheetHeader>
               <nav className="mt-8 flex flex-col gap-4">
-                <NavLink to="/" icon={Home} onClick={closeSheet}>Accueil</NavLink>
                 {renderNavLinks()}
                 {currentUser && (
-                  <button onClick={handleLogout} className="flex items-center p-3 text-lg rounded-md hover:bg-destructive/10 transition-colors text-destructive">
-                    <LogOut className="mr-4 h-6 w-6" />
-                    <span>Déconnexion</span>
-                  </button>
+                  <>
+                    <button onClick={handleLogout} className="flex items-center p-3 text-lg rounded-md hover:bg-destructive/10 transition-colors text-destructive">
+                      <LogOut className="mr-4 h-6 w-6" />
+                      <span>Déconnexion</span>
+                    </button>
+                    <NavLink to="/" icon={Home} onClick={closeSheet}>Accueil</NavLink>
+                  </>
+                )}
+                {!currentUser && (
+                  <NavLink to="/" icon={Home} onClick={closeSheet}>Accueil</NavLink>
                 )}
               </nav>
             </SheetContent>

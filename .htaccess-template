@@ -1,0 +1,38 @@
+# htaccess file for Vite SPA on Hostinger
+# Save as: .htaccess in public_html/ (root folder)
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  
+  # Don't rewrite files/directories that actually exist
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  
+  # Rewrite all other requests to index.html
+  # This allows React Router to handle all routes
+  RewriteRule ^ index.html [QSA,L]
+</IfModule>
+
+# Optional: Force HTTPS (if not already configured)
+# Uncomment lines below if needed:
+# <IfModule mod_rewrite.c>
+#   RewriteCond %{HTTPS} off
+#   RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# </IfModule>
+
+# Optional: Compress static assets for faster loading
+# Uncomment if .htaccess supports mod_deflate:
+# <IfModule mod_deflate.c>
+#   AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+# </IfModule>
+
+# Optional: Cache headers for static assets
+# <FilesMatch "\.(js|css|jpg|jpeg|png|gif|ico|svg|woff|woff2)$">
+#   Header set Cache-Control "max-age=31536000, public"
+# </FilesMatch>
+
+# Optional: Don't cache HTML
+# <FilesMatch "\.html?$">
+#   Header set Cache-Control "max-age=0, public, must-revalidate"
+# </FilesMatch>

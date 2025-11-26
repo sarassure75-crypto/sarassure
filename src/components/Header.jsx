@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
-import { Menu, X, User, LogOut, UserCog, LayoutDashboard, BookOpen, HelpCircle, BarChart3, Download, MessageSquare as MessageSquareWarning } from 'lucide-react';
+import { Menu, X, User, LogOut, UserCog, LayoutDashboard, BookOpen, HelpCircle, BarChart3, Download, MessageSquare as MessageSquareWarning, FileText, Image, Folder } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { USER_ROLES } from '@/data/users';
 import LearnerCredentialsModal from '@/components/LearnerCredentialsModal';
@@ -44,12 +44,28 @@ const Header = ({ pwaMode = false }) => {
       { to: '/compte-apprenant', label: 'Mon Compte', icon: UserCog },
       { to: '/report-error', label: 'Signaler une erreur', icon: MessageSquareWarning },
     ],
+    [USER_ROLES.CONTRIBUTOR]: [
+      { to: '/contributeur', label: 'Dashboard', icon: LayoutDashboard },
+      { to: '/contributeur/nouvelle-contribution', label: 'Créer un exercice', icon: FileText },
+      { to: '/contributeur/bibliotheque', label: 'Bibliothèque d\'images', icon: Image },
+      { to: '/contributeur/mes-contributions', label: 'Mes contributions', icon: Folder },
+      { to: '/contributeur/profil', label: 'Mon Profil', icon: UserCog },
+    ],
   };
 
   const getNavLinks = () => {
-    if (!currentUser) return [];
+    if (!currentUser) {
+      console.log('❌ getNavLinks: No currentUser');
+      return [];
+    }
+    console.log('🔍 Header - currentUser:', currentUser);
+    console.log('🔍 Header - currentUser.role:', currentUser.role);
+    console.log('🔍 Header - USER_ROLES.CONTRIBUTOR:', USER_ROLES.CONTRIBUTOR);
+    console.log('🔍 Header - userLinks[currentUser.role]:', userLinks[currentUser.role]);
+    
     const roleLinks = userLinks[currentUser.role] || [];
     const filteredCommonLinks = commonLinks.filter(link => link.roles.includes(currentUser.role));
+    console.log('🔍 Header - Final navLinks:', [...filteredCommonLinks, ...roleLinks]);
     return [...filteredCommonLinks, ...roleLinks];
   };
 

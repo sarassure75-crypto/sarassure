@@ -3,6 +3,7 @@ import AdminLearnerManager from './AdminLearnerManager';
 import AdminTrainerManager from './AdminTrainerManager';
 import AdminAssociationManager from './AdminAssociationManager';
 import AdminLicenseManager from './AdminLicenseManager';
+import AdminContributorManager from './AdminContributorManager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getTrainers } from '@/data/users';
 import { useToast } from '@/components/ui/use-toast';
@@ -34,9 +35,10 @@ const AdminUserManagement = () => {
 
     return (
         <Tabs defaultValue="learners" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="learners">Apprenants</TabsTrigger>
                 <TabsTrigger value="trainers">Formateurs</TabsTrigger>
+                <TabsTrigger value="contributors">Contributeurs</TabsTrigger>
                 <TabsTrigger value="associations">Associations</TabsTrigger>
                 <TabsTrigger value="licenses">Licences</TabsTrigger>
             </TabsList>
@@ -45,6 +47,9 @@ const AdminUserManagement = () => {
             </TabsContent>
             <TabsContent value="trainers">
                 <AdminTrainerManager onTrainerCreated={loadTrainers} />
+            </TabsContent>
+            <TabsContent value="contributors">
+                <AdminContributorManager onContributorCreated={() => {}} />
             </TabsContent>
             <TabsContent value="associations">
                 <AdminAssociationManager />

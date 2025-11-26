@@ -24,6 +24,27 @@ import DashboardRedirector from '@/pages/DashboardRedirector';
 import PwaInstallButton from '@/components/PwaInstallButton';
 import OfflineIndicator from '@/components/OfflineIndicator';
 
+// Pages Contributeur
+import ContributorDashboard from '@/pages/ContributorDashboard';
+import NewContribution from '@/pages/NewContribution';
+import MyContributions from '@/pages/MyContributions';
+import TermsOfServicePage from '@/pages/TermsOfServicePage';
+import ContributorSalesHistory from '@/components/ContributorSalesHistory';
+
+// Pages Formateur
+import TrainerLearnersPage from '@/pages/Formateur/TrainerLearnersPage';
+import BuyLicensesPage from '@/pages/Formateur/BuyLicensesPage';
+import TrainerProfilePage from '@/pages/Formateur/TrainerProfilePage';
+import TrainerLicensesManagementPage from '@/pages/Formateur/TrainerLicensesManagementPage';
+import ContributorImageLibrary from '@/pages/ContributorImageLibrary';
+import ContributorProfilePage from '@/pages/ContributorProfilePage';
+
+// Pages Admin - Modération
+import ModerationPage from '@/pages/ModerationPage';
+import AdminImageValidation from '@/pages/AdminImageValidation';
+import AdminExerciseValidation from '@/pages/AdminExerciseValidation';
+import AdminRevenueDashboard from '@/pages/AdminRevenueDashboard';
+
 function AppContent() {
   const location = useLocation();
   const isPwaMode = window.matchMedia('(display-mode: standalone)').matches || new URLSearchParams(location.search).get('mode') === 'pwa';
@@ -75,8 +96,27 @@ function AppContent() {
           </ProtectedRoute>
         } />
         
+        {/* Routes Contributeur */}
+        <Route path="contributeur" element={<ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.CONTRIBUTOR]}><ContributorDashboard /></ProtectedRoute>} />
+        <Route path="contributeur/nouvelle-contribution" element={<ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.CONTRIBUTOR]}><NewContribution /></ProtectedRoute>} />
+        <Route path="contributeur/mes-contributions" element={<ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.CONTRIBUTOR]}><MyContributions /></ProtectedRoute>} />
+        <Route path="contributeur/bibliotheque" element={<ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.CONTRIBUTOR]}><ContributorImageLibrary /></ProtectedRoute>} />
+        <Route path="contributeur/ventes" element={<ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.CONTRIBUTOR]}><ContributorSalesHistory /></ProtectedRoute>} />
+        <Route path="contributeur/profil" element={<ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.CONTRIBUTOR]}><ContributorProfilePage /></ProtectedRoute>} />
+        <Route path="contributeur/cgu" element={<ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.CONTRIBUTOR]}><TermsOfServicePage /></ProtectedRoute>} />
+        
+        {/* Routes Admin - Modération */}
+        <Route path="admin/moderation" element={<ProtectedRoute roles={[USER_ROLES.ADMIN]}><ModerationPage /></ProtectedRoute>} />
+        <Route path="admin/validation/images" element={<ProtectedRoute roles={[USER_ROLES.ADMIN]}><AdminImageValidation /></ProtectedRoute>} />
+        <Route path="admin/validation/exercices" element={<ProtectedRoute roles={[USER_ROLES.ADMIN]}><AdminExerciseValidation /></ProtectedRoute>} />
+        <Route path="admin/revenus" element={<ProtectedRoute roles={[USER_ROLES.ADMIN]}><AdminRevenueDashboard /></ProtectedRoute>} />
+        
         <Route path="formateur" element={<ProtectedRoute roles={[USER_ROLES.TRAINER, USER_ROLES.ADMIN]}><TrainerDashboardPage /></ProtectedRoute>} />
+        <Route path="formateur/apprenants" element={<ProtectedRoute roles={[USER_ROLES.TRAINER]}><TrainerLearnersPage /></ProtectedRoute>} />
+        <Route path="formateur/acheter-licences" element={<ProtectedRoute roles={[USER_ROLES.TRAINER]}><BuyLicensesPage /></ProtectedRoute>} />
+        <Route path="formateur/gestion-licences" element={<ProtectedRoute roles={[USER_ROLES.TRAINER]}><TrainerLicensesManagementPage /></ProtectedRoute>} />
         <Route path="formateur/faq" element={<ProtectedRoute roles={[USER_ROLES.TRAINER, USER_ROLES.ADMIN]}><TrainerFaqPage /></ProtectedRoute>} />
+        <Route path="formateur/profil" element={<ProtectedRoute roles={[USER_ROLES.TRAINER]}><TrainerProfilePage /></ProtectedRoute>} />
         <Route path="compte-formateur" element={<ProtectedRoute roles={[USER_ROLES.TRAINER]}><TrainerAccountPage /></ProtectedRoute>} />
         
         <Route path="*" element={<NotFoundPage />} />
