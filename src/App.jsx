@@ -124,6 +124,7 @@ function AppContent() {
         
         {/* Ressources publiques / contributeurs */}
         <Route path="ressources/wallpapers" element={<WallpapersLibraryPage />} />
+        <Route path="wallpapers" element={<WallpapersLibraryPage />} />
         
         {/* Routes Admin - Modération */}
         <Route path="admin/moderation" element={<ProtectedRoute roles={[USER_ROLES.ADMIN]}><ModerationPage /></ProtectedRoute>} />
