@@ -76,6 +76,7 @@ const AdminImageGallery = () => {
             description: `Téléversé le ${new Date().toLocaleDateString()}`,
             category,
             file_path: filePath,
+            android_version: 'Non spécifiée', // Valeur par défaut
             metadata: { size: metadata.size, mimeType: metadata.mimeType }
         });
         toast({ title: "Succès", description: "Image ajoutée à la galerie." });
@@ -99,10 +100,11 @@ const AdminImageGallery = () => {
     const name = formData.get('name');
     const description = formData.get('description');
     const category = formData.get('category');
+    const android_version = formData.get('android_version');
 
     setIsEditing(true);
     try {
-      await apiUpdateImage(editImage.id, { name, description, category });
+      await apiUpdateImage(editImage.id, { name, description, category, android_version });
       toast({ title: "Succès", description: "Image mise à jour." });
       await fetchAllData();
       setIsEditDialogOpen(false);
@@ -153,6 +155,15 @@ const AdminImageGallery = () => {
                   ))}
                 </select>
               </div>
+              <div>
+                <Label htmlFor="edit-android-version">Version Android</Label>
+                <Input 
+                  id="edit-android-version" 
+                  name="android_version" 
+                  defaultValue={editImage.android_version || ''}
+                  placeholder="Ex: Android 13" 
+                />
+              </div>
             <DialogFooter>
                <Button type="button" variant="secondary" onClick={() => setIsEditDialogOpen(false)}>Annuler</Button>
               <Button type="submit" disabled={isEditing}>
@@ -184,6 +195,18 @@ const AdminImageGallery = () => {
         setIsLoading(false);
     };
 
+    const handleSubmitCategory = (e) => {
+        e.preventDefault();
+        handleAddCategory();
+    };
+
+    const handleCategoryInputKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleAddCategory();
+        }
+    };
+
     const handleDeleteCategory = async (category) => {
         setIsLoading(true);
         try {
@@ -206,10 +229,20 @@ const AdminImageGallery = () => {
               <DialogTitle>Gérer les catégories d'images</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-              <div className="flex gap-2">
-                  <Input value={newCategory} onChange={(e) => setNewCategory(e.target.value)} placeholder="Nouvelle catégorie..."/>
-                  <Button onClick={handleAddCategory} disabled={isLoading}>{isLoading ? <Loader2 className="animate-spin h-4 w-4" /> : <FolderPlus className="h-4 w-4"/>}</Button>
-              </div>
+              <form onSubmit={handleSubmitCategory} className="flex gap-2">
+                  <Input 
+                    value={newCategory} 
+                    onChange={(e) => setNewCategory(e.target.value)} 
+                    onKeyDown={handleCategoryInputKeyDown}
+                    placeholder="Nouvelle catégorie..."
+                  />
+                  <Button 
+                    type="submit" 
+                    disabled={isLoading || !newCategory.trim()}
+                  >
+                    {isLoading ? <Loader2 className="animate-spin h-4 w-4" /> : <FolderPlus className="h-4 w-4"/>}
+                  </Button>
+              </form>
               <ScrollArea className="h-48">
               <ul className="space-y-2">
                   {adminCategories.filter(c => c !== 'all').map(cat => (

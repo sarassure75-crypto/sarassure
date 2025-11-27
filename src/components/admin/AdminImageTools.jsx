@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Crop, Minimize, ImageDown as UploadIcon } from 'lucide-react';
+import { Crop, Minimize, ImageDown as UploadIcon, Type, Smartphone } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
@@ -19,12 +19,18 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(categories && categories.length > 0 ? (categories.includes('default') ? 'default' : categories[0]) : 'default');
+  const [imageName, setImageName] = useState('');
+  const [androidVersion, setAndroidVersion] = useState('');
   const fileInputRef = useRef(null);
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
       setSelectedFile(file);
+      // Pré-remplir le nom basé sur le nom du fichier (sans extension)
+      const nameWithoutExtension = file.name.split('.').slice(0, -1).join('.');
+      setImageName(nameWithoutExtension);
+      
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
@@ -80,6 +86,8 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
             
             onImageProcessedAndUploaded(filePath, {
               originalName: selectedFile.name,
+              customName: imageName.trim() || selectedFile.name.split('.').slice(0, -1).join('.'),
+              androidVersion: androidVersion.trim() || 'Non spécifiée',
               newWidth: width,
               newHeight: height,
               quality: compressionQuality,
@@ -112,6 +120,8 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
     setImagePreview(null);
     setTargetWidth(800);
     setCompressionQuality(0.8);
+    setImageName('');
+    setAndroidVersion('');
     setIsDialogOpen(false);
     setIsProcessing(false);
     if (fileInputRef.current) {
@@ -178,6 +188,32 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
                 />
                 <span className="text-sm text-muted-foreground w-12 text-right">{compressionQuality.toFixed(2)}</span>
               </div>
+            </div>
+            <div>
+              <Label htmlFor="imageName" className="flex items-center">
+                <Type className="mr-2 h-4 w-4" /> Nom de l'image
+              </Label>
+              <Input
+                id="imageName"
+                type="text"
+                value={imageName}
+                onChange={(e) => setImageName(e.target.value)}
+                placeholder="Nom de l'image"
+                disabled={isProcessing}
+              />
+            </div>
+            <div>
+              <Label htmlFor="androidVersion" className="flex items-center">
+                <Smartphone className="mr-2 h-4 w-4" /> Version Android
+              </Label>
+              <Input
+                id="androidVersion"
+                type="text"
+                value={androidVersion}
+                onChange={(e) => setAndroidVersion(e.target.value)}
+                placeholder="Ex: 14, 13, 12..."
+                disabled={isProcessing}
+              />
             </div>
             <div>
               <Label htmlFor="upload-category" className="flex items-center">Catégorie</Label>

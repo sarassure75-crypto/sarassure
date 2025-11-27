@@ -38,6 +38,9 @@ import React from 'react';
               <DialogTitle className="flex items-center">
                 <Youtube className="mr-2 h-6 w-6 text-red-600" /> {title || "Vidéo Explicative"}
               </DialogTitle>
+              <DialogDescription>
+                Regardez cette vidéo pour mieux comprendre le sujet.
+              </DialogDescription>
             </DialogHeader>
             <div className="aspect-video p-4">
               <iframe

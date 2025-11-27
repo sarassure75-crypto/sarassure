@@ -66,17 +66,17 @@ export const AdminProvider = ({ children }) => {
         return { tasksData: tasksData || [], categoriesData: categoriesData || [], hierarchyData: hierarchyData || [] };
       } catch (error) {
         const errorMessage = "Impossible de recharger les données.";
-        toast({ title: "Erreur de rafraîchissement", description: errorMessage, variant: "destructive" });
+        console.error("Error fetching admin data:", error);
         setError(errorMessage);
         return { tasksData: [], categoriesData: [], hierarchyData: [] };
       } finally {
         setIsLoading(false);
       }
-  }, [toast]);
+  }, []); // Supprime toast des dépendances pour éviter la boucle
 
   useEffect(() => {
     fetchAllData();
-  }, [fetchAllData]);
+  }, []); // Utilise tableau vide pour n'exécuter qu'une fois au montage
   
   const createTask = async (taskData) => {
     const newTask = await apiCreateTask(taskData);

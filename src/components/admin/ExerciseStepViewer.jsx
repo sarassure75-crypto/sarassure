@@ -17,6 +17,12 @@ export default function ExerciseStepViewer({ steps = [] }) {
   }
 
   console.log('ExerciseStepViewer - Current step:', currentStepIndex, steps[currentStepIndex]);
+  console.log('🔍 STEP DEBUG - Zones disponibles:', {
+    target_area: currentStep?.target_area,
+    text_input_area: currentStep?.text_input_area,
+    start_area: currentStep?.start_area,
+    hasAnyArea: !!(currentStep?.target_area || currentStep?.text_input_area || currentStep?.start_area)
+  });
   
   const currentStep = steps[currentStepIndex];
   const hasImage = currentStep?.image_url;
@@ -72,16 +78,33 @@ export default function ExerciseStepViewer({ steps = [] }) {
               {/* Zones d'action */}
               {(currentStep.target_area || currentStep.text_input_area || currentStep.start_area) && (
                 <div className="absolute inset-0 pointer-events-none">
-                  {/* Zone de clic (rouge) */}
+                  {/* Zone de clic avec couleur du contributeur */}
                   {currentStep.target_area && (() => {
                     try {
                       const area = typeof currentStep.target_area === 'string' 
                         ? JSON.parse(currentStep.target_area) 
                         : currentStep.target_area;
-                      const x = area.x_percent || area.x || 0;
-                      const y = area.y_percent || area.y || 0;
-                      const w = area.width_percent || area.width || 10;
-                      const h = area.height_percent || area.height || 10;
+                      
+                      console.log('🎯 TARGET AREA DEBUG:', {
+                        raw: currentStep.target_area,
+                        parsed: area,
+                        type: typeof currentStep.target_area
+                      });
+                      
+                      // Chercher les coordonnées avec priorité aux propriétés _percent
+                      const x = area.x_percent ?? area.x ?? 0;
+                      const y = area.y_percent ?? area.y ?? 0;
+                      const w = area.width_percent ?? area.width ?? 10;
+                      const h = area.height_percent ?? area.height ?? 10;
+                      
+                      console.log('🎯 TARGET AREA COORDS:', { x, y, w, h, area });
+                      
+                      // Utiliser la couleur du contributeur
+                      const color = area.color || 'rgb(239, 68, 68)';
+                      const opacity = area.opacity !== undefined ? area.opacity : 0.4;
+                      const fillColor = color.includes('rgb') 
+                        ? color.replace('rgb', 'rgba').replace(')', `, ${opacity})`) 
+                        : `rgba(239, 68, 68, ${opacity})`;
 
                       return (
                         <svg className="absolute inset-0 w-full h-full" style={{ transform: `scale(${zoom})`, transformOrigin: 'center' }}>
@@ -90,10 +113,11 @@ export default function ExerciseStepViewer({ steps = [] }) {
                             y={`${y}%`}
                             width={`${w}%`}
                             height={`${h}%`}
-                            fill="rgba(239, 68, 68, 0.4)"
-                            stroke="rgb(220, 38, 38)"
+                            fill={fillColor}
+                            stroke={color}
                             strokeWidth="3"
                             strokeDasharray="5,5"
+                            rx={area.shape === 'ellipse' ? `${Math.min(w, h)/2}%` : '4'}
                           />
                         </svg>
                       );
@@ -103,16 +127,33 @@ export default function ExerciseStepViewer({ steps = [] }) {
                     }
                   })()}
 
-                  {/* Zone de saisie (bleue) */}
+                  {/* Zone de saisie avec couleur du contributeur */}
                   {currentStep.text_input_area && (() => {
                     try {
                       const area = typeof currentStep.text_input_area === 'string' 
                         ? JSON.parse(currentStep.text_input_area) 
                         : currentStep.text_input_area;
-                      const x = area.x_percent || area.x || 0;
-                      const y = area.y_percent || area.y || 0;
-                      const w = area.width_percent || area.width || 10;
-                      const h = area.height_percent || area.height || 10;
+                      
+                      console.log('✏️ TEXT INPUT AREA DEBUG:', {
+                        raw: currentStep.text_input_area,
+                        parsed: area,
+                        type: typeof currentStep.text_input_area
+                      });
+                      
+                      // Chercher les coordonnées avec priorité aux propriétés _percent
+                      const x = area.x_percent ?? area.x ?? 0;
+                      const y = area.y_percent ?? area.y ?? 0;
+                      const w = area.width_percent ?? area.width ?? 10;
+                      const h = area.height_percent ?? area.height ?? 10;
+                      
+                      console.log('✏️ TEXT INPUT AREA COORDS:', { x, y, w, h, area });
+                      
+                      // Utiliser la couleur du contributeur
+                      const color = area.color || 'rgb(59, 130, 246)';
+                      const opacity = area.opacity !== undefined ? area.opacity : 0.4;
+                      const fillColor = color.includes('rgb') 
+                        ? color.replace('rgb', 'rgba').replace(')', `, ${opacity})`) 
+                        : `rgba(59, 130, 246, ${opacity})`;
 
                       return (
                         <svg className="absolute inset-0 w-full h-full" style={{ transform: `scale(${zoom})`, transformOrigin: 'center' }}>
@@ -121,10 +162,11 @@ export default function ExerciseStepViewer({ steps = [] }) {
                             y={`${y}%`}
                             width={`${w}%`}
                             height={`${h}%`}
-                            fill="rgba(59, 130, 246, 0.4)"
-                            stroke="rgb(37, 99, 235)"
+                            fill={fillColor}
+                            stroke={color}
                             strokeWidth="3"
                             strokeDasharray="5,5"
+                            rx={area.shape === 'ellipse' ? `${Math.min(w, h)/2}%` : '4'}
                           />
                         </svg>
                       );
@@ -134,16 +176,33 @@ export default function ExerciseStepViewer({ steps = [] }) {
                     }
                   })()}
 
-                  {/* Zone de départ (verte) */}
+                  {/* Zone de départ avec couleur du contributeur */}
                   {currentStep.start_area && (() => {
                     try {
                       const area = typeof currentStep.start_area === 'string' 
                         ? JSON.parse(currentStep.start_area) 
                         : currentStep.start_area;
-                      const x = area.x_percent || area.x || 0;
-                      const y = area.y_percent || area.y || 0;
-                      const w = area.width_percent || area.width || 10;
-                      const h = area.height_percent || area.height || 10;
+                      
+                      console.log('🚀 START AREA DEBUG:', {
+                        raw: currentStep.start_area,
+                        parsed: area,
+                        type: typeof currentStep.start_area
+                      });
+                      
+                      // Chercher les coordonnées avec priorité aux propriétés _percent
+                      const x = area.x_percent ?? area.x ?? 0;
+                      const y = area.y_percent ?? area.y ?? 0;
+                      const w = area.width_percent ?? area.width ?? 10;
+                      const h = area.height_percent ?? area.height ?? 10;
+                      
+                      console.log('🚀 START AREA COORDS:', { x, y, w, h, area });
+                      
+                      // Utiliser la couleur du contributeur
+                      const color = area.color || 'rgb(34, 197, 94)';
+                      const opacity = area.opacity !== undefined ? area.opacity : 0.4;
+                      const fillColor = color.includes('rgb') 
+                        ? color.replace('rgb', 'rgba').replace(')', `, ${opacity})`) 
+                        : `rgba(34, 197, 94, ${opacity})`;
 
                       return (
                         <svg className="absolute inset-0 w-full h-full" style={{ transform: `scale(${zoom})`, transformOrigin: 'center' }}>
@@ -152,10 +211,11 @@ export default function ExerciseStepViewer({ steps = [] }) {
                             y={`${y}%`}
                             width={`${w}%`}
                             height={`${h}%`}
-                            fill="rgba(34, 197, 94, 0.4)"
-                            stroke="rgb(22, 163, 74)"
+                            fill={fillColor}
+                            stroke={color}
                             strokeWidth="3"
                             strokeDasharray="5,5"
+                            rx={area.shape === 'ellipse' ? `${Math.min(w, h)/2}%` : '4'}
                           />
                         </svg>
                       );
@@ -173,6 +233,19 @@ export default function ExerciseStepViewer({ steps = [] }) {
                   ℹ️ Aucune zone d'action définie
                 </div>
               )}
+
+              {/* DEBUG: Affichage temporaire des zones brutes */}
+              <div className="absolute top-2 right-2 bg-white border border-gray-300 rounded p-2 text-xs max-w-xs opacity-90 z-10">
+                <p className="font-bold mb-1">🔍 DEBUG ZONES</p>
+                <p><strong>Target:</strong> {currentStep.target_area ? '✓' : '✗'}</p>
+                <p><strong>Text Input:</strong> {currentStep.text_input_area ? '✓' : '✗'}</p>
+                <p><strong>Start:</strong> {currentStep.start_area ? '✓' : '✗'}</p>
+                {currentStep.target_area && (
+                  <p className="text-blue-600 mt-1">
+                    <strong>Target Raw:</strong> {typeof currentStep.target_area === 'string' ? currentStep.target_area.substring(0, 50) + '...' : JSON.stringify(currentStep.target_area).substring(0, 50) + '...'}
+                  </p>
+                )}
+              </div>
             </div>
           ) : (
             <div className="text-gray-400 text-center p-8">
@@ -289,25 +362,6 @@ export default function ExerciseStepViewer({ steps = [] }) {
           </button>
         </div>
       )}
-
-      {/* Légende des zones */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm font-medium text-blue-900 mb-2">Légende des zones d'action:</p>
-        <div className="space-y-1 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-red-600 bg-red-100"></div>
-            <span className="text-gray-700">Zone de clic (Tap)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-blue-600 bg-blue-100"></div>
-            <span className="text-gray-700">Zone de saisie (Text Input)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-green-600 bg-green-100"></div>
-            <span className="text-gray-700">Zone de démarrage (Swipe/Scroll)</span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

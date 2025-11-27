@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import { deleteImage } from './imagesMetadata';
 
 /**
  * ============================================================================
@@ -410,15 +411,64 @@ export async function publishContributionAsTask(contribution) {
 }
 
 /**
- * Supprimer une contribution (brouillon uniquement)
+ * Supprimer une contribution (version, task ou image)
  */
-export async function deleteContribution(contributionId) {
+export async function deleteContribution(contributionId, contributionType = 'version', userId = null) {
   try {
-    const { error } = await supabase
-      .from('contributions')
-      .delete()
-      .eq('id', contributionId)
-      .eq('status', 'draft');
+    let error;
+
+    if (contributionType === 'image') {
+      // Utiliser la fonction spécialisée pour les images
+      const result = await deleteImage(contributionId, userId);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+    } else if (contributionType === 'draft') {
+      // Supprimer la tâche complète (brouillon)
+      const { error: taskError } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', contributionId);
+      
+      error = taskError;
+    } else {
+      // Pour une version spécifique, d'abord récupérer le task_id
+      const { data: versionData, error: fetchError } = await supabase
+        .from('versions')
+        .select('task_id')
+        .eq('id', contributionId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const taskId = versionData?.task_id;
+
+      // Supprimer la version
+      const { error: versionError } = await supabase
+        .from('versions')
+        .delete()
+        .eq('id', contributionId);
+      
+      if (versionError) throw versionError;
+
+      // Vérifier s'il reste des versions pour cette tâche
+      if (taskId) {
+        const { data: remainingVersions } = await supabase
+          .from('versions')
+          .select('id')
+          .eq('task_id', taskId);
+
+        // Si plus aucune version, supprimer la tâche
+        if (!remainingVersions || remainingVersions.length === 0) {
+          const { error: taskError } = await supabase
+            .from('tasks')
+            .delete()
+            .eq('id', taskId);
+          
+          if (taskError) throw taskError;
+        }
+      }
+    }
 
     if (error) throw error;
     return { success: true };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabaseClient';
 import { useAdminCounters } from '../hooks/useAdminCounters';
 import AdminTabNavigation from '../components/admin/AdminTabNavigation';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -16,11 +16,6 @@ import {
   Home
 } from 'lucide-react';
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
-
 export default function AdminImageValidation() {
   const { currentUser } = useAuth();
   const { counters } = useAdminCounters();
@@ -29,6 +24,12 @@ export default function AdminImageValidation() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedImage, setSelectedImage] = useState(null);
   const [validatingId, setValidatingId] = useState(null);
+  const [editingAndroidVersion, setEditingAndroidVersion] = useState(false);
+  const [newAndroidVersion, setNewAndroidVersion] = useState('');
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [imageToReject, setImageToReject] = useState(null);
+  const [isLoadingImages, setIsLoadingImages] = useState(false);
 
   // Charger les images en attente de validation
   useEffect(() => {
@@ -36,6 +37,9 @@ export default function AdminImageValidation() {
   }, []);
 
   const loadPendingImages = async () => {
+    if (isLoadingImages) return; // Éviter les chargements multiples
+    
+    setIsLoadingImages(true);
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -60,9 +64,12 @@ export default function AdminImageValidation() {
       }
     } catch (error) {
       console.error('Erreur lors du chargement des images:', error);
-      alert('Erreur: ' + error.message);
+      if (!error.message.includes('aborted')) { // Éviter les alertes pour les requêtes annulées
+        alert('Erreur: ' + error.message);
+      }
     } finally {
       setLoading(false);
+      setIsLoadingImages(false);
     }
   };
 
@@ -101,26 +108,31 @@ export default function AdminImageValidation() {
     }
   };
 
-  const rejectImage = async (imageId) => {
-    const reason = prompt('Raison du rejet:');
-    if (!reason) return;
+  const openRejectModal = (imageId) => {
+    setImageToReject(imageId);
+    setRejectReason('');
+    setShowRejectModal(true);
+  };
 
-    setValidatingId(imageId);
+  const rejectImage = async () => {
+    if (!imageToReject || !rejectReason.trim()) return;
+
+    setValidatingId(imageToReject);
     try {
       const { error } = await supabase
         .from('images_metadata')
         .update({ 
           moderation_status: 'rejected',
-          rejection_reason: reason,
+          rejection_reason: rejectReason.trim(),
           reviewed_by: currentUser.id,
           reviewed_at: new Date().toISOString()
         })
-        .eq('id', imageId);
+        .eq('id', imageToReject);
 
       if (error) throw error;
 
       // Retirer l'image de la liste
-      setImages(images.filter(img => img.id !== imageId));
+      setImages(images.filter(img => img.id !== imageToReject));
       
       // Charger l'image suivante
       if (images.length > 1) {
@@ -131,6 +143,9 @@ export default function AdminImageValidation() {
         setSelectedImage(null);
       }
 
+      setShowRejectModal(false);
+      setImageToReject(null);
+      setRejectReason('');
       alert('✅ Image rejetée');
     } catch (error) {
       console.error('Erreur:', error);
@@ -138,6 +153,45 @@ export default function AdminImageValidation() {
     } finally {
       setValidatingId(null);
     }
+  };
+
+  const updateAndroidVersion = async () => {
+    if (!selectedImage || !newAndroidVersion.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('images_metadata')
+        .update({ android_version: newAndroidVersion.trim() })
+        .eq('id', selectedImage.id);
+
+      if (error) throw error;
+
+      // Mettre à jour l'image sélectionnée
+      const updatedImage = { ...selectedImage, android_version: newAndroidVersion.trim() };
+      setSelectedImage(updatedImage);
+      
+      // Mettre à jour dans la liste
+      setImages(images.map(img => 
+        img.id === selectedImage.id ? updatedImage : img
+      ));
+
+      setEditingAndroidVersion(false);
+      setNewAndroidVersion('');
+      alert('✅ Version Android mise à jour!');
+    } catch (error) {
+      console.error('Erreur:', error);
+      alert('❌ Erreur: ' + error.message);
+    }
+  };
+
+  const startEditingAndroidVersion = () => {
+    setNewAndroidVersion(selectedImage?.android_version || '');
+    setEditingAndroidVersion(true);
+  };
+
+  const cancelEditingAndroidVersion = () => {
+    setEditingAndroidVersion(false);
+    setNewAndroidVersion('');
   };
 
   const deleteImage = async (imageId) => {
@@ -270,6 +324,56 @@ export default function AdminImageValidation() {
                       {new Date(selectedImage.uploaded_at).toLocaleDateString('fr-FR')}
                     </p>
                   </div>
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Version Android</span>
+                      {!editingAndroidVersion && (
+                        <button
+                          onClick={startEditingAndroidVersion}
+                          className="text-blue-600 hover:text-blue-800 text-xs"
+                          title="Modifier la version Android"
+                        >
+                          ✏️ Modifier
+                        </button>
+                      )}
+                    </div>
+                    {editingAndroidVersion ? (
+                      <div className="flex items-center gap-2 mt-1">
+                        <input
+                          type="text"
+                          value={newAndroidVersion}
+                          onChange={(e) => setNewAndroidVersion(e.target.value)}
+                          className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                          placeholder="Ex: Android 13"
+                          autoFocus
+                        />
+                        <button
+                          onClick={updateAndroidVersion}
+                          className="text-green-600 hover:text-green-800 font-bold"
+                          title="Sauvegarder"
+                        >
+                          ✓
+                        </button>
+                        <button
+                          onClick={cancelEditingAndroidVersion}
+                          className="text-red-600 hover:text-red-800 font-bold"
+                          title="Annuler"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="font-medium text-gray-900">
+                        {selectedImage.android_version || 'Non spécifiée'}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Statut</span>
+                    <p className="font-medium text-gray-900 capitalize">
+                      {selectedImage.moderation_status === 'pending' ? 'En attente' : selectedImage.moderation_status}
+                    </p>
+                  </div>
                 </div>
 
                 {selectedImage.tags && selectedImage.tags.length > 0 && (
@@ -326,7 +430,7 @@ export default function AdminImageValidation() {
                     <span>Approuver</span>
                   </button>
                   <button
-                    onClick={() => rejectImage(selectedImage.id)}
+                    onClick={() => openRejectModal(selectedImage.id)}
                     disabled={validatingId === selectedImage.id}
                     className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50"
                   >
@@ -387,6 +491,77 @@ export default function AdminImageValidation() {
           </div>
         </div>
       </div>
+
+      {/* Modal de rejet */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Rejeter l'image
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowRejectModal(false);
+                    setImageToReject(null);
+                    setRejectReason('');
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Raison du rejet *
+                  </label>
+                  <textarea
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                    placeholder="Ex: Image floue, données personnelles visibles, contenu inapproprié..."
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6 pt-4 border-t">
+                <button
+                  onClick={rejectImage}
+                  disabled={validatingId === imageToReject || !rejectReason.trim()}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {validatingId === imageToReject ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Rejet...</span>
+                    </>
+                  ) : (
+                    <>
+                      <X className="w-4 h-4" />
+                      <span>Rejeter</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowRejectModal(false);
+                    setImageToReject(null);
+                    setRejectReason('');
+                  }}
+                  disabled={validatingId === imageToReject}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

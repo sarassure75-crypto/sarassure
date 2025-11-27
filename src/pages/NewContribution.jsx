@@ -50,6 +50,12 @@ export default function NewContribution() {
   const [draftId, setDraftId] = useState(null);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showCGUBanner, setShowCGUBanner] = useState(true);
+  
+  // État pour la gestion des corrections
+  const [isEditingCorrection, setIsEditingCorrection] = useState(false);
+  const [originalSubmissionId, setOriginalSubmissionId] = useState(null);
+  const [adminComments, setAdminComments] = useState('');
+  const [modificationCount, setModificationCount] = useState(0);
 
   // Charger les images au montage et restaurer les brouillons
   useEffect(() => {
@@ -116,11 +122,14 @@ export default function NewContribution() {
     }
   };
 
-  const loadDraft = () => {
+  const loadDraft = async () => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const draftIdParam = urlParams.get('draft');
+      const editParam = urlParams.get('edit'); // Task ID pour édition
+      const correctionParam = urlParams.get('correction'); // Version ID pour correction
       
+      // Cas 1: Charger un brouillon depuis localStorage
       if (draftIdParam) {
         const drafts = JSON.parse(localStorage.getItem('contributionDrafts') || '[]');
         const draft = drafts.find(d => d.id === draftIdParam);
@@ -135,8 +144,91 @@ export default function NewContribution() {
           setDraftId(draft.id);
         }
       }
+      
+      // Cas 2: Charger une version à corriger depuis la base de données
+      else if (correctionParam) {
+        const { data: versionData, error: versionError } = await supabase
+          .from('versions')
+          .select(`
+            *,
+            task:task_id (
+              id,
+              title,
+              description,
+              category
+            ),
+            steps (
+              id,
+              step_order,
+              instruction,
+              action_type,
+              target_area,
+              text_input_area,
+              start_area,
+              expected_input,
+              app_image_id,
+              app_images:app_image_id (
+                id,
+                file_path,
+                name
+              )
+            )
+          `)
+          .eq('id', correctionParam)
+          .eq('creation_status', 'needs_changes')
+          .single();
+
+        if (versionError) {
+          console.error('Erreur chargement version:', versionError);
+          alert('Impossible de charger cette version.');
+          navigate('/contributeur/mes-contributions');
+          return;
+        }
+
+        if (versionData) {
+          // Remplir le formulaire avec les données de la version à corriger
+          setTitle(versionData.task?.title || '');
+          setDescription(versionData.task?.description || '');
+          setCategory(versionData.task?.category || '');
+          setIsEditingCorrection(true);
+          setOriginalSubmissionId(versionData.original_submission_id || versionData.id);
+          setAdminComments(versionData.admin_comments || '');
+          setModificationCount(versionData.modification_count || 0);
+          
+          // Construire la version pour l'édition
+          const editVersion = {
+            id: versionData.id,
+            task_id: versionData.task_id,
+            name: versionData.name,
+            icon_name: versionData.icon_name,
+            pictogram_app_image_id: versionData.pictogram_app_image_id,
+            video_url: versionData.video_url,
+            steps: versionData.steps?.map(step => ({
+              id: step.id,
+              instruction: step.instruction,
+              action_type: step.action_type,
+              target_area: step.target_area,
+              text_input_area: step.text_input_area,
+              start_area: step.start_area,
+              expected_input: step.expected_input,
+              app_image_id: step.app_image_id,
+              image_url: step.app_images?.file_path ? 
+                supabase.storage.from('images').getPublicUrl(step.app_images.file_path).data?.publicUrl : null
+            })).sort((a, b) => (a.step_order || 0) - (b.step_order || 0)) || []
+          };
+          
+          setVersions([editVersion]);
+        }
+      }
+      
+      // Cas 3: Édition normale d'un exercice existant (editParam)
+      else if (editParam) {
+        // Logique existante d'édition...
+        // À implémenter si nécessaire
+      }
+      
     } catch (err) {
-      console.error('Erreur chargement brouillon:', err);
+      console.error('Erreur chargement:', err);
     }
   };
 
@@ -237,88 +329,203 @@ export default function NewContribution() {
 
     setLoading(true);
     try {
-      // Créer la tâche (exercice) dans la table tasks
-      const { data: task, error: taskError } = await supabase
-        .from('tasks')
-        .insert([{
-          title,
-          description,
-          category,
-          icon_name: 'help-circle',
-          owner_id: currentUser.id,
-          is_public: false,
-          creation_status: {
-            status: 'pending',
-            difficulty,
-            created_at: new Date().toISOString()
-          }
-        }])
-        .select()
-        .single();
-
-      if (taskError) throw taskError;
-
-      // Créer les versions
-      if (versions.length > 0) {
-        const versionsData = versions.map((v, idx) => ({
-          id: uuidv4(),
-          task_id: task.id,
-          name: v.name,
-          icon_name: v.icon_name,
-          pictogram_app_image_id: v.pictogram_app_image_id,
-          creation_status: 'pending',
-          version_int: idx + 1
-        }));
-
-        const { error: versionsError } = await supabase
-          .from('versions')
-          .insert(versionsData);
-
-        if (versionsError) throw versionsError;
-
-        // Créer les étapes pour chaque version
-        for (let i = 0; i < versions.length; i++) {
-          const versionData = versionsData[i];
-          const versionSteps = versions[i].steps || [];
-          
-          if (versionSteps.length > 0) {
-            const stepsData = versionSteps.map((step, stepIdx) => {
-              // Déterminer la clé de zone basée sur le type d'action
-              const zoneKey = ['text_input', 'number_input'].includes(step.action_type) 
-                ? 'text_input_area'
-                : step.action_type?.startsWith('swipe') || step.action_type === 'scroll'
-                ? 'start_area'
-                : 'target_area';
-
-              return {
-                id: uuidv4(),
-                version_id: versionData.id,
-                instruction: step.instruction,
-                action_type: step.action_type || 'tap',
-                app_image_id: step.image_id,
-                [zoneKey]: step[zoneKey] || step.area || null,
-                step_order: stepIdx,
-                created_at: new Date().toISOString()
-              };
-            });
-
-            const { error: stepsError } = await supabase
-              .from('steps')
-              .insert(stepsData);
-
-            if (stepsError) throw stepsError;
-          }
-        }
+      // Cas spécial: Resoumission après correction
+      if (isEditingCorrection && versions.length > 0) {
+        return await handleCorrectionResubmission();
       }
-
-      alert('✅ Contribution soumise avec succès ! Elle sera validée par un administrateur.');
-      navigate('/contributeur/mes-contributions');
+      
+      // Cas normal: Nouvelle contribution
+      return await handleNewSubmission();
     } catch (error) {
       console.error('Erreur soumission:', error);
-      alert('Erreur: ' + (error.message || 'Impossible de soumettre'));
+      alert('❌ Erreur: ' + error.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Nouvelle soumission normale
+  const handleNewSubmission = async () => {
+    // Créer la tâche (exercice) dans la table tasks
+    const { data: task, error: taskError } = await supabase
+      .from('tasks')
+      .insert([{
+        title,
+        description,
+        category,
+        icon_name: 'help-circle',
+        owner_id: currentUser.id,
+        is_public: false,
+        creation_status: {
+          status: 'pending',
+          difficulty,
+          created_at: new Date().toISOString()
+        }
+      }])
+      .select()
+      .single();
+
+    if (taskError) throw taskError;
+
+    // Créer les versions
+    if (versions.length > 0) {
+      const versionsData = versions.map((v, idx) => ({
+        id: uuidv4(),
+        task_id: task.id,
+        name: v.name,
+        icon_name: v.icon_name,
+        pictogram_app_image_id: v.pictogram_app_image_id,
+        creation_status: 'pending',
+        version_int: idx + 1
+      }));
+
+      const { error: versionsError } = await supabase
+        .from('versions')
+        .insert(versionsData);
+
+      if (versionsError) throw versionsError;
+
+      // Créer les étapes pour chaque version
+      for (let i = 0; i < versions.length; i++) {
+        const versionData = versionsData[i];
+        const versionSteps = versions[i].steps || [];
+        
+        if (versionSteps.length > 0) {
+          const stepsData = versionSteps.map((step, stepIdx) => {
+            // Déterminer la clé de zone basée sur le type d'action
+            const zoneKey = ['text_input', 'number_input'].includes(step.action_type) 
+              ? 'text_input_area'
+              : step.action_type?.startsWith('swipe') || step.action_type === 'scroll'
+              ? 'start_area'
+              : 'target_area';
+
+            return {
+              id: uuidv4(),
+              version_id: versionData.id,
+              instruction: step.instruction,
+              action_type: step.action_type || 'tap',
+              app_image_id: step.image_id,
+              [zoneKey]: step[zoneKey] || step.area || null,
+              step_order: stepIdx,
+              created_at: new Date().toISOString()
+            };
+          });
+
+          const { error: stepsError } = await supabase
+            .from('steps')
+            .insert(stepsData);
+
+          if (stepsError) throw stepsError;
+        }
+      }
+    }
+
+    alert('✅ Contribution soumise avec succès ! Elle sera validée par un administrateur.');
+    navigate('/contributeur/mes-contributions');
+  };
+
+  // Resoumission après correction
+  const handleCorrectionResubmission = async () => {
+    const version = versions[0]; // Une seule version en mode correction
+    
+    if (!version || !version.id) {
+      throw new Error('Version introuvable pour la correction');
+    }
+    
+    // Préparer les données avec vérification des UUIDs
+    const updateData = {
+      name: version.name || 'Version corrigée',
+      icon_name: version.icon_name || null,
+      creation_status: 'pending', // Remet en attente de validation
+      modification_count: (modificationCount || 0) + 1,
+      updated_at: new Date().toISOString()
+    };
+
+    // Ajouter pictogram_app_image_id seulement s'il est valide
+    if (version.pictogram_app_image_id && version.pictogram_app_image_id !== 'undefined') {
+      updateData.pictogram_app_image_id = version.pictogram_app_image_id;
+    }
+
+    // Ajouter original_submission_id seulement s'il est valide
+    if (originalSubmissionId && originalSubmissionId !== 'undefined') {
+      updateData.original_submission_id = originalSubmissionId;
+    }
+    
+    // Mettre à jour la version existante
+    const { error: versionError } = await supabase
+      .from('versions')
+      .update(updateData)
+      .eq('id', version.id);
+
+    if (versionError) throw versionError;
+
+    // Mettre à jour la tâche
+    const taskId = version.task_id || version.taskId;
+    if (!taskId || taskId === 'undefined') {
+      throw new Error('ID de la tâche introuvable');
+    }
+    
+    const { error: taskError } = await supabase
+      .from('tasks')
+      .update({
+        title,
+        description,
+        category,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', taskId);
+
+    if (taskError) throw taskError;
+
+    // Supprimer les anciennes étapes
+    const { error: deleteStepsError } = await supabase
+      .from('steps')
+      .delete()
+      .eq('version_id', version.id);
+
+    if (deleteStepsError) throw deleteStepsError;
+
+    // Recréer les étapes mises à jour
+    if (version.steps && version.steps.length > 0) {
+      const stepsData = version.steps.map((step, stepIdx) => {
+        const zoneKey = ['text_input', 'number_input'].includes(step.action_type) 
+          ? 'text_input_area'
+          : step.action_type?.startsWith('swipe') || step.action_type === 'scroll'
+          ? 'start_area'
+          : 'target_area';
+
+        const stepData = {
+          id: uuidv4(),
+          version_id: version.id,
+          instruction: step.instruction || '',
+          action_type: step.action_type || 'tap',
+          step_order: stepIdx,
+          created_at: new Date().toISOString()
+        };
+        
+        // Ajouter app_image_id seulement s'il est valide
+        if (step.app_image_id && step.app_image_id !== 'undefined') {
+          stepData.app_image_id = step.app_image_id;
+        }
+        
+        // Ajouter la zone d'action
+        const zoneData = step[zoneKey] || step.area;
+        if (zoneData) {
+          stepData[zoneKey] = zoneData;
+        }
+        
+        return stepData;
+      });
+
+      const { error: stepsError } = await supabase
+        .from('steps')
+        .insert(stepsData);
+
+      if (stepsError) throw stepsError;
+    }
+
+    alert('✅ Exercice corrigé et resoumis avec succès ! Il sera re-validé par un administrateur.');
+    navigate('/contributeur/mes-contributions');
   };
 
   // Si en édition de version
@@ -366,6 +573,41 @@ export default function NewContribution() {
           </div>
         )}
       </div>
+
+      {/* Banner mode correction */}
+      {isEditingCorrection && (
+        <div className="mb-6 bg-orange-50 border border-orange-200 rounded-lg p-4">
+          <div className="flex gap-3">
+            <Edit className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-orange-900 mb-2">
+                🔧 Mode correction - Exercice à réviser
+              </h3>
+              <p className="text-sm text-orange-800 mb-3">
+                Cet exercice a été renvoyé par l'administrateur avec des commentaires. 
+                Apportez les corrections demandées puis resoumettez.
+              </p>
+              
+              {adminComments && (
+                <div className="bg-orange-100 border border-orange-300 rounded p-3 mt-3">
+                  <p className="text-sm font-medium text-orange-900 mb-1">
+                    Commentaires de l'administrateur :
+                  </p>
+                  <p className="text-sm text-orange-800 whitespace-pre-wrap">
+                    {adminComments}
+                  </p>
+                </div>
+              )}
+              
+              {modificationCount > 0 && (
+                <p className="text-xs text-orange-600 mt-2">
+                  Nombre de modifications : {modificationCount}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Erreurs */}
       {validationErrors.length > 0 && (

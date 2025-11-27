@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabaseClient';
 import { useAdminCounters } from '../hooks/useAdminCounters';
 import AdminTabNavigation from '../components/admin/AdminTabNavigation';
 import ExerciseStepViewer from '../components/admin/ExerciseStepViewer';
+import AdminExerciseStepEditor from '../components/admin/AdminExerciseStepEditor';
 // import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
   Check, 
@@ -12,13 +13,9 @@ import {
   Trash2,
   AlertTriangle,
   BookOpen,
-  Home
+  Home,
+  Edit
 } from 'lucide-react';
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
 
 export default function AdminExerciseValidation() {
   const { currentUser } = useAuth();
@@ -27,6 +24,9 @@ export default function AdminExerciseValidation() {
   const [loading, setLoading] = useState(true);
   const [selectedContribution, setSelectedContribution] = useState(null);
   const [validatingId, setValidatingId] = useState(null);
+  const [editingZones, setEditingZones] = useState(false);
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const [adminComments, setAdminComments] = useState('');
 
   // Charger les contributions en attente
   useEffect(() => {
@@ -103,7 +103,10 @@ export default function AdminExerciseValidation() {
             instruction: step.instruction,
             app_images: step.app_images,
             appImage: appImage,
-            imagePath: imagePath
+            imagePath: imagePath,
+            target_area: step.target_area,
+            text_input_area: step.text_input_area,
+            start_area: step.start_area
           });
           
           if (imagePath) {
@@ -119,7 +122,11 @@ export default function AdminExerciseValidation() {
             ...step,
             image_url: imageUrl,
             image_path: imagePath,
-            app_image: appImage
+            app_image: appImage,
+            // Assurer que les zones d'action sont bien incluses
+            target_area: step.target_area,
+            text_input_area: step.text_input_area,
+            start_area: step.start_area
           };
         }) || [];
         
@@ -215,6 +222,48 @@ export default function AdminExerciseValidation() {
       }
 
       alert('✅ Contribution rejetée');
+    } catch (error) {
+      console.error('Erreur:', error);
+      alert('❌ Erreur: ' + error.message);
+    } finally {
+      setValidatingId(null);
+    }
+  };
+
+  const requestModifications = async (contributionId, comments) => {
+    if (!comments.trim()) {
+      alert('Veuillez saisir des commentaires pour les corrections demandées.');
+      return;
+    }
+
+    setValidatingId(contributionId);
+    try {
+      const { error } = await supabase
+        .from('versions')
+        .update({ 
+          creation_status: 'needs_changes',
+          admin_comments: comments.trim(),
+          reviewer_id: currentUser?.id,
+          reviewed_at: new Date().toISOString()
+        })
+        .eq('id', contributionId);
+
+      if (error) throw error;
+
+      // Retirer de la liste des contributions en attente
+      setContributions(contributions.filter(c => c.id !== contributionId));
+      
+      if (contributions.length > 1) {
+        setSelectedContribution(contributions.find(c => c.id !== contributionId));
+      } else {
+        setSelectedContribution(null);
+      }
+
+      // Fermer le modal et réinitialiser
+      setShowCommentsModal(false);
+      setAdminComments('');
+
+      alert('✅ Demande de modification envoyée au contributeur!');
     } catch (error) {
       console.error('Erreur:', error);
       alert('❌ Erreur: ' + error.message);
@@ -346,7 +395,36 @@ export default function AdminExerciseValidation() {
                 {/* Étapes avec visualisation */}
                 {selectedContribution.steps && Array.isArray(selectedContribution.steps) && selectedContribution.steps.length > 0 && (
                   <div>
-                    <ExerciseStepViewer steps={selectedContribution.steps} />
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold text-gray-900">
+                        Étapes ({selectedContribution.steps.length})
+                      </h3>
+                      <button
+                        onClick={() => setEditingZones(!editingZones)}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                          editingZones
+                            ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                            : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                        }`}
+                      >
+                        <Edit className="w-4 h-4" />
+                        {editingZones ? 'Mode aperçu' : 'Éditer zones'}
+                      </button>
+                    </div>
+                    
+                    {editingZones ? (
+                      <AdminExerciseStepEditor 
+                        steps={selectedContribution.steps}
+                        onStepsUpdate={(updatedSteps) => {
+                          setSelectedContribution({
+                            ...selectedContribution,
+                            steps: updatedSteps
+                          });
+                        }}
+                      />
+                    ) : (
+                      <ExerciseStepViewer steps={selectedContribution.steps} />
+                    )}
                   </div>
                 )}
 
@@ -411,31 +489,50 @@ export default function AdminExerciseValidation() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-3 pt-4 border-t">
-                  <button
-                    onClick={() => approveContribution(selectedContribution.id)}
-                    disabled={validatingId === selectedContribution.id}
-                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
-                  >
-                    <Check className="w-5 h-5" />
-                    <span>Approuver</span>
-                  </button>
-                  <button
-                    onClick={() => rejectContribution(selectedContribution.id)}
-                    disabled={validatingId === selectedContribution.id}
-                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50"
-                  >
-                    <X className="w-5 h-5" />
-                    <span>Rejeter</span>
-                  </button>
-                  <button
-                    onClick={() => deleteContribution(selectedContribution.id)}
-                    disabled={validatingId === selectedContribution.id}
-                    className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg transition-colors disabled:opacity-50"
-                    title="Supprimer"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
+                <div className="space-y-3 pt-4 border-t">
+                  {/* Actions principales */}
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => approveContribution(selectedContribution.id)}
+                      disabled={validatingId === selectedContribution.id}
+                      className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      <Check className="w-5 h-5" />
+                      <span>Approuver</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowCommentsModal(true);
+                        setAdminComments('');
+                      }}
+                      disabled={validatingId === selectedContribution.id}
+                      className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      <Edit className="w-5 h-5" />
+                      <span>À corriger</span>
+                    </button>
+                  </div>
+                  
+                  {/* Actions secondaires */}
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => rejectContribution(selectedContribution.id)}
+                      disabled={validatingId === selectedContribution.id}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 text-sm"
+                    >
+                      <X className="w-4 h-4" />
+                      <span>Rejeter</span>
+                    </button>
+                    <button
+                      onClick={() => deleteContribution(selectedContribution.id)}
+                      disabled={validatingId === selectedContribution.id}
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg transition-colors disabled:opacity-50 text-sm"
+                      title="Supprimer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span>Supprimer</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -477,6 +574,89 @@ export default function AdminExerciseValidation() {
           </div>
         </div>
       </div>
+
+      {/* Modal pour les commentaires de modification */}
+      {showCommentsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Demander des corrections
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowCommentsModal(false);
+                    setAdminComments('');
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-800">
+                    <strong>Cette action va :</strong>
+                  </p>
+                  <ul className="text-xs text-blue-700 mt-2 space-y-1">
+                    <li>• Renvoyer l'exercice dans les brouillons du contributeur</li>
+                    <li>• Permettre au contributeur de voir vos commentaires</li>
+                    <li>• Conserver le suivi de cet exercice pour éviter les doublons</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Commentaires pour le contributeur *
+                  </label>
+                  <textarea
+                    value={adminComments}
+                    onChange={(e) => setAdminComments(e.target.value)}
+                    placeholder="Expliquez les modifications à apporter..."
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Soyez précis et constructif dans vos commentaires.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6 pt-4 border-t">
+                <button
+                  onClick={() => requestModifications(selectedContribution?.id, adminComments)}
+                  disabled={validatingId === selectedContribution?.id || !adminComments.trim()}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {validatingId === selectedContribution?.id ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Envoi...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Edit className="w-4 h-4" />
+                      <span>Envoyer</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCommentsModal(false);
+                    setAdminComments('');
+                  }}
+                  disabled={validatingId === selectedContribution?.id}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -94,6 +94,20 @@ const AdminCategoryManager = () => {
     setIsAddDialogOpen(false);
   };
 
+  const handleCategoryInputKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddCategory();
+    }
+  };
+
+  const handleSubcategoryInputKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddSubcategory();
+    }
+  };
+
   const handleAddSubcategory = async () => {
     const trimmedName = newSubcategoryName.trim();
     if (!trimmedName) {
@@ -133,22 +147,30 @@ const AdminCategoryManager = () => {
               <Button size="sm" className="flex-1"><PlusCircle className="mr-2 h-4 w-4" /> Ajouter une Catégorie</Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Ajouter une nouvelle catégorie</DialogTitle>
-                <DialogDescription>Entrez le nom de la nouvelle catégorie.</DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="new-category-name" className="text-right">Nom</Label>
-                  <Input id="new-category-name" value={newCategoryInput} onChange={(e) => setNewCategoryInput(e.target.value)} className="col-span-3" />
+              <form onSubmit={(e) => { e.preventDefault(); handleAddCategory(); }}>
+                <DialogHeader>
+                  <DialogTitle>Ajouter une nouvelle catégorie</DialogTitle>
+                  <DialogDescription>Entrez le nom de la nouvelle catégorie.</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="new-category-name" className="text-right">Nom</Label>
+                    <Input 
+                      id="new-category-name" 
+                      value={newCategoryInput} 
+                      onChange={(e) => setNewCategoryInput(e.target.value)}
+                      onKeyDown={handleCategoryInputKeyDown}
+                      className="col-span-3" 
+                    />
+                  </div>
                 </div>
-              </div>
-              <DialogFooter>
-                <Button onClick={handleAddCategory} disabled={isLoading}>
-                  {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4"/>}
-                  Ajouter
-                </Button>
-              </DialogFooter>
+                <DialogFooter>
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4"/>}
+                    Ajouter
+                  </Button>
+                </DialogFooter>
+              </form>
             </DialogContent>
           </Dialog>
 
@@ -157,35 +179,43 @@ const AdminCategoryManager = () => {
               <Button size="sm" className="flex-1" variant="outline"><PlusCircle className="mr-2 h-4 w-4" /> Ajouter une Sous-Catégorie</Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Ajouter une sous-catégorie</DialogTitle>
-                <DialogDescription>Sélectionnez une catégorie parente et entrez le nom de la sous-catégorie.</DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="parent-category" className="text-right">Catégorie Parente</Label>
-                  <Select value={selectedParentCategory} onValueChange={setSelectedParentCategory}>
-                    <SelectTrigger className="col-span-3" id="parent-category">
-                      <SelectValue placeholder="Sélectionner une catégorie" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map(cat => (
-                        <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              <form onSubmit={(e) => { e.preventDefault(); handleAddSubcategory(); }}>
+                <DialogHeader>
+                  <DialogTitle>Ajouter une sous-catégorie</DialogTitle>
+                  <DialogDescription>Sélectionnez une catégorie parente et entrez le nom de la sous-catégorie.</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="parent-category" className="text-right">Catégorie Parente</Label>
+                    <Select value={selectedParentCategory} onValueChange={setSelectedParentCategory}>
+                      <SelectTrigger className="col-span-3" id="parent-category">
+                        <SelectValue placeholder="Sélectionner une catégorie" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map(cat => (
+                          <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="new-subcategory-name" className="text-right">Nom</Label>
+                    <Input 
+                      id="new-subcategory-name" 
+                      value={newSubcategoryName} 
+                      onChange={(e) => setNewSubcategoryName(e.target.value)}
+                      onKeyDown={handleSubcategoryInputKeyDown}
+                      className="col-span-3" 
+                    />
+                  </div>
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="new-subcategory-name" className="text-right">Nom</Label>
-                  <Input id="new-subcategory-name" value={newSubcategoryName} onChange={(e) => setNewSubcategoryName(e.target.value)} className="col-span-3" />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button onClick={handleAddSubcategory} disabled={isLoading}>
-                  {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4"/>}
-                  Ajouter
-                </Button>
-              </DialogFooter>
+                <DialogFooter>
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4"/>}
+                    Ajouter
+                  </Button>
+                </DialogFooter>
+              </form>
             </DialogContent>
           </Dialog>
         </div>

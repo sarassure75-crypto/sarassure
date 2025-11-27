@@ -1,4 +1,3 @@
-
 /* eslint-env serviceworker */
 const CACHE_NAME = 'sarassure-pwa-cache-v4';
 const urlsToCache = [
@@ -35,21 +34,29 @@ this.addEventListener('install', (event) => {
 this.addEventListener('fetch', (event) => {
   const { request } = event;
 
+  // Ignorer les requêtes vers les extensions Chrome et autres protocoles non-HTTP
+  if (request.url.startsWith('chrome-extension://') || 
+      request.url.startsWith('moz-extension://') ||
+      request.url.startsWith('safari-extension://') ||
+      !request.url.startsWith('http')) {
+    return;
+  }
+
   // Always fetch non-GET requests from the network
   if (request.method !== 'GET') {
     event.respondWith(fetch(request));
     return;
   }
   
-  // For API calls (supabase), try network first, then cache fallback
+  // Pour les appels API (supabase), essayer le réseau en premier, puis le cache en secours
   if (request.url.includes('supabase.co')) {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Clone the response before caching
+          // Cloner la réponse avant la mise en cache
           const responseToCache = response.clone();
           
-          // Only cache successful responses (200-299)
+          // Mettre en cache seulement les réponses réussies (200-299)
           if (response.ok) {
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(request, responseToCache);
@@ -59,14 +66,14 @@ this.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          // Network failed, try cache
+          // Le réseau a échoué, essayer le cache
           return caches.match(request).then((cachedResponse) => {
             if (cachedResponse) {
               console.log('Serving from cache (offline):', request.url);
               return cachedResponse;
             }
             
-            // No cache available, return offline error
+            // Pas de cache disponible, retourner une erreur hors ligne
             return new Response(
               JSON.stringify({ 
                 error: "Offline: Impossible de charger les données. Veuillez vous connecter à Internet.",
@@ -83,55 +90,39 @@ this.addEventListener('fetch', (event) => {
     return;
   }
   
-  // For other GET requests, use a cache-first strategy
+  // Pour les autres requêtes GET, utiliser une stratégie cache-first
   event.respondWith(
     caches.match(request).then((response) => {
-      // Cache hit - return response
+      // Cache hit - retourner la réponse
       if (response) {
         return response;
       }
 
-      // Not in cache - fetch and cache
-      return fetch(request).then(
-        (networkResponse) => {
-          // Check if we received a valid response
-          if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-            return networkResponse;
-          }
-
-          const responseToCache = networkResponse.clone();
+      // Cache miss - aller chercher sur le réseau
+      return fetch(request).then((fetchResponse) => {
+        // Vérifier que la réponse est valide avant la mise en cache
+        if (fetchResponse && fetchResponse.status === 200 && fetchResponse.type === 'basic') {
+          // Cloner la réponse car elle ne peut être lue qu'une seule fois
+          const responseToCache = fetchResponse.clone();
           
-          // Filtrer les requêtes chrome-extension et autres schemes non-supportés
-          if (request.url.startsWith('chrome-extension://') || 
-              request.url.startsWith('moz-extension://') || 
-              request.url.startsWith('safari-extension://')) {
-            return networkResponse;
-          }
-
-          caches.open(CACHE_NAME)
-            .then(cache => {
-              try {
-                cache.put(request, responseToCache);
-              } catch (error) {
-                console.warn('Cache put failed:', error.message);
-              }
-            })
-            .catch(error => {
-              console.warn('Cache open failed:', error.message);
-            });
-
-          return networkResponse;
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseToCache);
+          });
         }
-      );
+        
+        return fetchResponse;
+      });
     }).catch(() => {
-        // Fallback for navigation requests when offline
+        // Fallback pour les requêtes de navigation quand hors ligne
         if (request.mode === 'navigate') {
             return caches.match('/index.html');
         }
+        
+        // Pour les autres ressources, retourner une erreur
+        return new Response('Offline', { status: 503 });
     })
   );
 });
-
 
 // Update a service worker
 this.addEventListener('activate', (event) => {

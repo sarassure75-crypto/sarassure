@@ -67,7 +67,11 @@ export default function MyContributions() {
             creation_status,
             name,
             created_at,
-            updated_at
+            updated_at,
+            admin_comments,
+            reviewer_id,
+            reviewed_at,
+            modification_count
           )
         `)
         .eq('owner_id', currentUser?.id)
@@ -91,6 +95,10 @@ export default function MyContributions() {
                 status: version.creation_status,
                 created_at: version.created_at,
                 updated_at: version.updated_at || version.created_at,
+                admin_comments: version.admin_comments,
+                reviewer_id: version.reviewer_id,
+                reviewed_at: version.reviewed_at,
+                modification_count: version.modification_count,
                 type: 'version'
               });
             });
@@ -195,6 +203,8 @@ export default function MyContributions() {
           return false;
         } else if (statusFilter === 'rejected' && contrib.status !== 'rejected') {
           return false;
+        } else if (statusFilter === 'needs_changes' && contrib.status !== 'needs_changes') {
+          return false;
         }
       }
 
@@ -224,15 +234,45 @@ export default function MyContributions() {
   console.log('Search term:', searchTerm);
 
   // Actions
-  const handleDelete = async (id) => {
+  const handleDelete = async (contrib) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette contribution ?')) {
-      await deleteContribution(id);
-      loadContributions();
+      try {
+        // Déterminer le type de contribution et l'ID approprié
+        let contributionId = contrib.id;
+        let contributionType = contrib.type;
+
+        // Pour les versions, utiliser l'ID de la version
+        // Pour les drafts, utiliser l'ID de la task
+        // Pour les images, utiliser l'ID de l'image
+        
+        const result = await deleteContribution(
+          contributionId, 
+          contributionType, 
+          contributionType === 'image' ? currentUser?.id : null
+        );
+        
+        if (result.success) {
+          // Recharger la liste
+          loadContributions();
+        } else {
+          alert('Erreur lors de la suppression: ' + result.error);
+        }
+      } catch (error) {
+        console.error('Error deleting contribution:', error);
+        alert('Erreur lors de la suppression: ' + error.message);
+      }
     }
   };
 
-  const handleEdit = (id) => {
-    navigate(`/contributeur/nouvelle-contribution?edit=${id}`);
+  const handleEdit = (contrib) => {
+    if (contrib.status === 'needs_changes') {
+      // Version à corriger - rediriger vers le formulaire de correction
+      navigate(`/contributeur/nouvelle-contribution?correction=${contrib.id}`);
+    } else {
+      // Édition normale - utiliser l'ID de la tâche
+      const taskId = contrib.taskId || contrib.id;
+      navigate(`/contributeur/nouvelle-contribution?edit=${taskId}`);
+    }
   };
 
   // Status badge
@@ -241,6 +281,7 @@ export default function MyContributions() {
       validated: { color: 'bg-green-100 text-green-700', icon: CheckCircle, label: 'Approuvée' },
       approved: { color: 'bg-green-100 text-green-700', icon: CheckCircle, label: 'Approuvée' },
       pending: { color: 'bg-yellow-100 text-yellow-700', icon: Clock, label: 'En attente' },
+      needs_changes: { color: 'bg-orange-100 text-orange-700', icon: Edit, label: 'À corriger' },
       rejected: { color: 'bg-red-100 text-red-700', icon: XCircle, label: 'Rejetée' },
       draft: { color: 'bg-gray-100 text-gray-700', icon: Edit, label: 'Brouillon' },
     };
@@ -349,6 +390,7 @@ export default function MyContributions() {
               <option value="all">Tous les statuts</option>
               <option value="draft">Brouillons</option>
               <option value="pending">En attente</option>
+              <option value="needs_changes">À corriger</option>
               <option value="approved">Approuvées</option>
               <option value="rejected">Rejetées</option>
             </select>
@@ -415,6 +457,30 @@ export default function MyContributions() {
                     </p>
                   )}
 
+                  {/* Commentaires admin pour les exercices à corriger */}
+                  {contrib.status === 'needs_changes' && contrib.admin_comments && (
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3">
+                      <div className="flex items-start space-x-2">
+                        <div className="flex-shrink-0">
+                          <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-orange-800 mb-1">
+                            Commentaires de l'admin :
+                          </p>
+                          <p className="text-sm text-orange-700 whitespace-pre-wrap">
+                            {contrib.admin_comments}
+                          </p>
+                          {contrib.reviewed_at && (
+                            <p className="text-xs text-orange-600 mt-2">
+                              Révisé le {formatDate(contrib.reviewed_at)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex items-center space-x-4 text-sm text-gray-500 flex-wrap">
                     <div className="flex items-center space-x-1">
                       <Calendar className="w-4 h-4" />
@@ -432,15 +498,19 @@ export default function MyContributions() {
                 <div className="flex items-center space-x-2 ml-4">
                   {(contrib.type === 'version' || contrib.type === 'draft') && (
                     <button
-                      onClick={() => handleEdit(contrib.taskId)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="Modifier"
+                      onClick={() => handleEdit(contrib)}
+                      className={`p-2 rounded-lg transition-colors ${
+                        contrib.status === 'needs_changes' 
+                          ? 'text-orange-600 hover:bg-orange-50' 
+                          : 'text-blue-600 hover:bg-blue-50'
+                      }`}
+                      title={contrib.status === 'needs_changes' ? 'Corriger' : 'Modifier'}
                     >
                       <Edit className="w-5 h-5" />
                     </button>
                   )}
                   <button
-                    onClick={() => handleDelete(contrib.id)}
+                    onClick={() => handleDelete(contrib)}
                     className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     title="Supprimer"
                   >
