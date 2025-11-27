@@ -1,0 +1,27 @@
+<svg width="1080" height="1920" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1080" height="1920" fill="#0B1120"/>
+  <!-- Étoiles -->
+  <circle cx="150" cy="200" r="2" fill="#FFFFFF"/>
+  <circle cx="300" cy="350" r="2" fill="#FFFFFF"/>
+  <circle cx="500" cy="150" r="3" fill="#FFFFFF"/>
+  <circle cx="700" cy="400" r="2" fill="#FFFFFF"/>
+  <circle cx="900" cy="250" r="2" fill="#FFFFFF"/>
+  <circle cx="200" cy="600" r="2" fill="#FFFFFF"/>
+  <circle cx="450" cy="500" r="3" fill="#FFFFFF"/>
+  <circle cx="800" cy="650" r="2" fill="#FFFFFF"/>
+  <circle cx="950" cy="550" r="2" fill="#FFFFFF"/>
+  <circle cx="100" cy="800" r="2" fill="#FFFFFF"/>
+  <circle cx="350" cy="900" r="2" fill="#FFFFFF"/>
+  <circle cx="600" cy="850" r="3" fill="#FFFFFF"/>
+  <circle cx="850" cy="950" r="2" fill="#FFFFFF"/>
+  <circle cx="250" cy="1100" r="2" fill="#FFFFFF"/>
+  <circle cx="550" cy="1050" r="2" fill="#FFFFFF"/>
+  <circle cx="750" cy="1150" r="2" fill="#FFFFFF"/>
+  <circle cx="400" cy="1250" r="2" fill="#FFFFFF"/>
+  <circle cx="650" cy="1300" r="3" fill="#FFFFFF"/>
+  <circle cx="180" cy="1400" r="2" fill="#FFFFFF"/>
+  <circle cx="880" cy="1350" r="2" fill="#FFFFFF"/>
+  <!-- Voie lactée -->
+  <ellipse cx="540" cy="960" rx="200" ry="800" fill="#FFFFFF" opacity="0.05" transform="rotate(-30 540 960)"/>
+  <ellipse cx="540" cy="960" rx="150" ry="700" fill="#FFFFFF" opacity="0.08" transform="rotate(-30 540 960)"/>
+</svg>

@@ -1,0 +1,15 @@
+<svg width="1080" height="1920" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="geomGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1920" fill="url(#geomGrad1)"/>
+  <g opacity="0.3">
+    <polygon points="0,0 540,960 0,1920" fill="#FFFFFF"/>
+    <polygon points="1080,0 540,960 1080,1920" fill="#000000"/>
+  </g>
+  <circle cx="540" cy="960" r="300" fill="none" stroke="#FFFFFF" stroke-width="4" opacity="0.4"/>
+  <circle cx="540" cy="960" r="400" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.3"/>
+</svg>
