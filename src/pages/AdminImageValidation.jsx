@@ -3,7 +3,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { useAdminCounters } from '../hooks/useAdminCounters';
 import AdminTabNavigation from '../components/admin/AdminTabNavigation';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
   Check, 
   X, 
@@ -269,17 +268,17 @@ export default function AdminImageValidation() {
     return (
       <div className="container mx-auto p-4">
         {/* Header */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center text-3xl">
+        <div className="bg-white rounded-lg border shadow-sm mb-6">
+          <div className="flex flex-col space-y-1.5 p-6">
+            <h3 className="flex items-center text-3xl font-semibold leading-none tracking-tight">
               <Home className="mr-3 h-8 w-8 text-primary"/>
               Validation des images
-            </CardTitle>
-            <CardDescription>
+            </h3>
+            <p className="text-sm text-muted-foreground">
               Validez les images soumises par les contributeurs
-            </CardDescription>
-          </CardHeader>
-        </Card>
+            </p>
+          </div>
+        </div>
 
         {/* Navigation Buttons */}
         <AdminTabNavigation counters={counters} />
@@ -296,17 +295,17 @@ export default function AdminImageValidation() {
   return (
     <div className="container mx-auto p-4">
       {/* Header */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center text-3xl">
+      <div className="bg-white rounded-lg border shadow-sm mb-6">
+        <div className="flex flex-col space-y-1.5 p-6">
+          <h3 className="flex items-center text-3xl font-semibold leading-none tracking-tight">
             <Home className="mr-3 h-8 w-8 text-primary"/>
             Validation des images
-          </CardTitle>
-          <CardDescription>
+          </h3>
+          <p className="text-sm text-muted-foreground">
             {images.length} image(s) en attente de validation
-          </CardDescription>
-        </CardHeader>
-      </Card>
+          </p>
+        </div>
+      </div>
 
       {/* Navigation Buttons */}
       <AdminTabNavigation counters={counters} />
