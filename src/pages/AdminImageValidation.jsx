@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { useAdminCounters } from '../hooks/useAdminCounters';
@@ -29,7 +29,7 @@ export default function AdminImageValidation() {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [imageToReject, setImageToReject] = useState(null);
-  const [isLoadingImages, setIsLoadingImages] = useState(false);
+  const loadingRef = useRef(false);
 
   // Charger les images en attente de validation
   useEffect(() => {
@@ -37,10 +37,15 @@ export default function AdminImageValidation() {
   }, []);
 
   const loadPendingImages = async () => {
-    if (isLoadingImages) return; // Éviter les chargements multiples
+    // Protection contre les appels multiples simultanés
+    if (loadingRef.current) {
+      console.log('⚠️ Chargement déjà en cours, annulation...');
+      return;
+    }
     
-    setIsLoadingImages(true);
+    loadingRef.current = true;
     setLoading(true);
+    
     try {
       const { data, error } = await supabase
         .from('images_metadata')
@@ -58,22 +63,29 @@ export default function AdminImageValidation() {
         .order('uploaded_at', { ascending: false });
 
       if (error) throw error;
+      
       setImages(data || []);
       if (data && data.length > 0) {
         setSelectedImage(data[0]);
+        setCurrentIndex(0);
+      } else {
+        setSelectedImage(null);
+        setCurrentIndex(0);
       }
     } catch (error) {
       console.error('Erreur lors du chargement des images:', error);
-      if (!error.message.includes('aborted')) { // Éviter les alertes pour les requêtes annulées
+      if (!error.message?.includes('aborted')) {
         alert('Erreur: ' + error.message);
       }
     } finally {
       setLoading(false);
-      setIsLoadingImages(false);
+      loadingRef.current = false;
     }
   };
 
   const approveImage = async (imageId) => {
+    if (validatingId) return; // Empêcher les clics multiples
+    
     setValidatingId(imageId);
     try {
       const { error } = await supabase
@@ -87,16 +99,18 @@ export default function AdminImageValidation() {
 
       if (error) throw error;
 
-      // Retirer l'image de la liste
-      setImages(images.filter(img => img.id !== imageId));
+      // Mettre à jour la liste localement
+      const updatedImages = images.filter(img => img.id !== imageId);
+      setImages(updatedImages);
       
-      // Charger l'image suivante
-      if (images.length > 1) {
-        const newIndex = Math.min(currentIndex, images.length - 2);
+      // Sélectionner l'image suivante
+      if (updatedImages.length > 0) {
+        const newIndex = Math.min(currentIndex, updatedImages.length - 1);
         setCurrentIndex(newIndex);
-        setSelectedImage(images[newIndex]);
+        setSelectedImage(updatedImages[newIndex]);
       } else {
         setSelectedImage(null);
+        setCurrentIndex(0);
       }
 
       alert('✅ Image approuvée!');
@@ -115,7 +129,7 @@ export default function AdminImageValidation() {
   };
 
   const rejectImage = async () => {
-    if (!imageToReject || !rejectReason.trim()) return;
+    if (!imageToReject || !rejectReason.trim() || validatingId) return;
 
     setValidatingId(imageToReject);
     try {
@@ -131,16 +145,18 @@ export default function AdminImageValidation() {
 
       if (error) throw error;
 
-      // Retirer l'image de la liste
-      setImages(images.filter(img => img.id !== imageToReject));
+      // Mettre à jour la liste localement
+      const updatedImages = images.filter(img => img.id !== imageToReject);
+      setImages(updatedImages);
       
-      // Charger l'image suivante
-      if (images.length > 1) {
-        const newIndex = Math.min(currentIndex, images.length - 2);
+      // Sélectionner l'image suivante
+      if (updatedImages.length > 0) {
+        const newIndex = Math.min(currentIndex, updatedImages.length - 1);
         setCurrentIndex(newIndex);
-        setSelectedImage(images[newIndex]);
+        setSelectedImage(updatedImages[newIndex]);
       } else {
         setSelectedImage(null);
+        setCurrentIndex(0);
       }
 
       setShowRejectModal(false);
@@ -195,7 +211,7 @@ export default function AdminImageValidation() {
   };
 
   const deleteImage = async (imageId) => {
-    if (!confirm('Êtes-vous sûr?')) return;
+    if (!confirm('Êtes-vous sûr?') || validatingId) return;
 
     setValidatingId(imageId);
     try {
@@ -215,15 +231,18 @@ export default function AdminImageValidation() {
 
       if (error) throw error;
 
-      // Retirer l'image de la liste
-      setImages(images.filter(img => img.id !== imageId));
+      // Mettre à jour la liste localement
+      const updatedImages = images.filter(img => img.id !== imageId);
+      setImages(updatedImages);
       
-      if (images.length > 1) {
-        const newIndex = Math.min(currentIndex, images.length - 2);
+      // Sélectionner l'image suivante
+      if (updatedImages.length > 0) {
+        const newIndex = Math.min(currentIndex, updatedImages.length - 1);
         setCurrentIndex(newIndex);
-        setSelectedImage(images[newIndex]);
+        setSelectedImage(updatedImages[newIndex]);
       } else {
         setSelectedImage(null);
+        setCurrentIndex(0);
       }
 
       alert('✅ Image supprimée');

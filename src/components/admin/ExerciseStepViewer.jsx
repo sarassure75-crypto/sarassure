@@ -30,14 +30,6 @@ export default function ExerciseStepViewer({ steps = [] }) {
 
   const currentStep = steps[currentStepIndex];
   const hasImage = currentStep?.image_url;
-  
-  console.log('ExerciseStepViewer - Current step:', currentStepIndex, currentStep);
-  console.log('🔍 STEP DEBUG - Zones disponibles:', {
-    target_area: currentStep?.target_area,
-    text_input_area: currentStep?.text_input_area,
-    start_area: currentStep?.start_area,
-    hasAnyArea: !!(currentStep?.target_area || currentStep?.text_input_area || currentStep?.start_area)
-  });
 
   const handlePrevStep = () => {
     if (currentStepIndex > 0) {
@@ -67,24 +59,19 @@ export default function ExerciseStepViewer({ steps = [] }) {
         {/* Image avec zones d'action */}
         <div className="p-6">
           {hasImage ? (
-            <div className="relative mx-auto" style={{ maxWidth: '400px' }}>
+            <div className="relative mx-auto inline-block" style={{ maxWidth: '400px' }}>
               <img
                 src={currentStep.image_url}
                 alt={`Étape ${currentStepIndex + 1}`}
-                className="w-full h-auto rounded-lg border border-gray-200"
+                className="w-full h-auto rounded-lg border border-gray-200 block"
                 style={{ transform: `scale(${zoom})`, transformOrigin: 'center' }}
-                onLoad={() => console.log('✅ Image chargée:', currentStep.image_url)}
-                onError={(e) => {
-                  console.error('❌ Erreur chargement image:', currentStep.image_url);
-                  console.error('Path:', currentStep.image_path);
-                }}
               />
               
               {/* Zones d'action avec logique robuste de l'éditeur */}
               {[
-                { data: parseAreaData(currentStep.target_area), color: 'rgba(239, 68, 68, 0.3)', borderColor: '#ef4444' },
-                { data: parseAreaData(currentStep.text_input_area), color: 'rgba(59, 130, 246, 0.3)', borderColor: '#3b82f6' },
-                { data: parseAreaData(currentStep.start_area), color: 'rgba(34, 197, 94, 0.3)', borderColor: '#22c55e' }
+                { data: parseAreaData(currentStep.target_area), color: 'rgba(239, 68, 68, 0.3)', borderColor: '#ef4444', label: 'Cible' },
+                { data: parseAreaData(currentStep.text_input_area), color: 'rgba(59, 130, 246, 0.3)', borderColor: '#3b82f6', label: 'Saisie' },
+                { data: parseAreaData(currentStep.start_area), color: 'rgba(34, 197, 94, 0.3)', borderColor: '#22c55e', label: 'Départ' }
               ].map((zone, zoneIndex) => {
                 if (!zone.data) return null;
                 
@@ -93,12 +80,10 @@ export default function ExerciseStepViewer({ steps = [] }) {
                 const w = zone.data.width_percent ?? zone.data.width ?? 10;
                 const h = zone.data.height_percent ?? zone.data.height ?? 10;
                 
-                console.log(`🎯 Zone ${zoneIndex} coords:`, { x, y, w, h, data: zone.data });
-                
                 return (
                   <div
                     key={zoneIndex}
-                    className="absolute border-2 border-dashed"
+                    className="absolute border-2 pointer-events-none"
                     style={{
                       left: `${x}%`,
                       top: `${y}%`,
@@ -108,11 +93,13 @@ export default function ExerciseStepViewer({ steps = [] }) {
                         zone.data.color.replace('rgb', 'rgba').replace(')', `, ${zone.data.opacity || 0.3})`) : 
                         zone.color,
                       borderColor: zone.data.color || zone.borderColor,
-                      borderRadius: zone.data.shape === 'ellipse' ? '50%' : '4px',
-                      transform: `scale(${zoom})`,
-                      transformOrigin: 'top left'
+                      borderRadius: zone.data.shape === 'ellipse' ? '50%' : '4px'
                     }}
-                  />
+                  >
+                    <div className="absolute -top-6 left-0 bg-white/90 px-2 py-0.5 rounded text-xs font-medium" style={{ borderColor: zone.borderColor }}>
+                      {zone.label}
+                    </div>
+                  </div>
                 );
               })}
 
@@ -122,14 +109,6 @@ export default function ExerciseStepViewer({ steps = [] }) {
                   ℹ️ Aucune zone d'action définie
                 </div>
               )}
-
-              {/* Debug info condensé */}
-              <div className="absolute top-2 right-2 bg-white/90 border border-gray-300 rounded p-2 text-xs max-w-xs">
-                <p className="font-bold mb-1">🔍 ZONES</p>
-                <p><strong>Target:</strong> {currentStep.target_area ? '✓' : '✗'}</p>
-                <p><strong>Input:</strong> {currentStep.text_input_area ? '✓' : '✗'}</p>
-                <p><strong>Start:</strong> {currentStep.start_area ? '✓' : '✗'}</p>
-              </div>
             </div>
           ) : (
             <div className="text-gray-400 text-center p-8">

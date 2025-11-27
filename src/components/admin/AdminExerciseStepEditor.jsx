@@ -297,37 +297,53 @@ export default function AdminExerciseStepEditor({ steps = [], onStepsUpdate }) {
             // Aperçu simple de l'étape
             <div className="space-y-4">
               {currentStep.image_url ? (
-                <div className="relative mx-auto" style={{ maxWidth: '360px' }}>
+                <div className="relative mx-auto inline-block" style={{ maxWidth: '360px' }}>
                   <img
                     src={currentStep.image_url}
                     alt={`Étape ${currentStepIndex + 1}`}
-                    className="w-full h-auto rounded-lg border border-gray-200"
+                    className="w-full h-auto rounded-lg border border-gray-200 block"
                   />
                   
                   {/* Afficher les zones existantes */}
                   {[
-                    { data: parseAreaData(currentStep.target_area), color: 'rgba(239, 68, 68, 0.3)' },
-                    { data: parseAreaData(currentStep.text_input_area), color: 'rgba(59, 130, 246, 0.3)' },
-                    { data: parseAreaData(currentStep.start_area), color: 'rgba(34, 197, 94, 0.3)' }
+                    { data: parseAreaData(currentStep.target_area), color: 'rgba(239, 68, 68, 0.3)', borderColor: '#ef4444', label: 'Cible' },
+                    { data: parseAreaData(currentStep.text_input_area), color: 'rgba(59, 130, 246, 0.3)', borderColor: '#3b82f6', label: 'Saisie' },
+                    { data: parseAreaData(currentStep.start_area), color: 'rgba(34, 197, 94, 0.3)', borderColor: '#22c55e', label: 'Départ' }
                   ].map((zone, idx) => {
                     if (!zone.data) return null;
+                    
+                    const x = zone.data.x_percent ?? zone.data.x ?? 0;
+                    const y = zone.data.y_percent ?? zone.data.y ?? 0;
+                    const w = zone.data.width_percent ?? zone.data.width ?? 10;
+                    const h = zone.data.height_percent ?? zone.data.height ?? 10;
                     
                     return (
                       <div
                         key={idx}
-                        className="absolute border-2 border-dashed"
+                        className="absolute border-2 pointer-events-none"
                         style={{
-                          left: `${zone.data.x_percent || 0}%`,
-                          top: `${zone.data.y_percent || 0}%`,
-                          width: `${zone.data.width_percent || 0}%`,
-                          height: `${zone.data.height_percent || 0}%`,
+                          left: `${x}%`,
+                          top: `${y}%`,
+                          width: `${w}%`,
+                          height: `${h}%`,
                           backgroundColor: zone.data.color ? zone.data.color.replace('rgb', 'rgba').replace(')', `, ${zone.data.opacity || 0.3})`) : zone.color,
-                          borderColor: zone.data.color || (idx === 0 ? '#ef4444' : idx === 1 ? '#3b82f6' : '#22c55e'),
+                          borderColor: zone.data.color || zone.borderColor,
                           borderRadius: zone.data.shape === 'ellipse' ? '50%' : '4px'
                         }}
-                      />
+                      >
+                        <div className="absolute -top-6 left-0 bg-white/90 px-2 py-0.5 rounded text-xs font-medium" style={{ borderColor: zone.borderColor }}>
+                          {zone.label}
+                        </div>
+                      </div>
                     );
                   })}
+                  
+                  {/* Message si aucune zone */}
+                  {!(currentStep.target_area || currentStep.text_input_area || currentStep.start_area) && (
+                    <div className="absolute top-2 left-2 bg-amber-100 border border-amber-300 rounded px-3 py-1 text-xs text-amber-800">
+                      ℹ️ Aucune zone d'action définie
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="bg-gray-100 p-8 rounded-lg text-center">
