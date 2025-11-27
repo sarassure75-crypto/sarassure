@@ -218,7 +218,7 @@ export default function WallpapersLibraryPage() {
 
       {/* Wallpapers Grid */}
       <div className="container mx-auto px-4 pb-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {filteredWallpapers.map(wallpaper => (
             <div key={wallpaper.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
               {/* Preview */}
@@ -232,25 +232,19 @@ export default function WallpapersLibraryPage() {
               </div>
 
               {/* Info */}
-              <div className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{wallpaper.name}</h3>
-                    <p className="text-xs text-gray-500 mt-1">{wallpaper.category}</p>
-                  </div>
-                  <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
-                    PNG
-                  </span>
+              <div className="p-3">
+                <div className="mb-2">
+                  <h3 className="font-semibold text-sm text-gray-900 truncate">{wallpaper.name}</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">{wallpaper.category}</p>
                 </div>
-                <p className="text-sm text-gray-600 mb-4">{wallpaper.description}</p>
                 
                 {/* Download Button */}
                 <button
                   onClick={() => handleDownload(wallpaper)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                 >
-                  <Download className="w-4 h-4" />
-                  <span>Télécharger (1080x1920)</span>
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Télécharger</span>
                 </button>
               </div>
             </div>
