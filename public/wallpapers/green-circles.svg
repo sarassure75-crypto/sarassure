@@ -1,0 +1,17 @@
+<svg width="1080" height="1920" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="greenBrand" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1920" fill="url(#greenBrand)"/>
+  <!-- Cercles géométriques -->
+  <circle cx="200" cy="300" r="150" fill="#FFFFFF" opacity="0.1"/>
+  <circle cx="880" cy="600" r="200" fill="#FFFFFF" opacity="0.15"/>
+  <circle cx="300" cy="1200" r="180" fill="#FFFFFF" opacity="0.1"/>
+  <circle cx="800" cy="1600" r="160" fill="#FFFFFF" opacity="0.12"/>
+  <!-- Lignes diagonales -->
+  <line x1="0" y1="400" x2="1080" y2="800" stroke="#FFFFFF" stroke-width="2" opacity="0.2"/>
+  <line x1="0" y1="1000" x2="1080" y2="1400" stroke="#FFFFFF" stroke-width="2" opacity="0.2"/>
+</svg>

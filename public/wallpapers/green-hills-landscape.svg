@@ -1,0 +1,17 @@
+<svg width="1080" height="1920" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="greenHills" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#DBEAFE;stop-opacity:1" />
+      <stop offset="40%" style="stop-color:#A7F3D0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10B981;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1920" fill="url(#greenHills)"/>
+  <!-- Collines stylisées -->
+  <path d="M0,1600 Q270,1400 540,1500 T1080,1450 L1080,1920 L0,1920 Z" fill="#059669" opacity="0.7"/>
+  <path d="M0,1700 Q270,1550 540,1650 T1080,1600 L1080,1920 L0,1920 Z" fill="#047857" opacity="0.8"/>
+  <path d="M0,1800 Q270,1700 540,1750 T1080,1720 L1080,1920 L0,1920 Z" fill="#065F46" opacity="0.9"/>
+  <!-- Soleil -->
+  <circle cx="800" cy="400" r="100" fill="#FCD34D" opacity="0.8"/>
+  <circle cx="800" cy="400" r="120" fill="#FCD34D" opacity="0.3"/>
+</svg>

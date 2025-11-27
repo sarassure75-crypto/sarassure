@@ -1,49 +1,63 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
-import Layout from '@/pages/Layout';
-import HomePage from '@/pages/HomePage';
-import TaskListPage from '@/pages/TaskListPage';
-import ExercisePage from '@/pages/ExercisePage';
-import ExerciseStepsPreviewPage from '@/pages/ExerciseStepsPreviewPage';
-import AdminPage from '@/pages/AdminPage';
-import TrainerDashboardPage from '@/pages/TrainerDashboardPage';
-import TrainerFaqPage from '@/pages/TrainerFaqPage';
-import ReportErrorPage from '@/pages/ReportErrorPage';
-import LoginPage from '@/pages/LoginPage';
-import LearnerLoginPage from '@/pages/LearnerLoginPage';
-import RegisterPage from '@/pages/RegisterPage';
-import TrainerAccountPage from '@/pages/TrainerAccountPage';
-import LearnerAccountPage from '@/pages/LearnerAccountPage';
-import LearnerProgressPage from '@/pages/LearnerProgressPage';
-import NotFoundPage from '@/pages/NotFoundPage';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { USER_ROLES } from '@/data/users';
-import PwaHomePage from '@/pages/PwaHomePage';
 import { AdminProvider } from '@/contexts/AdminContext';
-import DashboardRedirector from '@/pages/DashboardRedirector';
 import PwaInstallButton from '@/components/PwaInstallButton';
 import OfflineIndicator from '@/components/OfflineIndicator';
 
+// Pages chargées immédiatement (critiques pour le démarrage)
+import Layout from '@/pages/Layout';
+import HomePage from '@/pages/HomePage';
+import LoginPage from '@/pages/LoginPage';
+import NotFoundPage from '@/pages/NotFoundPage';
+
+// Composant de chargement
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+  </div>
+);
+
+// Pages chargées à la demande (lazy loading)
+const TaskListPage = lazy(() => import('@/pages/TaskListPage'));
+const ExercisePage = lazy(() => import('@/pages/ExercisePage'));
+const ExerciseStepsPreviewPage = lazy(() => import('@/pages/ExerciseStepsPreviewPage'));
+const AdminPage = lazy(() => import('@/pages/AdminPage'));
+const TrainerDashboardPage = lazy(() => import('@/pages/TrainerDashboardPage'));
+const TrainerFaqPage = lazy(() => import('@/pages/TrainerFaqPage'));
+const ReportErrorPage = lazy(() => import('@/pages/ReportErrorPage'));
+const LearnerLoginPage = lazy(() => import('@/pages/LearnerLoginPage'));
+const RegisterPage = lazy(() => import('@/pages/RegisterPage'));
+const TrainerAccountPage = lazy(() => import('@/pages/TrainerAccountPage'));
+const LearnerAccountPage = lazy(() => import('@/pages/LearnerAccountPage'));
+const LearnerProgressPage = lazy(() => import('@/pages/LearnerProgressPage'));
+const PwaHomePage = lazy(() => import('@/pages/PwaHomePage'));
+const DashboardRedirector = lazy(() => import('@/pages/DashboardRedirector'));
+
 // Pages Contributeur
-import ContributorDashboard from '@/pages/ContributorDashboard';
-import NewContribution from '@/pages/NewContribution';
-import MyContributions from '@/pages/MyContributions';
-import TermsOfServicePage from '@/pages/TermsOfServicePage';
-import ContributorSalesHistory from '@/components/ContributorSalesHistory';
+const ContributorDashboard = lazy(() => import('@/pages/ContributorDashboard'));
+const NewContribution = lazy(() => import('@/pages/NewContribution'));
+const MyContributions = lazy(() => import('@/pages/MyContributions'));
+const TermsOfServicePage = lazy(() => import('@/pages/TermsOfServicePage'));
+const ContributorSalesHistory = lazy(() => import('@/components/ContributorSalesHistory'));
+const ContributorImageLibrary = lazy(() => import('@/pages/ContributorImageLibrary'));
+const ContributorProfilePage = lazy(() => import('@/pages/ContributorProfilePage'));
 
 // Pages Formateur
-import TrainerLearnersPage from '@/pages/Formateur/TrainerLearnersPage';
-import BuyLicensesPage from '@/pages/Formateur/BuyLicensesPage';
-import TrainerProfilePage from '@/pages/Formateur/TrainerProfilePage';
-import TrainerLicensesManagementPage from '@/pages/Formateur/TrainerLicensesManagementPage';
-import ContributorImageLibrary from '@/pages/ContributorImageLibrary';
-import ContributorProfilePage from '@/pages/ContributorProfilePage';
+const TrainerLearnersPage = lazy(() => import('@/pages/Formateur/TrainerLearnersPage'));
+const BuyLicensesPage = lazy(() => import('@/pages/Formateur/BuyLicensesPage'));
+const TrainerProfilePage = lazy(() => import('@/pages/Formateur/TrainerProfilePage'));
+const TrainerLicensesManagementPage = lazy(() => import('@/pages/Formateur/TrainerLicensesManagementPage'));
 
 // Pages Admin - Modération
-import ModerationPage from '@/pages/ModerationPage';
-import AdminImageValidation from '@/pages/AdminImageValidation';
-import AdminExerciseValidation from '@/pages/AdminExerciseValidation';
-import AdminRevenueDashboard from '@/pages/AdminRevenueDashboard';
+const ModerationPage = lazy(() => import('@/pages/ModerationPage'));
+const AdminImageValidation = lazy(() => import('@/pages/AdminImageValidation'));
+const AdminExerciseValidation = lazy(() => import('@/pages/AdminExerciseValidation'));
+const AdminRevenueDashboard = lazy(() => import('@/pages/AdminRevenueDashboard'));
+
+// Ressources
+const WallpapersLibraryPage = lazy(() => import('@/pages/WallpapersLibraryPage'));
 
 function AppContent() {
   const location = useLocation();
@@ -51,10 +65,11 @@ function AppContent() {
 
   if (isPwaMode && location.pathname === '/') {
      return (
-        <Routes>
-          <Route path="/" element={<Layout pwaMode={true} />}>
-            <Route index element={<PwaHomePage />} />
-            <Route path="taches" element={<ProtectedRoute roles={[USER_ROLES.LEARNER, USER_ROLES.TRAINER, USER_ROLES.ADMIN]}><TaskListPage /></ProtectedRoute>} />
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<Layout pwaMode={true} />}>
+              <Route index element={<PwaHomePage />} />
+              <Route path="taches" element={<ProtectedRoute roles={[USER_ROLES.LEARNER, USER_ROLES.TRAINER, USER_ROLES.ADMIN]}><TaskListPage /></ProtectedRoute>} />
             <Route path="tache/:taskId" element={<ProtectedRoute roles={[USER_ROLES.LEARNER, USER_ROLES.TRAINER, USER_ROLES.ADMIN]}><ExerciseStepsPreviewPage /></ProtectedRoute>} />
             <Route path="tache/:taskId/version/:versionId" element={<ProtectedRoute roles={[USER_ROLES.LEARNER, USER_ROLES.TRAINER, USER_ROLES.ADMIN]}><ExercisePage /></ProtectedRoute>} />
             <Route path="formateur" element={<ProtectedRoute roles={[USER_ROLES.TRAINER, USER_ROLES.ADMIN]}><TrainerDashboardPage /></ProtectedRoute>} />
@@ -65,11 +80,13 @@ function AppContent() {
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
+        </Suspense>
       );
   }
 
   return (
-    <Routes>
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
       <Route path="/" element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path="login" element={<LoginPage />} />
@@ -105,6 +122,9 @@ function AppContent() {
         <Route path="contributeur/profil" element={<ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.CONTRIBUTOR]}><ContributorProfilePage /></ProtectedRoute>} />
         <Route path="contributeur/cgu" element={<ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.CONTRIBUTOR]}><TermsOfServicePage /></ProtectedRoute>} />
         
+        {/* Ressources publiques / contributeurs */}
+        <Route path="ressources/wallpapers" element={<WallpapersLibraryPage />} />
+        
         {/* Routes Admin - Modération */}
         <Route path="admin/moderation" element={<ProtectedRoute roles={[USER_ROLES.ADMIN]}><ModerationPage /></ProtectedRoute>} />
         <Route path="admin/validation/images" element={<ProtectedRoute roles={[USER_ROLES.ADMIN]}><AdminImageValidation /></ProtectedRoute>} />
@@ -122,6 +142,7 @@ function AppContent() {
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
+    </Suspense>
   );
 }
 

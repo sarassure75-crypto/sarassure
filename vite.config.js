@@ -261,7 +261,24 @@ export default defineConfig({
 				'@babel/traverse',
 				'@babel/generator',
 				'@babel/types'
-			]
-		}
+			],
+			output: {
+				manualChunks: {
+					// Séparer les dépendances volumineuses
+					'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+					'supabase': ['@supabase/supabase-js'],
+					'ui-icons': ['lucide-react'],
+					'radix-ui': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tabs'],
+					'stripe': ['@stripe/stripe-js', '@stripe/react-stripe-js']
+				}
+			}
+		},
+		chunkSizeWarningLimit: 1000,
+		// Optimiser les assets
+		assetsInlineLimit: 4096,
+		cssCodeSplit: true,
+		sourcemap: false,
+		minify: 'esbuild',
+		target: 'es2015'
 	}
 });

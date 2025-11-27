@@ -1,0 +1,33 @@
+<svg width="1080" height="1920" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="greenForest" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#6EE7B7;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#10B981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#064E3B;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1920" fill="url(#greenForest)"/>
+  <!-- Arbres stylisés (triangles) -->
+  <g fill="#065F46" opacity="0.6">
+    <!-- Rangée arrière -->
+    <polygon points="150,1400 200,1300 100,1300"/>
+    <polygon points="300,1450 360,1320 240,1320"/>
+    <polygon points="500,1380 570,1250 430,1250"/>
+    <polygon points="700,1420 780,1280 620,1280"/>
+    <polygon points="900,1400 970,1290 830,1290"/>
+  </g>
+  <g fill="#047857" opacity="0.8">
+    <!-- Rangée avant -->
+    <polygon points="100,1600 160,1450 40,1450"/>
+    <polygon points="350,1650 430,1480 270,1480"/>
+    <polygon points="600,1620 690,1440 510,1440"/>
+    <polygon points="850,1680 950,1500 750,1500"/>
+  </g>
+  <!-- Troncs -->
+  <g fill="#78350F">
+    <rect x="140" y="1600" width="20" height="320"/>
+    <rect x="390" y="1650" width="20" height="270"/>
+    <rect x="640" y="1620" width="20" height="300"/>
+    <rect x="890" y="1680" width="20" height="240"/>
+  </g>
+</svg>

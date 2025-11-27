@@ -1,0 +1,15 @@
+<svg width="1080" height="1920" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="greenWaves" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#A7F3D0;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#34D399;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1920" fill="url(#greenWaves)"/>
+  <!-- Vagues abstraites -->
+  <path d="M0,600 Q270,550 540,600 T1080,600" stroke="#FFFFFF" stroke-width="3" fill="none" opacity="0.3"/>
+  <path d="M0,800 Q270,750 540,800 T1080,800" stroke="#FFFFFF" stroke-width="3" fill="none" opacity="0.3"/>
+  <path d="M0,1000 Q270,950 540,1000 T1080,1000" stroke="#FFFFFF" stroke-width="3" fill="none" opacity="0.3"/>
+  <path d="M0,1200 Q270,1150 540,1200 T1080,1200" stroke="#FFFFFF" stroke-width="3" fill="none" opacity="0.3"/>
+</svg>
