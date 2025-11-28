@@ -21,7 +21,6 @@ export async function fetchExerciseRequests(filters = {}) {
       .from('exercise_requests')
       .select(`
         *,
-        category:categories(id, name, icon),
         creator:profiles!exercise_requests_created_by_fkey(id, username, role)
       `)
       .order('priority', { ascending: false })
@@ -59,7 +58,6 @@ export async function fetchExerciseRequestByCode(code) {
       .from('exercise_requests')
       .select(`
         *,
-        category:categories(id, name, icon),
         creator:profiles!exercise_requests_created_by_fkey(id, username, role)
       `)
       .eq('code', code)
@@ -75,7 +73,7 @@ export async function fetchExerciseRequestByCode(code) {
 
 /**
  * Créer une nouvelle demande d'exercice
- * @param {Object} requestData - { title, description, category_id, priority, notes }
+ * @param {Object} requestData - { title, description, category_name, priority, notes }
  * @returns {Promise<Object>}
  */
 export async function createExerciseRequest(requestData) {
@@ -92,7 +90,6 @@ export async function createExerciseRequest(requestData) {
       }])
       .select(`
         *,
-        category:categories(id, name, icon),
         creator:profiles!exercise_requests_created_by_fkey(id, username, role)
       `)
       .single();
@@ -119,7 +116,6 @@ export async function updateExerciseRequest(id, updates) {
       .eq('id', id)
       .select(`
         *,
-        category:categories(id, name, icon),
         creator:profiles!exercise_requests_created_by_fkey(id, username, role)
       `)
       .single();
@@ -237,7 +233,6 @@ export async function searchExerciseRequests(searchTerm) {
       .from('exercise_requests')
       .select(`
         *,
-        category:categories(id, name, icon),
         creator:profiles!exercise_requests_created_by_fkey(id, username, role)
       `)
       .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%`)

@@ -159,9 +159,9 @@ export default function ExerciseRequestsList() {
                                   <StatusIcon className="h-3 w-3 mr-1" />
                                   {statusConfig[request.status].label}
                                 </Badge>
-                                {request.category && (
+                                {request.category_name && (
                                   <Badge variant="outline">
-                                    {request.category.name}
+                                    {request.category_name}
                                   </Badge>
                                 )}
                               </div>

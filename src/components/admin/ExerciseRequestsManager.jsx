@@ -76,7 +76,7 @@ function CreateEditDialog({ open, onOpenChange, request, categories, onSuccess }
       const data = {
         title: formData.get('title'),
         description: formData.get('description'),
-        category_id: parseInt(formData.get('category_id')),
+        category_name: formData.get('category_name'),
         priority: formData.get('priority'),
         notes: formData.get('notes')
       };
@@ -137,19 +137,13 @@ function CreateEditDialog({ open, onOpenChange, request, categories, onSuccess }
           </div>
 
           <div>
-            <Label htmlFor="category_id">Catégorie *</Label>
-            <select
-              id="category_id"
-              name="category_id"
-              defaultValue={request?.category_id}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              required
-            >
-              <option value="">Sélectionner une catégorie</option>
-              {categories.map(cat => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </select>
+            <Label htmlFor="category_name">Catégorie</Label>
+            <Input
+              id="category_name"
+              name="category_name"
+              defaultValue={request?.category_name}
+              placeholder="Ex: Communication, Paramètres..."
+            />
           </div>
 
           <div>
@@ -427,9 +421,9 @@ export default function ExerciseRequestsManager() {
                             <StatusIcon className="h-3 w-3 mr-1" />
                             {statusConfig[request.status].label}
                           </Badge>
-                          {request.category && (
+                          {request.category_name && (
                             <Badge variant="outline">
-                              {request.category.name}
+                              {request.category_name}
                             </Badge>
                           )}
                         </div>

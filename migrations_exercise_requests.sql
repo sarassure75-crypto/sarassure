@@ -5,7 +5,8 @@
 CREATE TABLE IF NOT EXISTS exercise_requests (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     code VARCHAR(20) UNIQUE NOT NULL, -- Code unique pour référencer la demande (ex: "EX-2025-001")
-    category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
+    category_id INTEGER, -- Référence optionnelle vers categories (pas de FK pour éviter dépendances)
+    category_name VARCHAR(100), -- Nom de catégorie en texte libre si categories n'existe pas
     title VARCHAR(255) NOT NULL,
     description TEXT,
     priority VARCHAR(20) DEFAULT 'normal' CHECK (priority IN ('high', 'normal', 'low')),
@@ -218,10 +219,10 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Données d'exemple (optionnel, à supprimer en production)
-INSERT INTO exercise_requests (code, category_id, title, description, priority, status) VALUES
-('EX-2025-001', 1, 'Paramétrer le Wi-Fi', 'Exercice complet pour connecter un smartphone au Wi-Fi avec captures d''écran', 'high', 'pending'),
-('EX-2025-002', 2, 'Envoyer un SMS', 'Créer un exercice simple pour envoyer un premier SMS', 'high', 'in_progress'),
-('EX-2025-003', 3, 'Configurer Gmail', 'Guide pas-à-pas pour ajouter un compte Gmail', 'normal', 'pending')
+INSERT INTO exercise_requests (code, category_name, title, description, priority, status) VALUES
+('EX-2025-001', 'Paramètres', 'Paramétrer le Wi-Fi', 'Exercice complet pour connecter un smartphone au Wi-Fi avec captures d''écran', 'high', 'pending'),
+('EX-2025-002', 'Communication', 'Envoyer un SMS', 'Créer un exercice simple pour envoyer un premier SMS', 'high', 'in_progress'),
+('EX-2025-003', 'Applications', 'Configurer Gmail', 'Guide pas-à-pas pour ajouter un compte Gmail', 'normal', 'pending')
 ON CONFLICT (code) DO NOTHING;
 
 -- Commentaire final
