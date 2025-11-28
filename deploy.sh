@@ -16,6 +16,10 @@ npm install --production
 echo "Construction du projet..."
 npm run build
 
+# 2.5. Copier le .htaccess racine vers dist/ (écrase celui de public/)
+echo "Copie du .htaccess principal..."
+cp .htaccess dist/.htaccess
+
 # 3. Copier le contenu de dist vers public_html
 echo "Déploiement du dossier dist..."
 
