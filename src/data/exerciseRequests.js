@@ -19,10 +19,7 @@ export async function fetchExerciseRequests(filters = {}) {
   try {
     let query = supabase
       .from('exercise_requests')
-      .select(`
-        *,
-        creator:profiles!exercise_requests_created_by_fkey(id, username, role)
-      `)
+      .select('*')
       .order('priority', { ascending: false })
       .order('created_at', { ascending: false });
 
@@ -56,10 +53,7 @@ export async function fetchExerciseRequestByCode(code) {
   try {
     const { data, error } = await supabase
       .from('exercise_requests')
-      .select(`
-        *,
-        creator:profiles!exercise_requests_created_by_fkey(id, username, role)
-      `)
+      .select('*')
       .eq('code', code)
       .single();
 
@@ -88,10 +82,7 @@ export async function createExerciseRequest(requestData) {
         created_by: user.id,
         status: 'pending'
       }])
-      .select(`
-        *,
-        creator:profiles!exercise_requests_created_by_fkey(id, username, role)
-      `)
+      .select('*')
       .single();
 
     if (error) throw error;
@@ -114,10 +105,7 @@ export async function updateExerciseRequest(id, updates) {
       .from('exercise_requests')
       .update(updates)
       .eq('id', id)
-      .select(`
-        *,
-        creator:profiles!exercise_requests_created_by_fkey(id, username, role)
-      `)
+      .select('*')
       .single();
 
     if (error) throw error;
@@ -231,10 +219,7 @@ export async function searchExerciseRequests(searchTerm) {
   try {
     const { data, error } = await supabase
       .from('exercise_requests')
-      .select(`
-        *,
-        creator:profiles!exercise_requests_created_by_fkey(id, username, role)
-      `)
+      .select('*')
       .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%`)
       .order('priority', { ascending: false })
       .order('created_at', { ascending: false });
