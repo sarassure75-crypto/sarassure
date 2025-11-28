@@ -1,6 +1,6 @@
 
 /* eslint-env serviceworker */
-const CACHE_NAME = 'sarassure-pwa-cache-v4';
+const CACHE_NAME = 'sarassure-pwa-cache-v5';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -83,7 +83,52 @@ this.addEventListener('fetch', (event) => {
     return;
   }
   
-  // For other GET requests, use a cache-first strategy
+  // For other GET requests, use a network-first strategy for HTML/JS/CSS
+  // to ensure fresh content, cache-first for images and fonts
+  const url = new URL(request.url);
+  const isNavigationOrAsset = 
+    request.mode === 'navigate' || 
+    request.destination === 'document' ||
+    url.pathname.endsWith('.html') ||
+    url.pathname.endsWith('.js') ||
+    url.pathname.endsWith('.css') ||
+    url.pathname.includes('/assets/');
+
+  if (isNavigationOrAsset) {
+    // Network-first for critical resources
+    event.respondWith(
+      fetch(request)
+        .then((networkResponse) => {
+          // Cache the fresh response
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(request, responseToCache).catch(err => {
+                console.warn('Cache put failed:', err);
+              });
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          // Network failed, try cache as fallback
+          return caches.match(request).then((cachedResponse) => {
+            if (cachedResponse) {
+              console.log('Serving from cache (offline):', request.url);
+              return cachedResponse;
+            }
+            // Fallback to index.html for navigation
+            if (request.mode === 'navigate') {
+              return caches.match('/index.html');
+            }
+            return new Response('Offline', { status: 503 });
+          });
+        })
+    );
+    return;
+  }
+
+  // Cache-first for images, fonts, and other static assets
   event.respondWith(
     caches.match(request).then((response) => {
       // Cache hit - return response
