@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { X, Menu, Home, BookOpen, User, LogOut, Shield, UserCog, MessageSquare, BarChart3, Bug, Mail, Users, CreditCard, ListTodo, LayoutGrid, Image as ImageIcon, CheckCircle, DollarSign, AlertTriangle, Trash, Upload } from 'lucide-react';
+import { X, Menu, Home, BookOpen, User, LogOut, Shield, UserCog, MessageSquare, BarChart3, Bug, Mail, Users, CreditCard, ListTodo, LayoutGrid, Image as ImageIcon, CheckCircle, DollarSign, AlertTriangle, Trash, Upload, ClipboardList } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -95,6 +95,7 @@ const AppBanner = () => {
           <>
             <NavLink to="/contributeur" icon={Home} onClick={closeSheet}>Dashboard</NavLink>
             <NavLink to="/contributeur/nouvelle-contribution" icon={Upload} onClick={closeSheet}>Créer un exercice</NavLink>
+            <NavLink to="/contributeur/liste-demandes" icon={ClipboardList} onClick={closeSheet}>Liste des demandes</NavLink>
             <NavLink to="/contributeur/bibliotheque" icon={ImageIcon} onClick={closeSheet}>Bibliothèque d'images</NavLink>
             <NavLink to="/contributeur/mes-contributions" icon={BookOpen} onClick={closeSheet}>Mes contributions</NavLink>
             <NavLink to="/contributeur/profil" icon={UserCog} onClick={closeSheet}>Mon Profil</NavLink>

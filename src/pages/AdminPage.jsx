@@ -10,6 +10,7 @@ import AdminErrorReportViewer from '@/components/admin/AdminErrorReportViewer';
 import AdminContactManager from '@/components/admin/AdminContactManager';
 import AdminTrash from '@/components/admin/AdminTrash';
 import AdminCategoryManager from '@/components/admin/AdminCategoryManager';
+import ExerciseRequestsManager from '@/components/admin/ExerciseRequestsManager';
 import AdminImageValidation from './AdminImageValidation';
 import AdminExerciseValidation from './AdminExerciseValidation';
 import AdminExerciseValidationDebug from './AdminExerciseValidationDebug';
@@ -30,6 +31,7 @@ const AdminPage = () => {
     else if (pathSegment === 'validation/images') currentTab = 'validation-images';
     else if (pathSegment === 'validation/exercices') currentTab = 'validation-exercices';
     else if (pathSegment === 'revenus') currentTab = 'revenus';
+    else if (pathSegment === 'requests') currentTab = 'requests';
     else if (pathSegment === 'users') currentTab = 'users';
     else if (pathSegment === 'faq') currentTab = 'faq';
     else if (pathSegment === 'errors') currentTab = 'errors';
@@ -61,6 +63,7 @@ const AdminPage = () => {
                         <Route path="images" element={<AdminImageGallery />} />
                         <Route path="validation/images" element={<AdminImageValidation />} />
                         <Route path="validation/exercices" element={<AdminExerciseValidation />} />
+                        <Route path="requests" element={<ExerciseRequestsManager />} />
                         <Route path="users" element={<AdminUserManagement />} />
                         <Route path="faq" element={<AdminFaqManager />} />
                         <Route path="errors" element={<AdminErrorReportViewer />} />

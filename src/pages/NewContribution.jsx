@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { searchImages } from "../data/imagesMetadata";
 import { actionTypes } from "../data/tasks";
+import { linkExerciseToRequest } from "../data/exerciseRequests";
 import CGUWarningBanner from "../components/CGUWarningBanner";
 import { 
   Save, 
@@ -34,6 +35,10 @@ export default function NewContribution() {
   const [category, setCategory] = useState('');
   const [subcategory, setSubcategory] = useState('');
   const [difficulty, setDifficulty] = useState('facile');
+  
+  // Liaison avec une demande d'exercice
+  const [linkedRequestCode, setLinkedRequestCode] = useState('');
+  const [hasRequestLink, setHasRequestLink] = useState(false);
   
   // États des versions
   const [versions, setVersions] = useState([]);
@@ -367,6 +372,17 @@ export default function NewContribution() {
 
     if (taskError) throw taskError;
 
+    // Lier à la demande d'exercice si un code est fourni
+    if (hasRequestLink && linkedRequestCode.trim()) {
+      try {
+        await linkExerciseToRequest(linkedRequestCode.trim(), task.id);
+        console.log(`✓ Exercice lié à la demande ${linkedRequestCode}`);
+      } catch (linkError) {
+        console.warn('Impossible de lier à la demande:', linkError);
+        // Ne pas bloquer la soumission si le lien échoue
+      }
+    }
+
     // Créer les versions
     if (versions.length > 0) {
       const versionsData = versions.map((v, idx) => ({
@@ -656,6 +672,40 @@ export default function NewContribution() {
                   placeholder="Ex: Envoyer un message WhatsApp"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
+              </div>
+
+              {/* Liaison avec une demande d'exercice */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <input
+                    type="checkbox"
+                    id="hasRequestLink"
+                    checked={hasRequestLink}
+                    onChange={(e) => setHasRequestLink(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                  />
+                  <label htmlFor="hasRequestLink" className="text-sm font-medium text-gray-900 cursor-pointer">
+                    Cet exercice correspond à une demande de la liste
+                  </label>
+                </div>
+                
+                {hasRequestLink && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Code de la demande
+                    </label>
+                    <input
+                      type="text"
+                      value={linkedRequestCode}
+                      onChange={(e) => setLinkedRequestCode(e.target.value.toUpperCase())}
+                      placeholder="Ex: EX-2025-001"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
+                    />
+                    <p className="text-xs text-blue-700 mt-1">
+                      💡 Consultez la liste des exercices à créer pour trouver le code
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div>

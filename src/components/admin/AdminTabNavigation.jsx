@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, LayoutGrid, Image, CheckCircle, Users, MessageSquare, AlertTriangle, Mail, ListTodo, DollarSign } from 'lucide-react';
+import { Home, LayoutGrid, Image, CheckCircle, Users, MessageSquare, AlertTriangle, Mail, ListTodo, DollarSign, ClipboardList } from 'lucide-react';
 
 export default function AdminTabNavigation({ counters = {} }) {
   const navigate = useNavigate();
@@ -25,6 +25,7 @@ export default function AdminTabNavigation({ counters = {} }) {
     { id: 'dashboard', label: 'Tâches', icon: ListTodo, path: '/admin/dashboard', count: 0 },
     { id: 'categories', label: 'Catégories', icon: LayoutGrid, path: '/admin/categories', count: 0 },
     { id: 'images', label: 'Images', icon: Image, path: '/admin/images', count: 0 },
+    { id: 'requests', label: 'Demandes', icon: ClipboardList, path: '/admin/requests', count: 0 },
     { id: 'validation-images', label: 'Valider images', icon: CheckCircle, path: '/admin/validation/images', count: counters.pendingImages || 0 },
     { id: 'validation-exercices', label: 'Valider exercices', icon: CheckCircle, path: '/admin/validation/exercices', count: counters.pendingContributions || 0 },
     { id: 'revenus', label: 'Revenus', icon: DollarSign, path: '/admin/revenus', count: 0 },

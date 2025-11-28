@@ -58,6 +58,7 @@ const AdminRevenueDashboard = lazy(() => import('@/pages/AdminRevenueDashboard')
 
 // Ressources
 const WallpapersLibraryPage = lazy(() => import('@/pages/WallpapersLibraryPage'));
+const ExerciseRequestsList = lazy(() => import('@/pages/ExerciseRequestsList'));
 
 function AppContent() {
   const location = useLocation();
@@ -117,6 +118,7 @@ function AppContent() {
         <Route path="contributeur" element={<ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.CONTRIBUTOR]}><ContributorDashboard /></ProtectedRoute>} />
         <Route path="contributeur/nouvelle-contribution" element={<ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.CONTRIBUTOR]}><NewContribution /></ProtectedRoute>} />
         <Route path="contributeur/mes-contributions" element={<ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.CONTRIBUTOR]}><MyContributions /></ProtectedRoute>} />
+        <Route path="contributeur/liste-demandes" element={<ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.CONTRIBUTOR]}><ExerciseRequestsList /></ProtectedRoute>} />
         <Route path="contributeur/bibliotheque" element={<ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.CONTRIBUTOR]}><ContributorImageLibrary /></ProtectedRoute>} />
         <Route path="contributeur/ventes" element={<ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.CONTRIBUTOR]}><ContributorSalesHistory /></ProtectedRoute>} />
         <Route path="contributeur/profil" element={<ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.CONTRIBUTOR]}><ContributorProfilePage /></ProtectedRoute>} />
