@@ -1,6 +1,12 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+
+  # Forcer la route /wallpapers (et /wallpapers/) à charger l'application React
+  # même si un dossier physique /wallpapers existe (évite 403 directory listing).
+  RewriteRule ^wallpapers/?$ index.html [L]
+
+  # SPA fallback pour toutes les autres routes non-fichiers / non-dossiers
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^ index.html [L]
