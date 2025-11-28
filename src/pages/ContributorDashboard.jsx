@@ -14,7 +14,8 @@ import {
   Upload,
   Eye,
   DollarSign,
-  Trophy
+  Trophy,
+  ClipboardList
 } from 'lucide-react';
 
 export default function ContributorDashboard() {
@@ -67,7 +68,7 @@ export default function ContributorDashboard() {
       </div>
 
       {/* Actions rapides */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <button
           onClick={() => navigate('/contributeur/nouvelle-contribution')}
           className="bg-blue-600 hover:bg-blue-700 text-white p-6 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl flex items-center justify-center space-x-3"
@@ -90,6 +91,14 @@ export default function ContributorDashboard() {
         >
           <Eye className="w-6 h-6" />
           <span className="text-lg font-semibold">Mes contributions</span>
+        </button>
+
+        <button
+          onClick={() => navigate('/contributeur/liste-demandes')}
+          className="bg-orange-600 hover:bg-orange-700 text-white p-6 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl flex items-center justify-center space-x-3"
+        >
+          <ClipboardList className="w-6 h-6" />
+          <span className="text-lg font-semibold">Liste des demandes</span>
         </button>
 
         {/* Masqué pour le moment - sera affiché quand les ventes commenceront */}
