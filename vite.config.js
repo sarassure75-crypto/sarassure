@@ -212,10 +212,7 @@ const addTransformIndexHtml = {
 			);
 		}
 
-		return {
-			html,
-			tags,
-		};
+		return tags;
 	},
 };
 
