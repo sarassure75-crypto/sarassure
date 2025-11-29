@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trash2, Edit, Search, X, Loader2, AlertTriangle, ImageDown as ImageUp, FolderPlus, FolderMinus, Layers, Paintbrush } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 import {
   AlertDialog,
   AlertDialogAction,
