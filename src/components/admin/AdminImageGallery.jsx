@@ -441,8 +441,6 @@ const AdminImageGallery = () => {
         imageUrl={imageToEdit?.publicUrl}
         onSave={handleSaveEditedImage}
       />
-        adminCategories={adminCategories}
-      />
     </div>
   );
 };

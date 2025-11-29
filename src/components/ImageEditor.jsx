@@ -20,62 +20,127 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
 
   // Charger l'image dans le canvas
   useEffect(() => {
-    if (open && imageUrl && canvasRef.current) {
-      const canvas = canvasRef.current;
-      const context = canvas.getContext('2d', { willReadFrequently: true });
-      setCtx(context);
+    if (!open || !imageUrl || !canvasRef.current) {
+      return;
+    }
 
-      const img = new Image();
-      
-      // Ne pas utiliser crossOrigin pour les URLs Supabase car cela peut bloquer le chargement
-      // À la place, on va créer un proxy via fetch
-      
-      const loadImage = async () => {
-        try {
-          // Récupérer l'image via fetch pour contourner les restrictions CORS
-          const response = await fetch(imageUrl);
-          const blob = await response.blob();
-          const objectUrl = URL.createObjectURL(blob);
-          
-          img.onload = () => {
-            // Ajuster la taille du canvas à l'image (max 1920px de largeur)
-            const maxWidth = 1920;
-            let width = img.width;
-            let height = img.height;
-            
-            if (width > maxWidth) {
-              height = (height * maxWidth) / width;
-              width = maxWidth;
-            }
-            
-            canvas.width = width;
-            canvas.height = height;
-            context.drawImage(img, 0, 0, width, height);
-            
-            setOriginalImage(img);
-            setImageLoaded(true);
-            
-            // Sauvegarder l'état initial
-            saveToHistory();
-            
-            // Libérer l'URL object
-            URL.revokeObjectURL(objectUrl);
-          };
-          
-          img.onerror = (error) => {
-            console.error('Erreur de chargement de l\'image:', error);
-            alert('Impossible de charger l\'image. Vérifiez l\'URL.');
-          };
-          
-          img.src = objectUrl;
-        } catch (error) {
-          console.error('Erreur lors du fetch de l\'image:', error);
-          alert('Erreur de chargement de l\'image.');
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    setCtx(context);
+    
+    console.log('Chargement de l\'image:', imageUrl);
+
+    const loadImage = async () => {
+      try {
+        // Méthode 1: Essayer avec fetch (pour contourner CORS)
+        console.log('Tentative de chargement via fetch...');
+        const response = await fetch(imageUrl, {
+          mode: 'cors',
+          credentials: 'omit'
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
         }
+        
+        const blob = await response.blob();
+        console.log('Blob reçu:', blob.size, 'bytes');
+        
+        const img = new Image();
+        const objectUrl = URL.createObjectURL(blob);
+        
+        img.onload = () => {
+          console.log('Image chargée:', img.width, 'x', img.height);
+          
+          // Ajuster la taille du canvas
+          const maxWidth = 1920;
+          let width = img.width;
+          let height = img.height;
+          
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          
+          // Dessiner l'image
+          context.clearRect(0, 0, width, height);
+          context.drawImage(img, 0, 0, width, height);
+          
+          console.log('Image dessinée sur le canvas');
+          
+          setOriginalImage(img);
+          setImageLoaded(true);
+          
+          // Sauvegarder l'état initial
+          setTimeout(() => saveToHistory(), 100);
+          
+          // Libérer l'URL object
+          URL.revokeObjectURL(objectUrl);
+        };
+        
+        img.onerror = (error) => {
+          console.error('Erreur img.onload:', error);
+          URL.revokeObjectURL(objectUrl);
+          // Essayer la méthode 2
+          tryDirectLoad();
+        };
+        
+        img.src = objectUrl;
+        
+      } catch (error) {
+        console.error('Erreur fetch:', error);
+        // Essayer la méthode 2
+        tryDirectLoad();
+      }
+    };
+    
+    // Méthode 2: Chargement direct (fallback)
+    const tryDirectLoad = () => {
+      console.log('Tentative de chargement direct...');
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      img.onload = () => {
+        console.log('Image chargée (direct):', img.width, 'x', img.height);
+        
+        const maxWidth = 1920;
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        context.clearRect(0, 0, width, height);
+        context.drawImage(img, 0, 0, width, height);
+        
+        setOriginalImage(img);
+        setImageLoaded(true);
+        setTimeout(() => saveToHistory(), 100);
       };
       
-      loadImage();
-    }
+      img.onerror = (error) => {
+        console.error('Erreur chargement direct:', error);
+        alert('Impossible de charger l\'image. L\'URL peut être invalide ou inaccessible.');
+      };
+      
+      img.src = imageUrl;
+    };
+
+    loadImage();
+    
+    // Cleanup
+    return () => {
+      setImageLoaded(false);
+      setHistory([]);
+      setHistoryStep(-1);
+    };
   }, [open, imageUrl]);
 
   // Sauvegarder l'état actuel dans l'historique
