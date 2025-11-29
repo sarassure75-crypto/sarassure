@@ -219,11 +219,11 @@ const AdminImageGallery = () => {
   const handleImageProcessedAndUploaded = async (filePath, metadata, category = 'default') => {
     try {
         await addImage({
-            name: metadata.originalName.split('.').slice(0, -1).join('.'),
+            name: metadata.customName || metadata.originalName.split('.').slice(0, -1).join('.'),
             description: `Téléversé le ${new Date().toLocaleDateString()}`,
             category,
             file_path: filePath,
-            android_version: 'Non spécifiée', // Valeur par défaut
+            android_version: metadata.androidVersion || 'Non spécifiée',
             metadata: { size: metadata.size, mimeType: metadata.mimeType }
         });
         toast({ title: "Succès", description: "Image ajoutée à la galerie." });
