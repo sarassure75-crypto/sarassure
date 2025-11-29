@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Square, Circle, Move, Eraser, Download, Undo, Redo } from 'lucide-react';
 
 /**
@@ -340,6 +340,9 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Éditeur d'image - Protéger les informations personnelles</DialogTitle>
+          <DialogDescription>
+            Utilisez les outils pour flouter ou masquer les informations sensibles sur vos captures d'écran.
+          </DialogDescription>
         </DialogHeader>
 
         {/* Barre d'outils */}
@@ -414,6 +417,13 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
 
         {/* Zone de dessin */}
         <div className="flex-1 overflow-auto bg-gray-100 p-4 flex items-center justify-center">
+          {!imageLoaded && (
+            <div className="text-center text-gray-500">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p>Chargement de l'image...</p>
+              <p className="text-sm mt-2">Si le chargement échoue, vérifiez la console (F12)</p>
+            </div>
+          )}
           <canvas
             ref={canvasRef}
             onMouseDown={handleMouseDown}
@@ -423,7 +433,8 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
             className="max-w-full max-h-full cursor-crosshair bg-white shadow-lg"
             style={{ 
               imageRendering: 'crisp-edges',
-              cursor: isDrawing ? 'crosshair' : 'crosshair'
+              cursor: isDrawing ? 'crosshair' : 'crosshair',
+              display: imageLoaded ? 'block' : 'none'
             }}
           />
         </div>

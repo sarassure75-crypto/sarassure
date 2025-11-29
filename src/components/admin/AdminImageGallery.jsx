@@ -277,6 +277,8 @@ const AdminImageGallery = () => {
 
   // Ouvrir l'éditeur d'image
   const openImageEditor = (image) => {
+    console.log('🎨 Ouverture éditeur pour image:', image);
+    console.log('🖼️ URL publique:', image?.publicUrl);
     setImageToEdit(image);
     setIsImageEditorOpen(true);
   };
