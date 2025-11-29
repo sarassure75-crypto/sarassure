@@ -345,15 +345,6 @@ const AdminImageGallery = () => {
       });
     }
   };
-      toast({ 
-        title: "Erreur", 
-        description: "Impossible de sauvegarder l'image modifiée", 
-        variant: "destructive" 
-      });
-    }
-  };
-
-  
 
   return (
     <div className="p-4">
