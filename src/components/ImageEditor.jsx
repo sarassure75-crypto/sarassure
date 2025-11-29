@@ -22,27 +22,59 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
   useEffect(() => {
     if (open && imageUrl && canvasRef.current) {
       const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
+      const context = canvas.getContext('2d', { willReadFrequently: true });
       setCtx(context);
 
       const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        // Ajuster la taille du canvas à l'image
-        canvas.width = img.width;
-        canvas.height = img.height;
-        context.drawImage(img, 0, 0);
-        
-        setOriginalImage(img);
-        setImageLoaded(true);
-        
-        // Sauvegarder l'état initial
-        saveToHistory();
+      
+      // Ne pas utiliser crossOrigin pour les URLs Supabase car cela peut bloquer le chargement
+      // À la place, on va créer un proxy via fetch
+      
+      const loadImage = async () => {
+        try {
+          // Récupérer l'image via fetch pour contourner les restrictions CORS
+          const response = await fetch(imageUrl);
+          const blob = await response.blob();
+          const objectUrl = URL.createObjectURL(blob);
+          
+          img.onload = () => {
+            // Ajuster la taille du canvas à l'image (max 1920px de largeur)
+            const maxWidth = 1920;
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > maxWidth) {
+              height = (height * maxWidth) / width;
+              width = maxWidth;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            context.drawImage(img, 0, 0, width, height);
+            
+            setOriginalImage(img);
+            setImageLoaded(true);
+            
+            // Sauvegarder l'état initial
+            saveToHistory();
+            
+            // Libérer l'URL object
+            URL.revokeObjectURL(objectUrl);
+          };
+          
+          img.onerror = (error) => {
+            console.error('Erreur de chargement de l\'image:', error);
+            alert('Impossible de charger l\'image. Vérifiez l\'URL.');
+          };
+          
+          img.src = objectUrl;
+        } catch (error) {
+          console.error('Erreur lors du fetch de l\'image:', error);
+          alert('Erreur de chargement de l\'image.');
+        }
       };
-      img.onerror = () => {
-        console.error('Erreur de chargement de l\'image');
-      };
-      img.src = imageUrl;
+      
+      loadImage();
     }
   }, [open, imageUrl]);
 
