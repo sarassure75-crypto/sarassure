@@ -148,19 +148,20 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
       />
 
       <Dialog open={isDialogOpen} onOpenChange={(isOpen) => { if(!isOpen) resetState(); else setIsDialogOpen(true);}}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Redimensionner & Compresser</DialogTitle>
             <DialogDescription>
               Ajustez la taille et la compression de votre image avant de l'ajouter à la galerie.
             </DialogDescription>
           </DialogHeader>
-          {imagePreview && (
-            <div className="my-4 flex justify-center max-h-[300px] overflow-hidden rounded-md border">
-              <img src={imagePreview} alt="Aperçu" className="max-h-full object-contain" />
-            </div>
-          )}
-          <div className="space-y-4">
+          <div className="flex-1 overflow-y-auto">
+            {imagePreview && (
+              <div className="my-4 flex justify-center max-h-[300px] overflow-hidden rounded-md border">
+                <img src={imagePreview} alt="Aperçu" className="max-h-full object-contain" />
+              </div>
+            )}
+            <div className="space-y-4 px-1">
             <div>
               <Label htmlFor="targetWidth" className="flex items-center">
                 <Crop className="mr-2 h-4 w-4" /> Largeur maximale (px)
@@ -247,8 +248,9 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
                 ))}
               </select>
             </div>
+            </div>
           </div>
-          <DialogFooter className="mt-6">
+          <DialogFooter className="mt-4 pt-4 border-t flex-shrink-0">
             <Button type="button" variant="outline" onClick={resetState} disabled={isProcessing}>Annuler</Button>
             <Button type="button" onClick={() => processAndUploadImage(selectedCategory)} disabled={isProcessing}>
                 {isProcessing ? "En cours..." : "Traiter et Téléverser"}
