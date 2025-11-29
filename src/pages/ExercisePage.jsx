@@ -20,6 +20,7 @@ import ActionAnimator from '@/components/exercise/ActionAnimator';
 import InformationPanel from '@/components/exercise/InformationPanel';
 import LearnerNotesViewer from '@/components/exercise/LearnerNotesViewer';
 import useDisableTouchGestures from '@/hooks/useDisableTouchGestures';
+import BravoOverlay from '@/components/exercise/BravoOverlay';
 
 
 const toPascalCase = (str) => {
@@ -341,6 +342,7 @@ const ExercisePage = () => {
   const [error, setError] = useState(null);
   const [showInformationPanel, setShowInformationPanel] = useState(false);
   const [hideActionZone, setHideActionZone] = useState(false);
+  const [showBravoOverlay, setShowBravoOverlay] = useState(false);
   // Toggle to show debug buttons in the toolbar without removing code
   const showDebugButtons = false;
 
@@ -445,6 +447,18 @@ const ExercisePage = () => {
     if (!currentVersion || !currentVersion.steps || currentStepIndex >= currentVersion.steps.length) return;
 
     if (isCorrectAction) {
+      const currentStep = currentVersion.steps[currentStepIndex];
+      
+      // Si c'est une action "bravo", afficher l'overlay au lieu du toast
+      if (currentStep?.action_type === 'bravo') {
+        setShowBravoOverlay(true);
+        // Marquer comme complété sans afficher l'écran de complétion classique
+        if (!isCompleted) {
+          handleCompletion();
+        }
+        return;
+      }
+      
       toast({
         title: "Bien joué !",
         description: "Action correcte.",
@@ -459,7 +473,7 @@ const ExercisePage = () => {
       // Erreur déjà gérée par ZoomableImage
       // Ne pas afficher de toast supplémentaire
     }
-  }, [currentVersion, currentStepIndex, toast, handleCompletion]);
+  }, [currentVersion, currentStepIndex, toast, handleCompletion, isCompleted]);
   
   const handleInputChange = (e) => {
     setInputValue(e.target.value);
@@ -585,6 +599,12 @@ const ExercisePage = () => {
           startArea={currentStep?.start_area}
           hideActionZone={hideActionZone}
           isMobileLayout={true}
+        />
+        {/* Overlay Bravo */}
+        <BravoOverlay
+          isOpen={showBravoOverlay}
+          onClose={() => setShowBravoOverlay(false)}
+          onReturnToTasks={() => navigate('/taches')}
         />
       </div>
       <div className="shrink-0 mt-1.5">
@@ -740,6 +760,12 @@ const ExercisePage = () => {
               startArea={currentStep?.start_area}
               hideActionZone={hideActionZone}
               isMobileLayout={false}
+            />
+            {/* Overlay Bravo */}
+            <BravoOverlay
+              isOpen={showBravoOverlay}
+              onClose={() => setShowBravoOverlay(false)}
+              onReturnToTasks={() => navigate('/taches')}
             />
           </div>
           <ExerciseControls

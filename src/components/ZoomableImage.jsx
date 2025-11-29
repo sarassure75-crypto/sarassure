@@ -14,7 +14,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
   const longPressTimeout = useRef(null);
   
   // Select appropriate zone based on action type
-  const actionArea = ['tap', 'double_tap', 'long_press', 'swipe_left', 'swipe_right', 'swipe_up', 'swipe_down', 'scroll', 'drag_and_drop'].includes(actionType) ? startArea : targetArea;
+  const actionArea = ['tap', 'double_tap', 'long_press', 'swipe_left', 'swipe_right', 'swipe_up', 'swipe_down', 'scroll', 'drag_and_drop', 'bravo'].includes(actionType) ? startArea : targetArea;
   
   const [showTextInput, setShowTextInput] = useState(false);
   const [textInputValue, setTextInputValue] = useState('');
@@ -203,6 +203,11 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
           return;
         }
       } else if (isQuickTap && actionType === 'tap') {
+        setAttemptCount(0);
+        onInteraction(true);
+        return;
+      } else if (isQuickTap && actionType === 'bravo') {
+        // Pour le type "bravo", n'importe quel tap dans la zone déclenche l'overlay
         setAttemptCount(0);
         onInteraction(true);
         return;

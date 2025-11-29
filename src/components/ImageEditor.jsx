@@ -18,11 +18,19 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
   const [originalImage, setOriginalImage] = useState(null);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [canvasReady, setCanvasReady] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Log au montage du composant
   useEffect(() => {
     console.log('📦 ImageEditor monté - Props:', { open, imageUrl: imageUrl?.substring(0, 50) + '...' });
   }, [open, imageUrl]);
+
+  // Réinitialiser isSaving quand le dialog se ferme
+  useEffect(() => {
+    if (!open) {
+      setIsSaving(false);
+    }
+  }, [open]);
 
   // Vérifier si le canvas est monté
   useEffect(() => {
@@ -352,11 +360,14 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
 
   // Sauvegarder l'image modifiée
   const handleSave = () => {
-    if (!canvasRef.current) return;
+    if (!canvasRef.current || isSaving) return;
     
+    setIsSaving(true);
     canvasRef.current.toBlob((blob) => {
       if (blob && onSave) {
         onSave(blob);
+      } else {
+        setIsSaving(false);
       }
     }, 'image/png');
   };
@@ -493,11 +504,11 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
+          <Button variant="outline" onClick={handleClose} disabled={isSaving}>
             Annuler
           </Button>
-          <Button onClick={handleSave} disabled={!imageLoaded}>
-            Enregistrer les modifications
+          <Button onClick={handleSave} disabled={!imageLoaded || isSaving}>
+            {isSaving ? 'Sauvegarde...' : 'Enregistrer les modifications'}
           </Button>
         </DialogFooter>
       </DialogContent>

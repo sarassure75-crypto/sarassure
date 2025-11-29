@@ -285,34 +285,66 @@ const AdminImageGallery = () => {
 
   // Sauvegarder l'image éditée
   const handleSaveEditedImage = async (blob) => {
-    if (!imageToEdit) return;
+    if (!imageToEdit || !blob) {
+      console.error('Image ou blob manquant');
+      return;
+    }
 
     try {
-      // Créer un fichier à partir du blob
-      const file = new File([blob], `edited-${imageToEdit.name}.png`, { type: 'image/png' });
-      
-      // Upload de la nouvelle image
-      const formData = new FormData();
-      formData.append('file', file);
-      
       toast({ 
-        title: "Upload en cours...", 
-        description: "Téléchargement de l'image modifiée" 
+        title: "Traitement...", 
+        description: "Sauvegarde de l'image modifiée en cours" 
       });
 
-      // Remplacer l'ancienne image par la nouvelle
-      // Note: Vous devrez peut-être ajuster cette logique selon votre API
-      // Pour l'instant, on peut uploader comme nouvelle image ou remplacer
+      // Générer un nouveau nom de fichier
+      const timestamp = Date.now();
+      const fileExtension = imageToEdit.file_path.split('.').pop() || 'png';
+      const newFileName = `${timestamp}_${Math.random().toString(36).substring(7)}.${fileExtension}`;
+      const newFilePath = `public/${newFileName}`;
       
-      setIsImageEditorOpen(false);
+      // Créer un fichier à partir du blob
+      const file = new File([blob], newFileName, { type: 'image/png' });
+      
+      // Upload vers Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(newFilePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Mettre à jour la référence dans la base de données
+      await apiUpdateImage(imageToEdit.id, { 
+        file_path: newFilePath,
+        updated_at: new Date().toISOString()
+      });
+
+      // Supprimer l'ancienne image du storage (optionnel)
+      if (imageToEdit.file_path) {
+        await supabase.storage
+          .from('images')
+          .remove([imageToEdit.file_path]);
+      }
+
       toast({ 
         title: "Succès", 
         description: "Image modifiée sauvegardée avec succès" 
       });
       
+      setIsImageEditorOpen(false);
+      setImageToEdit(null);
       await fetchAllData();
     } catch (error) {
       console.error("Error saving edited image:", error);
+      toast({ 
+        title: "Erreur", 
+        description: "Impossible de sauvegarder l'image modifiée", 
+        variant: "destructive" 
+      });
+    }
+  };
       toast({ 
         title: "Erreur", 
         description: "Impossible de sauvegarder l'image modifiée", 
