@@ -462,12 +462,14 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
         </div>
 
         {/* Zone de dessin */}
-        <div className="flex-1 overflow-auto bg-gray-100 p-4 flex items-center justify-center">
+        <div className="flex-1 overflow-auto bg-gray-100 p-4">
           {!imageLoaded && (
-            <div className="text-center text-gray-500">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p>Chargement de l'image...</p>
-              <p className="text-sm mt-2">Si le chargement échoue, vérifiez la console (F12)</p>
+            <div className="text-center text-gray-500 flex items-center justify-center h-full">
+              <div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p>Chargement de l'image...</p>
+                <p className="text-sm mt-2">Si le chargement échoue, vérifiez la console (F12)</p>
+              </div>
             </div>
           )}
           <canvas
@@ -476,7 +478,7 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={() => setIsDrawing(false)}
-            className="max-w-full max-h-full cursor-crosshair bg-white shadow-lg"
+            className="cursor-crosshair bg-white shadow-lg mx-auto"
             style={{ 
               imageRendering: 'crisp-edges',
               cursor: isDrawing ? 'crosshair' : 'crosshair',
