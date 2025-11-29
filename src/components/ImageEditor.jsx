@@ -25,7 +25,15 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
 
   // Charger l'image dans le canvas
   useEffect(() => {
+    console.log('🔄 useEffect image loading - Conditions:', { 
+      open, 
+      hasImageUrl: !!imageUrl, 
+      hasCanvasRef: !!canvasRef.current,
+      imageUrl: imageUrl?.substring(0, 60)
+    });
+    
     if (!open || !imageUrl || !canvasRef.current) {
+      console.log('❌ Chargement annulé - Conditions non remplies');
       return;
     }
 
@@ -33,7 +41,7 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
     const context = canvas.getContext('2d', { willReadFrequently: true });
     setCtx(context);
     
-    console.log('Chargement de l\'image:', imageUrl);
+    console.log('✅ Chargement de l\'image:', imageUrl);
 
     const loadImage = async () => {
       try {
