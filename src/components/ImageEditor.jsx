@@ -32,9 +32,22 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
       imageUrl: imageUrl?.substring(0, 60)
     });
     
-    if (!open || !imageUrl || !canvasRef.current) {
-      console.log('❌ Chargement annulé - Conditions non remplies');
+    if (!open || !imageUrl) {
+      console.log('❌ Chargement annulé - open ou imageUrl manquant');
       return;
+    }
+    
+    // Attendre que le canvas soit monté dans le DOM
+    if (!canvasRef.current) {
+      console.log('⏳ Canvas pas encore monté, nouvel essai dans 100ms...');
+      const timer = setTimeout(() => {
+        if (canvasRef.current) {
+          console.log('✅ Canvas maintenant disponible!');
+          // Forcer un re-render en mettant à jour un état
+          setImageLoaded(prev => prev); // Trigger re-render
+        }
+      }, 100);
+      return () => clearTimeout(timer);
     }
 
     const canvas = canvasRef.current;
