@@ -26,12 +26,28 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
 
   // Vérifier si le canvas est monté
   useEffect(() => {
-    if (open && canvasRef.current && !canvasReady) {
+    if (!open) {
+      setCanvasReady(false);
+      return;
+    }
+
+    // Vérifier immédiatement
+    if (canvasRef.current && !canvasReady) {
       console.log('✅ Canvas détecté et prêt!');
       setCanvasReady(true);
-    } else if (!open) {
-      setCanvasReady(false);
+      return;
     }
+
+    // Si pas encore disponible, réessayer avec un petit délai
+    console.log('🔍 Vérification canvas, tentative programmée...');
+    const timer = setTimeout(() => {
+      if (canvasRef.current && !canvasReady) {
+        console.log('✅ Canvas détecté et prêt (après délai)!');
+        setCanvasReady(true);
+      }
+    }, 50);
+
+    return () => clearTimeout(timer);
   }, [open, canvasReady]);
 
   // Charger l'image dans le canvas
