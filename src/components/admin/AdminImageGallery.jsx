@@ -220,7 +220,7 @@ const AdminImageGallery = () => {
     try {
         await addImage({
             name: metadata.customName || metadata.originalName.split('.').slice(0, -1).join('.'),
-            description: `Téléversé le ${new Date().toLocaleDateString()}`,
+            description: metadata.customDescription || `Téléversé le ${new Date().toLocaleDateString()}`,
             category,
             file_path: filePath,
             android_version: metadata.androidVersion || 'Non spécifiée',

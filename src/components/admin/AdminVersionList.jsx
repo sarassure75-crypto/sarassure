@@ -6,6 +6,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { PlusCircle, Edit, Trash2, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { creationStatuses } from '@/data/tasks';
 import { useAdmin } from '@/contexts/AdminContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import AdminVersionForm from './AdminVersionForm';
 import AdminStepList from './AdminStepList';
@@ -13,6 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 const AdminVersionList = ({ task }) => {
   const { upsertVersion, deleteVersion, isLoading } = useAdmin();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [editingVersion, setEditingVersion] = useState(null);
   const [selectedVersionId, setSelectedVersionId] = useState(null); // State to manage which version's steps are shown
@@ -42,10 +44,15 @@ const AdminVersionList = ({ task }) => {
 
   const handleSaveVersion = async (versionData) => {
     try {
+      // Ajouter user_id pour les nouvelles versions
+      if (!versionData.user_id && user?.id) {
+        versionData.user_id = user.id;
+      }
       await upsertVersion(versionData);
       toast({ title: "Version enregistrée", description: "La version a été enregistrée avec succès." });
       setEditingVersion(null);
     } catch (error) {
+      console.error('Error saving version:', error);
       toast({ title: "Erreur", description: "Impossible d'enregistrer la version.", variant: "destructive" });
     }
   };

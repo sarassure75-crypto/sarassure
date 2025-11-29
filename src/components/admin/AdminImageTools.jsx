@@ -3,9 +3,10 @@ import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Crop, Minimize, ImageDown as UploadIcon, Type, Smartphone } from 'lucide-react';
+import { Crop, Minimize, ImageDown as UploadIcon, Type, Smartphone, FileText } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
@@ -20,6 +21,7 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(categories && categories.length > 0 ? (categories.includes('default') ? 'default' : categories[0]) : 'default');
   const [imageName, setImageName] = useState('');
+  const [imageDescription, setImageDescription] = useState('');
   const [androidVersion, setAndroidVersion] = useState('');
   const fileInputRef = useRef(null);
 
@@ -87,6 +89,7 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
             onImageProcessedAndUploaded(filePath, {
               originalName: selectedFile.name,
               customName: imageName.trim() || selectedFile.name.split('.').slice(0, -1).join('.'),
+              customDescription: imageDescription.trim() || `Téléversé le ${new Date().toLocaleDateString()}`,
               androidVersion: androidVersion.trim() || 'Non spécifiée',
               newWidth: width,
               newHeight: height,
@@ -121,6 +124,7 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
     setTargetWidth(800);
     setCompressionQuality(0.8);
     setImageName('');
+    setImageDescription('');
     setAndroidVersion('');
     setIsDialogOpen(false);
     setIsProcessing(false);
@@ -200,6 +204,19 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
                 onChange={(e) => setImageName(e.target.value)}
                 placeholder="Nom de l'image"
                 disabled={isProcessing}
+              />
+            </div>
+            <div>
+              <Label htmlFor="imageDescription" className="flex items-center">
+                <FileText className="mr-2 h-4 w-4" /> Description
+              </Label>
+              <Textarea
+                id="imageDescription"
+                value={imageDescription}
+                onChange={(e) => setImageDescription(e.target.value)}
+                placeholder="Description de l'image..."
+                disabled={isProcessing}
+                rows={2}
               />
             </div>
             <div>
