@@ -423,9 +423,11 @@ const ExercisePage = () => {
     navigate(path);
   };
   
-  const handleCompletion = useCallback(async () => {
+  const handleCompletion = useCallback(async (skipCompletionScreen = false) => {
       setIsCompleted(true);
-      setShowCompletionScreen(true);
+      if (!skipCompletionScreen) {
+        setShowCompletionScreen(true);
+      }
       if (user && !isPreviewMode && startTimeRef.current) {
         const timeTaken = (Date.now() - startTimeRef.current) / 1000;
         try {
@@ -434,7 +436,7 @@ const ExercisePage = () => {
             console.error('recordCompletion error', res.error);
             toast({ title: 'Erreur', description: 'Impossible d\'enregistrer la progression.', variant: 'destructive' });
           } else {
-            toast({ title: 'Progression sauvegardée', description: 'Votre progression a été enregistrée.' });
+            console.log('Progression enregistrée avec succès');
           }
         } catch (err) {
           console.error('recordCompletion threw', err);
@@ -452,9 +454,9 @@ const ExercisePage = () => {
       // Si c'est une action "bravo", afficher l'overlay au lieu du toast
       if (currentStep?.action_type === 'bravo') {
         setShowBravoOverlay(true);
-        // Marquer comme complété sans afficher l'écran de complétion classique
-        if (!isCompleted) {
-          handleCompletion();
+        // Marquer comme complété et enregistrer la progression (sans écran de complétion classique)
+        if (currentStepIndex === currentVersion.steps.length - 1) {
+          handleCompletion(true); // true = skip completion screen
         }
         return;
       }
@@ -473,7 +475,7 @@ const ExercisePage = () => {
       // Erreur déjà gérée par ZoomableImage
       // Ne pas afficher de toast supplémentaire
     }
-  }, [currentVersion, currentStepIndex, toast, handleCompletion, isCompleted]);
+  }, [currentVersion, currentStepIndex, toast, handleCompletion]);
   
   const handleInputChange = (e) => {
     setInputValue(e.target.value);
