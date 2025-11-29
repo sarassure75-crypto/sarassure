@@ -30,7 +30,7 @@ const AdminVersionList = ({ task }) => {
       task_id: task.id,
       name: `Nouvelle Version ${task.versions.length + 1}`,
       version: '',
-      creation_status: 'to_create',
+      creation_status: 'draft',
       has_variant_note: false,
       steps: [],
       isNew: true,

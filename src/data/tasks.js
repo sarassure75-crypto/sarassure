@@ -15,11 +15,11 @@ import { supabase } from '@/lib/supabaseClient';
     ];
 
     export const creationStatuses = [
-      { id: 'to_create', label: 'À Créer', color: 'bg-gray-500' },
-      { id: 'in_progress', label: 'En Cours', color: 'bg-blue-500' },
-      { id: 'completed', label: 'Terminé', color: 'bg-green-500' },
-      { id: 'to_correct', label: 'À Corriger', color: 'bg-yellow-500' },
-      { id: 'validated', label: 'Validé', color: 'bg-teal-500' },
+      { id: 'draft', label: 'Brouillon', color: 'bg-gray-500' },
+      { id: 'pending', label: 'En attente', color: 'bg-blue-500' },
+      { id: 'needs_changes', label: 'À Corriger', color: 'bg-yellow-500' },
+      { id: 'validated', label: 'Validé', color: 'bg-green-500' },
+      { id: 'rejected', label: 'Rejeté', color: 'bg-red-500' },
     ];
 
     export const fetchTaskCategories = async (forceRefresh = false) => {

@@ -7,6 +7,25 @@ let imagesPromise = null;
 let categoriesCache = null;
 let categoriesPromise = null;
 
+const CUSTOM_CATEGORIES_KEY = 'admin_custom_image_categories';
+
+const getCustomCategories = () => {
+  try {
+    const stored = localStorage.getItem(CUSTOM_CATEGORIES_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveCustomCategories = (categories) => {
+  try {
+    localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(categories));
+  } catch (e) {
+    console.error('Error saving custom categories:', e);
+  }
+};
+
 export const fetchImages = async (forceRefresh = false) => {
   if (imagesCache && !forceRefresh) {
     return imagesCache;
@@ -70,7 +89,8 @@ export const getImageCategories = async (forceRefresh = false) => {
       return ['all', 'default'];
     }
     const cats = data.map(item => item.category);
-    categoriesCache = ['all', ...new Set(cats.filter(Boolean))];
+    const customCats = getCustomCategories();
+    categoriesCache = ['all', ...new Set([...cats.filter(Boolean), ...customCats])];
     categoriesPromise = null;
     return categoriesCache;
   })();
@@ -141,10 +161,13 @@ export const deleteImage = async (id, filePath) => {
 };
 
 export const addImageCategory = async (categoryName) => {
-    // This is a dummy operation as categories are dynamic.
-    // We invalidate cache to force a refresh which will include the new category if an image uses it.
+    const customCats = getCustomCategories();
+    if (!customCats.includes(categoryName)) {
+        customCats.push(categoryName);
+        saveCustomCategories(customCats);
+    }
     invalidateCategoriesCache();
-    return { success: true, message: "Refresh category list to see changes after an image uses it." };
+    return { success: true, message: "Catégorie ajoutée avec succès." };
 };
 
 export const deleteImageCategory = async (categoryName) => {
@@ -159,8 +182,11 @@ export const deleteImageCategory = async (categoryName) => {
         throw new Error("Impossible de supprimer : des images utilisent encore cette catégorie.");
     }
     
-    // As categories are just strings on images, there's nothing to delete from a separate table.
-    // We just need to invalidate the cache.
+    // Remove from custom categories
+    const customCats = getCustomCategories();
+    const filtered = customCats.filter(cat => cat !== categoryName);
+    saveCustomCategories(filtered);
+    
     invalidateCategoriesCache();
     return { success: true };
 };

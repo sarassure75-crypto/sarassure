@@ -69,7 +69,7 @@ const AdminVersionForm = ({ version: initialVersion, onSave, onCancel, onDelete 
             </div>
             <div>
               <Label htmlFor="versionStatus">Statut</Label>
-              <Select value={version.creation_status || 'to_create'} onValueChange={(value) => handleSelectChange('creation_status', value)}>
+              <Select value={version.creation_status || 'draft'} onValueChange={(value) => handleSelectChange('creation_status', value)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {creationStatuses.map(s => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
