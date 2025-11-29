@@ -17,11 +17,22 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
   const [historyStep, setHistoryStep] = useState(-1);
   const [originalImage, setOriginalImage] = useState(null);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [canvasReady, setCanvasReady] = useState(false);
 
   // Log au montage du composant
   useEffect(() => {
     console.log('📦 ImageEditor monté - Props:', { open, imageUrl: imageUrl?.substring(0, 50) + '...' });
   }, [open, imageUrl]);
+
+  // Vérifier si le canvas est monté
+  useEffect(() => {
+    if (open && canvasRef.current && !canvasReady) {
+      console.log('✅ Canvas détecté et prêt!');
+      setCanvasReady(true);
+    } else if (!open) {
+      setCanvasReady(false);
+    }
+  }, [open, canvasReady]);
 
   // Charger l'image dans le canvas
   useEffect(() => {
@@ -29,6 +40,7 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
       open, 
       hasImageUrl: !!imageUrl, 
       hasCanvasRef: !!canvasRef.current,
+      canvasReady,
       imageUrl: imageUrl?.substring(0, 60)
     });
     
@@ -37,17 +49,9 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
       return;
     }
     
-    // Attendre que le canvas soit monté dans le DOM
-    if (!canvasRef.current) {
-      console.log('⏳ Canvas pas encore monté, nouvel essai dans 100ms...');
-      const timer = setTimeout(() => {
-        if (canvasRef.current) {
-          console.log('✅ Canvas maintenant disponible!');
-          // Forcer un re-render en mettant à jour un état
-          setImageLoaded(prev => prev); // Trigger re-render
-        }
-      }, 100);
-      return () => clearTimeout(timer);
+    if (!canvasRef.current || !canvasReady) {
+      console.log('⏳ Attente du canvas...');
+      return;
     }
 
     const canvas = canvasRef.current;
@@ -167,7 +171,7 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
       setHistory([]);
       setHistoryStep(-1);
     };
-  }, [open, imageUrl]);
+  }, [open, imageUrl, canvasReady]);
 
   // Sauvegarder l'état actuel dans l'historique
   const saveToHistory = () => {
