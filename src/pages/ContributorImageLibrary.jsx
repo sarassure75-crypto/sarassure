@@ -25,8 +25,10 @@ import {
   Eye,
   Clock,
   CheckCircle,
-  BookOpen
+  BookOpen,
+  Paintbrush
 } from 'lucide-react';
+import ImageEditor from '@/components/ImageEditor';
 
 export default function ContributorImageLibrary() {
   const { currentUser } = useAuth();
@@ -45,6 +47,10 @@ export default function ContributorImageLibrary() {
   const [allExercises, setAllExercises] = useState([]);
   const [adminExercises, setAdminExercises] = useState([]);
   const [exercisesLoading, setExercisesLoading] = useState(false);
+  
+  // Éditeur d'image
+  const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
+  const [imageToEdit, setImageToEdit] = useState(null);
 
   // Charger TOUS les exercices (admin + contributeurs) + les images admin
   useEffect(() => {
@@ -217,6 +223,31 @@ export default function ContributorImageLibrary() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  // Ouvrir l'éditeur d'image
+  const openImageEditor = (image) => {
+    setImageToEdit(image);
+    setIsImageEditorOpen(true);
+  };
+
+  // Sauvegarder l'image éditée
+  const handleSaveEditedImage = async (blob) => {
+    if (!imageToEdit) return;
+
+    try {
+      // Créer un fichier à partir du blob
+      const file = new File([blob], `edited-${imageToEdit.title || 'image'}.png`, { type: 'image/png' });
+      
+      // Upload comme nouvelle image
+      await uploadImage(file, imageToEdit.category || 'screenshot');
+      
+      setIsImageEditorOpen(false);
+      alert('Image modifiée uploadée avec succès');
+    } catch (error) {
+      console.error("Error saving edited image:", error);
+      alert('Erreur lors de la sauvegarde de l\'image modifiée');
+    }
   };
 
   // Formatage date
@@ -441,6 +472,13 @@ export default function ContributorImageLibrary() {
 
               {/* Actions */}
               <div className={`flex ${viewMode === 'grid' ? 'px-3 pb-3 space-x-2' : 'space-x-2'}`}>
+                <button
+                  onClick={() => openImageEditor(image)}
+                  className="p-2 text-purple-600 hover:bg-purple-50 rounded transition-colors"
+                  title="Éditer (flou, masques)"
+                >
+                  <Paintbrush className="w-4 h-4" />
+                </button>
                 <button
                   onClick={() => handleDownload(image)}
                   className="p-2 text-blue-600 hover:bg-blue-50 rounded transition-colors"
@@ -683,6 +721,14 @@ export default function ContributorImageLibrary() {
           </div>
         </div>
       )}
+
+      {/* Éditeur d'image */}
+      <ImageEditor
+        open={isImageEditorOpen}
+        onOpenChange={setIsImageEditorOpen}
+        imageUrl={imageToEdit?.public_url}
+        onSave={handleSaveEditedImage}
+      />
     </div>
   );
 }

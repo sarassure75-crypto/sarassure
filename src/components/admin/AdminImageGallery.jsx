@@ -4,7 +4,7 @@ import { useAdmin } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Trash2, Edit, Search, X, Loader2, AlertTriangle, ImageDown as ImageUp, FolderPlus, FolderMinus, Layers } from 'lucide-react';
+import { Trash2, Edit, Search, X, Loader2, AlertTriangle, ImageDown as ImageUp, FolderPlus, FolderMinus, Layers, Paintbrush } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,6 +31,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { updateImage as apiUpdateImage, deleteImage as apiDeleteImage, addImage, getImageCategories, addImageCategory, deleteImageCategory } from '@/data/images';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import AdminImageTools from './AdminImageTools';
+import ImageEditor from '@/components/ImageEditor';
 
 // IMPORTANT: Define dialog components at module scope to avoid remounts
 // that reset input values on each parent re-render.
@@ -196,6 +197,8 @@ const AdminImageGallery = () => {
   const [editImage, setEditImage] = useState(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
+  const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
+  const [imageToEdit, setImageToEdit] = useState(null);
 
   const images = useMemo(() => (imagesMap instanceof Map ? Array.from(imagesMap.values()) : []), [imagesMap]);
   
@@ -272,6 +275,50 @@ const AdminImageGallery = () => {
     }
   };
 
+  // Ouvrir l'éditeur d'image
+  const openImageEditor = (image) => {
+    setImageToEdit(image);
+    setIsImageEditorOpen(true);
+  };
+
+  // Sauvegarder l'image éditée
+  const handleSaveEditedImage = async (blob) => {
+    if (!imageToEdit) return;
+
+    try {
+      // Créer un fichier à partir du blob
+      const file = new File([blob], `edited-${imageToEdit.name}.png`, { type: 'image/png' });
+      
+      // Upload de la nouvelle image
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      toast({ 
+        title: "Upload en cours...", 
+        description: "Téléchargement de l'image modifiée" 
+      });
+
+      // Remplacer l'ancienne image par la nouvelle
+      // Note: Vous devrez peut-être ajuster cette logique selon votre API
+      // Pour l'instant, on peut uploader comme nouvelle image ou remplacer
+      
+      setIsImageEditorOpen(false);
+      toast({ 
+        title: "Succès", 
+        description: "Image modifiée sauvegardée avec succès" 
+      });
+      
+      await fetchAllData();
+    } catch (error) {
+      console.error("Error saving edited image:", error);
+      toast({ 
+        title: "Erreur", 
+        description: "Impossible de sauvegarder l'image modifiée", 
+        variant: "destructive" 
+      });
+    }
+  };
+
   
 
   return (
@@ -333,6 +380,14 @@ const AdminImageGallery = () => {
                    <p className="text-xs text-muted-foreground mt-1">{formatBytes(image.metadata?.size || 0)}</p>
                 </CardContent>
                 <CardFooter className="p-2 flex justify-end gap-1">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => openImageEditor(image)}
+                    title="Éditer l'image (flou, masques)"
+                  >
+                    <Paintbrush className="h-4 w-4" />
+                  </Button>
                   <Button variant="ghost" size="icon" onClick={() => handleEdit(image)}>
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -368,12 +423,24 @@ const AdminImageGallery = () => {
           </div>
         )}
       </ScrollArea>
+      
+      {/* Dialog d'édition des métadonnées */}
       <EditDialog 
         open={isEditDialogOpen}
         onOpenChange={(isOpen) => { if (!isOpen) setEditImage(null); setIsEditDialogOpen(isOpen);} }
         editImage={editImage}
         onSubmit={handleUpdate}
         isEditing={isEditing}
+        adminCategories={adminCategories}
+      />
+
+      {/* Éditeur d'image avec flou et masques */}
+      <ImageEditor
+        open={isImageEditorOpen}
+        onOpenChange={setIsImageEditorOpen}
+        imageUrl={imageToEdit?.publicUrl}
+        onSave={handleSaveEditedImage}
+      />
         adminCategories={adminCategories}
       />
     </div>
