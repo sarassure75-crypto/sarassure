@@ -1284,7 +1284,7 @@ function StepForm({ step, images, onSave, onCancel, onDelete }) {
             </select>
           </div>
 
-          {formStep.action_type && selectedImage && (
+          {formStep.action_type && formStep.action_type !== 'bravo' && selectedImage && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
               <p className="font-medium mb-1">💡 Zone d'action</p>
               <p className="text-xs">
@@ -1299,11 +1299,20 @@ function StepForm({ step, images, onSave, onCancel, onDelete }) {
               </p>
             </div>
           )}
+
+          {formStep.action_type === 'bravo' && selectedImage && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800">
+              <p className="font-medium mb-1">🎉 Bravo</p>
+              <p className="text-xs">
+                Cette étape affichera uniquement la capture d'écran de félicitations sans zone d'action à cliquer.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* COLONNE DROITE: Image + Éditeur */}
         <div className="lg:col-span-2">
-          {selectedImage && formStep.action_type ? (
+          {selectedImage && formStep.action_type && formStep.action_type !== 'bravo' ? (
             <div className="space-y-4">
               <div className="border border-gray-300 rounded-lg bg-gray-100 overflow-auto" style={{ maxHeight: '600px' }}>
                 <StepAreaEditor
@@ -1316,6 +1325,19 @@ function StepForm({ step, images, onSave, onCancel, onDelete }) {
               <p className="text-xs text-gray-500 text-center">
                 Cliquez et glissez sur l'image pour dessiner la zone d'action
               </p>
+            </div>
+          ) : selectedImage && formStep.action_type === 'bravo' ? (
+            <div className="border border-gray-300 rounded-lg bg-gray-50 overflow-hidden">
+              <img 
+                src={selectedImage.public_url} 
+                alt="Capture finale" 
+                className="w-full h-auto"
+              />
+              <div className="p-4 text-center bg-green-50">
+                <p className="text-sm text-green-800">
+                  🎉 Capture d'écran de félicitations (aucune zone d'action requise)
+                </p>
+              </div>
             </div>
           ) : (
             <div className="border border-dashed border-gray-300 rounded-lg p-8 bg-gray-50 flex items-center justify-center min-h-96">

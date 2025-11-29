@@ -12,6 +12,7 @@ import { supabase } from '@/lib/supabaseClient';
       { id: 'drag_and_drop', label: 'Maintenir et déplacer' },
       { id: 'number_input', label: 'Clavier num' },
       { id: 'text_input', label: 'Clavier texte' },
+      { id: 'bravo', label: '🎉 Bravo (sans zone d\'action)' },
     ];
 
     export const creationStatuses = [

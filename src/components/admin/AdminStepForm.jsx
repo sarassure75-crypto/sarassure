@@ -128,7 +128,7 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
       </div>
 
       {/* Zone éditeur visuel avec drag-drop sur la capture */}
-      {watch('action_type') && selectedImage && (
+      {watch('action_type') && watch('action_type') !== 'bravo' && selectedImage && (
         <div className="border rounded-lg p-4 bg-gray-50">
           <Label className="text-base font-semibold mb-4 block">Configuration de la zone d'action</Label>
           <StepAreaEditor
@@ -147,6 +147,15 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
             }}
             onImageLoad={setEditorImageDimensions}
           />
+        </div>
+      )}
+
+      {/* Message pour l'option Bravo */}
+      {watch('action_type') === 'bravo' && selectedImage && (
+        <div className="border rounded-lg p-4 bg-blue-50 border-blue-200">
+          <p className="text-sm text-blue-800">
+            🎉 <strong>Étape de félicitations :</strong> Cette étape affichera uniquement la capture d'écran sans zone d'action à cliquer. Parfait pour montrer un message de réussite ou le résultat final.
+          </p>
         </div>
       )}
 
