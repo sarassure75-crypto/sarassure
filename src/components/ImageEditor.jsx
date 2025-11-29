@@ -18,6 +18,11 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
   const [originalImage, setOriginalImage] = useState(null);
   const [imageLoaded, setImageLoaded] = useState(false);
 
+  // Log au montage du composant
+  useEffect(() => {
+    console.log('📦 ImageEditor monté - Props:', { open, imageUrl: imageUrl?.substring(0, 50) + '...' });
+  }, [open, imageUrl]);
+
   // Charger l'image dans le canvas
   useEffect(() => {
     if (!open || !imageUrl || !canvasRef.current) {
