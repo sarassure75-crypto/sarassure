@@ -82,11 +82,16 @@ export const AuthProvider = ({ children }) => {
     }
   }, [fetchProfile]);
 
+  const logout = useCallback(async () => {
+    setCurrentUser(null); // Nettoyer immédiatement l'état
+    await supabase.auth.signOut();
+  }, []);
+
   const value = {
     currentUser,
     loading,
     login: (email, password) => supabase.auth.signInWithPassword({ email, password }),
-    logout: () => supabase.auth.signOut(),
+    logout,
     register: (email, password, metadata) => supabase.auth.signUp({ email, password, options: { data: metadata } }),
     loginWithLearnerCode,
     refetchUser,
