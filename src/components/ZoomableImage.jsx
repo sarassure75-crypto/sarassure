@@ -443,7 +443,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
             transition: { type: 'spring', stiffness: 300, damping: 30 },
           }}
         >
-          <ImageFromSupabase imageId={imageId} alt={alt} className="w-full h-full object-contain" />
+          <ImageFromSupabase imageId={imageId} alt={alt} className="w-full h-full object-cover" />
         </motion.div>
       </motion.div>
       

@@ -52,9 +52,31 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
     const img = new Image();
     img.onload = async () => {
       const canvas = document.createElement('canvas');
-      let width = img.width;
-      let height = img.height;
-
+      
+      // Ratio cible 9:16 pour smartphone
+      const targetRatio = 9 / 16;
+      const sourceRatio = img.width / img.height;
+      
+      let sourceWidth = img.width;
+      let sourceHeight = img.height;
+      let sourceX = 0;
+      let sourceY = 0;
+      
+      // Crop pour obtenir le ratio 9:16
+      if (sourceRatio > targetRatio) {
+        // Image trop large, on crop les côtés
+        sourceWidth = img.height * targetRatio;
+        sourceX = (img.width - sourceWidth) / 2;
+      } else if (sourceRatio < targetRatio) {
+        // Image trop haute, on crop le haut et le bas
+        sourceHeight = img.width / targetRatio;
+        sourceY = (img.height - sourceHeight) / 2;
+      }
+      
+      // Redimensionner si nécessaire
+      let width = sourceWidth;
+      let height = sourceHeight;
+      
       if (width > targetWidth) {
         height = (targetWidth / width) * height;
         width = targetWidth;
@@ -63,7 +85,9 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
       canvas.width = width;
       canvas.height = height;
       const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, width, height);
+      
+      // Dessiner l'image croppée et redimensionnée
+      ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, width, height);
 
       canvas.toBlob(async (blob) => {
         if (blob) {
