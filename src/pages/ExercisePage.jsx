@@ -800,9 +800,9 @@ const ExercisePage = () => {
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }} 
       transition={{ duration: 0.3 }} 
-      className={cn("mx-auto flex flex-col fixed inset-0 overflow-auto", isMobileLayout ? "p-0.5" : "p-2 md:p-4 max-w-4xl mx-auto")}
+      className={cn("mx-auto flex flex-col fixed inset-0", isMobileLayout ? "p-0.5 overflow-hidden" : "p-2 md:p-4 max-w-4xl mx-auto overflow-auto")}
     >
-      <div className={cn("shrink-0", isMobileLayout ? "sticky top-0 bg-background z-10" : "")}> 
+      <div className={cn("shrink-0", isMobileLayout ? "sticky top-0 bg-background z-10 pb-1" : "")}> 
         <ExerciseHeader 
           taskTitle={task.title}
           currentStep={currentStep}
@@ -826,7 +826,7 @@ const ExercisePage = () => {
         />
       </div>
       
-      <div className={cn("flex-grow min-h-0", isMobileLayout ? "overflow-y-auto" : "")}>
+      <div className={cn("flex-grow min-h-0 overflow-y-auto")}>
         <AnimatePresence mode="wait">
           <motion.div
             key={`${currentVersion.id}-${currentStepIndex}`}
