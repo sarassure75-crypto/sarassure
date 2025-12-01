@@ -54,7 +54,7 @@ export const fetchUserProgressDetails = async (userId) => {
 
 
 export const recordCompletion = async (userId, versionId, timeTakenInSeconds) => {
-  if (!userId || !versionId) return;
+  if (!userId || !versionId) return { error: 'Missing userId or versionId' };
 
   const existingProgress = await getProgressForVersion(userId, versionId);
 
@@ -62,17 +62,7 @@ export const recordCompletion = async (userId, versionId, timeTakenInSeconds) =>
   const completionEvent = { time: new Date().toISOString(), duration: timeTakenInSeconds };
 
   if (existingProgress) {
-    // Check if user_id and version_id are present before creating the composite key for upsert
-    if (!existingProgress.user_id || !existingProgress.version_id) {
-        console.error("Existing progress is missing user_id or version_id", existingProgress);
-        // Handle case where we can't form a conflict key, maybe create a new one.
-        // For now, let's just add them if they are missing.
-        existingProgress.user_id = userId;
-        existingProgress.version_id = versionId;
-    }
-
     newProgressData = {
-      id: existingProgress.id,
       user_id: userId,
       version_id: versionId,
       attempts: (existingProgress.attempts || 0) + 1,
@@ -93,10 +83,14 @@ export const recordCompletion = async (userId, versionId, timeTakenInSeconds) =>
   }
   
   try {
-     const { data, error } = await supabase.from('user_version_progress').upsert(newProgressData, {
-        onConflict: 'id',
-        ignoreDuplicates: false,
-    }).select();
+     const { data, error } = await supabase
+       .from('user_version_progress')
+       .upsert(newProgressData, {
+         onConflict: 'user_id,version_id'
+       })
+       .select()
+       .single();
+       
     if (error) {
       console.error("recordCompletion - upsert error:", error);
       return { error };
