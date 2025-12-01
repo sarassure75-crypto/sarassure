@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { searchImages } from "../data/imagesMetadata";
+import { getImageSubcategories, DEFAULT_SUBCATEGORIES } from "../data/images";
 import { actionTypes } from "../data/tasks";
 import { linkExerciseToRequest } from "../data/exerciseRequests";
 import CGUWarningBanner from "../components/CGUWarningBanner";
@@ -1138,6 +1139,58 @@ function StepForm({ step, images, onSave, onCancel, onDelete }) {
   const [formStep, setFormStep] = useState(step);
   const [selectedImage, setSelectedImage] = useState(null);
   const [editorImageDimensions, setEditorImageDimensions] = useState({ width: 0, height: 0 });
+  
+  // Filters for images
+  const [subcategoryFilter, setSubcategoryFilter] = useState('all');
+  const [androidVersionFilter, setAndroidVersionFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState("Capture d'écran");
+  const [availableSubcategories, setAvailableSubcategories] = useState([]);
+
+  // Load subcategories when category changes
+  useEffect(() => {
+    const loadSubcategories = async () => {
+      if (categoryFilter && categoryFilter !== 'all') {
+        const subcats = await getImageSubcategories(categoryFilter, true);
+        if (subcats && subcats.length > 0) {
+          setAvailableSubcategories(subcats);
+        } else {
+          setAvailableSubcategories([]);
+        }
+      }
+    };
+    loadSubcategories();
+    setSubcategoryFilter('all');
+  }, [categoryFilter]);
+
+  // Filter images by category, subcategory, and Android version
+  const filteredImages = images.filter(img => {
+    if (categoryFilter !== 'all' && img.category !== categoryFilter) {
+      return false;
+    }
+    if (subcategoryFilter !== 'all' && img.subcategory !== subcategoryFilter) {
+      return false;
+    }
+    if (androidVersionFilter !== 'all' && img.android_version !== androidVersionFilter) {
+      return false;
+    }
+    return true;
+  });
+
+  // Get unique Android versions from images
+  const availableAndroidVersions = useMemo(() => {
+    const versions = images
+      .filter(img => categoryFilter === 'all' || img.category === categoryFilter)
+      .map(img => img.android_version)
+      .filter(v => v && v !== null && v !== '');
+    return ['all', ...new Set(versions)].sort((a, b) => {
+      if (a === 'all') return -1;
+      if (b === 'all') return 1;
+      // Extract numeric part for proper sorting
+      const numA = parseInt(a.match(/\d+/)?.[0] || '0');
+      const numB = parseInt(b.match(/\d+/)?.[0] || '0');
+      return numB - numA; // Descending order
+    });
+  }, [images, categoryFilter]);
 
   // Charger l'image sélectionnée au montage
   useEffect(() => {
@@ -1266,6 +1319,84 @@ function StepForm({ step, images, onSave, onCancel, onDelete }) {
             </div>
           )}
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Filtres pour les images
+              </label>
+              
+              {/* Category filter */}
+              <div className="mb-2">
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                >
+                  <option value="all">Toutes catégories</option>
+                  <option value="Capture d'écran">Capture d'écran</option>
+                  <option value="Fond d'écran">Fond d'écran</option>
+                  <option value="Icône">Icône</option>
+                  <option value="Autre">Autre</option>
+                </select>
+              </div>
+
+              {/* Subcategory filter buttons */}
+              {availableSubcategories.length > 0 && (
+                <div className="mb-2">
+                  <div className="text-xs text-gray-600 mb-1">Sous-cat:</div>
+                  <div className="flex flex-wrap gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setSubcategoryFilter('all')}
+                      className={`px-2 py-1 rounded text-xs ${
+                        subcategoryFilter === 'all'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      Toutes
+                    </button>
+                    {availableSubcategories.map(subcat => (
+                      <button
+                        type="button"
+                        key={subcat}
+                        onClick={() => setSubcategoryFilter(subcat)}
+                        className={`px-2 py-1 rounded text-xs ${
+                          subcategoryFilter === subcat
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {subcat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Android version filter buttons */}
+              {availableAndroidVersions.length > 0 && (
+                <div className="mb-2">
+                  <div className="text-xs text-gray-600 mb-1">Android:</div>
+                  <div className="flex flex-wrap gap-1">
+                    {availableAndroidVersions.map(version => (
+                      <button
+                        type="button"
+                        key={version}
+                        onClick={() => setAndroidVersionFilter(version)}
+                        className={`px-2 py-1 rounded text-xs ${
+                          androidVersionFilter === version
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {version === 'all' ? 'Toutes' : version}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Image de capture *
@@ -1276,12 +1407,15 @@ function StepForm({ step, images, onSave, onCancel, onDelete }) {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             >
               <option value="">Sélectionner une image</option>
-              {images.map(img => (
+              {filteredImages.map(img => (
                 <option key={img.id} value={img.id}>
                   {img.title || img.name}
                 </option>
               ))}
             </select>
+            <p className="text-xs text-gray-500 mt-1">
+              {filteredImages.length} image(s) disponible(s)
+            </p>
           </div>
 
           {formStep.action_type && formStep.action_type !== 'bravo' && selectedImage && (

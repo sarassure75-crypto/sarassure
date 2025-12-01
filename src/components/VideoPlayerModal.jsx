@@ -5,18 +5,42 @@ import React from 'react';
     const VideoPlayerModal = ({ isOpen, onClose, videoUrl, title }) => {
       if (!isOpen || !videoUrl) return null;
 
+      // More robust parsing for YouTube and Vimeo URLs
+      const parseYouTubeId = (url) => {
+        // Matches various YouTube URL formats and extracts the 11-char id
+        // Includes: watch?v=, embed/, v/, shorts/, youtu.be/
+        const ytRegex = /(?:youtube(?:-nocookie)?\.com\/(?:watch\?.*v=|embed\/|v\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/;
+        const m = url.match(ytRegex);
+        if (m && m[1]) return m[1];
+        // try query param fallback
+        try {
+          const u = new URL(url);
+          return u.searchParams.get('v');
+        } catch (e) {
+          return null;
+        }
+      };
+
+      const parseVimeoId = (url) => {
+        // Matches vimeo.com/{id} or player.vimeo.com/video/{id}
+        const vimeoRegex = /(?:vimeo\.com\/(?:video\/)?)([0-9]+)/;
+        const m = url.match(vimeoRegex);
+        return m ? m[1] : null;
+      };
+
       let embedUrl = '';
-      if (videoUrl.includes('youtube.com/watch?v=')) {
-        const videoId = videoUrl.split('v=')[1].split('&')[0];
-        embedUrl = `https://www.youtube.com/embed/${videoId}`;
-      } else if (videoUrl.includes('youtu.be/')) {
-        const videoId = videoUrl.split('youtu.be/')[1].split('?')[0];
-        embedUrl = `https://www.youtube.com/embed/${videoId}`;
-      } else if (videoUrl.includes('vimeo.com/')) {
-        const videoId = videoUrl.split('vimeo.com/')[1].split('?')[0];
-        embedUrl = `https://player.vimeo.com/video/${videoId}`;
+      const ytId = parseYouTubeId(videoUrl || '');
+      const vimeoId = parseVimeoId(videoUrl || '');
+
+      if (ytId) {
+        embedUrl = `https://www.youtube.com/embed/${ytId}`;
+      } else if (vimeoId) {
+        embedUrl = `https://player.vimeo.com/video/${vimeoId}`;
+      } else if ((videoUrl || '').includes('/embed/')) {
+        // Already an embed URL
+        embedUrl = videoUrl;
       } else {
-        // Fallback or error for unsupported URL
+        // Unsupported
         return (
           <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent>

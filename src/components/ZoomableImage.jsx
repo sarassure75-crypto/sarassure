@@ -1,17 +1,22 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, useDragControls, AnimatePresence } from 'framer-motion';
-import { Maximize, Minimize } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, X } from 'lucide-react';
 import ImageFromSupabase from './ImageFromSupabase';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 
-const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInteraction, imageContainerClassName, isMobileLayout, isZoomActive: initialZoom = false, hideActionZone = false }) => {
+const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInteraction, imageContainerClassName, isMobileLayout, isZoomActive: initialZoom = false, hideActionZone = false, keyboardAutoShow = false, expectedInput = '' }) => {
   const [isZoomed, setIsZoomed] = useState(initialZoom);
-  const [isDragging, setIsDragging] = useState(false);
-  const dragControls = useDragControls();
   const containerRef = useRef(null);
+  const imageRef = useRef(null);
   const longPressTimeout = useRef(null);
+  
+  // Loupe qui suit le curseur
+  const [magnifierPos, setMagnifierPos] = useState({ x: 0, y: 0 });
+  const [showMagnifier, setShowMagnifier] = useState(false);
+  const [mainImageRect, setMainImageRect] = useState(null);
+  const [mainImageSrc, setMainImageSrc] = useState(null);
   
   // Select appropriate zone based on action type
   const actionArea = ['tap', 'double_tap', 'long_press', 'swipe_left', 'swipe_right', 'swipe_up', 'swipe_down', 'scroll', 'drag_and_drop', 'bravo'].includes(actionType) ? startArea : targetArea;
@@ -26,6 +31,52 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
   useEffect(() => {
     setIsZoomed(initialZoom);
   }, [initialZoom]);
+  
+  // Gestionnaire du mouvement de la loupe - simple et direct
+  const handleMouseMove = (e) => {
+    if (!isZoomed || !containerRef.current) return;
+    
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // Vérifier que le pointeur est dans les limites du container
+    if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
+      setMagnifierPos({ x, y });
+      setShowMagnifier(true);
+    }
+  };
+  
+  const handleTouchMove = (e) => {
+    if (!isZoomed || !containerRef.current || e.touches.length === 0) return;
+    
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = e.touches[0].clientX - rect.left;
+    const y = e.touches[0].clientY - rect.top;
+    
+    // Vérifier que le pointeur est dans les limites du container
+    if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
+      setMagnifierPos({ x, y });
+      setShowMagnifier(true);
+    }
+  };
+  
+  const handleMouseLeave = () => {
+    setShowMagnifier(false);
+  };
+  
+  const handleTouchEnd = () => {
+    setShowMagnifier(false);
+  };
+  
+  // Affichage automatique du clavier pour number_input ou text_input avec keyboard_auto_show
+  useEffect(() => {
+    if (actionType === 'number_input') {
+      setShowTextInput(true);
+    } else if (actionType === 'text_input' && keyboardAutoShow) {
+      setShowTextInput(true);
+    }
+  }, [actionType, keyboardAutoShow]);
   
   useEffect(() => {
     if (showTextInput && textInputRef.current) {
@@ -181,14 +232,12 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
     if (distance < 10) {
       const elapsed = Date.now() - interactionState.current.startTime;
       const isQuickTap = elapsed < 700;
-      
       if (actionType === 'double_tap') {
         // Double-tap: détecter 2 taps rapides (<300ms) dans la même zone
         const now = Date.now();
         const isSecondTap = now - interactionState.current.lastTapTime < 300 &&
-                          Math.abs(event.clientX - interactionState.current.lastTapX) < 50 &&
-                          Math.abs(event.clientY - interactionState.current.lastTapY) < 50;
-        
+                            Math.abs(event.clientX - interactionState.current.lastTapX) < 50 &&
+                            Math.abs(event.clientY - interactionState.current.lastTapY) < 50;
         if (isSecondTap) {
           // Double-tap valide!
           setAttemptCount(0);
@@ -214,12 +263,12 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
       } else if (isQuickTap && (actionType === 'text_input' || actionType === 'number_input')) {
         setShowTextInput(true);
         return;
+        return;
       } else if (isQuickTap && !['long_press', 'drag_and_drop'].includes(actionType)) {
         handleWrongAction();
         return;
       }
     }
-    
     if (!['drag_and_drop'].includes(actionType)) {
       handleWrongAction();
     }
@@ -421,31 +470,38 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
   return (
     <div 
       ref={containerRef} 
-      className={cn("relative w-full h-full overflow-hidden bg-black select-none", imageContainerClassName)} 
+      className={cn("relative overflow-hidden w-auto h-auto max-w-full max-h-full", imageContainerClassName)} 
       onContextMenu={handleContextMenu}
       onPointerDown={actionType !== 'drag_and_drop' ? handlePointerDown : undefined}
       onPointerMove={actionType !== 'drag_and_drop' ? handlePointerMove : undefined}
       onPointerUp={actionType !== 'drag_and_drop' ? handlePointerUp : undefined}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
-      <motion.div
-        className="absolute inset-0 w-full h-full cursor-grab"
-        drag={isZoomed && isDragging}
-        dragControls={dragControls}
-        dragConstraints={containerRef}
-        dragElastic={0.1}
-        onPointerDown={(e) => isZoomed && dragControls.start(e)}
-        whileTap={{ cursor: 'grabbing' }}
-      >
-        <motion.div
-          className="w-full h-full"
-          animate={{
-            scale: isZoomed ? 2 : 1,
-            transition: { type: 'spring', stiffness: 300, damping: 30 },
+      {/* Image principale sans zoom */}
+      <div className="relative w-full h-full">
+        <ImageFromSupabase 
+          ref={imageRef}
+          imageId={imageId} 
+          alt={alt} 
+          className="w-full h-auto"
+          style={{ objectFit: 'contain', objectPosition: 'left top', display: 'block' }}
+          onLoad={() => {
+            try {
+              const el = imageRef.current;
+              if (el) {
+                const rect = el.getBoundingClientRect();
+                setMainImageRect({ width: rect.width, height: rect.height });
+                setMainImageSrc(el.src || null);
+              }
+            } catch (e) {
+              // ignore
+            }
           }}
-        >
-          <ImageFromSupabase imageId={imageId} alt={alt} className="w-full h-full object-cover" />
-        </motion.div>
-      </motion.div>
+        />
+      </div>
       
       {actionArea && !hideActionZone && (
         <motion.div
@@ -474,32 +530,33 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
         />
       )}
 
-      {showTextInput && actionArea && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          style={getAreaStyle(actionArea)}
-          className="z-20 flex items-center justify-center p-4 bg-white rounded-lg shadow-lg"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="w-full flex flex-col items-center gap-2">
-            {/* Barre en contraste - noire au début */}
-            <div className="w-full h-3 bg-black rounded-t-lg"></div>
-            
-            <Input
-              ref={textInputRef}
-              type={actionType === 'number_input' ? 'number' : 'text'}
-              inputMode={actionType === 'number_input' ? 'numeric' : 'text'}
-              value={textInputValue}
-              onChange={handleTextInputChange}
-              className="w-full text-center text-lg p-3 rounded border-0 focus:outline-none"
-              placeholder={actionType === 'number_input' ? 'Entrez un nombre...' : 'Entrez le texte...'}
-              autoComplete="off"
-              autoFocus
-            />
-          </div>
-        </motion.div>
+      {showTextInput && targetArea && (
+        (() => {
+          const area = { ...targetArea };
+          return (
+            <div
+              style={getAreaStyle(area)}
+              className="z-20 flex items-center justify-center p-2 bg-white/95 rounded border-2 border-blue-500"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Input
+                ref={textInputRef}
+                type={actionType === 'number_input' ? 'number' : 'text'}
+                inputMode={actionType === 'number_input' ? 'numeric' : 'text'}
+                value={textInputValue}
+                onChange={handleTextInputChange}
+                onBlur={() => {
+                  setShowTextInput(false);
+                  setTextInputValue('');
+                }}
+                className="w-full text-center text-lg p-3 rounded border-2 border-blue-500 bg-white"
+                placeholder={actionType === 'number_input' ? '0' : 'Tapez ici...'}
+                autoComplete="off"
+                autoFocus
+              />
+            </div>
+          );
+        })()
       )}
 
       <AnimatePresence>
@@ -525,12 +582,43 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
         )}
       </AnimatePresence>
 
+      {/* Loupe circulaire simple qui suit le curseur */}
+      {isZoomed && showMagnifier && mainImageSrc && mainImageRect && (
+        <div
+          className="absolute pointer-events-none z-40"
+          style={{
+            left: `${magnifierPos.x}px`,
+            top: `${magnifierPos.y}px`,
+            width: '120px',
+            height: '120px',
+            transform: 'translate(-50%, -50%)',
+            border: '2px solid white',
+            borderRadius: '50%',
+            boxShadow: '0 0 10px rgba(0,0,0,0.3)',
+            overflow: 'hidden',
+            backgroundColor: 'rgba(255, 255, 255, 0.05)'
+          }}
+        >
+          {/* Background-based magnifier: use the main image src and scale/position the background */}
+          <div
+            style={{
+              width: '100%',
+              height: '100%',
+              backgroundImage: `url(${mainImageSrc})`,
+              backgroundRepeat: 'no-repeat',
+              backgroundSize: `${mainImageRect.width * 2}px ${mainImageRect.height * 2}px`,
+              backgroundPosition: `${60 - magnifierPos.x * 2}px ${60 - magnifierPos.y * 2}px`
+            }}
+          />
+        </div>
+      )}
+
       <button
         onClick={() => setIsZoomed(!isZoomed)}
         className="absolute bottom-2 right-2 z-20 p-2 bg-background/50 backdrop-blur-sm rounded-full text-foreground hover:bg-background/80"
-        title={isZoomed ? "Dézoomer" : "Zoomer"}
+        title={isZoomed ? "Désactiver la loupe" : "Activer la loupe"}
       >
-        {isZoomed ? <Minimize size={isMobileLayout ? 16 : 20} /> : <Maximize size={isMobileLayout ? 16 : 20} />}
+        {isZoomed ? <X size={isMobileLayout ? 16 : 20} /> : <Search size={isMobileLayout ? 16 : 20} />}
       </button>
     </div>
   );

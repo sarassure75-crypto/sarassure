@@ -7,13 +7,13 @@ import {
 } from "../hooks/useImageLibrary";
 import { useAuth } from "../contexts/AuthContext";
 import { useContributorStats } from "../hooks/useContributions";
+import { getImageSubcategories, DEFAULT_SUBCATEGORIES } from '../data/images';
 import { useNavigate } from 'react-router-dom';
 import CGUWarningBanner from '../components/CGUWarningBanner';
 import { createClient } from "@supabase/supabase-js";
 import { 
   Upload, 
   Search, 
-  Filter, 
   Grid, 
   List, 
   X, 
@@ -43,6 +43,8 @@ export default function ContributorImageLibrary() {
   // Filtres
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [subcategoryFilter, setSubcategoryFilter] = useState('all');
+  const [androidVersionFilter, setAndroidVersionFilter] = useState('all');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' ou 'list'
   const [allExercises, setAllExercises] = useState([]);
   const [adminExercises, setAdminExercises] = useState([]);
@@ -51,6 +53,47 @@ export default function ContributorImageLibrary() {
   // Éditeur d'image
   const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
   const [imageToEdit, setImageToEdit] = useState(null);
+
+  // Upload states - declared before useEffect that uses them
+  const [uploadFile, setUploadFile] = useState(null);
+  const [uploadTitle, setUploadTitle] = useState('');
+  const [uploadCategory, setUploadCategory] = useState("Capture d'écran");
+  const [uploadSubcategory, setUploadSubcategory] = useState('général');
+  const [uploadAndroidVersion, setUploadAndroidVersion] = useState('');
+  const [uploadTags, setUploadTags] = useState('');
+  const [availableSubcategories, setAvailableSubcategories] = useState(['général', 'parametres', 'first acces']);
+
+  // Load subcategories for gallery filter when category changes
+  const [gallerySubcategories, setGallerySubcategories] = useState([]);
+  useEffect(() => {
+    const loadGallerySubcategories = async () => {
+      if (categoryFilter && categoryFilter !== 'all') {
+        const subcats = await getImageSubcategories(categoryFilter, true);
+        setGallerySubcategories(subcats || []);
+      } else {
+        setGallerySubcategories([]);
+      }
+    };
+    loadGallerySubcategories();
+    setSubcategoryFilter('all'); // Reset subcategory filter when category changes
+  }, [categoryFilter]);
+
+  // Load subcategories when upload category changes
+  useEffect(() => {
+    const loadSubcategories = async () => {
+      if (uploadCategory && uploadCategory !== 'all') {
+        const subcats = await getImageSubcategories(uploadCategory, true);
+        if (subcats && subcats.length > 0) {
+          setAvailableSubcategories(subcats);
+        } else {
+          setAvailableSubcategories(DEFAULT_SUBCATEGORIES);
+        }
+      } else {
+        setAvailableSubcategories(DEFAULT_SUBCATEGORIES);
+      }
+    };
+    loadSubcategories();
+  }, [uploadCategory]);
 
   // Charger TOUS les exercices (admin + contributeurs) + les images admin
   useEffect(() => {
@@ -95,11 +138,33 @@ export default function ContributorImageLibrary() {
   }, []);
 
   // Hooks - Récupérer TOUTES les images approuvées + les images de l'utilisateur
-  const { images, loading, refresh } = useImageLibrary({
+  const { images: allImages, loading, refresh } = useImageLibrary({
     // Afficher les images approuvées (de tous les contributeurs + admin)
     moderationStatus: 'approved',
     category: categoryFilter === 'all' ? undefined : categoryFilter,
     searchTerm: searchTerm || undefined
+  });
+
+  // Apply subcategory and Android version filters
+  const images = (allImages || []).filter(img => {
+    if (subcategoryFilter !== 'all' && img.subcategory !== subcategoryFilter) {
+      return false;
+    }
+    if (androidVersionFilter !== 'all' && img.android_version !== androidVersionFilter) {
+      return false;
+    }
+    return true;
+  });
+
+  // Extract unique Android versions from all images for filter
+  const availableAndroidVersions = ['all', ...new Set(
+    (allImages || [])
+      .map(img => img.android_version)
+      .filter(v => v && v !== null && v !== '')
+  )].sort((a, b) => {
+    if (a === 'all') return -1;
+    if (b === 'all') return 1;
+    return parseInt(b) - parseInt(a);
   });
 
   const { upload, uploading, progress: uploadProgress } = useImageUpload();
@@ -110,12 +175,6 @@ export default function ContributorImageLibrary() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [dragActive, setDragActive] = useState(false);
-
-  // Upload
-  const [uploadFile, setUploadFile] = useState(null);
-  const [uploadTitle, setUploadTitle] = useState('');
-  const [uploadCategory, setUploadCategory] = useState('screenshot');
-  const [uploadTags, setUploadTags] = useState('');
 
   // Statistiques
   const stats = {
@@ -182,6 +241,8 @@ export default function ContributorImageLibrary() {
       {
         title: uploadTitle,
         category: uploadCategory,
+        subcategory: uploadSubcategory,
+        android_version: uploadAndroidVersion.trim() || null,
         tags: tagsArray,
         contributor_id: currentUser.id
       },
@@ -201,7 +262,9 @@ export default function ContributorImageLibrary() {
   const resetUploadForm = () => {
     setUploadFile(null);
     setUploadTitle('');
-    setUploadCategory('screenshot');
+    setUploadCategory("Capture d'écran");
+    setUploadSubcategory('général');
+    setUploadAndroidVersion('');
     setUploadTags('');
   };
 
@@ -239,11 +302,27 @@ export default function ContributorImageLibrary() {
       // Créer un fichier à partir du blob
       const file = new File([blob], `edited-${imageToEdit.title || 'image'}.png`, { type: 'image/png' });
       
-      // Upload comme nouvelle image
-      await uploadImage(file, imageToEdit.category || 'screenshot');
+      // Upload comme nouvelle image en utilisant le hook upload
+      const result = await upload(
+        file,
+        {
+          title: `${imageToEdit.title || 'image'} (éditée)`,
+          category: imageToEdit.category || 'screenshot',
+          subcategory: imageToEdit.subcategory || 'général',
+          android_version: imageToEdit.android_version || null,
+          tags: imageToEdit.tags || [],
+          contributor_id: currentUser.id
+        },
+        currentUser.id
+      );
       
-      setIsImageEditorOpen(false);
-      alert('Image modifiée uploadée avec succès');
+      if (result.success) {
+        setIsImageEditorOpen(false);
+        alert('✅ Image modifiée uploadée avec succès');
+        refresh();
+      } else {
+        alert(`❌ Erreur : ${result.error}`);
+      }
     } catch (error) {
       console.error("Error saving edited image:", error);
       alert('Erreur lors de la sauvegarde de l\'image modifiée');
@@ -385,10 +464,10 @@ export default function ContributorImageLibrary() {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="all">Toutes les catégories</option>
-              <option value="screenshot">Captures d'écran</option>
-              <option value="wallpaper">Fonds d'écran</option>
-              <option value="icon">Icônes</option>
-              <option value="other">Autres</option>
+              <option value="Capture d'écran">Captures d'écran</option>
+              <option value="Fond d'écran">Fonds d'écran</option>
+              <option value="Icône">Icônes</option>
+              <option value="Autre">Autres</option>
             </select>
           </div>
 
@@ -408,6 +487,60 @@ export default function ContributorImageLibrary() {
             </button>
           </div>
         </div>
+
+        {/* Sous-catégorie filters */}
+        {gallerySubcategories.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="text-sm font-medium text-gray-700 mb-2">Sous-catégories:</div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSubcategoryFilter('all')}
+                className={`px-3 py-1 rounded text-sm ${
+                  subcategoryFilter === 'all'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Toutes
+              </button>
+              {gallerySubcategories.map(subcat => (
+                <button
+                  key={subcat}
+                  onClick={() => setSubcategoryFilter(subcat)}
+                  className={`px-3 py-1 rounded text-sm ${
+                    subcategoryFilter === subcat
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {subcat}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Android version filters */}
+        {availableAndroidVersions.length > 1 && (
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="text-sm font-medium text-gray-700 mb-2">Version Android:</div>
+            <div className="flex flex-wrap gap-2">
+              {availableAndroidVersions.map(version => (
+                <button
+                  key={version}
+                  onClick={() => setAndroidVersionFilter(version)}
+                  className={`px-3 py-1 rounded text-sm ${
+                    androidVersionFilter === version
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {version === 'all' ? 'Toutes' : `Android ${version}`}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Galerie */}
@@ -629,11 +762,39 @@ export default function ContributorImageLibrary() {
                       onChange={(e) => setUploadCategory(e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      <option value="screenshot">Capture ecran</option>
-                      <option value="wallpaper">Fond d'écran</option>
-                      <option value="icon">Icône</option>
-                      <option value="other">Autre</option>
+                      <option value="Capture d'écran">Capture d'écran</option>
+                      <option value="Fond d'écran">Fond d'écran</option>
+                      <option value="Icône">Icône</option>
+                      <option value="Autre">Autre</option>
                     </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Sous-catégorie
+                    </label>
+                    <select
+                      value={uploadSubcategory}
+                      onChange={(e) => setUploadSubcategory(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      {availableSubcategories.map(subcat => (
+                        <option key={subcat} value={subcat}>{subcat}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Version Android
+                    </label>
+                    <input
+                      type="text"
+                      value={uploadAndroidVersion}
+                      onChange={(e) => setUploadAndroidVersion(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Ex: 14, 13, 12..."
+                    />
                   </div>
 
                   <div>

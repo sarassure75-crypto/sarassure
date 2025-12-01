@@ -12,7 +12,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { v4 as uuidv4 } from 'uuid';
 
 const AdminTaskManager = () => {
-  const { tasks, images, fetchAllData, isLoading, error, deleteTask, updateTask, createTask } = useAdmin();
+  const { tasks, images, categories, fetchAllData, isLoading, error, deleteTask, updateTask, createTask } = useAdmin();
   const [view, setView] = useState('list'); // 'list', 'form'
   const [selectedTask, setSelectedTask] = useState(null);
   const { toast } = useToast();
@@ -151,6 +151,7 @@ const AdminTaskManager = () => {
               onAddNewTask={handleAddNewTask}
               onDeleteTask={handleDeleteTask}
               imagesMap={imagesMap}
+              categories={categories}
             />
           ) : (
             selectedTask && (

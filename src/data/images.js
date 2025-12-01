@@ -6,8 +6,13 @@ let imagesCache = null;
 let imagesPromise = null;
 let categoriesCache = null;
 let categoriesPromise = null;
+let subcategoriesCache = {};
+let subcategoriesPromise = {};
 
 const CUSTOM_CATEGORIES_KEY = 'admin_custom_image_categories';
+
+// Default subcategories for "Capture d'écran" category
+export const DEFAULT_SUBCATEGORIES = ['général', 'parametres', 'first acces'];
 
 const getCustomCategories = () => {
   try {
@@ -105,12 +110,26 @@ const invalidateCategoriesCache = () => {
   categoriesCache = null;
   categoriesPromise = null;
 };
+const invalidateSubcategoriesCache = (category = null) => {
+  if (category) {
+    delete subcategoriesCache[category];
+    delete subcategoriesPromise[category];
+  } else {
+    subcategoriesCache = {};
+    subcategoriesPromise = {};
+  }
+};
 
 
 export const addImage = async (imageData) => {
+  const dataWithSubcategory = {
+    ...imageData,
+    subcategory: imageData.subcategory || 'général'
+  };
+  
   const { data, error } = await supabase
     .from('app_images')
-    .insert([imageData])
+    .insert([dataWithSubcategory])
     .select()
     .single();
 
@@ -122,6 +141,7 @@ export const addImage = async (imageData) => {
   if (!categoriesCache?.includes(imageData.category)) {
       invalidateCategoriesCache();
   }
+  invalidateSubcategoriesCache(imageData.category);
   return data;
 };
 
@@ -139,6 +159,7 @@ export const updateImage = async (id, updates) => {
   }
   invalidateCache();
   invalidateCategoriesCache();
+  invalidateSubcategoriesCache();
   return data;
 };
 
@@ -158,6 +179,7 @@ export const deleteImage = async (id, filePath) => {
     }
     invalidateCache();
     invalidateCategoriesCache();
+    invalidateSubcategoriesCache();
 };
 
 export const addImageCategory = async (categoryName) => {
@@ -211,4 +233,45 @@ export const getImageByName = async (name) => {
       throw error;
     }
     return data;
+};
+
+export const getImageSubcategories = async (category = null, forceRefresh = false) => {
+  const cacheKey = category || 'all';
+  
+  if (subcategoriesCache[cacheKey] && !forceRefresh) {
+    return subcategoriesCache[cacheKey];
+  }
+  
+  if (subcategoriesPromise[cacheKey] && !forceRefresh) {
+    return subcategoriesPromise[cacheKey];
+  }
+  
+  subcategoriesPromise[cacheKey] = (async () => {
+    try {
+      const { data, error } = await supabase
+        .rpc('get_distinct_image_subcategories', { category_filter: category });
+      
+      if (error) {
+        console.error('Error fetching image subcategories:', error);
+        // Return defaults if RPC fails
+        subcategoriesCache[cacheKey] = DEFAULT_SUBCATEGORIES;
+        delete subcategoriesPromise[cacheKey];
+        return DEFAULT_SUBCATEGORIES;
+      }
+      
+      const subcats = data.map(item => item.subcategory).filter(Boolean);
+      // Ensure defaults are always present
+      const merged = [...new Set([...DEFAULT_SUBCATEGORIES, ...subcats])];
+      subcategoriesCache[cacheKey] = merged;
+      delete subcategoriesPromise[cacheKey];
+      return merged;
+    } catch (err) {
+      console.error('Error in getImageSubcategories:', err);
+      subcategoriesCache[cacheKey] = DEFAULT_SUBCATEGORIES;
+      delete subcategoriesPromise[cacheKey];
+      return DEFAULT_SUBCATEGORIES;
+    }
+  })();
+  
+  return subcategoriesPromise[cacheKey];
 };

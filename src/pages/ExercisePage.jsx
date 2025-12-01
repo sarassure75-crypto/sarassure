@@ -13,6 +13,7 @@ import * as LucideIcons from 'lucide-react';
 import ExerciseToolbar from '@/components/exercise/ExerciseToolbar';
 import VersionHeader from '@/components/exercise/VersionHeader';
 import ExerciseControls from '@/components/exercise/ExerciseControls';
+import VerticalToolbar from '@/components/exercise/VerticalToolbar';
 import ImageFromSupabase from '@/components/ImageFromSupabase';
 import { recordCompletion } from '@/data/progress';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,35 +32,41 @@ const toPascalCase = (str) => {
     .join('');
 };
 
-const ExerciseHeader = ({ taskTitle, onNavigateBack, onNavigateHome, onViewNotes, isMobileLayout }) => (
-  <div className={cn("flex justify-between items-center shrink-0 relative", isMobileLayout ? "py-1 px-0.5" : "mb-4 md:mb-6")}> 
-    <Button variant="outline" onClick={onNavigateBack} size={isMobileLayout ? "icon_xs" : "sm"} className={isMobileLayout ? "h-7 w-7" : ""}>
-      <ChevronLeft className={cn(isMobileLayout ? "h-4 w-4" : "mr-1 h-4 w-4")} /> <span className={cn(isMobileLayout ? "sr-only" : "")}>Tâches</span>
-    </Button>
-    <h1 className={cn("font-bold text-center text-primary truncate px-1", isMobileLayout ? "text-sm leading-tight" : "text-xl sm:text-2xl md:text-3xl")}>{taskTitle}</h1>
-    <div className="flex items-center gap-1.5">
-      <Button variant="outline" onClick={onNavigateHome} size={isMobileLayout ? "icon_xs" : "sm"} className={isMobileLayout ? "h-7 w-7" : ""}>
-        <Home className={cn(isMobileLayout ? "h-4 w-4" : "mr-1 h-4 w-4")} /> <span className={cn(isMobileLayout ? "sr-only" : "")}>Accueil</span>
-      </Button>
-      {/* Bouton consulter les notes */}
-      <button 
-        onClick={onViewNotes} 
-        className={cn("flex-shrink-0 bg-primary/80 hover:bg-primary/90 text-white rounded-md flex items-center justify-center transition-colors", isMobileLayout ? "h-7 w-7" : "h-8 w-8")}
-        title="Consulter mes notes"
-      >
-        <FolderOpen className={isMobileLayout ? "h-4 w-4" : "h-5 w-5"} />
-      </button>
-      {/* Bouton ajouter une note */}
-      <button 
-        onClick={() => window.dispatchEvent(new CustomEvent('openNotesModal'))} 
-        className={cn("flex-shrink-0 bg-primary/80 hover:bg-primary/90 text-white rounded-md flex items-center justify-center transition-colors", isMobileLayout ? "h-7 w-7" : "h-8 w-8")}
-        title="Ajouter une note"
-      >
-        <FileText className={isMobileLayout ? "h-4 w-4" : "h-5 w-5"} />
-      </button>
+const ExerciseHeader = ({ taskTitle, currentStep, onPlayAudio, showInstructions, isMobileLayout }) => {
+  const IconComponent = currentStep?.icon_name ? LucideIcons[toPascalCase(currentStep.icon_name)] : null;
+  
+  return (
+    <div className={cn("flex justify-between items-center shrink-0 relative bg-white p-4 rounded-lg shadow", isMobileLayout ? "mb-2" : "mb-4")}>
+      {/* Titre à gauche */}
+      <h1 className={cn("font-bold text-primary", isMobileLayout ? "text-sm" : "text-xl sm:text-2xl")}>{taskTitle}</h1>
+      
+      {/* Instructions à droite (affichées par défaut) */}
+      {showInstructions && (
+        <div className="flex items-center gap-3">
+          {IconComponent && (
+            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
+              <IconComponent className="w-6 h-6 text-primary" />
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <p className={cn("text-gray-700", isMobileLayout ? "text-xs" : "text-base")}>
+              {currentStep?.instruction || 'Aucune instruction'}
+            </p>
+            {currentStep?.instruction && (
+              <button
+                onClick={() => onPlayAudio(currentStep.instruction)}
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                title="Écouter l'instruction"
+              >
+                <Volume2 className="w-5 h-5 text-primary" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 const ExerciseTabs = ({ versions, currentVersionId, onTabChange, isMobileLayout }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -348,6 +355,58 @@ const ExercisePage = () => {
 
   // Désactiver les gestes tactiles natifs
   useDisableTouchGestures();
+  
+  // Empêcher le body de scroller seulement quand un champ reçoit le focus (évite le décalage au clavier)
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    const originalPosition = document.body.style.position;
+    const originalTop = document.body.style.top;
+    const originalLeft = document.body.style.left;
+    const originalRight = document.body.style.right;
+    const originalBottom = document.body.style.bottom;
+
+    const applyFixed = () => {
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = '0';
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      document.body.style.bottom = '0';
+    };
+
+    const restore = () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.position = originalPosition;
+      document.body.style.top = originalTop;
+      document.body.style.left = originalLeft;
+      document.body.style.right = originalRight;
+      document.body.style.bottom = originalBottom;
+    };
+
+    const onFocusIn = (e) => {
+      const tag = e.target?.tagName?.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || e.target?.isContentEditable) {
+        applyFixed();
+      }
+    };
+
+    const onFocusOut = (e) => {
+      const tag = e.target?.tagName?.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || e.target?.isContentEditable) {
+        // small timeout to allow other focus events
+        setTimeout(() => restore(), 50);
+      }
+    };
+
+    window.addEventListener('focusin', onFocusIn);
+    window.addEventListener('focusout', onFocusOut);
+
+    return () => {
+      restore();
+      window.removeEventListener('focusin', onFocusIn);
+      window.removeEventListener('focusout', onFocusOut);
+    };
+  }, []);
 
   const startTimeRef = useRef(null);
 
@@ -404,7 +463,6 @@ const ExercisePage = () => {
 
         setCurrentStepIndex(initialStepIndex >= 0 && initialStepIndex < foundVersion.steps.length ? initialStepIndex : 0);
         setIsCompleted(false);
-        setShowInstructions(foundVersion.name.toLowerCase().includes('guidé'));
 
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -594,6 +652,8 @@ const ExercisePage = () => {
           isMobileLayout={true}
           isZoomActive={isZoomActive}
           hideActionZone={hideActionZone}
+          keyboardAutoShow={currentStep?.keyboard_auto_show || false}
+          expectedInput={currentStep?.expected_input || ''}
         />
         {/* Animation pour les swipes et drag - Mobile */}
         <ActionAnimator
@@ -664,122 +724,74 @@ const ExercisePage = () => {
   );
 
   const mainContentDesktop = (
-    <div className="p-3 sm:p-4 md:p-6 bg-card rounded-lg shadow-xl flex flex-col relative">
+    <div className="bg-card rounded-lg shadow-xl">
       <AnimatePresence>
         {showCompletionScreen && <CompletionScreen onBackToList={() => navigate('/taches')} isMobileLayout={false} />}
       </AnimatePresence>
-      <VersionHeader
-        versionName={currentVersion.name}
-        versionNumber={currentVersion.version}
-        progress={totalSteps > 0 ? ((isCompleted ? totalSteps : currentStepIndex + 1) / totalSteps) * 100 : 0}
-        hasVideo={!!videoUrl}
-        onVideoClick={() => setIsVideoModalOpen(true)}
-        onListClick={() => navigate(`/tache/${taskId}`)}
-        isMobileLayout={false}
-      />
-      {currentVersion.has_variant_note && (
-        <div className="my-2 sm:my-3 text-xs sm:text-sm p-1 sm:p-1.5 bg-amber-100 border-l-4 border-amber-500 text-amber-700 rounded shrink-0">
-          <div className="flex items-center"> <AlertTriangle className="mr-1 h-4 w-4 sm:h-5 sm:w-5"/> <p className="font-semibold">Note :</p> </div>
-          <p>Cette version peut présenter des différences.</p>
+
+      <div className="flex gap-2 items-start p-4 pb-0">
+        {/* Barre verticale verte à gauche */}
+        <VerticalToolbar
+          isZoomActive={isZoomActive}
+          onZoomToggle={() => setIsZoomActive(z => !z)}
+          showInstructions={showInstructions}
+          onInstructionsToggle={() => setShowInstructions(s => !s)}
+          hideActionZone={hideActionZone}
+          onHideActionZone={() => setHideActionZone(h => !h)}
+          versions={sortedVersions}
+          currentVersionId={versionId}
+          onVersionChange={handleTabChange}
+          onNavigateHome={() => navigate('/')}
+          onViewNotes={() => setNotesViewerOpen(true)}
+          onAddNote={() => window.dispatchEvent(new CustomEvent('openNotesModal'))}
+          onPrev={goToPrevStep}
+          onNext={goToNextStep}
+          isPrevDisabled={currentStepIndex === 0}
+          isNextDisabled={currentStepIndex === totalSteps - 1 && isCompleted}
+          onNavigateToTasks={() => navigate('/taches')}
+          isMobileLayout={false}
+        />
+
+        {/* Zone capture d'écran avec zone d'action */}
+        <div className="flex-1">
+          <div className="relative w-full h-full flex items-start justify-start">
+            <ZoomableImage
+            imageId={currentStep?.app_image_id}
+            alt={`Capture d'écran pour l'étape`}
+            targetArea={currentStep?.target_area}
+            actionType={currentStep?.action_type}
+            startArea={currentStep?.start_area}
+            onInteraction={handleInteraction}
+            imageContainerClassName=""
+            isMobileLayout={false}
+            isZoomActive={isZoomActive}
+            hideActionZone={hideActionZone}
+            keyboardAutoShow={currentStep?.keyboard_auto_show || false}
+            expectedInput={currentStep?.expected_input || ''}
+          />
+          {/* Animation pour les swipes et drag */}
+          <ActionAnimator
+            actionType={currentStep?.action_type}
+            startArea={currentStep?.start_area}
+            hideActionZone={hideActionZone}
+            isMobileLayout={false}
+          />
+          {/* Overlay Bravo */}
+          <BravoOverlay
+            isOpen={showBravoOverlay}
+            onClose={() => setShowBravoOverlay(false)}
+            onReturnToTasks={() => navigate('/taches')}
+          />
+          </div>
         </div>
-      )}
-      {/* Outils en haut juste après le titre */}
-      <ExerciseToolbar
-        isZoomActive={isZoomActive}
-        onZoomToggle={() => setIsZoomActive(z => !z)}
-        showInstructions={showInstructions}
-        onInstructionsToggle={() => setShowInstructions(s => !s)}
-        hideActionZone={hideActionZone}
-        onHideActionZone={() => setHideActionZone(h => !h)}
-        versions={sortedVersions}
-        currentVersionId={versionId}
-        onVersionChange={handleTabChange}
-        isMobileLayout={false}
-        onDebugForceSave={showDebugButtons ? async () => {
-          if (!user) return;
-          const timeTaken = 1;
-          const res = await recordCompletion(user.id, versionId, timeTaken);
-          if (res && res.error) {
-            toast({ title: 'Erreur debug', description: 'Impossible d\'enregistrer la progression (debug).', variant: 'destructive' });
-          } else {
-            toast({ title: 'Debug', description: 'Progression debug enregistrée.' });
-          }
-        } : undefined}
-        onDebugDeleteProgress={showDebugButtons ? async () => {
-          if (!user) return;
-          try {
-            const { data, error } = await supabase.from('user_version_progress').delete().match({ user_id: user.id, version_id: versionId });
-            if (error) {
-              toast({ title: 'Erreur debug', description: 'Suppression échouée.', variant: 'destructive' });
-            } else {
-              toast({ title: 'Debug', description: 'Progression supprimée.' });
-            }
-          } catch (err) {
-            toast({ title: 'Erreur', description: 'Suppression échouée.', variant: 'destructive' });
-          }
-        } : undefined}
-      />
+      </div>
+      
       <InformationPanel
         isVisible={showInformationPanel}
         onClose={() => setShowInformationPanel(false)}
         actionType={currentStep?.action_type}
         startArea={currentStep?.start_area}
       />
-      <div className="grid md:grid-cols-2 gap-3 sm:gap-4 md:gap-6 flex-grow min-h-0">
-        <div className="flex flex-col w-full">
-          <div className="flex items-center justify-center space-x-2 mb-2">
-            {/* Icônes zoom/info/etc. ici */}
-            {/* ...icônes existantes... */}
-          </div>
-          {/* Bloc d'action conditionnel juste sous les icônes */}
-          {!showInstructions && (
-            <StepDisplay 
-              currentStep={currentStep} 
-              currentStepIndex={currentStepIndex}
-              totalSteps={totalSteps}
-              showInstructions={showInstructions}
-              isMobileLayout={false}
-              onPlayAudio={playInstructionAudio}
-              iconName={currentStep?.icon_name}
-            />
-          )}
-          <div className="w-full max-w-sm mx-auto aspect-[9/16] bg-black rounded-lg overflow-hidden relative">
-            <ZoomableImage
-              imageId={currentStep?.app_image_id}
-              alt={`Capture d'écran pour l'étape`}
-              targetArea={currentStep?.target_area}
-              actionType={currentStep?.action_type}
-              startArea={currentStep?.start_area}
-              onInteraction={handleInteraction}
-              imageContainerClassName="w-full h-full"
-              isMobileLayout={false}
-              isZoomActive={isZoomActive}
-              hideActionZone={hideActionZone}
-            />
-            {/* Animation pour les swipes et drag */}
-            <ActionAnimator
-              actionType={currentStep?.action_type}
-              startArea={currentStep?.start_area}
-              hideActionZone={hideActionZone}
-              isMobileLayout={false}
-            />
-            {/* Overlay Bravo */}
-            <BravoOverlay
-              isOpen={showBravoOverlay}
-              onClose={() => setShowBravoOverlay(false)}
-              onReturnToTasks={() => navigate('/taches')}
-            />
-          </div>
-          <ExerciseControls
-            onPrev={goToPrevStep}
-            onNext={goToNextStep}
-            isPrevDisabled={currentStepIndex === 0}
-            isNextDisabled={currentStepIndex === totalSteps - 1 && isCompleted}
-            isCompleted={isCompleted}
-            isMobileLayout={false}
-          />
-        </div>
-      </div>
     </div>
   );
 
@@ -788,14 +800,14 @@ const ExercisePage = () => {
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }} 
       transition={{ duration: 0.3 }} 
-      className={cn("mx-auto h-full flex flex-col", isMobileLayout ? "p-0.5 max-w-full" : "p-2 md:p-0 max-w-4xl")}
+      className={cn("mx-auto flex flex-col fixed inset-0 overflow-auto", isMobileLayout ? "p-0.5" : "p-2 md:p-4 max-w-4xl mx-auto")}
     >
       <div className={cn("shrink-0", isMobileLayout ? "sticky top-0 bg-background z-10" : "")}> 
         <ExerciseHeader 
           taskTitle={task.title}
-          onNavigateBack={() => navigate(isPreviewMode ? `/admin/dashboard` : `/taches`)}
-          onNavigateHome={() => navigate('/')}
-          onViewNotes={() => setNotesViewerOpen(true)}
+          currentStep={currentStep}
+          onPlayAudio={playInstructionAudio}
+          showInstructions={showInstructions}
           isMobileLayout={isMobileLayout}
         />
         <NotesModal 
@@ -811,12 +823,6 @@ const ExercisePage = () => {
           onClose={() => setNotesViewerOpen(false)}
           taskId={task?.id}
           userId={user?.id}
-        />
-        <ExerciseTabs 
-          versions={sortedVersions}
-          currentVersionId={currentVersion.id}
-          onTabChange={handleTabChange}
-          isMobileLayout={isMobileLayout}
         />
       </div>
       
@@ -836,16 +842,7 @@ const ExercisePage = () => {
       </div>
 
       <div className={cn("flex justify-between shrink-0", isMobileLayout ? "mt-1.5" : "mt-4 sm:mt-6 md:mt-8")}>
-        {prevVersionOverall ? (
-          <Button variant="outline" size={isMobileLayout ? "xs" : "sm"} onClick={() => handleTabChange(prevVersionOverall.id)} className={isMobileLayout ? "text-2xs h-7 px-1.5" : "text-xs sm:text-sm"}>
-            <ChevronLeft className={cn("mr-0.5", isMobileLayout ? "h-3 w-3" : "h-3 w-3 sm:h-4 sm:w-4")} /> V. Préc.
-          </Button>
-        ) : <div />}
-        {nextVersionOverall ? (
-          <Button variant="outline" size={isMobileLayout ? "xs" : "sm"} onClick={() => handleTabChange(nextVersionOverall.id)} className={isMobileLayout ? "text-2xs h-7 px-1.5" : "text-xs sm:text-sm"}>
-            V. Suiv. <ChevronRight className={cn("ml-0.5", isMobileLayout ? "h-3 w-3" : "h-3 w-3 sm:h-4 sm:w-4")} />
-          </Button>
-        ) : <div />}
+        {/* Boutons de navigation entre versions supprimés */}
       </div>
       
       <VideoPlayerModal 

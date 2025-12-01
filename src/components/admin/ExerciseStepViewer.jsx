@@ -63,7 +63,7 @@ export default function ExerciseStepViewer({ steps = [] }) {
               <img
                 src={currentStep.image_url}
                 alt={`Étape ${currentStepIndex + 1}`}
-                className="w-full h-auto rounded-lg border border-gray-200 block"
+                className="w-full h-full object-fill rounded-lg border border-gray-200 block"
                 style={{ transform: `scale(${zoom})`, transformOrigin: 'center' }}
               />
               

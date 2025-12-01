@@ -60,7 +60,21 @@ const TaskItem = ({ task, onSelectTask, onDeleteTask, imagesMap }) => {
   );
 };
 
-const AdminTaskList = ({ tasks, onSelectTask, onAddNewTask, onDeleteTask, imagesMap }) => {
+const AdminTaskList = ({ tasks, onSelectTask, onAddNewTask, onDeleteTask, imagesMap, categories = [] }) => {
+  const [selectedCategory, setSelectedCategory] = useState('all');
+
+  // Group tasks by category name (use task.category or 'Sans catégorie')
+  const grouped = tasks.reduce((acc, task) => {
+    const cat = task.category || 'Sans catégorie';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(task);
+    return acc;
+  }, {});
+
+  // Build a list of category names in desired order: provided categories first, then others
+  const categoryOrder = ['all', ...categories.map(c => c.name)];
+  const otherCats = Object.keys(grouped).filter(k => k !== 'Sans catégorie' && !categoryOrder.includes(k));
+  const orderedCategoryKeys = ['all', ...categories.map(c => c.name), ...otherCats, 'Sans catégorie'].filter((v, i, a) => a.indexOf(v) === i);
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -68,22 +82,55 @@ const AdminTaskList = ({ tasks, onSelectTask, onAddNewTask, onDeleteTask, images
           <CardTitle>Gestion des Tâches</CardTitle>
           <CardDescription>Créez, modifiez et organisez les tâches de l'application.</CardDescription>
         </div>
-        <Button onClick={onAddNewTask}>
-          <PlusCircle className="mr-2 h-4 w-4" /> Ajouter une Tâche
-        </Button>
+        <div className="flex items-center space-x-3">
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="px-3 py-2 border rounded bg-white text-sm"
+            aria-label="Filtrer par catégorie"
+          >
+            <option value="all">Toutes catégories</option>
+            {categories.map(cat => (
+              <option key={cat.id} value={cat.name}>{cat.name}</option>
+            ))}
+            <option value="Sans catégorie">Sans catégorie</option>
+          </select>
+
+          <Button onClick={onAddNewTask}>
+            <PlusCircle className="mr-2 h-4 w-4" /> Ajouter une Tâche
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         {tasks && tasks.length > 0 ? (
-          <div className="space-y-4">
-            {tasks.map(task => (
-              <TaskItem
-                key={task.id}
-                task={task}
-                onSelectTask={onSelectTask}
-                onDeleteTask={onDeleteTask}
-                imagesMap={imagesMap}
-              />
-            ))}
+          <div className="space-y-6">
+            {(() => {
+              // When showing 'all', render each category group (avoid rendering a flat "all" list)
+              const keysToRender = selectedCategory === 'all'
+                ? orderedCategoryKeys.filter(k => k !== 'all')
+                : [selectedCategory];
+
+              return keysToRender.map(catName => {
+                const items = catName === 'all' ? tasks : (grouped[catName] || []);
+                if (!items || items.length === 0) return null;
+                return (
+                  <div key={catName}>
+                    {catName !== 'all' && <h3 className="text-sm font-semibold mb-2">{catName}</h3>}
+                    <div className="space-y-4">
+                      {items.map(task => (
+                        <TaskItem
+                          key={task.id}
+                          task={task}
+                          onSelectTask={onSelectTask}
+                          onDeleteTask={onDeleteTask}
+                          imagesMap={imagesMap}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              });
+            })()}
           </div>
         ) : (
           <div className="text-center py-12">

@@ -1,15 +1,16 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Crop, Minimize, ImageDown as UploadIcon, Type, Smartphone, FileText } from 'lucide-react';
+import { Crop, Minimize, ImageDown as UploadIcon, Type, Smartphone, FileText, FolderTree } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
+import { DEFAULT_SUBCATEGORIES, getImageSubcategories } from '@/data/images';
 
 const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
   const { toast } = useToast();
@@ -20,10 +21,30 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(categories && categories.length > 0 ? (categories.includes('default') ? 'default' : categories[0]) : 'default');
+  const [selectedSubcategory, setSelectedSubcategory] = useState('général');
+  const [availableSubcategories, setAvailableSubcategories] = useState(DEFAULT_SUBCATEGORIES);
   const [imageName, setImageName] = useState('');
   const [imageDescription, setImageDescription] = useState('');
   const [androidVersion, setAndroidVersion] = useState('');
   const fileInputRef = useRef(null);
+
+  // Load subcategories when category changes
+  useEffect(() => {
+    const loadSubcategories = async () => {
+      try {
+        const subcats = await getImageSubcategories(selectedCategory);
+        setAvailableSubcategories(subcats);
+        // Reset to first available subcategory
+        if (!subcats.includes(selectedSubcategory)) {
+          setSelectedSubcategory(subcats[0] || 'général');
+        }
+      } catch (error) {
+        console.error('Error loading subcategories:', error);
+        setAvailableSubcategories(DEFAULT_SUBCATEGORIES);
+      }
+    };
+    loadSubcategories();
+  }, [selectedCategory]);
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -119,7 +140,8 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
               newHeight: height,
               quality: compressionQuality,
               size: processedFile.size,
-              mimeType: processedFile.type
+              mimeType: processedFile.type,
+              subcategory: selectedSubcategory
             }, category);
             toast({ title: "Image traitée et téléversée", description: `L'image a été ajoutée à la galerie.` });
             resetState();
@@ -150,6 +172,7 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
     setImageName('');
     setImageDescription('');
     setAndroidVersion('');
+    setSelectedSubcategory('général');
     setIsDialogOpen(false);
     setIsProcessing(false);
     if (fileInputRef.current) {
@@ -269,6 +292,23 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
               >
                 {(categories || []).filter(c => c !== 'all').map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label htmlFor="upload-subcategory" className="flex items-center">
+                <FolderTree className="mr-2 h-4 w-4" /> Sous-catégorie
+              </Label>
+              <select
+                id="upload-subcategory"
+                name="subcategory"
+                value={selectedSubcategory}
+                onChange={(e) => setSelectedSubcategory(e.target.value)}
+                className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                disabled={isProcessing}
+              >
+                {availableSubcategories.map(subcat => (
+                  <option key={subcat} value={subcat}>{subcat}</option>
                 ))}
               </select>
             </div>

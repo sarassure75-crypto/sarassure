@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useAdmin } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -29,7 +30,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
-import { updateImage as apiUpdateImage, deleteImage as apiDeleteImage, addImage, getImageCategories, addImageCategory, deleteImageCategory } from '@/data/images';
+import { updateImage as apiUpdateImage, deleteImage as apiDeleteImage, addImage, getImageCategories, addImageCategory, deleteImageCategory, getImageSubcategories, DEFAULT_SUBCATEGORIES } from '@/data/images';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import AdminImageTools from './AdminImageTools';
 import ImageEditor from '@/components/ImageEditor';
@@ -37,11 +38,37 @@ import ImageEditor from '@/components/ImageEditor';
 // IMPORTANT: Define dialog components at module scope to avoid remounts
 // that reset input values on each parent re-render.
 function EditDialog({ open, onOpenChange, editImage, onSubmit, isEditing, adminCategories }) {
+  const [selectedCategory, setSelectedCategory] = useState(editImage?.category || '');
+  const [availableSubcategories, setAvailableSubcategories] = useState(DEFAULT_SUBCATEGORIES);
+  
+  // Load subcategories when category changes
+  useEffect(() => {
+    const loadSubcategories = async () => {
+      if (!selectedCategory) return;
+      try {
+        const subcats = await getImageSubcategories(selectedCategory);
+        setAvailableSubcategories(subcats);
+      } catch (error) {
+        console.error('Error loading subcategories:', error);
+        setAvailableSubcategories(DEFAULT_SUBCATEGORIES);
+      }
+    };
+    loadSubcategories();
+  }, [selectedCategory]);
+  
+  // Update selectedCategory when editImage changes
+  useEffect(() => {
+    if (editImage?.category) {
+      setSelectedCategory(editImage.category);
+    }
+  }, [editImage]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Modifier l'image</DialogTitle>
+          <DialogDescription>Modifiez le nom, la description et les métadonnées de l'image.</DialogDescription>
         </DialogHeader>
         {editImage && (
           <form onSubmit={onSubmit} className="space-y-4">
@@ -58,9 +85,28 @@ function EditDialog({ open, onOpenChange, editImage, onSubmit, isEditing, adminC
             </div>
             <div>
               <Label htmlFor="edit-category">Catégorie</Label>
-              <select id="edit-category" name="category" defaultValue={editImage.category} className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+              <select 
+                id="edit-category" 
+                name="category" 
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
                 {(adminCategories || []).filter(c => c !== 'all').map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label htmlFor="edit-subcategory">Sous-catégorie</Label>
+              <select 
+                id="edit-subcategory" 
+                name="subcategory" 
+                defaultValue={editImage.subcategory || 'général'}
+                className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                {availableSubcategories.map(subcat => (
+                  <option key={subcat} value={subcat}>{subcat}</option>
                 ))}
               </select>
             </div>
@@ -138,6 +184,7 @@ function CategoryManager({ open, onOpenChange, adminCategories, refreshImageCate
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Gérer les catégories d'images</DialogTitle>
+          <DialogDescription>Ajoutez, supprimez ou gérez les catégories utilisées pour la galerie d'images.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <form onSubmit={handleSubmitCategory} className="flex gap-2">
@@ -194,6 +241,8 @@ const AdminImageGallery = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [subcategoryFilter, setSubcategoryFilter] = useState('all');
+  const [availableSubcategories, setAvailableSubcategories] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editImage, setEditImage] = useState(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -203,18 +252,38 @@ const AdminImageGallery = () => {
 
   const images = useMemo(() => (imagesMap instanceof Map ? Array.from(imagesMap.values()) : []), [imagesMap]);
   
+  // Load subcategories when category filter changes
+  useEffect(() => {
+    const loadSubcategories = async () => {
+      if (categoryFilter === 'all') {
+        setAvailableSubcategories([]);
+        setSubcategoryFilter('all');
+        return;
+      }
+      try {
+        const subcats = await getImageSubcategories(categoryFilter);
+        setAvailableSubcategories(subcats);
+        setSubcategoryFilter('all');
+      } catch (error) {
+        console.error('Error loading subcategories:', error);
+        setAvailableSubcategories([]);
+      }
+    };
+    loadSubcategories();
+  }, [categoryFilter]);
+  
   const filteredImages = useMemo(() => {
     return images
       .filter(image => {
         const term = searchTerm.toLowerCase();
-        return (
-          (image.name?.toLowerCase().includes(term) ||
-           image.description?.toLowerCase().includes(term)) &&
-          (categoryFilter === 'all' || image.category === categoryFilter)
-        );
+        const matchesSearch = image.name?.toLowerCase().includes(term) ||
+                             image.description?.toLowerCase().includes(term);
+        const matchesCategory = categoryFilter === 'all' || image.category === categoryFilter;
+        const matchesSubcategory = subcategoryFilter === 'all' || image.subcategory === subcategoryFilter;
+        return matchesSearch && matchesCategory && matchesSubcategory;
       })
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  }, [images, searchTerm, categoryFilter]);
+  }, [images, searchTerm, categoryFilter, subcategoryFilter]);
 
 
   const handleImageProcessedAndUploaded = async (filePath, metadata, category = 'default') => {
@@ -223,6 +292,7 @@ const AdminImageGallery = () => {
             name: metadata.customName || metadata.originalName.split('.').slice(0, -1).join('.'),
             description: metadata.customDescription || `Téléversé le ${new Date().toLocaleDateString()}`,
             category,
+            subcategory: metadata.subcategory || 'général',
             file_path: filePath,
             android_version: metadata.androidVersion || 'Non spécifiée',
             metadata: { size: metadata.size, mimeType: metadata.mimeType }
@@ -248,11 +318,12 @@ const AdminImageGallery = () => {
     const name = formData.get('name');
     const description = formData.get('description');
     const category = formData.get('category');
+    const subcategory = formData.get('subcategory');
     const android_version = formData.get('android_version');
 
     setIsEditing(true);
     try {
-      await apiUpdateImage(editImage.id, { name, description, category, android_version });
+      await apiUpdateImage(editImage.id, { name, description, category, subcategory, android_version });
       toast({ title: "Succès", description: "Image mise à jour." });
       await fetchAllData();
       setIsEditDialogOpen(false);
@@ -389,6 +460,31 @@ const AdminImageGallery = () => {
           refreshImageCategories={refreshImageCategories}
         />
       </div>
+
+      {/* Subcategory filter - only show when a specific category is selected */}
+      {categoryFilter !== 'all' && availableSubcategories.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4 ml-4">
+          <span className="text-sm text-muted-foreground self-center mr-2">Sous-catégories:</span>
+          <Button
+            size="sm"
+            variant={subcategoryFilter === 'all' ? 'default' : 'ghost'}
+            onClick={() => setSubcategoryFilter('all')}
+          >
+            Toutes
+          </Button>
+          {availableSubcategories.map(subcat => (
+            <Button
+              key={subcat}
+              size="sm"
+              variant={subcategoryFilter === subcat ? 'default' : 'ghost'}
+              onClick={() => setSubcategoryFilter(subcat)}
+              className="capitalize"
+            >
+              {subcat}
+            </Button>
+          ))}
+        </div>
+      )}
 
       <ScrollArea className="h-[calc(100vh-250px)]">
         {filteredImages.length > 0 ? (

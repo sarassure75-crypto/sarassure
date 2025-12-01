@@ -24,7 +24,7 @@ const fetchImageUrl = async (imageId) => {
   return urlData.publicUrl;
 };
 
-const ImageFromSupabase = forwardRef(({ imageId, alt, className, onLoad }, ref) => {
+const ImageFromSupabase = forwardRef(({ imageId, alt, className, onLoad, style }, ref) => {
   const { data: src, isLoading, isError } = useQuery(
     ['imageUrl', imageId],
     () => fetchImageUrl(imageId),
@@ -57,6 +57,7 @@ const ImageFromSupabase = forwardRef(({ imageId, alt, className, onLoad }, ref) 
       src={src}
       alt={alt}
       className={className}
+      style={style}
       onLoad={onLoad}
       crossOrigin="anonymous"
     />
