@@ -144,6 +144,37 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Function to apply penalties based on rejection reason
+CREATE OR REPLACE FUNCTION apply_rejection_penalty(
+  p_contributor_id UUID,
+  p_version_id UUID,
+  p_reason VARCHAR(50) DEFAULT 'generic'
+)
+RETURNS DECIMAL(10, 1) AS $$
+DECLARE
+  v_penalty DECIMAL(10, 1);
+  v_description TEXT;
+BEGIN
+  -- Determine penalty based on reason
+  v_penalty := -2; -- Default: simple rejection
+  v_description := 'Rejet simple - ' || p_reason;
+  
+  IF p_reason ILIKE '%donnée personnelle%' OR p_reason ILIKE '%données personnelles%' OR p_reason ILIKE '%privacy%' OR p_reason ILIKE '%personnel%' THEN
+    v_penalty := -5;
+    v_description := 'Rejet: données personnelles détectées';
+  ELSIF p_reason ILIKE '%répét%' OR p_reason ILIKE '%duplicate%' OR p_reason ILIKE '%plagiat%' THEN
+    v_penalty := -10;
+    v_description := 'Rejet: contenu répété/plagiat';
+  ELSIF p_reason ILIKE '%erreur%' OR p_reason ILIKE '%error%' OR p_reason ILIKE '%bug%' THEN
+    v_penalty := -3;
+    v_description := 'Rejet: erreur détectée';
+  END IF;
+  
+  -- Apply penalty using add_contributor_points
+  RETURN add_contributor_points(p_contributor_id, v_penalty, 'penalty', v_description);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- RLS Policies for contributor_points
 ALTER TABLE contributor_points ENABLE ROW LEVEL SECURITY;
 

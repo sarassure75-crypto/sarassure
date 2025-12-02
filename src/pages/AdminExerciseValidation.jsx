@@ -203,14 +203,38 @@ export default function AdminExerciseValidation() {
 
     setValidatingId(contributionId);
     try {
+      // Trouver la contribution à rejeter pour obtenir son contributor_id
+      const contribution = contributions.find(c => c.id === contributionId);
+      const contributorId = contribution?.task?.owner_id;
+
+      // Mettre à jour le statut de la version
       const { error } = await supabase
         .from('versions')
         .update({ 
-          creation_status: 'rejected'
+          creation_status: 'rejected',
+          admin_comments: reason,
+          reviewer_id: currentUser?.id,
+          reviewed_at: new Date().toISOString()
         })
         .eq('id', contributionId);
 
       if (error) throw error;
+
+      // Appliquer la pénalité de points au contributeur
+      if (contributorId) {
+        const { data, error: penaltyError } = await supabase.rpc('apply_rejection_penalty', {
+          p_contributor_id: contributorId,
+          p_version_id: contributionId,
+          p_reason: reason
+        });
+        
+        if (penaltyError) {
+          console.error('Erreur lors de l\'application de la pénalité:', penaltyError);
+          // Ne pas bloquer le rejet si la pénalité échoue
+        } else {
+          console.log('Pénalité appliquée:', data);
+        }
+      }
 
       // Retirer de la liste
       setContributions(contributions.filter(c => c.id !== contributionId));
@@ -221,7 +245,7 @@ export default function AdminExerciseValidation() {
         setSelectedContribution(null);
       }
 
-      alert('✅ Contribution rejetée');
+      alert('✅ Contribution rejetée avec pénalité appliquée');
     } catch (error) {
       console.error('Erreur:', error);
       alert('❌ Erreur: ' + error.message);

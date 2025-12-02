@@ -36,23 +36,23 @@ const ExerciseHeader = ({ taskTitle, currentStep, onPlayAudio, showInstructions,
   const IconComponent = currentStep?.icon_name ? LucideIcons[toPascalCase(currentStep.icon_name)] : null;
   
   return (
-    <div className={cn("flex justify-between items-center shrink-0 relative bg-white p-4 rounded-lg shadow", isMobileLayout ? "mb-2" : "mb-4")}>
-      {/* Titre à gauche avec icône audio */}
-      <div className="flex items-center gap-2">
-        <h1 className={cn("font-bold text-primary", isMobileLayout ? "text-sm" : "text-xl sm:text-2xl")}>{taskTitle}</h1>
-        {currentStep?.instruction && isMobileLayout && (
+    <div className={cn("flex justify-between items-center shrink-0 relative bg-white p-4 rounded-lg shadow", isMobileLayout ? "mb-1 p-2" : "mb-4")}>
+      {/* Titre à gauche avec icônes audio */}
+      <div className="flex items-center gap-1 flex-grow min-w-0">
+        <h1 className={cn("font-bold text-primary truncate", isMobileLayout ? "text-xs" : "text-xl sm:text-2xl")}>{taskTitle}</h1>
+        {currentStep?.instruction && (
           <button
             onClick={() => onPlayAudio(currentStep.instruction)}
-            className="p-1.5 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors shrink-0"
+            className={cn("p-1 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors shrink-0 flex-shrink-0", isMobileLayout ? "h-6 w-6" : "h-8 w-8")}
             title="Écouter l'instruction"
           >
-            <Volume2 className="w-4 h-4 text-primary" />
+            <Volume2 className={cn("text-primary", isMobileLayout ? "w-3 h-3" : "w-4 h-4")} />
           </button>
         )}
       </div>
       
-      {/* Instructions à droite (affichées par défaut) */}
-      {showInstructions && (
+      {/* Instructions à droite (affichées par défaut, masquées sur très petit mobile) */}
+      {showInstructions && !isMobileLayout && (
         <div className="flex items-center gap-3">
           {IconComponent && (
             <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
@@ -60,7 +60,7 @@ const ExerciseHeader = ({ taskTitle, currentStep, onPlayAudio, showInstructions,
             </div>
           )}
           <div className="flex items-center gap-2">
-            <p className={cn("text-gray-700", isMobileLayout ? "text-xs" : "text-base")}>
+            <p className="text-gray-700 text-base">
               {currentStep?.instruction || 'Aucune instruction'}
             </p>
             {currentStep?.instruction && (
@@ -811,9 +811,9 @@ const ExercisePage = () => {
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }} 
       transition={{ duration: 0.3 }} 
-      className={cn("mx-auto flex flex-col fixed inset-0", isMobileLayout ? "p-0.5 overflow-hidden pt-14" : "p-2 md:p-4 max-w-4xl mx-auto overflow-auto")}
+      className={cn("mx-auto flex flex-col fixed inset-0", isMobileLayout ? "p-0.5 overflow-hidden" : "p-2 md:p-4 max-w-4xl mx-auto overflow-auto")}
     >
-      <div className={cn("shrink-0", isMobileLayout ? "sticky top-0 bg-background z-10 pb-1" : "")}> 
+      <div className={cn("shrink-0 z-50", isMobileLayout ? "sticky top-0 bg-background pb-1" : "")}> 
         <ExerciseHeader 
           taskTitle={task.title}
           currentStep={currentStep}

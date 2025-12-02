@@ -149,6 +149,9 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
   };
 
   const isPointerInZone = (event) => {
+    // Pour bravo, pas de vérification de zone - n'importe quel tap sur l'image valide
+    if (actionType === 'bravo') return true;
+    
     if (!actionArea) return false;
     const rect = containerRef.current?.querySelector('[data-action-zone]')?.getBoundingClientRect();
     if (!rect) return true;
