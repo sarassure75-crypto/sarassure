@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, X, Eye, EyeOff, Home, FileText, FolderOpen, ChevronLeft, ChevronRight, Layers, Info } from 'lucide-react';
+import { Search, X, Eye, EyeOff, Home, FileText, FolderOpen, ChevronLeft, ChevronRight, Layers, Info, Volume2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
@@ -23,6 +23,8 @@ const VerticalToolbar = ({
   isPrevDisabled,
   isNextDisabled,
   onNavigateToTasks,
+  onPlayAudio,
+  currentStep,
   isMobileLayout
 }) => {
   const [showVersionMenu, setShowVersionMenu] = useState(false);
@@ -57,6 +59,17 @@ const VerticalToolbar = ({
       >
         {hideActionZone ? <Eye className={iconSize} /> : <EyeOff className={iconSize} />}
       </button>
+
+      {/* Lire les instructions */}
+      {currentStep?.instruction && onPlayAudio && (
+        <button
+          onClick={() => onPlayAudio(currentStep.instruction)}
+          className={buttonClass}
+          title="Lire l'instruction audio"
+        >
+          <Volume2 className={iconSize} />
+        </button>
+      )}
 
       {/* Changer de version */}
       <div className="relative w-full">

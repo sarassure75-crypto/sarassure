@@ -37,18 +37,9 @@ const ExerciseHeader = ({ taskTitle, currentStep, onPlayAudio, showInstructions,
   
   return (
     <div className={cn("flex justify-between items-center shrink-0 relative bg-white p-4 rounded-lg shadow", isMobileLayout ? "mb-1 p-2" : "mb-4")}>
-      {/* Titre à gauche avec icônes audio */}
+      {/* Titre à gauche */}
       <div className="flex items-center gap-1 flex-grow min-w-0">
         <h1 className={cn("font-bold text-primary truncate", isMobileLayout ? "text-xs" : "text-xl sm:text-2xl")}>{taskTitle}</h1>
-        {currentStep?.instruction && (
-          <button
-            onClick={() => onPlayAudio(currentStep.instruction)}
-            className={cn("p-1 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors shrink-0 flex-shrink-0", isMobileLayout ? "h-6 w-6" : "h-8 w-8")}
-            title="Écouter l'instruction"
-          >
-            <Volume2 className={cn("text-primary", isMobileLayout ? "w-3 h-3" : "w-4 h-4")} />
-          </button>
-        )}
       </div>
       
       {/* Instructions à droite (affichées par défaut, masquées sur très petit mobile) */}
@@ -63,15 +54,6 @@ const ExerciseHeader = ({ taskTitle, currentStep, onPlayAudio, showInstructions,
             <p className="text-gray-700 text-base">
               {currentStep?.instruction || 'Aucune instruction'}
             </p>
-            {currentStep?.instruction && (
-              <button
-                onClick={() => onPlayAudio(currentStep.instruction)}
-                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                title="Écouter l'instruction"
-              >
-                <Volume2 className="w-5 h-5 text-primary" />
-              </button>
-            )}
           </div>
         </div>
       )}
@@ -760,6 +742,8 @@ const ExercisePage = () => {
           isPrevDisabled={currentStepIndex === 0}
           isNextDisabled={currentStepIndex === totalSteps - 1 && isCompleted}
           onNavigateToTasks={() => navigate('/taches')}
+          onPlayAudio={playInstructionAudio}
+          currentStep={currentStep}
           isMobileLayout={false}
         />
 
