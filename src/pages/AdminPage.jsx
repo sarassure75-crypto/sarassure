@@ -11,12 +11,13 @@ import AdminContactManager from '@/components/admin/AdminContactManager';
 import AdminTrash from '@/components/admin/AdminTrash';
 import AdminCategoryManager from '@/components/admin/AdminCategoryManager';
 import ExerciseRequestsManager from '@/components/admin/ExerciseRequestsManager';
+import AdminPointsManager from '@/components/admin/AdminPointsManager';
 import AdminImageValidation from './AdminImageValidation';
 import AdminExerciseValidation from './AdminExerciseValidation';
 import AdminExerciseValidationDebug from './AdminExerciseValidationDebug';
 import AdminTabNavigation from '@/components/admin/AdminTabNavigation';
 import { useAdminCounters } from '@/hooks/useAdminCounters';
-import { Home, Image, ListTodo, Users, MessageSquare, AlertTriangle, Mail, Trash, LayoutGrid, CheckCircle, DollarSign } from 'lucide-react';
+import { Home, Image, ListTodo, Users, MessageSquare, AlertTriangle, Mail, Trash, LayoutGrid, CheckCircle, DollarSign, Zap } from 'lucide-react';
 
 const AdminPage = () => {
     const location = useLocation();
@@ -31,6 +32,7 @@ const AdminPage = () => {
     else if (pathSegment === 'validation/images') currentTab = 'validation-images';
     else if (pathSegment === 'validation/exercices') currentTab = 'validation-exercices';
     else if (pathSegment === 'revenus') currentTab = 'revenus';
+    else if (pathSegment === 'points') currentTab = 'points';
     else if (pathSegment === 'requests') currentTab = 'requests';
     else if (pathSegment === 'users') currentTab = 'users';
     else if (pathSegment === 'faq') currentTab = 'faq';
@@ -69,6 +71,7 @@ const AdminPage = () => {
                         <Route path="errors" element={<AdminErrorReportViewer />} />
                         <Route path="trash" element={<AdminTrash />} />
                         <Route path="contact" element={<AdminContactManager />} />
+                        <Route path="points" element={<AdminPointsManager />} />
                         <Route index element={<Navigate to="dashboard" replace />} />
                     </Routes>
                 </CardContent>

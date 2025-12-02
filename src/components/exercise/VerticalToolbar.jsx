@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, X, Eye, EyeOff, Home, FileText, FolderOpen, ChevronLeft, ChevronRight, Layers, Info, Volume2 } from 'lucide-react';
+import { Search, X, Eye, EyeOff, Home, FileText, FolderOpen, ChevronLeft, ChevronRight, Layers, Info, Volume2, Type } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
@@ -25,6 +25,8 @@ const VerticalToolbar = ({
   onNavigateToTasks,
   onPlayAudio,
   currentStep,
+  textZoom,
+  onTextZoomChange,
   isMobileLayout
 }) => {
   const [showVersionMenu, setShowVersionMenu] = useState(false);
@@ -70,6 +72,49 @@ const VerticalToolbar = ({
           <Volume2 className={iconSize} />
         </button>
       )}
+
+      {/* Zoom texte (agrandir/réduire instructions et header) */}
+      <div className="relative w-full">
+        <button
+          onClick={() => {
+            // Créer un menu popup pour le zoom
+            const menu = document.getElementById('text-zoom-menu');
+            if (menu) {
+              menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            }
+          }}
+          className={buttonClass}
+          title={`Taille du texte (${Math.round(textZoom * 100)}%)`}
+        >
+          <Type className={iconSize} />
+        </button>
+
+        {/* Menu déroulant zoom texte */}
+        <div 
+          id="text-zoom-menu"
+          className="fixed bg-white border-2 border-green-700 rounded-lg shadow-2xl z-50 min-w-[180px] pointer-events-auto hidden" 
+          style={{ top: '240px', right: '20px' }}
+        >
+          <div className="p-2">
+            <p className="text-xs font-semibold text-gray-600 mb-2 px-2">Taille du texte:</p>
+            {[1, 1.25, 1.5].map((zoom) => (
+              <button
+                key={zoom}
+                onClick={() => {
+                  onTextZoomChange(zoom);
+                  document.getElementById('text-zoom-menu').style.display = 'none';
+                }}
+                className={cn(
+                  "w-full text-left px-3 py-2 text-sm rounded hover:bg-green-50 transition-colors",
+                  textZoom === zoom && "bg-green-100 font-semibold text-green-800"
+                )}
+              >
+                {Math.round(zoom * 100)}%
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* Changer de version */}
       <div className="relative w-full">

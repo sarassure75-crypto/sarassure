@@ -32,14 +32,14 @@ const toPascalCase = (str) => {
     .join('');
 };
 
-const ExerciseHeader = ({ taskTitle, currentStep, onPlayAudio, showInstructions, isMobileLayout }) => {
+const ExerciseHeader = ({ taskTitle, currentStep, onPlayAudio, showInstructions, textZoom, isMobileLayout }) => {
   const IconComponent = currentStep?.icon_name ? LucideIcons[toPascalCase(currentStep.icon_name)] : null;
   
   return (
     <div className={cn("flex justify-between items-center shrink-0 relative bg-white p-4 rounded-lg shadow", isMobileLayout ? "mb-1 p-2" : "mb-4")}>
       {/* Titre à gauche */}
       <div className="flex items-center gap-1 flex-grow min-w-0">
-        <h1 className={cn("font-bold text-primary truncate", isMobileLayout ? "text-xs" : "text-xl sm:text-2xl")}>{taskTitle}</h1>
+        <h1 className={cn("font-bold text-primary line-clamp-3", isMobileLayout ? "text-xs" : "text-xl sm:text-2xl")} style={{ fontSize: `${100 * textZoom}%` }}>{taskTitle}</h1>
       </div>
       
       {/* Instructions à droite (affichées par défaut, masquées sur très petit mobile) */}
@@ -51,7 +51,7 @@ const ExerciseHeader = ({ taskTitle, currentStep, onPlayAudio, showInstructions,
             </div>
           )}
           <div className="flex items-center gap-2">
-            <p className="text-gray-700 text-base">
+            <p className="text-gray-700 text-base" style={{ fontSize: `${100 * textZoom}%` }}>
               {currentStep?.instruction || 'Aucune instruction'}
             </p>
           </div>
@@ -339,6 +339,7 @@ const ExercisePage = () => {
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isZoomActive, setIsZoomActive] = useState(false);
+  const [textZoom, setTextZoom] = useState(1); // 1 = 100%, 1.25 = 125%, 1.5 = 150%
   const [error, setError] = useState(null);
   const [showInformationPanel, setShowInformationPanel] = useState(false);
   const [hideActionZone, setHideActionZone] = useState(false);
@@ -598,7 +599,7 @@ const ExercisePage = () => {
   const videoUrl = currentVersion.video_url || task.video_url;
 
   const mainContentMobile = (
-    <div className="p-1 sm:p-1.5 bg-card rounded-lg shadow-xl flex flex-col h-full relative">
+    <div className="p-0.5 sm:p-1 bg-card rounded-lg shadow-xl flex flex-col h-full relative">
       <AnimatePresence>
         {showCompletionScreen && <CompletionScreen onBackToList={() => navigate('/taches')} isMobileLayout={true} />}
       </AnimatePresence>
@@ -612,12 +613,12 @@ const ExercisePage = () => {
         isMobileLayout={true}
       />
       {currentVersion.has_variant_note && (
-        <div className="p-1 my-1 text-2xs bg-amber-100 border-l-4 border-amber-500 text-amber-700 rounded shrink-0">
+        <div className="p-1 my-0.5 text-2xs bg-amber-100 border-l-4 border-amber-500 text-amber-700 rounded shrink-0">
           <div className="flex items-center"> <AlertTriangle className="mr-1 h-2.5 w-2.5"/> <p className="font-semibold">Note :</p> </div>
           <p>Cette version peut présenter des différences.</p>
         </div>
       )}
-      <div className="flex items-center justify-center space-x-2 mb-2">
+      <div className="flex items-center justify-center space-x-2 mb-1">
         {/* Icônes zoom/info/etc. ici */}
         {/* ...icônes existantes... */}
       </div>
@@ -744,6 +745,8 @@ const ExercisePage = () => {
           onNavigateToTasks={() => navigate('/taches')}
           onPlayAudio={playInstructionAudio}
           currentStep={currentStep}
+          textZoom={textZoom}
+          onTextZoomChange={setTextZoom}
           isMobileLayout={false}
         />
 
@@ -795,7 +798,7 @@ const ExercisePage = () => {
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }} 
       transition={{ duration: 0.3 }} 
-      className={cn("mx-auto flex flex-col fixed inset-0", isMobileLayout ? "p-0.5 overflow-hidden" : "p-2 md:p-4 max-w-4xl mx-auto overflow-auto")}
+      className={cn("mx-auto flex flex-col w-full h-screen", isMobileLayout ? "p-0.5 overflow-hidden" : "p-2 md:p-4 max-w-4xl mx-auto overflow-auto")}
     >
       <div className={cn("shrink-0 z-50", isMobileLayout ? "sticky top-0 bg-background pb-1" : "")}> 
         <ExerciseHeader 
@@ -803,6 +806,7 @@ const ExercisePage = () => {
           currentStep={currentStep}
           onPlayAudio={playInstructionAudio}
           showInstructions={showInstructions}
+          textZoom={textZoom}
           isMobileLayout={isMobileLayout}
         />
         <NotesModal 

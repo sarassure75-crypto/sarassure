@@ -117,15 +117,11 @@ const ContributorInfoPage = () => {
     },
     {
       question: "Mes contenus sont-ils protégés ?",
-      answer: "Oui, chaque contenu est lié à votre compte contributeur. Votre nom apparaît comme auteur et vous conservez vos droits d'auteur."
+      answer: "Oui, vos droits de propriété intellectuelle sont cédés à la plateforme qui les protège. Cependant, aucun nom ou auteur n'est affiché sur les exercices ou images dans l'application pédagogique pour garantir une utilisation objective et impartiale du contenu. Seul votre pseudonyme apparaît dans le classement des contributeurs."
     },
     {
       question: "Comment devenir contributeur ?",
       answer: "Contactez l'équipe via le formulaire de contact en indiquant votre motivation. Après validation de votre profil, vous recevrez vos accès contributeur."
-    },
-    {
-      question: "Mes contenus sont-ils protégés ?",
-      answer: "Oui, vos droits de propriété intellectuelle sont cédés à la plateforme qui les protège. Cependant, aucun nom ou auteur n'est affiché sur les exercices ou images dans l'application pédagogique pour garantir une utilisation objective et impartiale du contenu. Seul votre pseudonyme apparaît dans le classement des contributeurs."
     },
     {
       question: "Y a-t-il un quota minimum de contributions ?",

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, LayoutGrid, Image, CheckCircle, Users, MessageSquare, AlertTriangle, Mail, ListTodo, DollarSign, ClipboardList } from 'lucide-react';
+import { Home, LayoutGrid, Image, CheckCircle, Users, MessageSquare, AlertTriangle, Mail, ListTodo, DollarSign, ClipboardList, Zap } from 'lucide-react';
 
 export default function AdminTabNavigation({ counters = {} }) {
   const navigate = useNavigate();
@@ -16,6 +16,7 @@ export default function AdminTabNavigation({ counters = {} }) {
   else if (pathSegment === 'validation/images') currentTab = 'validation-images';
   else if (pathSegment === 'validation/exercices') currentTab = 'validation-exercices';
   else if (pathSegment === 'revenus') currentTab = 'revenus';
+  else if (pathSegment === 'points') currentTab = 'points';
   else if (pathSegment === 'users') currentTab = 'users';
   else if (pathSegment === 'faq') currentTab = 'faq';
   else if (pathSegment === 'errors') currentTab = 'errors';
@@ -29,6 +30,7 @@ export default function AdminTabNavigation({ counters = {} }) {
     { id: 'validation-images', label: 'Valider images', icon: CheckCircle, path: '/admin/validation/images', count: counters.pendingImages || 0 },
     { id: 'validation-exercices', label: 'Valider exercices', icon: CheckCircle, path: '/admin/validation/exercices', count: counters.pendingContributions || 0 },
     { id: 'revenus', label: 'Revenus', icon: DollarSign, path: '/admin/revenus', count: 0 },
+    { id: 'points', label: 'Points', icon: Zap, path: '/admin/points', count: 0 },
     { id: 'users', label: 'Utilisateurs', icon: Users, path: '/admin/users', count: 0 },
     { id: 'faq', label: 'FAQ', icon: MessageSquare, path: '/admin/faq', count: counters.pendingFaq || 0 },
     { id: 'errors', label: 'Rapports', icon: AlertTriangle, path: '/admin/errors', count: 0 },
@@ -36,7 +38,7 @@ export default function AdminTabNavigation({ counters = {} }) {
   ];
 
   return (
-    <div className="grid grid-cols-5 md:grid-cols-5 lg:grid-cols-10 gap-2 mb-6">
+    <div className="grid grid-cols-5 md:grid-cols-5 lg:grid-cols-11 gap-2 mb-6">
       {navItems.map(item => (
         <Button
           key={item.id}
