@@ -43,6 +43,7 @@ const TermsOfServicePage = lazy(() => import('@/pages/TermsOfServicePage'));
 const ContributorSalesHistory = lazy(() => import('@/components/ContributorSalesHistory'));
 const ContributorImageLibrary = lazy(() => import('@/pages/ContributorImageLibrary'));
 const ContributorProfilePage = lazy(() => import('@/pages/ContributorProfilePage'));
+const ContributorInfoPage = lazy(() => import('@/pages/ContributorInfoPage'));
 
 // Pages Formateur
 const TrainerLearnersPage = lazy(() => import('@/pages/Formateur/TrainerLearnersPage'));
@@ -95,6 +96,9 @@ function AppContent() {
         <Route path="register" element={<RegisterPage />} />
         <Route path="pwa-home" element={<PwaHomePage />} />
         <Route path="dashboard-redirect" element={<DashboardRedirector />} />
+        
+        {/* Page publique d'information contributeur */}
+        <Route path="devenir-contributeur" element={<ContributorInfoPage />} />
         
         <Route path="taches" element={<ProtectedRoute roles={[USER_ROLES.LEARNER, USER_ROLES.TRAINER, USER_ROLES.ADMIN]}><TaskListPage /></ProtectedRoute>} />
         <Route path="tache/:taskId" element={<ProtectedRoute roles={[USER_ROLES.LEARNER, USER_ROLES.TRAINER, USER_ROLES.ADMIN]}><ExerciseStepsPreviewPage /></ProtectedRoute>} />

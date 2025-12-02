@@ -26,6 +26,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
   const textInputRef = useRef(null);
   const [attemptCount, setAttemptCount] = useState(0);
   const [showHint, setShowHint] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const interactionState = useRef({ isDown: false, startTime: 0, hasMoved: false, lastTapTime: 0, lastTapX: 0, lastTapY: 0 });
   
   useEffect(() => {
@@ -108,8 +109,6 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
   };
 
   const handlePointerDown = (event) => {
-    if (actionType === 'drag_and_drop') return;
-    
     interactionState.current = { 
       isDown: true, 
       startTime: Date.now(), 
@@ -132,8 +131,6 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
   };
 
   const handlePointerMove = (event) => {
-    if (actionType === 'drag_and_drop') return;
-    
     if (interactionState.current.isDown) {
       const dx = event.clientX - (interactionState.current.startX || event.clientX);
       const dy = event.clientY - (interactionState.current.startY || event.clientY);
@@ -160,8 +157,6 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
   };
 
   const handlePointerUp = (event) => {
-    if (actionType === 'drag_and_drop') return;
-    
     if (longPressTimeout.current) {
       clearTimeout(longPressTimeout.current);
     }
@@ -263,12 +258,12 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
       } else if (isQuickTap && (actionType === 'text_input' || actionType === 'number_input')) {
         setShowTextInput(true);
         return;
-        return;
       } else if (isQuickTap && !['long_press', 'drag_and_drop'].includes(actionType)) {
         handleWrongAction();
         return;
       }
     }
+    // Pour drag_and_drop, ne pas signaler d'erreur ici car la validation se fait dans handleDragEnd
     if (!['drag_and_drop'].includes(actionType)) {
       handleWrongAction();
     }
@@ -472,9 +467,9 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
       ref={containerRef} 
       className={cn("relative overflow-hidden w-auto h-auto max-w-full max-h-full", imageContainerClassName)} 
       onContextMenu={handleContextMenu}
-      onPointerDown={actionType !== 'drag_and_drop' ? handlePointerDown : undefined}
-      onPointerMove={actionType !== 'drag_and_drop' ? handlePointerMove : undefined}
-      onPointerUp={actionType !== 'drag_and_drop' ? handlePointerUp : undefined}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onTouchMove={handleTouchMove}
@@ -525,8 +520,8 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
           onDragStart={() => setIsDragging(true)}
           onDragEnd={handleDragEnd}
           drag={actionType === 'drag_and_drop'}
-          dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-          dragElastic={0.2}
+          dragConstraints={containerRef}
+          dragElastic={0.1}
         />
       )}
 

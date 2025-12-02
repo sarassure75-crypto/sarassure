@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { motion } from 'framer-motion';
-import { ArrowRight, BookOpen, Zap, Smartphone } from 'lucide-react';
+import { ArrowRight, BookOpen, Zap, Smartphone, Award } from 'lucide-react';
 import PwaInstallCard from '@/components/PwaInstallCard';
 
 const FeatureCard = ({ icon, title, description, delay }) => (
@@ -52,6 +52,12 @@ const HomePage = () => {
                 </Button>
                 <Button asChild size="lg" variant="outline">
                   <Link to="/login">Espace Formateur</Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
+                  <Link to="/devenir-contributeur">
+                    <Award className="mr-2 h-5 w-5" />
+                    Devenir Contributeur
+                  </Link>
                 </Button>
               </div>
             </motion.div>

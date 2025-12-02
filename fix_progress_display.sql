@@ -1,4 +1,6 @@
 -- Fix RPC function to include task_id and version_id
+DROP FUNCTION IF EXISTS public.get_user_progress_details(uuid);
+
 CREATE OR REPLACE FUNCTION public.get_user_progress_details(p_user_id uuid)
  RETURNS TABLE(
    id uuid, 
