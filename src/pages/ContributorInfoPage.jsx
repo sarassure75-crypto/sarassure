@@ -81,7 +81,11 @@ const ContributorInfoPage = () => {
   const faqItems = [
     {
       question: "Comment fonctionne le système de points ?",
-      answer: "Vous gagnez des points selon la complexité de vos contributions : 1 point par image, 5 points par exercice de base, avec des bonus pour la qualité et l'engagement. Votre rémunération est proportionnelle à vos points par rapport au total de la communauté."
+      answer: "Vous gagnez des points selon la complexité de vos contributions : 1 point par image, 5 points par exercice de base, avec un bonus si plus de 5 tâches ou versions supplémentaires. Votre rémunération est proportionnelle à vos points par rapport au total de la communauté."
+    },
+    {
+      question: "C'est quoi ce modèle d'économie solidaire ?",
+      answer: "C'est un modèle où 20% des revenus totaux de la plateforme sont répartis entre tous les contributeurs proportionnellement à leurs points. Vous ne vendez pas individuellement : vous participez aux dividendes collectifs. Le succès de la plateforme bénéficie à tous les contributeurs équitablement."
     },
     {
       question: "Qu'est-ce qu'un palier de distribution ?",
@@ -101,7 +105,7 @@ const ContributorInfoPage = () => {
     },
     {
       question: "Comment sont calculés les points ?",
-      answer: "Images : 1 point (nouvelle capture) + 0.5 bonus qualité. Exercices : 5 points de base + 2 points si plus de 5 tâches + 3 points par version additionnelle significative. Bonus d'engagement possibles : +10 points (Top 10), +5 points (taux de complétion >80%), etc."
+      answer: "Images : 1 point par nouvelle capture. Exercices : 5 points de base + 2 points si plus de 5 tâches + 3 points par version additionnelle significative. Pas de bonus de qualité (images compressées) ni bonus d'engagement."
     },
     {
       question: "Y a-t-il des pénalités ?",
@@ -120,8 +124,8 @@ const ContributorInfoPage = () => {
       answer: "Contactez l'équipe via le formulaire de contact en indiquant votre motivation. Après validation de votre profil, vous recevrez vos accès contributeur."
     },
     {
-      question: "Puis-je voir l'historique de mes ventes ?",
-      answer: "Oui, votre dashboard contributeur affiche toutes vos statistiques : nombre de ventes, revenus générés, gains acquis, et un historique détaillé de chaque transaction."
+      question: "Mes contenus sont-ils protégés ?",
+      answer: "Oui, vos droits de propriété intellectuelle sont cédés à la plateforme qui les protège. Cependant, aucun nom ou auteur n'est affiché sur les exercices ou images dans l'application pédagogique pour garantir une utilisation objective et impartiale du contenu. Seul votre pseudonyme apparaît dans le classement des contributeurs."
     },
     {
       question: "Y a-t-il un quota minimum de contributions ?",
@@ -280,7 +284,6 @@ const ContributorInfoPage = () => {
                     <div className="font-medium mb-2">📸 Images</div>
                     <div className="text-sm space-y-1">
                       <div>• 1 point par nouvelle capture</div>
-                      <div>• +0.5 point pour haute qualité</div>
                     </div>
                   </div>
                   <div className="bg-green-50 p-4 rounded-lg">
@@ -291,12 +294,10 @@ const ContributorInfoPage = () => {
                       <div>• +3 points par version supplémentaire</div>
                     </div>
                   </div>
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <div className="font-medium mb-2">⭐ Bonus d'engagement</div>
-                    <div className="text-sm space-y-1">
-                      <div>• +10 points (Top 10 de la semaine)</div>
-                      <div>• +5 points (80%+ complétion sur 30j)</div>
-                      <div>• +5 points (10 contributions approuvées)</div>
+                  <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                    <div className="font-medium mb-2 text-amber-900">ℹ️ Modèle solidaire</div>
+                    <div className="text-sm text-amber-800">
+                      Les points ne représentent pas des ventes individuelles. Vous participez à une économie collective où 20% des revenus totaux sont distribués proportionnellement à vos points, indépendamment de qui utilise votre contenu.
                     </div>
                   </div>
                 </div>
@@ -306,17 +307,17 @@ const ContributorInfoPage = () => {
             <Card className="border-2 border-green-200">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="w-6 h-6 text-green-600" />
-                  Paliers et distribution
+                  <DollarSign className="w-6 h-6 text-green-600" />
+                  Économie solidaire et distribution
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 mb-4">
-                  À chaque <span className="font-bold text-green-600">palier de 1000€ de CA</span>, 20% (200€) sont distribués entre contributeurs proportionnellement à leurs points.
+                  Vous participez à un modèle d'<span className="font-bold text-green-600">économie solidaire</span> où 20% des revenus de la plateforme sont partagés entre contributeurs.
                 </p>
-                <div className="bg-amber-50 border-2 border-amber-200 p-4 rounded-lg mb-4">
-                  <p className="text-sm text-amber-900 font-medium">
-                    ⚠️ Important : Aucune rémunération n'est versée avant que le premier palier de 1000€ ne soit atteint.
+                <div className="bg-green-50 p-4 rounded-lg mb-4 border-l-4 border-green-600">
+                  <p className="text-sm text-gray-700">
+                    <strong>Pas de vente individuelle :</strong> Vous ne vendez pas votre contenu directement. Les formateurs achètent des licences à la plateforme, et 20% du CA total sont répartis entre tous les contributeurs au prorata de leurs points.
                   </p>
                 </div>
                 <div className="bg-green-50 p-4 rounded-lg mb-4">
@@ -330,28 +331,28 @@ const ContributorInfoPage = () => {
                     <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
                     <div>
                       <div className="font-medium">Palier 1 - 1000€ CA</div>
-                      <div className="text-sm text-gray-600">Distribution de 200€</div>
+                      <div className="text-sm text-gray-600">200€ partagés entre tous les contributeurs</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-3 bg-gray-50 rounded">
                     <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
                     <div>
                       <div className="font-medium">Palier 2 - 2000€ CA</div>
-                      <div className="text-sm text-gray-600">200€ supplémentaires (total 400€)</div>
+                      <div className="text-sm text-gray-600">200€ supplémentaires (total 400€ distribués)</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-3 bg-gray-50 rounded">
                     <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
                     <div>
-                      <div className="font-medium">Palier 3 - 3000€ CA</div>
-                      <div className="text-sm text-gray-600">200€ supplémentaires (total 600€)</div>
+                      <div className="font-medium">Tous bénéficient ensemble</div>
+                      <div className="text-sm text-gray-600">Le succès de la plateforme profite à toute la communauté</div>
                     </div>
                   </div>
                 </div>
-                <div className="mt-4 p-4 bg-green-50 rounded-lg">
+                <div className="mt-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-600">
                   <p className="text-sm text-gray-700">
-                    <strong>Exemple :</strong> Palier 1 atteint (1000€ CA), vous avez 150 points sur 500 au total.
-                    <br />Votre part : (150/500) × 200€ = <strong className="text-green-600">60€</strong>
+                    <strong>Exemple :</strong> Plateforme atteint 1000€ CA, vous avez 150 points sur 500 au total.
+                    <br />Votre part : (150/500) × 200€ = <strong className="text-green-600">60€ de dividendes</strong>
                   </p>
                   <p className="text-xs text-gray-600 mt-2">
                     Minimum de versement : 10€. Montants inférieurs reportés au palier suivant.

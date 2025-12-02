@@ -69,10 +69,13 @@ La cession est consentie :
 - Pour toute la durée légale de protection des droits de propriété intellectuelle
 - Sans limitation de supports ou de formats
 
-### 3.3 Droits moraux
-Le Contributeur renonce expressément à exercer ses droits moraux d'auteur (droit de paternité, droit au respect de l'œuvre, droit de divulgation, droit de retrait) à l'encontre de l'Éditeur.
+### 3.3 Droits moraux et attribution
+Le Contributeur renonce expressément à exercer ses droits morals d'auteur (droit de paternité, droit au respect de l'œuvre, droit de divulgation, droit de retrait) à l'encontre de l'Éditeur.
 
-Le Contributeur accepte que son pseudo public soit utilisé pour le classement des Contributeurs, mais consent à ce que ses Contributions soient publiées sans mention d'auteur dans le contenu pédagogique.
+Le Contributeur accepte que :
+- Ses Contributions soient publiées **sans aucune mention d'auteur** ni attribution de nom
+- Son pseudo public soit utilisé **uniquement** pour le classement des Contributeurs (visible dans l'espace contributeur)
+- Aucun lien direct ne soit établi entre son identité et ses contenus dans l'application pédagogique
 
 ### 3.4 Garanties du Contributeur
 Le Contributeur garantit qu'il est le créateur original de chaque Contribution et qu'il dispose de l'intégralité des droits nécessaires à la cession.
@@ -139,19 +142,24 @@ Il est interdit de soumettre des Contributions :
 
 ## ARTICLE 5 - SYSTÈME DE POINTS ET RÉMUNÉRATION
 
-### 5.1 Principe général
-Les Contributeurs sont rémunérés sur la base d'un système de Points reflétant la complexité et la qualité de leurs Contributions.
+### 5.1 Principe général - Modèle d'économie solidaire
+Les Contributeurs reçoivent une part des revenus de la Plateforme proportionnellement à leur contribution, selon un modèle d'**économie solidaire et de partage** :
+
+- Les revenus proviennent des **ventes de licences par les formateurs** (pas de vente directe de contenu)
+- **20% des revenus totaux** sont répartis entre tous les Contributeurs au prorata de leurs Points
+- Chaque Contributeur reçoit une **part équitable des dividendes collectifs** (similaire à un modèle coopératif)
 
 **Seuil de déclenchement** : La rémunération n'est versée que si la Plateforme atteint un chiffre d'affaires de 1 000€ (via ventes de licences).
 
-**Important** : Si le seuil de 1 000€ n'est jamais atteint, aucune rémunération ne sera versée, quelle que soit la quantité de Contributions.
+**Important** : Si le seuil de 1 000€ n'est jamais atteint, aucune rémunération ne sera versée, quelle que soit la quantité de Contributions. Les Contributeurs participent à une économie collective dont le succès dépend du succès global de la Plateforme.
 
 ### 5.2 Attribution des Points
 
 #### Captures d'écran
 - **0 point** : Réutilisation d'une capture déjà présente dans la bibliothèque
-- **1 point** : Nouvelle capture d'écran de qualité standard
-- **+0.5 point** : Bonus qualité (haute résolution, composition soignée)
+- **1 point** : Nouvelle capture d'écran
+
+*Note : Les images sont compressées au maximum pour limiter la taille de l'application. Aucun bonus de qualité n'est appliqué aux images.*
 
 #### Exercices
 - **5 points** : Exercice de base (1 version, moins de 5 tâches)
@@ -160,12 +168,7 @@ Les Contributeurs sont rémunérés sur la base d'un système de Points refléta
   - Les versions doivent présenter des différences substantielles (pas seulement cosmétiques)
   - Des tâches identiques ne donnent pas droit au bonus
 
-#### Bonus d'engagement
-- **+10 points** : Exercice dans le Top 10 des plus réalisés par les apprenants durant la semaine
-- **+2 points** : Premier exercice complété avec succès par un apprenant
-- **+5 points** : Taux de complétion supérieur à 80% sur 30 jours (minimum 20 tentatives)
-- **+5 points** : 10 contributions consécutives approuvées sans rejet
-- **+10 points** : Exercice marqué "Tutoriel de référence" par un Administrateur
+
 
 ### 5.3 Pénalités
 
@@ -197,17 +200,21 @@ Les apprenants peuvent signaler des erreurs via le formulaire dédié.
 
 ### 5.4 Calcul de la rémunération
 
+Chaque Contributeur reçoit une part du pool de 20% des revenus collectifs, proportionnellement à ses Points accumulés.
+
 **Formule** :
 ```
 Montant Contributeur = (Points Contributeur / Total Points Communauté) × (CA atteint × 20%)
 ```
 
-**Exemple concret** :
-- CA atteint : 1 000€
-- Montant à distribuer : 200€ (20% de 1 000€)
-- Total Points communauté : 500 points
+**Exemple concret (modèle solidaire)** :
+- CA atteint par la Plateforme : 1 000€
+- Pool de distribution : 200€ (20% du CA, pas des ventes individuelles)
+- Total Points communauté : 500 points (accumulés par tous les contributeurs)
 - Points Contributeur A : 150 points
-- Rémunération A : (150 / 500) × 200€ = **60€**
+- **Dividende reçu par A : (150 / 500) × 200€ = 60€**
+
+Ce modèle reflète une **économie solidaire** : tous les Contributeurs bénéficient du succès collectif de la Plateforme, indépendamment de qui utilise leur contenu spécifiquement.
 
 ### 5.5 Paliers de distribution
 Les distributions ont lieu à chaque palier de 1 000€ de CA :
@@ -260,6 +267,13 @@ L'Éditeur se réserve le droit de refuser ou de modifier un pseudonyme inapprop
 
 ### 6.3 Opt-out
 Le Contributeur peut choisir de ne pas apparaître dans le classement public, mais continuera à accumuler des Points et à recevoir des rémunérations.
+
+### 6.4 Confidentialité des Contributions
+Les contenus créés par les Contributeurs ne sont pas associés à leur identité dans l'application pédagogique :
+- Aucun nom ou pseudonyme n'apparaît sur les exercices
+- L'utilisateur (apprenant ou formateur) ne sait pas qui a créé le contenu
+- Seul le classement interne des Contributeurs (non public aux utilisateurs) affiche les Points et pseudonymes
+- Cette approche garantit une utilisation objective et impartiale du contenu pédagogique
 
 ---
 
