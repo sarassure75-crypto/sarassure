@@ -1,7 +1,8 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Search, Replace, Info, Eye, EyeOff, Maximize2 } from 'lucide-react';
+import { Search, Replace, Info, Eye, EyeOff, Maximize2, Bug } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 const ExerciseToolbar = ({
@@ -17,8 +18,21 @@ const ExerciseToolbar = ({
   isMobileLayout,
   onDebugForceSave,
   onDebugDeleteProgress,
+  taskId,
+  versionId,
+  currentStepIndex,
 }) => {
+  const navigate = useNavigate();
   const buttonSizeClass = isMobileLayout ? "h-7 w-7" : "h-8 w-8";
+
+  const handleReportError = () => {
+    // Passer les paramètres courants au formulaire de signalement
+    const params = new URLSearchParams();
+    if (taskId) params.append('taskId', taskId);
+    if (versionId) params.append('versionId', versionId);
+    if (currentStepIndex !== undefined && currentStepIndex >= 0) params.append('stepIndex', currentStepIndex);
+    navigate(`/report-error?${params.toString()}`);
+  };
 
   return (
     <div className={cn("w-full flex items-center justify-center gap-2 shrink-0", isMobileLayout ? "mb-1.5" : "mb-2 sm:mb-4")}>
@@ -62,6 +76,15 @@ const ExerciseToolbar = ({
           </div>
         </PopoverContent>
       </Popover>
+
+      {/* Bouton signaler une erreur */}
+      <button
+        onClick={handleReportError}
+        className={cn("flex-shrink-0 rounded-md flex items-center justify-center transition-colors", buttonSizeClass, "bg-red-600 hover:bg-red-700 text-white")}
+        title="Signaler une erreur"
+      >
+        <Bug className={isMobileLayout ? "h-4 w-4" : "h-5 w-5"} />
+      </button>
       {/* Debug button (optional) */}
       {onDebugForceSave && onDebugDeleteProgress && (
         <Popover>

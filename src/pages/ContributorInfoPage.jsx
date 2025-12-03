@@ -109,7 +109,7 @@ const ContributorInfoPage = () => {
     },
     {
       question: "Y a-t-il des pénalités ?",
-      answer: "Oui : -2 points pour contribution rejetée, -5 points pour inclusion de données personnelles, -3 points par erreur signalée au-delà de 2 erreurs. Un taux d'erreur élevé peut entraîner une suspension du statut contributeur."
+      answer: "Non ! Il n'y a aucune pénalité pour les contributeurs. Vos points ne peuvent qu'augmenter. En cas de qualité insuffisante, une contribution peut être rejetée, mais sans affecter votre solde de points. Nous croyons en l'encouragement plutôt qu'en la punition."
     },
     {
       question: "Comment est calculée ma rémunération ?",

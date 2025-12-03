@@ -54,9 +54,9 @@ const HomePage = () => {
                   <Link to="/login">Espace Formateur</Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
-                  <Link to="/devenir-contributeur">
+                  <Link to="/presentation">
                     <Award className="mr-2 h-5 w-5" />
-                    Devenir Contributeur
+                    Présentation
                   </Link>
                 </Button>
               </div>

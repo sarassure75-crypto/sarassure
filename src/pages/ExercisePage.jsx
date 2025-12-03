@@ -22,6 +22,9 @@ import InformationPanel from '@/components/exercise/InformationPanel';
 import LearnerNotesViewer from '@/components/exercise/LearnerNotesViewer';
 import useDisableTouchGestures from '@/hooks/useDisableTouchGestures';
 import BravoOverlay from '@/components/exercise/BravoOverlay';
+import ConfidenceBeforeModal from '@/components/exercise/ConfidenceBeforeModal';
+import ConfidenceAfterModal from '@/components/exercise/ConfidenceAfterModal';
+import { useConfidence } from '@/hooks/useConfidence';
 
 
 const toPascalCase = (str) => {
@@ -344,6 +347,15 @@ const ExercisePage = () => {
   const [showInformationPanel, setShowInformationPanel] = useState(false);
   const [hideActionZone, setHideActionZone] = useState(false);
   const [showBravoOverlay, setShowBravoOverlay] = useState(false);
+  
+  // Confidence modals states
+  const [showConfidenceBeforeModal, setShowConfidenceBeforeModal] = useState(false);
+  const [showConfidenceAfterModal, setShowConfidenceAfterModal] = useState(false);
+  const [confidenceBefore, setConfidenceBefore] = useState(null);
+  
+  // Confidence hook
+  const { recordConfidenceBefore, recordConfidenceAfter, fetchConfidence } = useConfidence();
+  
   // Toggle to show debug buttons in the toolbar without removing code
   const showDebugButtons = false;
 
@@ -469,6 +481,29 @@ const ExercisePage = () => {
     fetchAndSetData();
   }, [taskId, versionId, isPreviewMode, toast, adminContext, location.search]);
 
+  // Afficher le modal de confiance avant au premier chargement
+  useEffect(() => {
+    const checkAndShowConfidenceModal = async () => {
+      if (currentVersion && user && !isPreviewMode && !isLoading) {
+        try {
+          // Vérifier si une confiance_before a déjà été enregistrée pour cette version
+          const existingConfidence = await fetchConfidence(user.id, versionId);
+          
+          // Ne montrer le modal que si aucune confiance_before n'existe
+          if (!existingConfidence || !existingConfidence.confidence_before) {
+            setShowConfidenceBeforeModal(true);
+          }
+        } catch (error) {
+          console.error('Error checking confidence:', error);
+          // En cas d'erreur, montrer le modal par sécurité
+          setShowConfidenceBeforeModal(true);
+        }
+      }
+    };
+
+    checkAndShowConfidenceModal();
+  }, [versionId, user, isPreviewMode, isLoading, fetchConfidence]);
+
 
   const handleTabChange = (newVersionId) => {
     const path = isPreviewMode ? `/admin/preview/tache/${taskId}/version/${newVersionId}` : `/tache/${taskId}/version/${newVersionId}`;
@@ -477,9 +512,14 @@ const ExercisePage = () => {
   
   const handleCompletion = useCallback(async (skipCompletionScreen = false) => {
       setIsCompleted(true);
-      if (!skipCompletionScreen) {
+      
+      // Afficher le modal de confiance après au lieu de l'écran de complétion
+      if (user && !isPreviewMode && !skipCompletionScreen) {
+        setShowConfidenceAfterModal(true);
+      } else if (!skipCompletionScreen) {
         setShowCompletionScreen(true);
       }
+      
       if (user && !isPreviewMode && startTimeRef.current) {
         const timeTaken = (Date.now() - startTimeRef.current) / 1000;
         try {
@@ -531,6 +571,24 @@ const ExercisePage = () => {
   
   const handleInputChange = (e) => {
     setInputValue(e.target.value);
+  };
+
+  // Handlers pour la confiance
+  const handleConfidenceBeforeSubmit = async (confidence) => {
+    setConfidenceBefore(confidence);
+    if (user && versionId) {
+      await recordConfidenceBefore(user.id, versionId, confidence);
+    }
+    setShowConfidenceBeforeModal(false);
+  };
+
+  const handleConfidenceAfterSubmit = async (confidence) => {
+    if (user && versionId) {
+      await recordConfidenceAfter(user.id, versionId, confidence);
+    }
+    setShowConfidenceAfterModal(false);
+    // Montrer l'écran de complétion après le modal
+    setShowCompletionScreen(true);
   };
 
   const goToNextStep = () => {
@@ -675,6 +733,9 @@ const ExercisePage = () => {
           currentVersionId={versionId}
           onVersionChange={handleTabChange}
           isMobileLayout={true}
+          taskId={taskId}
+          versionId={versionId}
+          currentStepIndex={currentStepIndex}
           onDebugForceSave={showDebugButtons ? async () => {
             if (!user) return;
             const timeTaken = 1; // debug small duration
@@ -748,6 +809,10 @@ const ExercisePage = () => {
           textZoom={textZoom}
           onTextZoomChange={setTextZoom}
           isMobileLayout={false}
+          taskId={taskId}
+          versionId={versionId}
+          currentStepIndex={currentStepIndex}
+          totalSteps={totalSteps}
         />
 
         {/* Zone capture d'écran avec zone d'action */}
@@ -849,6 +914,25 @@ const ExercisePage = () => {
         onClose={() => setIsVideoModalOpen(false)}
         videoUrl={videoUrl}
         title={`Vidéo pour: ${currentVersion.name}`}
+      />
+
+      {/* Modals de confiance */}
+      <ConfidenceBeforeModal
+        isOpen={showConfidenceBeforeModal}
+        onClose={() => setShowConfidenceBeforeModal(false)}
+        onSubmit={handleConfidenceBeforeSubmit}
+        taskTitle={task?.title || 'Cet exercice'}
+      />
+      
+      <ConfidenceAfterModal
+        isOpen={showConfidenceAfterModal}
+        onClose={() => {
+          setShowConfidenceAfterModal(false);
+          setShowCompletionScreen(true);
+        }}
+        onSubmit={handleConfidenceAfterSubmit}
+        taskTitle={task?.title || 'Cet exercice'}
+        confidenceBefore={confidenceBefore}
       />
     </motion.div>
   );

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, LayoutGrid, Image, CheckCircle, Users, MessageSquare, AlertTriangle, Mail, ListTodo, DollarSign, ClipboardList, Zap } from 'lucide-react';
+import { Home, LayoutGrid, Image, CheckCircle, Users, MessageSquare, AlertTriangle, Mail, ListTodo, DollarSign, ClipboardList, Zap, HelpCircle } from 'lucide-react';
 
 export default function AdminTabNavigation({ counters = {} }) {
   const navigate = useNavigate();
@@ -15,6 +15,7 @@ export default function AdminTabNavigation({ counters = {} }) {
   else if (pathSegment === 'images') currentTab = 'images';
   else if (pathSegment === 'validation/images') currentTab = 'validation-images';
   else if (pathSegment === 'validation/exercices') currentTab = 'validation-exercices';
+  else if (pathSegment === 'validation/questionnaires') currentTab = 'validation-questionnaires';
   else if (pathSegment === 'revenus') currentTab = 'revenus';
   else if (pathSegment === 'points') currentTab = 'points';
   else if (pathSegment === 'users') currentTab = 'users';
@@ -29,6 +30,7 @@ export default function AdminTabNavigation({ counters = {} }) {
     { id: 'requests', label: 'Demandes', icon: ClipboardList, path: '/admin/requests', count: 0 },
     { id: 'validation-images', label: 'Valider images', icon: CheckCircle, path: '/admin/validation/images', count: counters.pendingImages || 0 },
     { id: 'validation-exercices', label: 'Valider exercices', icon: CheckCircle, path: '/admin/validation/exercices', count: counters.pendingContributions || 0 },
+    { id: 'validation-questionnaires', label: 'Valider QCM', icon: HelpCircle, path: '/admin/validation/questionnaires', count: counters.pendingQuestionnaires || 0 },
     { id: 'revenus', label: 'Revenus', icon: DollarSign, path: '/admin/revenus', count: 0 },
     { id: 'points', label: 'Points', icon: Zap, path: '/admin/points', count: 0 },
     { id: 'users', label: 'Utilisateurs', icon: Users, path: '/admin/users', count: 0 },

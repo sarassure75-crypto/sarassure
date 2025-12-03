@@ -172,31 +172,13 @@ Les Contributeurs reçoivent une part des revenus de la Plateforme proportionnel
 
 ### 5.3 Pénalités
 
-#### Rejets et mauvaise qualité
-- **-2 points** : Contribution rejetée pour non-respect des règles (Article 4)
-- **-5 points** : Inclusion de Données Personnelles (sanction aggravée)
-- **-10 points** : Violation répétée des règles (2ème violation dans un délai de 30 jours)
+#### Aucune Pénalité
 
-#### Signalements d'erreurs par les utilisateurs
-Les apprenants peuvent signaler des erreurs via le formulaire dédié.
+**Bonne nouvelle !** Le système a été simplifié : **Il n'y a aucune pénalité pour les contributeurs**.
 
-**Seuil de tolérance** :
-- 0-1 erreur signalée : Aucune pénalité
-- 2 erreurs signalées : **-3 points** par erreur supplémentaire
-- Au-delà de 5 erreurs : Suspension du statut Contributeur (examen administratif)
+Vos points ne peuvent qu'augmenter. En cas d'erreur détectée ou de qualité insuffisante, une contribution peut être rejetée, mais aucune pénalité ne sera appliquée à votre solde de points.
 
-**Calcul proportionnel** (pour Contributeurs actifs avec >20 contributions approuvées) :
-- Si taux d'erreur > 10% : **-1 point** par contribution approuvée au-delà du seuil
-- Si taux d'erreur > 20% : **-2 points** + révision obligatoire par Administrateur
-
-**Exemple** :
-- Contributeur avec 50 contributions approuvées
-- 12 erreurs signalées (24% de taux d'erreur)
-- Pénalité : -2 points × 50 = -100 points + révision obligatoire
-
-#### Fraude et abus
-- **-50 points** : Tentative de manipulation du système (votes frauduleux, faux comptes, etc.)
-- **Bannissement définitif** : Fraude avérée, avec perte de tous les Points accumulés
+Nous croyons en l'encouragement plutôt qu'à la punition, et nous reconnaissons les efforts de tous nos contributeurs.
 
 ### 5.4 Calcul de la rémunération
 

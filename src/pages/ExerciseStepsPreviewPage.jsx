@@ -11,6 +11,7 @@ import * as LucideIcons from 'lucide-react';
 import VideoPlayerModal from '@/components/VideoPlayerModal';
 import { cn } from '@/lib/utils';
 import ImageFromSupabase from '@/components/ImageFromSupabase';
+import SafetyBanner from '@/components/exercise/SafetyBanner';
 
 const toPascalCase = (str) => {
   if (!str) return null;
@@ -93,6 +94,9 @@ const ExerciseStepsPreviewPage = () => {
         <ChevronLeft className="mr-2 h-4 w-4" />
         Retour à la liste des tâches
       </Button>
+
+      {/* Banneau de sécurité */}
+      <SafetyBanner className="mb-6" />
 
       <Card className="mb-6 shadow-lg border-border/50 overflow-hidden">
         <CardHeader className="flex flex-row items-center gap-4 p-4 bg-card/80">

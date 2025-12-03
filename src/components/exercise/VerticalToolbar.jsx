@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Search, X, Eye, EyeOff, Home, FileText, FolderOpen, ChevronLeft, ChevronRight, Layers, Info, Volume2, Type } from 'lucide-react';
+import { Search, X, Eye, EyeOff, Home, FileText, FolderOpen, ChevronLeft, ChevronRight, Layers, Info, Volume2, Type, Bug } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 /**
@@ -27,11 +28,25 @@ const VerticalToolbar = ({
   currentStep,
   textZoom,
   onTextZoomChange,
-  isMobileLayout
+  isMobileLayout,
+  taskId,
+  versionId,
+  currentStepIndex,
+  totalSteps
 }) => {
+  const navigate = useNavigate();
   const [showVersionMenu, setShowVersionMenu] = useState(false);
   const iconSize = isMobileLayout ? "h-5 w-5" : "h-6 w-6";
   const buttonClass = "w-full p-3 flex items-center justify-center text-white hover:bg-green-600 transition-colors border-b border-green-600";
+  
+  const handleReportError = () => {
+    // Passer les paramètres courants au formulaire de signalement
+    const params = new URLSearchParams();
+    if (taskId) params.append('taskId', taskId);
+    if (versionId) params.append('versionId', versionId);
+    if (currentStepIndex !== undefined && currentStepIndex >= 0) params.append('stepIndex', currentStepIndex);
+    navigate(`/report-error?${params.toString()}`);
+  };
 
   return (
     <div className="flex flex-col bg-green-700 rounded-lg shadow-lg overflow-y-auto h-auto">
@@ -167,6 +182,15 @@ const VerticalToolbar = ({
         title="Ajouter une note"
       >
         <FileText className={iconSize} />
+      </button>
+
+      {/* Signaler une erreur */}
+      <button
+        onClick={handleReportError}
+        className={buttonClass}
+        title="Signaler une erreur"
+      >
+        <Bug className={iconSize} />
       </button>
 
       {/* Précédent */}

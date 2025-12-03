@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAdmin } from '@/contexts/AdminContext';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { PlusCircle, RefreshCw, ChevronLeft, Loader2 } from 'lucide-react';
@@ -16,6 +17,7 @@ const AdminTaskManager = () => {
   const [view, setView] = useState('list'); // 'list', 'form'
   const [selectedTask, setSelectedTask] = useState(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (view === 'list') {
@@ -39,6 +41,10 @@ const AdminTaskManager = () => {
     };
     setSelectedTask(newTask);
     setView('form');
+  };
+
+  const handleCreateQuestionnaire = () => {
+    navigate('/contributeur/questionnaire');
   };
 
   const handleBackToList = () => {
@@ -149,6 +155,7 @@ const AdminTaskManager = () => {
               tasks={sortedTasks}
               onSelectTask={handleSelectTask}
               onAddNewTask={handleAddNewTask}
+              onCreateQuestionnaire={handleCreateQuestionnaire}
               onDeleteTask={handleDeleteTask}
               imagesMap={imagesMap}
               categories={categories}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PlusCircle, Edit, Trash2, ChevronDown, ChevronUp, HelpCircle, Settings2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, ChevronDown, ChevronUp, HelpCircle, Settings2, HelpCircle as QuestionIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { creationStatuses } from '@/data/tasks';
 import * as LucideIcons from 'lucide-react';
@@ -60,7 +60,7 @@ const TaskItem = ({ task, onSelectTask, onDeleteTask, imagesMap }) => {
   );
 };
 
-const AdminTaskList = ({ tasks, onSelectTask, onAddNewTask, onDeleteTask, imagesMap, categories = [] }) => {
+const AdminTaskList = ({ tasks, onSelectTask, onAddNewTask, onCreateQuestionnaire, onDeleteTask, imagesMap, categories = [] }) => {
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   // Group tasks by category name (use task.category or 'Sans catégorie')
@@ -98,6 +98,11 @@ const AdminTaskList = ({ tasks, onSelectTask, onAddNewTask, onDeleteTask, images
 
           <Button onClick={onAddNewTask}>
             <PlusCircle className="mr-2 h-4 w-4" /> Ajouter une Tâche
+          </Button>
+
+          <Button onClick={onCreateQuestionnaire} variant="outline" className="border-purple-300 hover:bg-purple-50">
+            <QuestionIcon className="mr-2 h-4 w-4 text-purple-600" />
+            <span className="text-purple-600 font-medium">Créer QCM</span>
           </Button>
         </div>
       </CardHeader>

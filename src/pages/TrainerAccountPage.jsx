@@ -7,12 +7,13 @@ import React, { useState, useEffect, useCallback } from 'react';
     import { Input } from '@/components/ui/input';
     import { Label } from '@/components/ui/label';
     import { useToast } from '@/components/ui/use-toast';
-    import { Users, UserPlus, Link2, Trash2, Loader2, RefreshCw, ChevronDown, ChevronUp, ShoppingCart, Lock, Copy, HelpCircle } from 'lucide-react';
+    import { Users, UserPlus, Link2, Trash2, Loader2, RefreshCw, ChevronDown, ChevronUp, ShoppingCart, Lock, Copy, HelpCircle, BarChart3 } from 'lucide-react';
     import { motion } from 'framer-motion';
     import LearnerLicensesManager from '@/components/LearnerLicensesManager';
     import PurchaseLicensesModal from '@/components/PurchaseLicensesModal';
     import PurchaseHistory from '@/components/PurchaseHistory';
     import TrainerLicensesOverview from '@/components/TrainerLicensesOverview';
+    import TrainerLearnersProgressReport from '@/components/TrainerLearnersProgressReport';
 
     const TrainerAccountPage = () => {
       const { currentUser } = useAuth();
@@ -115,6 +116,14 @@ import React, { useState, useEffect, useCallback } from 'react';
             >
               <Users className="h-4 w-4" />
               Apprenants
+            </Button>
+            <Button 
+              variant={activeTab === 'progress' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('progress')}
+              className="flex items-center gap-2"
+            >
+              <BarChart3 className="h-4 w-4" />
+              Suivi des Apprenants
             </Button>
             <Button 
               variant={activeTab === 'licenses' ? 'default' : 'outline'}
@@ -231,6 +240,12 @@ import React, { useState, useEffect, useCallback } from 'react';
                   </Card>
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'progress' && (
+            <div>
+              <TrainerLearnersProgressReport trainerId={currentUser.id} learners={learners} />
             </div>
           )}
 

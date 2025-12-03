@@ -66,8 +66,8 @@ export const recordCompletion = async (userId, versionId, timeTakenInSeconds) =>
       user_id: userId,
       version_id: versionId,
       attempts: (existingProgress.attempts || 0) + 1,
-      last_time_seconds: timeTakenInSeconds,
-      best_time_seconds: Math.min(existingProgress.best_time_seconds || Infinity, timeTakenInSeconds),
+      last_time_seconds: Math.round(timeTakenInSeconds),
+      best_time_seconds: Math.round(Math.min(existingProgress.best_time_seconds || Infinity, timeTakenInSeconds)),
       completed_steps_history: [...(existingProgress.completed_steps_history || []), completionEvent]
     };
   } else {
@@ -75,9 +75,9 @@ export const recordCompletion = async (userId, versionId, timeTakenInSeconds) =>
       user_id: userId,
       version_id: versionId,
       attempts: 1,
-      first_time_seconds: timeTakenInSeconds,
-      last_time_seconds: timeTakenInSeconds,
-      best_time_seconds: timeTakenInSeconds,
+      first_time_seconds: Math.round(timeTakenInSeconds),
+      last_time_seconds: Math.round(timeTakenInSeconds),
+      best_time_seconds: Math.round(timeTakenInSeconds),
       completed_steps_history: [completionEvent]
     };
   }

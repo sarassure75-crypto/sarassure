@@ -34,10 +34,12 @@ const LearnerAccountPage = lazy(() => import('@/pages/LearnerAccountPage'));
 const LearnerProgressPage = lazy(() => import('@/pages/LearnerProgressPage'));
 const PwaHomePage = lazy(() => import('@/pages/PwaHomePage'));
 const DashboardRedirector = lazy(() => import('@/pages/DashboardRedirector'));
+const AppPresentationPage = lazy(() => import('@/pages/AppPresentationPage'));
 
 // Pages Contributeur
 const ContributorDashboard = lazy(() => import('@/pages/ContributorDashboard'));
 const NewContribution = lazy(() => import('@/pages/NewContribution'));
+const QuestionnaireCreation = lazy(() => import('@/pages/QuestionnaireCreation'));
 const MyContributions = lazy(() => import('@/pages/MyContributions'));
 const TermsOfServicePage = lazy(() => import('@/pages/TermsOfServicePage'));
 const ContributorSalesHistory = lazy(() => import('@/components/ContributorSalesHistory'));
@@ -97,6 +99,9 @@ function AppContent() {
         <Route path="pwa-home" element={<PwaHomePage />} />
         <Route path="dashboard-redirect" element={<DashboardRedirector />} />
         
+        {/* Page publique de présentation de l'application */}
+        <Route path="presentation" element={<AppPresentationPage />} />
+        
         {/* Page publique d'information contributeur */}
         <Route path="devenir-contributeur" element={<ContributorInfoPage />} />
         
@@ -121,6 +126,7 @@ function AppContent() {
         {/* Routes Contributeur */}
         <Route path="contributeur" element={<ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.CONTRIBUTOR]}><ContributorDashboard /></ProtectedRoute>} />
         <Route path="contributeur/nouvelle-contribution" element={<ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.CONTRIBUTOR]}><NewContribution /></ProtectedRoute>} />
+        <Route path="contributeur/questionnaire" element={<ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.CONTRIBUTOR]}><QuestionnaireCreation /></ProtectedRoute>} />
         <Route path="contributeur/mes-contributions" element={<ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.CONTRIBUTOR]}><MyContributions /></ProtectedRoute>} />
         <Route path="contributeur/liste-demandes" element={<ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.CONTRIBUTOR]}><ExerciseRequestsList /></ProtectedRoute>} />
         <Route path="contributeur/bibliotheque" element={<ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.CONTRIBUTOR]}><ContributorImageLibrary /></ProtectedRoute>} />

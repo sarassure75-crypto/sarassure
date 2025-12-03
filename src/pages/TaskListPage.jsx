@@ -11,6 +11,7 @@ import { USER_ROLES } from '@/data/users';
 import { Badge } from '@/components/ui/badge';
 import VideoPlayerModal from '@/components/VideoPlayerModal';
 import { motion } from 'framer-motion';
+import SafetyBanner from '@/components/exercise/SafetyBanner';
 
 const toPascalCase = (str) => {
   if (!str) return null;
@@ -157,6 +158,9 @@ const TaskListPage = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold tracking-tight text-center mb-8">Liste des Tâches</h1>
+      
+      {/* Banneau de sécurité */}
+      <SafetyBanner />
       
       {tasksByCategory.length > 0 ? (
         <div className="space-y-12">

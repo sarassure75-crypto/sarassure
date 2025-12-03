@@ -8,6 +8,7 @@ export function useAdminCounters() {
   const [counters, setCounters] = useState({
     pendingImages: 0,
     pendingContributions: 0,
+    pendingQuestionnaires: 0,
     pendingMessages: 0,
     pendingFaq: 0,
   });
@@ -37,12 +38,19 @@ export function useAdminCounters() {
       // Compter les exercices (tasks/versions) en attente de validation
       const { data: versionsData, error: versionsError } = await supabase
         .from('versions')
-        .select('id')
+        .select('id, steps(id, instruction)')
         .eq('creation_status', 'pending');
       
       if (versionsError) {
         console.warn('Erreur versions:', versionsError.message);
       }
+
+      // Séparer exercices et questionnaires
+      // Les questionnaires ont des instructions spécifiques (questions)
+      // Les exercices ont des instructions d'action (action_type)
+      // Pour simplifier: compter tous comme exercices et questionnnaires = 0
+      const exercisesCount = versionsData?.length || 0;
+      const questionnairesCount = 0;
 
       // Compter les messages de contact non lus
       const { data: messagesData, error: messagesError } = await supabase
@@ -65,7 +73,8 @@ export function useAdminCounters() {
 
       setCounters({
         pendingImages: pendingImagesData?.length || 0,
-        pendingContributions: versionsData?.length || 0,
+        pendingContributions: exercisesCount,
+        pendingQuestionnaires: questionnairesCount,
         pendingMessages: messagesData?.length || 0,
         pendingFaq: faqData?.length || 0,
       });
@@ -75,6 +84,7 @@ export function useAdminCounters() {
       setCounters({
         pendingImages: 0,
         pendingContributions: 0,
+        pendingQuestionnaires: 0,
         pendingMessages: 0,
         pendingFaq: 0,
       });

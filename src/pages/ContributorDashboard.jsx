@@ -17,7 +17,8 @@ import {
   DollarSign,
   Trophy,
   ClipboardList,
-  Zap
+  Zap,
+  HelpCircle
 } from 'lucide-react';
 
 export default function ContributorDashboard() {
@@ -81,6 +82,14 @@ export default function ContributorDashboard() {
         </button>
 
         <button
+          onClick={() => navigate('/contributeur/questionnaire')}
+          className="bg-cyan-600 hover:bg-cyan-700 text-white p-6 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl flex items-center justify-center space-x-3"
+        >
+          <HelpCircle className="w-6 h-6" />
+          <span className="text-lg font-semibold">Créer un QCM</span>
+        </button>
+
+        <button
           onClick={() => navigate('/contributeur/bibliotheque')}
           className="bg-purple-600 hover:bg-purple-700 text-white p-6 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl flex items-center justify-center space-x-3"
         >
@@ -94,14 +103,6 @@ export default function ContributorDashboard() {
         >
           <Eye className="w-6 h-6" />
           <span className="text-lg font-semibold">Mes contributions</span>
-        </button>
-
-        <button
-          onClick={() => navigate('/contributeur/liste-demandes')}
-          className="bg-orange-600 hover:bg-orange-700 text-white p-6 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl flex items-center justify-center space-x-3"
-        >
-          <ClipboardList className="w-6 h-6" />
-          <span className="text-lg font-semibold">Liste des demandes</span>
         </button>
 
         {/* Masqué pour le moment - sera affiché quand les ventes commenceront */}
@@ -448,27 +449,8 @@ export default function ContributorDashboard() {
             Les contributions non conformes entraînent des pénalités en points :
           </p>
 
-          <div className="space-y-3">
-            <div className="flex gap-4 text-sm">
-              <div className="bg-red-200 text-red-900 px-3 py-2 rounded font-semibold min-w-max">-2 pts</div>
-              <div className="text-red-800">Rejet simple (contenu non conforme)</div>
-            </div>
-            <div className="flex gap-4 text-sm">
-              <div className="bg-orange-200 text-orange-900 px-3 py-2 rounded font-semibold min-w-max">-5 pts</div>
-              <div className="text-orange-800">Données personnelles détectées dans le contenu</div>
-            </div>
-            <div className="flex gap-4 text-sm">
-              <div className="bg-red-300 text-red-900 px-3 py-2 rounded font-semibold min-w-max">-10 pts</div>
-              <div className="text-red-800">Contenu répété, plagié ou très similaire à un contenu existant</div>
-            </div>
-            <div className="flex gap-4 text-sm">
-              <div className="bg-orange-200 text-orange-900 px-3 py-2 rounded font-semibold min-w-max">-3 pts</div>
-              <div className="text-orange-800">Erreur détectée par les apprenants (par erreur au-delà de 2)</div>
-            </div>
-          </div>
-
-          <p className="text-sm text-red-700 mt-4 italic">
-            💡 Conseil : Vérifiez bien vos contributions avant de les soumettre pour éviter les pénalités !
+          <p className="text-sm text-green-700 italic border-t pt-4">
+            ✅ Bonne nouvelle : Il n'y a <strong>aucune pénalité</strong> pour les contributeurs. Vos points ne peuvent qu'augmenter !
           </p>
         </div>
 

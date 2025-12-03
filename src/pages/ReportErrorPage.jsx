@@ -21,6 +21,7 @@ const errorCategories = [
   "Version incompréhensible",
   "Pictogramme incorrect ou manquant",
   "Problème d'affichage général",
+  "Je ne trouve pas ma version de téléphone",
   "Autre"
 ];
 

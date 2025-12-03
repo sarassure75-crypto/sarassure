@@ -5,10 +5,12 @@ import { fetchTasks } from '@/data/tasks';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Link, BarChart, XCircle, RefreshCw } from 'lucide-react';
+import { Loader2, Link, BarChart, XCircle, RefreshCw, TrendingUp, Zap } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { getUserById, unassignTrainerFromLearner } from '@/data/users';
 import { Button } from '@/components/ui/button';
+import ConfidenceSelector from '@/components/exercise/ConfidenceSelector';
+import { useConfidence } from '@/hooks/useConfidence';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +30,83 @@ const formatTime = (seconds) => {
     return `${minutes}m ${remainingSeconds}s`;
 };
 
+/**
+ * Vérifie si un temps est valide (pas trop court, ce qui indiquerait une triche ou saut d'étapes)
+ * Un temps est considéré comme suspect s'il est inférieur à 10% du temps moyen des tentatives
+ */
+const isValidTime = (time, allTimes) => {
+  if (!time || !allTimes || allTimes.length === 0) return false;
+  
+  // Calcule la moyenne des temps
+  const avgTime = allTimes.reduce((sum, t) => sum + t, 0) / allTimes.length;
+  
+  // Un temps est valide s'il est au moins 10% du temps moyen (ou > 5 secondes minimum)
+  const minValidTime = Math.max(avgTime * 0.1, 5);
+  
+  return time >= minValidTime;
+};
+
+/**
+ * Calcule les statistiques pour une période donnée en filtrant les temps suspects
+ */
+const calculatePeriodStats = (progressItems, confidenceMap, startDate, endDate) => {
+  const itemsInPeriod = progressItems.filter(p => {
+    const date = new Date(p.created_at || new Date());
+    return date >= startDate && date <= endDate;
+  });
+
+  if (itemsInPeriod.length === 0) {
+    return {
+      totalExercises: 0,
+      avgAttempts: 0,
+      speedProgress: 0,
+      avgConfidenceBefore: 0,
+      avgConfidenceAfter: 0
+    };
+  }
+
+  const totalAttempts = itemsInPeriod.reduce((sum, p) => sum + (p.attempts || 0), 0);
+  const avgAttempts = (totalAttempts / itemsInPeriod.length).toFixed(1);
+
+  // Calcul progrès vitesse avec filtrage des temps suspects
+  const itemsWithTimes = itemsInPeriod.filter(p => p.first_time_seconds && p.best_time_seconds);
+  
+  // Collecte tous les temps pour calculer le seuil de validité
+  const allTimes = itemsWithTimes.flatMap(p => [p.first_time_seconds, p.best_time_seconds]);
+  
+  // Filtre les temps valides
+  const validItems = itemsWithTimes.filter(p => {
+    const firstTimeValid = isValidTime(p.first_time_seconds, allTimes);
+    const bestTimeValid = isValidTime(p.best_time_seconds, allTimes);
+    return firstTimeValid && bestTimeValid;
+  });
+
+  let speedProgress = 0;
+  if (validItems.length > 0) {
+    speedProgress = validItems.reduce((sum, p) => {
+      const improvement = ((p.first_time_seconds - p.best_time_seconds) / p.first_time_seconds) * 100;
+      return sum + improvement;
+    }, 0) / validItems.length;
+  }
+
+  // Moyenne confiance
+  const confidencesInPeriod = itemsInPeriod.map(p => confidenceMap.get(p.id)).filter(Boolean);
+  const avgConfidenceBefore = confidencesInPeriod.length > 0
+    ? (confidencesInPeriod.reduce((sum, c) => sum + (c.confidence_before || 0), 0) / confidencesInPeriod.length).toFixed(1)
+    : 0;
+  const avgConfidenceAfter = confidencesInPeriod.length > 0
+    ? (confidencesInPeriod.reduce((sum, c) => sum + (c.confidence_after || 0), 0) / confidencesInPeriod.length).toFixed(1)
+    : 0;
+
+  return {
+    totalExercises: itemsInPeriod.length,
+    avgAttempts,
+    speedProgress: speedProgress.toFixed(1),
+    avgConfidenceBefore,
+    avgConfidenceAfter
+  };
+};
+
 const LearnerProgressPage = () => {
     const { currentUser, refetchUser } = useAuth();
     const { toast } = useToast();
@@ -37,6 +116,9 @@ const LearnerProgressPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [trainerProfile, setTrainerProfile] = useState(null);
     const [isLoadingTrainer, setIsLoadingTrainer] = useState(true);
+    const [confidenceData, setConfidenceData] = useState([]);
+    const [selectedPeriod, setSelectedPeriod] = useState('last-week');
+    const { fetchConfidenceHistory, recordConfidenceAfter } = useConfidence();
 
     const fetchProgressData = useCallback(async () => {
         if (!currentUser?.id) {
@@ -48,80 +130,94 @@ const LearnerProgressPage = () => {
         try {
             const tasks = await fetchTasks();
             let progressData = [];
+            let confidenceHistory = [];
             setAllTasks(tasks || []);
             try {
                 progressData = await fetchUserProgressDetails(currentUser.id);
+                confidenceHistory = await fetchConfidenceHistory(currentUser.id);
                 setProgressError(false);
             } catch (error) {
+                console.error('Error fetching progress:', error);
                 setProgressError(true);
                 progressData = [];
+                confidenceHistory = [];
             }
+            
             // Crée une map pour retrouver la progression par version
             const progressMap = new Map();
             (progressData || []).forEach(p => {
                 progressMap.set(`${p.task_id}-${p.version_id}`, p);
             });
+            
+            // Crée une map pour retrouver la confiance par version
+            const confidenceMap = new Map();
+            (confidenceHistory || []).forEach(c => {
+                confidenceMap.set(`${c.versionId}`, c);
+            });
+            
             // Construit la liste complète à afficher
             const fullProgress = [];
             tasks.forEach(task => {
                 (task.versions || []).forEach(version => {
                     const key = `${task.id}-${version.id}`;
                     const p = progressMap.get(key);
+                    const c = confidenceMap.get(version.id);
                     fullProgress.push({
                         id: key,
+                        versionId: version.id,
                         task_title: task.title,
                         version_name: version.name,
                         attempts: p ? p.attempts : 0,
                         first_time_seconds: p ? p.first_time_seconds : null,
                         best_time_seconds: p ? p.best_time_seconds : null,
-                        completed_steps_history: p ? p.completed_steps_history : null
+                        completed_steps_history: p ? p.completed_steps_history : null,
+                        created_at: p ? p.created_at : new Date().toISOString(),
+                        confidence_before: c?.confidenceBefore || null,
+                        confidence_after: c?.confidenceAfter || null
                     });
                 });
             });
             setProgress(fullProgress);
+            setConfidenceData(confidenceHistory);
+            
             if (!progressError) {
                 toast({ title: "Progression mise à jour", description: "Vos données de suivi sont à jour." });
             }
         } catch (error) {
+            console.error('Error in fetchProgressData:', error);
             setProgressError(true);
             setProgress([]);
         } finally {
             setIsLoading(false);
         }
-    }, [currentUser, toast]);
+    }, [currentUser, toast, fetchConfidenceHistory]);
 
-    const fetchAndSetTrainerProfile = useCallback(async () => {
-        if (currentUser && currentUser.assigned_trainer_id) {
+    useEffect(() => {
+        fetchProgressData();
+    }, [fetchProgressData]);
+
+    useEffect(() => {
+        const loadTrainerProfile = async () => {
             setIsLoadingTrainer(true);
             try {
-                const profile = await getUserById(currentUser.assigned_trainer_id);
-                setTrainerProfile(profile);
+                if (currentUser?.trainer_id) {
+                    const trainer = await getUserById(currentUser.trainer_id);
+                    setTrainerProfile(trainer);
+                }
             } catch (error) {
-                console.error("Error fetching trainer profile:", error);
-                toast({ title: "Erreur", description: "Impossible de charger les informations du formateur.", variant: "destructive" });
+                console.error('Error loading trainer profile:', error);
             } finally {
                 setIsLoadingTrainer(false);
             }
-        } else {
-             setIsLoadingTrainer(false);
-             setTrainerProfile(null);
-        }
-    }, [currentUser, toast]);
-
-    useEffect(() => {
-        fetchAndSetTrainerProfile();
-    }, [fetchAndSetTrainerProfile]);
-    
-    useEffect(() => {
-        fetchProgressData();
-    }, [currentUser?.id]); // Removed fetchProgressData from dependency array
+        };
+        loadTrainerProfile();
+    }, [currentUser?.trainer_id]);
 
     const handleUnlink = async () => {
-        if (!currentUser) return;
         try {
             await unassignTrainerFromLearner(currentUser.id);
-            toast({ title: "Dissociation réussie", description: "Vous n'êtes plus lié à ce formateur." });
             setTrainerProfile(null);
+            toast({ title: "Succès", description: "Vous avez été délié du formateur." });
             if (refetchUser) {
               await refetchUser();
             }
@@ -139,6 +235,46 @@ const LearnerProgressPage = () => {
     if (!currentUser) {
         return <div className="flex justify-center items-center h-full pt-16"><Loader2 className="h-8 w-8 animate-spin" /></div>;
     }
+
+    // Calcule les 3 périodes de temps
+    const getPeriodDates = () => {
+        if (!currentUser?.created_at) return null;
+        const userCreated = new Date(currentUser.created_at);
+        const today = new Date();
+        
+        return {
+            period1: {
+                label: 'Ma première semaine',
+                startDate: userCreated,
+                endDate: new Date(userCreated.getTime() + 7 * 24 * 60 * 60 * 1000)
+            },
+            period2: {
+                label: 'Mon premier mois',
+                startDate: userCreated,
+                endDate: new Date(userCreated.getTime() + 30 * 24 * 60 * 60 * 1000)
+            },
+            period3: {
+                label: 'Ma dernière semaine',
+                startDate: new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000),
+                endDate: today
+            }
+        };
+    };
+
+    // Gestionnaire pour modifier la confiance après
+    const handleConfidenceAfterChange = async (versionId, newValue) => {
+        try {
+            await recordConfidenceAfter(currentUser.id, versionId, newValue);
+            // Réactualise les données
+            await fetchProgressData();
+            toast({ title: "Confiance mise à jour", description: "Votre confiance a été enregistrée." });
+        } catch (error) {
+            console.error('Error updating confidence:', error);
+            toast({ title: "Erreur", description: "Impossible de mettre à jour la confiance.", variant: "destructive" });
+        }
+    };
+
+    const periodDates = getPeriodDates();
 
     return (
         <div className="container mx-auto p-4 md:p-8">
@@ -192,9 +328,39 @@ const LearnerProgressPage = () => {
                 </CardContent>
             </Card>
 
+            {/* Cartes de récapitulatif par période */}
+            {!isLoading && progress && progress.length > 0 && periodDates && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    {[periodDates.period1, periodDates.period2, periodDates.period3].map((period, idx) => {
+                        const stats = calculatePeriodStats(progress, new Map(), period.startDate, period.endDate);
+                        return (
+                            <Card key={idx} className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="text-lg text-blue-900">{period.label}</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm text-blue-700">Exercices réalisés</span>
+                                        <span className="font-bold text-blue-900">{stats.totalExercises}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm text-blue-700">Moyenne tentatives</span>
+                                        <span className="font-bold text-blue-900">{parseFloat(stats.avgAttempts).toFixed(1)}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm text-blue-700">Progression vitesse</span>
+                                        <span className="font-bold text-green-600">+{parseFloat(stats.speedProgress).toFixed(1)}%</span>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        );
+                    })}
+                </div>
+            )}
+
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-xl">Progression des Versions</CardTitle>
+                    <CardTitle className="text-xl">Détail de vos exercices</CardTitle>
                     <Button variant="outline" size="sm" onClick={fetchProgressData} disabled={isLoading}>
                         <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
                         Rafraîchir
@@ -202,35 +368,62 @@ const LearnerProgressPage = () => {
                 </CardHeader>
                 <CardContent>
                     {progressError && (
-                        <div className="text-red-600 mb-2">Erreur : Impossible de charger la progression. Les tâches sont affichées sans suivi.</div>
+                        <div className="text-red-600 mb-2">Erreur : Impossible de charger la progression. Les tâches sont affichées sans suivi.</div>
                     )}
-                    <ScrollArea className="h-[400px]">
+                    <ScrollArea className="h-[600px]">
                         <Table>
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Tâche / Version</TableHead>
-                                    <TableHead>Tentatives</TableHead>
-                                    <TableHead>1er Temps</TableHead>
-                                    <TableHead>Meilleur Temps</TableHead>
-                                    <TableHead>Progrès</TableHead>
+                                    <TableHead className="text-center">Tentatives</TableHead>
+                                    <TableHead className="text-center">Progression vitesse</TableHead>
+                                    <TableHead className="text-center">Confiance Avant</TableHead>
+                                    <TableHead className="text-center">Confiance Après</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {isLoading && progress === null ? (
                                     <TableRow><TableCell colSpan={5} className="text-center"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></TableCell></TableRow>
                                 ) : progress && progress.length > 0 ? (
-                                    progress.map(p => (
-                                        <TableRow key={p.id}>
-                                            <TableCell>
-                                                <p className="font-medium">{p.task_title}</p>
-                                                <p className="text-sm text-muted-foreground">{p.version_name}</p>
-                                            </TableCell>
-                                            <TableCell>{p.attempts}</TableCell>
-                                            <TableCell>{formatTime(p.first_time_seconds)}</TableCell>
-                                            <TableCell>{formatTime(p.best_time_seconds)}</TableCell>
-                                            <TableCell>{p.completed_steps_history ? 'Terminé' : 'En cours'}</TableCell>
-                                        </TableRow>
-                                    ))
+                                    progress.map((p, idx) => {
+                                        // Valide les temps avant de calculer la progression
+                                        const isValidFirstTime = isValidTime(p.first_time_seconds, progress.flatMap(item => [item.first_time_seconds, item.best_time_seconds]).filter(Boolean));
+                                        const isValidBestTime = isValidTime(p.best_time_seconds, progress.flatMap(item => [item.first_time_seconds, item.best_time_seconds]).filter(Boolean));
+                                        
+                                        const speedProgress = (isValidFirstTime && isValidBestTime && p.first_time_seconds && p.best_time_seconds)
+                                            ? ((p.first_time_seconds - p.best_time_seconds) / p.first_time_seconds * 100)
+                                            : 0;
+                                        
+                                        return (
+                                            <TableRow key={idx}>
+                                                <TableCell>
+                                                    <p className="font-medium">{p.task_title}</p>
+                                                    <p className="text-sm text-muted-foreground">{p.version_name}</p>
+                                                </TableCell>
+                                                <TableCell className="text-center">{p.attempts}</TableCell>
+                                                <TableCell className="text-center">
+                                                    <span className={`font-semibold ${speedProgress > 0 ? 'text-green-600' : 'text-gray-500'}`}>
+                                                        {speedProgress > 0 ? '+' : ''}{speedProgress.toFixed(1)}%
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    <ConfidenceSelector
+                                                        value={p.confidence_before}
+                                                        editable={false}
+                                                        size="sm"
+                                                    />
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    <ConfidenceSelector
+                                                        value={p.confidence_after}
+                                                        onChange={(value) => handleConfidenceAfterChange(p.versionId, value)}
+                                                        editable={true}
+                                                        size="sm"
+                                                    />
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })
                                 ) : (
                                     <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">Aucune tâche disponible ou progression.</TableCell></TableRow>
                                 )}
