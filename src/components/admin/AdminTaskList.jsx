@@ -19,12 +19,15 @@ const TaskItem = ({ task, onSelectTask, onDeleteTask, imagesMap }) => {
   const statusInfo = creationStatuses.find(s => s.id === task.creation_status) || { label: 'Inconnu', color: 'bg-gray-400' };
   const IconComponent = LucideIcons[toPascalCase(task.icon_name)] || null;
   const PictogramInfo = task.pictogram_app_image_id ? imagesMap.get(task.pictogram_app_image_id) : null;
+  const isQuestionnaire = task.task_type === 'questionnaire';
 
   return (
     <div className="border rounded-lg overflow-hidden">
-      <div className="flex items-center p-4 bg-card hover:bg-muted/50 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
-        <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mr-4">
-          {IconComponent ? (
+      <div className={`flex items-center p-4 hover:bg-muted/50 cursor-pointer ${isQuestionnaire ? 'bg-blue-50' : 'bg-card'}`} onClick={() => setIsExpanded(!isExpanded)}>
+        <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center mr-4 ${isQuestionnaire ? 'bg-blue-100' : 'bg-primary/10'}`}>
+          {isQuestionnaire ? (
+            <QuestionIcon className="h-6 w-6 text-blue-600" />
+          ) : IconComponent ? (
             <IconComponent className="h-6 w-6 text-primary" />
           ) : PictogramInfo ? (
             <img src={PictogramInfo.publicUrl} alt={PictogramInfo.name} className="h-8 w-8 object-contain" />
@@ -33,7 +36,12 @@ const TaskItem = ({ task, onSelectTask, onDeleteTask, imagesMap }) => {
           )}
         </div>
         <div className="flex-1">
-          <p className="font-semibold text-lg">{task.title}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-semibold text-lg">{task.title}</p>
+            {isQuestionnaire && (
+              <Badge className="bg-blue-600 text-white">QCM</Badge>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground">{task.description}</p>
         </div>
         <div className="flex items-center space-x-2 ml-4">
@@ -52,7 +60,7 @@ const TaskItem = ({ task, onSelectTask, onDeleteTask, imagesMap }) => {
         <div className="p-4 border-t bg-background text-center">
             <Button onClick={(e) => { e.stopPropagation(); onSelectTask(task); }}>
                 <Settings2 className="mr-2 h-4 w-4" />
-                Gérer les versions et étapes
+                {isQuestionnaire ? 'Gérer le questionnaire' : 'Gérer les versions et étapes'}
             </Button>
         </div>
       )}
@@ -108,33 +116,82 @@ const AdminTaskList = ({ tasks, onSelectTask, onAddNewTask, onCreateQuestionnair
       </CardHeader>
       <CardContent>
         {tasks && tasks.length > 0 ? (
-          <div className="space-y-6">
+          <div className="space-y-8">
+            {/* Section Questionnaires */}
             {(() => {
-              // When showing 'all', render each category group (avoid rendering a flat "all" list)
-              const keysToRender = selectedCategory === 'all'
-                ? orderedCategoryKeys.filter(k => k !== 'all')
-                : [selectedCategory];
-
-              return keysToRender.map(catName => {
-                const items = catName === 'all' ? tasks : (grouped[catName] || []);
-                if (!items || items.length === 0) return null;
-                return (
-                  <div key={catName}>
-                    {catName !== 'all' && <h3 className="text-sm font-semibold mb-2">{catName}</h3>}
-                    <div className="space-y-4">
-                      {items.map(task => (
-                        <TaskItem
-                          key={task.id}
-                          task={task}
-                          onSelectTask={onSelectTask}
-                          onDeleteTask={onDeleteTask}
-                          imagesMap={imagesMap}
-                        />
-                      ))}
-                    </div>
+              const questionnaires = tasks.filter(t => t.task_type === 'questionnaire');
+              if (questionnaires.length === 0) return null;
+              return (
+                <div>
+                  <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-blue-700">
+                    <QuestionIcon className="h-5 w-5" />
+                    Questionnaires (QCM)
+                  </h3>
+                  <div className="space-y-4">
+                    {questionnaires.map(task => (
+                      <TaskItem
+                        key={task.id}
+                        task={task}
+                        onSelectTask={onSelectTask}
+                        onDeleteTask={onDeleteTask}
+                        imagesMap={imagesMap}
+                      />
+                    ))}
                   </div>
-                );
-              });
+                </div>
+              );
+            })()}
+
+            {/* Section Exercices */}
+            {(() => {
+              const exercises = tasks.filter(t => t.task_type !== 'questionnaire');
+              if (exercises.length === 0) return null;
+              
+              // Group exercises by category
+              const grouped = exercises.reduce((acc, task) => {
+                const cat = task.category || 'Sans catégorie';
+                if (!acc[cat]) acc[cat] = [];
+                acc[cat].push(task);
+                return acc;
+              }, {});
+
+              const categoryOrder = ['all', ...categories.map(c => c.name)];
+              const otherCats = Object.keys(grouped).filter(k => k !== 'Sans catégorie' && !categoryOrder.includes(k));
+              const orderedCategoryKeys = [...categories.map(c => c.name), ...otherCats, 'Sans catégorie'].filter((v, i, a) => a.indexOf(v) === i);
+
+              const keysToRender = selectedCategory === 'all'
+                ? orderedCategoryKeys
+                : [selectedCategory].filter(k => grouped[k]);
+
+              return (
+                <div>
+                  <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                    Exercices
+                  </h3>
+                  <div className="space-y-6">
+                    {keysToRender.map(catName => {
+                      const items = grouped[catName] || [];
+                      if (!items || items.length === 0) return null;
+                      return (
+                        <div key={catName}>
+                          {catName !== 'all' && <h4 className="text-sm font-semibold mb-2">{catName}</h4>}
+                          <div className="space-y-4">
+                            {items.map(task => (
+                              <TaskItem
+                                key={task.id}
+                                task={task}
+                                onSelectTask={onSelectTask}
+                                onDeleteTask={onDeleteTask}
+                                imagesMap={imagesMap}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
             })()}
           </div>
         ) : (

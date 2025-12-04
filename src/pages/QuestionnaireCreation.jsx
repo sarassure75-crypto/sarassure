@@ -302,10 +302,11 @@ const QuestionnaireCreation = () => {
 
       // Sauvegarder les questions avec leurs images ou réponses texte
       const questionsData = questions.map((q, idx) => {
-        const filledChoices = q.choices.filter(c => c.imageId || c.text.trim());
         let questionData = {};
         
         if (q.questionType === 'image_choice') {
+          // Pour image_choice: filtrer UNIQUEMENT par imageId
+          const filledChoices = q.choices.filter(c => c.imageId);
           questionData = {
             type: 'image_choice',
             choices: filledChoices.map(c => ({
@@ -316,10 +317,10 @@ const QuestionnaireCreation = () => {
             }))
           };
         } else if (q.questionType === 'image_text') {
+          // Pour image_text: filtrer UNIQUEMENT par texte
+          const filledChoices = q.choices.filter(c => c.text.trim());
           questionData = {
             type: 'image_text',
-            imageId: q.imageId,
-            imageName: q.imageName,
             answers: filledChoices.map(c => ({
               id: c.id,
               text: c.text,
@@ -327,6 +328,8 @@ const QuestionnaireCreation = () => {
             }))
           };
         } else if (q.questionType === 'mixed') {
+          // Pour mixed: filtrer par imageId OU texte
+          const filledChoices = q.choices.filter(c => c.imageId || c.text.trim());
           questionData = {
             type: 'mixed',
             imageId: q.imageId,
