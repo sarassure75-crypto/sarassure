@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient';
-import { Plus, Trash2, X, CheckCircle, AlertCircle, Image as ImageIcon, HelpCircle } from 'lucide-react';
+import { Plus, Trash2, X, Image as ImageIcon, HelpCircle } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 const QuestionnaireCreation = () => {
@@ -225,7 +225,6 @@ const QuestionnaireCreation = () => {
       title,
       description,
       category,
-      difficulty,
       questions
     };
     

@@ -47,7 +47,8 @@ export default function AdminExerciseValidation() {
             description,
             category,
             owner_id,
-            created_at
+            created_at,
+            task_type
           ),
           steps (
             id,
@@ -70,8 +71,14 @@ export default function AdminExerciseValidation() {
 
       if (error) throw error;
       
+      // Filtrer uniquement les exercices (pas les questionnaires)
+      // Exclure les versions sans tâche associée et vérifier task_type='exercise'
+      const exerciseVersions = (data || []).filter(v => 
+        v.task !== null && (v.task.task_type === 'exercise' || v.task.task_type === null)
+      );
+      
       // Récupérer les infos des contributeurs (propriétaires des tasks)
-      const ownerIds = [...new Set(data?.map(v => v.task?.owner_id).filter(Boolean))] || [];
+      const ownerIds = [...new Set(exerciseVersions?.map(v => v.task?.owner_id).filter(Boolean))] || [];
       
       let profiles = {};
       if (ownerIds.length > 0) {
@@ -88,7 +95,7 @@ export default function AdminExerciseValidation() {
       }
       
       // Mapper les données et enrichir les étapes avec les URLs des images
-      const mappedData = data?.map(version => {
+      const mappedData = exerciseVersions?.map(version => {
         const ownerProfile = profiles[version.task?.owner_id] || {};
         
         // Mapper les étapes avec les URLs des images

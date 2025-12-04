@@ -38,7 +38,7 @@ export function useAdminCounters() {
       // Compter les exercices (tasks/versions) en attente de validation
       const { data: versionsData, error: versionsError } = await supabase
         .from('versions')
-        .select('id, steps(id, instruction)')
+        .select('id, task:task_id(task_type)')
         .eq('creation_status', 'pending');
       
       if (versionsError) {
@@ -46,11 +46,12 @@ export function useAdminCounters() {
       }
 
       // Séparer exercices et questionnaires
-      // Les questionnaires ont des instructions spécifiques (questions)
-      // Les exercices ont des instructions d'action (action_type)
-      // Pour simplifier: compter tous comme exercices et questionnnaires = 0
-      const exercisesCount = versionsData?.length || 0;
-      const questionnairesCount = 0;
+      const exercisesCount = (versionsData || []).filter(v => 
+        !v.task || v.task.task_type === 'exercise'
+      ).length;
+      const questionnairesCount = (versionsData || []).filter(v => 
+        v.task && v.task.task_type === 'questionnaire'
+      ).length;
 
       // Compter les messages de contact non lus
       const { data: messagesData, error: messagesError } = await supabase

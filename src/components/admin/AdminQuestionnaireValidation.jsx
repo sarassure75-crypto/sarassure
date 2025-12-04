@@ -10,9 +10,7 @@ import {
   X, 
   Eye,
   Trash2,
-  AlertCircle,
-  HelpCircle,
-  Image as ImageIcon
+  HelpCircle
 } from 'lucide-react';
 
 export default function AdminQuestionnaireValidation() {
@@ -58,8 +56,10 @@ export default function AdminQuestionnaireValidation() {
       if (error) throw error;
 
       // Filtrer uniquement les questionnaires (pas les exercices)
-      // Exclure les versions sans tâche associée
-      const questionnaireVersions = (data || []).filter(v => v.task !== null);
+      // Exclure les versions sans tâche associée et vérifier task_type='questionnaire'
+      const questionnaireVersions = (data || []).filter(v => 
+        v.task !== null && v.task.task_type === 'questionnaire'
+      );
 
       // Récupérer les profils des contributeurs
       const ownerIds = [...new Set(questionnaireVersions.map(v => v.task?.owner_id).filter(Boolean))];
@@ -189,16 +189,6 @@ export default function AdminQuestionnaireValidation() {
 
   if (loading) {
     return <div className="text-center py-8">Chargement des QCM en attente...</div>;
-  }
-
-  if (loading) {
-    return (
-      <Card>
-        <CardContent className="py-12 text-center">
-          <p className="text-gray-500">Chargement...</p>
-        </CardContent>
-      </Card>
-    );
   }
 
   if (questionnaires.length === 0) {
