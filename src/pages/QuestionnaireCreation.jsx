@@ -179,8 +179,8 @@ const QuestionnaireCreation = () => {
         errors.push(`Question ${idx + 1}: au moins une réponse doit être marquée correcte`);
       }
       
-      // Pour image_text ou mixed, l'image est requise
-      if ((q.questionType === 'image_text' || q.questionType === 'mixed') && !q.imageId) {
+      // Pour mixed type, l'image question est requise
+      if (q.questionType === 'mixed' && !q.imageId) {
         errors.push(`Question ${idx + 1}: une image est requise pour ce type de question`);
       }
     });
@@ -568,7 +568,7 @@ const QuestionnaireCreation = () => {
                                   </Button>
                                 </div>
                               ) : (
-                                <div className="mb-3 max-h-40 overflow-y-auto border rounded-lg">
+                                <div className="mb-3 max-h-60 overflow-y-auto border rounded-lg bg-gray-50">
                                   <div className="grid grid-cols-3 gap-2 p-2">
                                     {images.map(img => (
                                       <button
@@ -577,9 +577,16 @@ const QuestionnaireCreation = () => {
                                           handleUpdateChoiceText(question.id, choice.id, 'imageId', img.id);
                                           handleUpdateChoiceText(question.id, choice.id, 'imageName', img.name);
                                         }}
-                                        className="p-2 text-center rounded hover:bg-blue-50 border hover:border-blue-300 transition-colors"
+                                        className="p-2 text-center rounded hover:bg-blue-100 border border-gray-200 hover:border-blue-400 transition-colors bg-white"
                                       >
-                                        <ImageIcon className="w-6 h-6 mx-auto mb-1 text-gray-400" />
+                                        <img 
+                                          src={img.file_path} 
+                                          alt={img.name}
+                                          className="w-full h-20 object-cover rounded mb-1"
+                                          onError={(e) => {
+                                            e.target.style.display = 'none';
+                                          }}
+                                        />
                                         <p className="text-xs text-gray-700 line-clamp-2">{img.name}</p>
                                       </button>
                                     ))}
@@ -602,50 +609,13 @@ const QuestionnaireCreation = () => {
                       </div>
                     )}
 
-                    {/* Pour image_text: Sélectionnez image + text answers */}
+                    {/* Pour image_text: Texte seul sans image */}
                     {question.questionType === 'image_text' && (
                       <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-3">
-                            Image de la question *
-                          </label>
-                          {question.imageId ? (
-                            <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200 flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <ImageIcon className="w-4 h-4 text-blue-600" />
-                                <span className="text-sm font-medium text-blue-900">{question.imageName}</span>
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  handleUpdateQuestionText(question.id, 'imageId', null);
-                                  handleUpdateQuestionText(question.id, 'imageName', '');
-                                }}
-                                className="text-blue-600 hover:text-blue-700"
-                              >
-                                Changer
-                              </Button>
-                            </div>
-                          ) : (
-                            <div className="max-h-40 overflow-y-auto border rounded-lg">
-                              <div className="grid grid-cols-3 gap-2 p-2">
-                                {images.map(img => (
-                                  <button
-                                    key={img.id}
-                                    onClick={() => {
-                                      handleUpdateQuestionText(question.id, 'imageId', img.id);
-                                      handleUpdateQuestionText(question.id, 'imageName', img.name);
-                                    }}
-                                    className="p-2 text-center rounded hover:bg-blue-50 border hover:border-blue-300 transition-colors"
-                                  >
-                                    <ImageIcon className="w-6 h-6 mx-auto mb-1 text-gray-400" />
-                                    <p className="text-xs text-gray-700 line-clamp-2">{img.name}</p>
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          )}
+                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                          <p className="text-sm text-blue-900">
+                            💡 <strong>Mode Texte Uniquement:</strong> Les réponses sont du texte pur. Aucune image requise pour la question.
+                          </p>
                         </div>
 
                         <div>
@@ -734,7 +704,7 @@ const QuestionnaireCreation = () => {
                               </Button>
                             </div>
                           ) : (
-                            <div className="max-h-40 overflow-y-auto border rounded-lg">
+                            <div className="max-h-60 overflow-y-auto border rounded-lg bg-gray-50">
                               <div className="grid grid-cols-3 gap-2 p-2">
                                 {images.map(img => (
                                   <button
@@ -743,9 +713,16 @@ const QuestionnaireCreation = () => {
                                       handleUpdateQuestionText(question.id, 'imageId', img.id);
                                       handleUpdateQuestionText(question.id, 'imageName', img.name);
                                     }}
-                                    className="p-2 text-center rounded hover:bg-blue-50 border hover:border-blue-300 transition-colors"
+                                    className="p-2 text-center rounded hover:bg-blue-100 border border-gray-200 hover:border-blue-400 transition-colors bg-white"
                                   >
-                                    <ImageIcon className="w-6 h-6 mx-auto mb-1 text-gray-400" />
+                                    <img 
+                                      src={img.file_path} 
+                                      alt={img.name}
+                                      className="w-full h-20 object-cover rounded mb-1"
+                                      onError={(e) => {
+                                        e.target.style.display = 'none';
+                                      }}
+                                    />
                                     <p className="text-xs text-gray-700 line-clamp-2">{img.name}</p>
                                   </button>
                                 ))}
@@ -811,7 +788,7 @@ const QuestionnaireCreation = () => {
                                       </Button>
                                     </div>
                                   ) : (
-                                    <div className="max-h-32 overflow-y-auto border rounded bg-gray-50 p-2">
+                                    <div className="max-h-40 overflow-y-auto border rounded bg-gray-50 p-2">
                                       <div className="grid grid-cols-3 gap-2">
                                         {images.map(img => (
                                           <button
@@ -820,9 +797,16 @@ const QuestionnaireCreation = () => {
                                               handleUpdateChoiceText(question.id, choice.id, 'imageId', img.id);
                                               handleUpdateChoiceText(question.id, choice.id, 'imageName', img.name);
                                             }}
-                                            className="p-1 text-center rounded hover:bg-blue-100 border hover:border-blue-300 transition-colors"
+                                            className="p-1 text-center rounded hover:bg-blue-100 border border-gray-200 hover:border-blue-400 transition-colors bg-white"
                                           >
-                                            <ImageIcon className="w-5 h-5 mx-auto mb-1 text-gray-400" />
+                                            <img 
+                                              src={img.file_path} 
+                                              alt={img.name}
+                                              className="w-full h-16 object-cover rounded mb-1"
+                                              onError={(e) => {
+                                                e.target.style.display = 'none';
+                                              }}
+                                            />
                                             <p className="text-xs text-gray-600 line-clamp-1">{img.name}</p>
                                           </button>
                                         ))}
