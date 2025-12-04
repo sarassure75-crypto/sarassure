@@ -26,9 +26,15 @@ const AdminTaskManager = () => {
   }, [view, fetchAllData]);
 
   const handleSelectTask = useCallback((task) => {
-    setSelectedTask(task);
-    setView('form');
-  }, []);
+    // Si c'est un questionnaire, rediriger vers la page de validation des QCM
+    if (task.task_type === 'questionnaire') {
+      navigate('/admin/validation/questionnaires');
+    } else {
+      // Sinon, ouvrir le formulaire d'édition normal
+      setSelectedTask(task);
+      setView('form');
+    }
+  }, [navigate]);
 
   const handleAddNewTask = () => {
     const newTask = {
