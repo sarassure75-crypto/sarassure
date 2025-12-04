@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useAdminCounters } from '../../hooks/useAdminCounters';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import QuestionnairePreviewCard from '@/components/exercise/QuestionnairePreviewCard';
+import QuestionnaireValidationEditor from '@/components/exercise/QuestionnaireValidationEditor';
 import { 
   Check, 
   X, 
@@ -260,7 +260,13 @@ export default function AdminQuestionnaireValidation() {
             {/* Questions */}
             <div className="mt-6">
               <h3 className="text-lg font-bold mb-4">Questions du QCM</h3>
-              <QuestionnairePreviewCard steps={selectedQuestionnaire.steps || []} />
+              <QuestionnaireValidationEditor 
+                steps={selectedQuestionnaire.steps || []}
+                onUpdate={(stepId, updatedData) => {
+                  console.log('Updated step:', stepId, updatedData);
+                  // Les changements sont enregistrés quand l'admin clique "Approuver"
+                }}
+              />
             </div>
 
             {/* Actions */}
