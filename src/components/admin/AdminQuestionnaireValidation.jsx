@@ -41,7 +41,8 @@ export default function AdminQuestionnaireValidation() {
             description,
             category,
             owner_id,
-            created_at
+            created_at,
+            task_type
           ),
           steps (
             id,
@@ -56,8 +57,8 @@ export default function AdminQuestionnaireValidation() {
       if (error) throw error;
 
       // Filtrer uniquement les questionnaires (pas les exercices)
-      // Pour maintenant, on prend toutes les versions en attente
-      const questionnaireVersions = data || [];
+      // Exclure les versions sans tâche associée
+      const questionnaireVersions = (data || []).filter(v => v.task !== null);
 
       // Récupérer les profils des contributeurs
       const ownerIds = [...new Set(questionnaireVersions.map(v => v.task?.owner_id).filter(Boolean))];
@@ -198,6 +199,16 @@ export default function AdminQuestionnaireValidation() {
     return <div className="text-center py-8">Chargement des QCM en attente...</div>;
   }
 
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center">
+          <p className="text-gray-500">Chargement...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (questionnaires.length === 0) {
     return (
       <Card>
@@ -209,7 +220,7 @@ export default function AdminQuestionnaireValidation() {
     );
   }
 
-  if (selectedQuestionnaire) {
+  if (selectedQuestionnaire && selectedQuestionnaire.task) {
     return (
       <div>
         <Button 
@@ -222,9 +233,9 @@ export default function AdminQuestionnaireValidation() {
 
         <Card>
           <CardHeader>
-            <CardTitle>{selectedQuestionnaire.task.title}</CardTitle>
+            <CardTitle>{selectedQuestionnaire.task?.title || 'Questionnaire'}</CardTitle>
             <CardDescription>
-              {selectedQuestionnaire.task.description}
+              {selectedQuestionnaire.task?.description}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -240,7 +251,7 @@ export default function AdminQuestionnaireValidation() {
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-gray-50 p-3 rounded">
                 <p className="text-xs text-gray-600">Catégorie</p>
-                <p className="font-semibold">{selectedQuestionnaire.task.category}</p>
+                <p className="font-semibold">{selectedQuestionnaire.task?.category || '-'}</p>
               </div>
               <div className="bg-gray-50 p-3 rounded">
                 <p className="text-xs text-gray-600">Nombre de questions</p>
@@ -249,7 +260,7 @@ export default function AdminQuestionnaireValidation() {
               <div className="bg-gray-50 p-3 rounded">
                 <p className="text-xs text-gray-600">Date</p>
                 <p className="font-semibold text-sm">
-                  {new Date(selectedQuestionnaire.task.created_at).toLocaleDateString('fr-FR')}
+                  {selectedQuestionnaire.task?.created_at ? new Date(selectedQuestionnaire.task.created_at).toLocaleDateString('fr-FR') : '-'}
                 </p>
               </div>
             </div>
@@ -335,18 +346,22 @@ export default function AdminQuestionnaireValidation() {
   return (
     <div>
       <div className="space-y-2">
-        {questionnaires.map(questionnaire => (
+        {questionnaires.map(questionnaire => {
+          // Vérifier que la tâche existe
+          if (!questionnaire.task) return null;
+          
+          return (
           <Card key={questionnaire.id} className="hover:shadow-md transition-shadow">
             <CardContent className="p-4">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h3 className="font-bold text-lg">{questionnaire.task.title}</h3>
-                  <p className="text-sm text-gray-600 mb-2">{questionnaire.task.description}</p>
+                  <h3 className="font-bold text-lg">{questionnaire.task?.title}</h3>
+                  <p className="text-sm text-gray-600 mb-2">{questionnaire.task?.description}</p>
                   <div className="flex gap-4 text-xs text-gray-500">
-                    <span>📁 {questionnaire.task.category}</span>
+                    <span>📁 {questionnaire.task?.category}</span>
                     <span>❓ {questionnaire.questionCount} questions</span>
                     <span>👤 {questionnaire.ownerProfile?.first_name} {questionnaire.ownerProfile?.last_name}</span>
-                    <span>📅 {new Date(questionnaire.task.created_at).toLocaleDateString('fr-FR')}</span>
+                    <span>📅 {questionnaire.task?.created_at ? new Date(questionnaire.task.created_at).toLocaleDateString('fr-FR') : '-'}</span>
                   </div>
                 </div>
                 <div className="flex gap-2 flex-shrink-0">
@@ -380,7 +395,8 @@ export default function AdminQuestionnaireValidation() {
               </div>
             </CardContent>
           </Card>
-        ))}
+        );
+        })}
       </div>
     </div>
   );

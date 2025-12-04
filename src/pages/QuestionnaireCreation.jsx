@@ -31,15 +31,18 @@ const QuestionnaireCreation = () => {
 
   const loadImages = async () => {
     try {
+      // Charger uniquement les images de catégorie 'qcm'
       const { data, error } = await supabase
         .from('app_images')
-        .select('id, name, file_path, description')
-        .limit(100);
+        .select('id, name, file_path, description, category')
+        .eq('category', 'qcm')
+        .order('name');
 
       if (error) throw error;
       setImages(data || []);
     } catch (error) {
-      console.error('Erreur chargement images:', error);
+      console.error('Erreur chargement images QCM:', error);
+      // Continuer même si aucune image disponible
     }
   };
 

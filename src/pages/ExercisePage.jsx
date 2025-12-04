@@ -15,6 +15,7 @@ import VersionHeader from '@/components/exercise/VersionHeader';
 import ExerciseControls from '@/components/exercise/ExerciseControls';
 import VerticalToolbar from '@/components/exercise/VerticalToolbar';
 import ImageFromSupabase from '@/components/ImageFromSupabase';
+import QuestionnairePlayer from '@/components/exercise/QuestionnairePlayer';
 import { recordCompletion } from '@/data/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import ActionAnimator from '@/components/exercise/ActionAnimator';
@@ -347,6 +348,7 @@ const ExercisePage = () => {
   const [showInformationPanel, setShowInformationPanel] = useState(false);
   const [hideActionZone, setHideActionZone] = useState(false);
   const [showBravoOverlay, setShowBravoOverlay] = useState(false);
+  const [taskType, setTaskType] = useState('exercise'); // 'exercise' ou 'questionnaire'
   
   // Confidence modals states
   const [showConfidenceBeforeModal, setShowConfidenceBeforeModal] = useState(false);
@@ -436,7 +438,7 @@ const ExercisePage = () => {
         } else {
           const { data: taskResult, error: taskError } = await supabase
             .from('tasks')
-            .select('id, title, video_url, versions(*, steps(*))')
+            .select('id, title, video_url, task_type, versions(*, steps(*))')
             .eq('id', taskId)
             .maybeSingle();
 
@@ -461,6 +463,7 @@ const ExercisePage = () => {
         }
 
         setTask(taskData);
+        setTaskType(taskData.task_type || 'exercise');
         setCurrentVersion(foundVersion);
         
         const queryParams = new URLSearchParams(location.search);
@@ -655,6 +658,30 @@ const ExercisePage = () => {
   const nextVersionOverall = currentIndexInAllVersions < sortedVersions.length - 1 ? sortedVersions[currentIndexInAllVersions + 1] : null;
   
   const videoUrl = currentVersion.video_url || task.video_url;
+
+  // Si c'est un questionnaire (QCM), afficher le lecteur de questionnaire
+  if (taskType === 'questionnaire') {
+    return (
+      <motion.div
+        key={`questionnaire-${versionId}`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="w-full h-full p-4"
+      >
+        <QuestionnairePlayer
+          versionId={versionId}
+          taskId={taskId}
+          learner_id={user?.id}
+          onComplete={() => {
+            setShowCompletionScreen(true);
+            setTimeout(() => navigate('/taches'), 3000);
+          }}
+        />
+      </motion.div>
+    );
+  }
 
   const mainContentMobile = (
     <div className="p-0.5 sm:p-1 bg-card rounded-lg shadow-xl flex flex-col h-full relative">
@@ -890,18 +917,33 @@ const ExercisePage = () => {
         />
       </div>
       
-      <div className={cn("flex-grow min-h-0 overflow-y-auto")}>
+      <div className={cn("flex-grow min-h-0 overflow-y-auto p-4")}>
         <AnimatePresence mode="wait">
-          <motion.div
-            key={`${currentVersion.id}-${currentStepIndex}`}
-            initial={{ opacity: 0, x: isMobileLayout ? 5 : 15 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: isMobileLayout ? -5 : -15 }}
-            transition={{ duration: 0.2 }}
-            className={cn("flex flex-col", isMobileLayout ? "h-full" : "")}
-          >
-            {isMobileLayout ? mainContentMobile : mainContentDesktop}
-          </motion.div>
+          {taskType === 'questionnaire' ? (
+            // Afficher le QuestionnairePlayer pour les QCM
+            <QuestionnairePlayer
+              versionId={versionId}
+              taskId={taskId}
+              learner_id={user?.id}
+              onComplete={(result) => {
+                // Enregistrer la complétion et afficher l'écran de fin
+                recordCompletion(user?.id, versionId, Date.now() - (startTimeRef.current || Date.now()));
+                setShowCompletionScreen(true);
+              }}
+            />
+          ) : (
+            // Afficher le contenu exercice normal
+            <motion.div
+              key={`${currentVersion.id}-${currentStepIndex}`}
+              initial={{ opacity: 0, x: isMobileLayout ? 5 : 15 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: isMobileLayout ? -5 : -15 }}
+              transition={{ duration: 0.2 }}
+              className={cn("flex flex-col", isMobileLayout ? "h-full" : "")}
+            >
+              {isMobileLayout ? mainContentMobile : mainContentDesktop}
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
 

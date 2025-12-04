@@ -467,6 +467,7 @@ export default function ContributorImageLibrary() {
               <option value="Capture d'écran">Captures d'écran</option>
               <option value="Fond d'écran">Fonds d'écran</option>
               <option value="Icône">Icônes</option>
+              <option value="qcm">Images QCM</option>
               <option value="Autre">Autres</option>
             </select>
           </div>
@@ -765,6 +766,7 @@ export default function ContributorImageLibrary() {
                       <option value="Capture d'écran">Capture d'écran</option>
                       <option value="Fond d'écran">Fond d'écran</option>
                       <option value="Icône">Icône</option>
+                      <option value="qcm">Image QCM</option>
                       <option value="Autre">Autre</option>
                     </select>
                   </div>
