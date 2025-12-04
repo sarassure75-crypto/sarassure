@@ -22,10 +22,21 @@ export default function AdminQuestionnaireValidation() {
   const [validatingId, setValidatingId] = useState(null);
   const [adminComments, setAdminComments] = useState('');
   const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const [editingMetadata, setEditingMetadata] = useState(false);
+  const [editedTitle, setEditedTitle] = useState('');
+  const [editedDescription, setEditedDescription] = useState('');
 
   useEffect(() => {
     loadPendingQuestionnaires();
   }, []);
+
+  // Initialiser les données d'édition quand on sélectionne un QCM
+  useEffect(() => {
+    if (selectedQuestionnaire) {
+      setEditedTitle(selectedQuestionnaire.task?.title || '');
+      setEditedDescription(selectedQuestionnaire.task?.description || '');
+    }
+  }, [selectedQuestionnaire]);
 
   const loadPendingQuestionnaires = async () => {
     setLoading(true);
@@ -187,6 +198,37 @@ export default function AdminQuestionnaireValidation() {
     }
   };
 
+  const saveMetadataChanges = async () => {
+    if (!selectedQuestionnaire?.task?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({
+          title: editedTitle,
+          description: editedDescription
+        })
+        .eq('id', selectedQuestionnaire.task.id);
+
+      if (error) throw error;
+
+      // Mettre à jour l'état local
+      setSelectedQuestionnaire(prev => ({
+        ...prev,
+        task: {
+          ...prev.task,
+          title: editedTitle,
+          description: editedDescription
+        }
+      }));
+
+      setEditingMetadata(false);
+      alert('Métadonnées sauvegardées');
+    } catch (error) {
+      alert('Erreur: ' + error.message);
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-8">Chargement des QCM en attente...</div>;
   }
@@ -215,10 +257,59 @@ export default function AdminQuestionnaireValidation() {
 
         <Card>
           <CardHeader>
-            <CardTitle>{selectedQuestionnaire.task?.title || 'Questionnaire'}</CardTitle>
-            <CardDescription>
-              {selectedQuestionnaire.task?.description}
-            </CardDescription>
+            {!editingMetadata ? (
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <CardTitle>{selectedQuestionnaire.task?.title || 'Questionnaire'}</CardTitle>
+                  <CardDescription>
+                    {selectedQuestionnaire.task?.description}
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditingMetadata(true)}
+                  className="ml-2"
+                >
+                  ✏️ Éditer
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Titre</label>
+                  <input
+                    type="text"
+                    value={editedTitle}
+                    onChange={(e) => setEditedTitle(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Description</label>
+                  <textarea
+                    value={editedDescription}
+                    onChange={(e) => setEditedDescription(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    rows={3}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={saveMetadataChanges}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    ✓ Enregistrer
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setEditingMetadata(false)}
+                  >
+                    ✕ Annuler
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Infos contributeur */}
@@ -252,9 +343,9 @@ export default function AdminQuestionnaireValidation() {
               <h3 className="text-lg font-bold mb-4">Questions du QCM</h3>
               <QuestionnaireValidationEditor 
                 steps={selectedQuestionnaire.steps || []}
+                versionId={selectedQuestionnaire.id}
                 onUpdate={(stepId, updatedData) => {
-                  console.log('Updated step:', stepId, updatedData);
-                  // Les changements sont enregistrés quand l'admin clique "Approuver"
+                  // Les changements sont enregistrés en temps réel
                 }}
               />
             </div>

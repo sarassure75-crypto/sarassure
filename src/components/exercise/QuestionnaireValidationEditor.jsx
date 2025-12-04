@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp, Check, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, Check, X, Loader } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabaseClient';
 
 /**
  * QuestionnaireValidationEditor
  * Affiche et permet de modifier les réponses correctes des QCM
  */
-export default function QuestionnaireValidationEditor({ steps = [], onUpdate = null }) {
+export default function QuestionnaireValidationEditor({ steps = [], onUpdate = null, versionId = null }) {
   const [expandedQuestions, setExpandedQuestions] = useState({});
   const [editMode, setEditMode] = useState({});
   const [localChoices, setLocalChoices] = useState({});
+  const [saving, setSaving] = useState(false);
 
   const toggleQuestion = (stepId) => {
     setExpandedQuestions(prev => ({
@@ -55,14 +57,34 @@ export default function QuestionnaireValidationEditor({ steps = [], onUpdate = n
     });
   };
 
-  const saveChanges = (stepId) => {
-    if (onUpdate) {
-      onUpdate(stepId, localChoices[stepId]);
+  const saveChanges = async (stepId) => {
+    setSaving(true);
+    try {
+      // Mettre à jour la base de données
+      if (versionId) {
+        const { error } = await supabase
+          .from('steps')
+          .update({ expected_input: localChoices[stepId] })
+          .eq('id', stepId);
+
+        if (error) throw error;
+      }
+
+      // Appeler le callback si fourni
+      if (onUpdate) {
+        onUpdate(stepId, localChoices[stepId]);
+      }
+
+      setEditMode(prev => ({
+        ...prev,
+        [stepId]: false
+      }));
+    } catch (error) {
+      console.error('Erreur enregistrement:', error);
+      alert('Erreur lors de la sauvegarde: ' + error.message);
+    } finally {
+      setSaving(false);
     }
-    setEditMode(prev => ({
-      ...prev,
-      [stepId]: false
-    }));
   };
 
   if (!steps || steps.length === 0) {
@@ -246,13 +268,16 @@ export default function QuestionnaireValidationEditor({ steps = [], onUpdate = n
                   <div className="flex gap-2 pt-4 border-t">
                     <Button
                       onClick={() => saveChanges(step.id)}
+                      disabled={saving}
                       className="flex-1 bg-green-600 hover:bg-green-700"
                     >
-                      ✓ Enregistrer
+                      {saving && <Loader className="w-4 h-4 mr-2 animate-spin" />}
+                      {saving ? 'Enregistrement...' : '✓ Enregistrer'}
                     </Button>
                     <Button
                       onClick={() => toggleEditMode(step.id)}
                       variant="outline"
+                      disabled={saving}
                       className="flex-1"
                     >
                       ✕ Annuler
