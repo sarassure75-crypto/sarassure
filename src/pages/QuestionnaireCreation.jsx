@@ -167,21 +167,47 @@ const QuestionnaireCreation = () => {
     questions.forEach((q, idx) => {
       if (!q.text.trim()) errors.push(`Question ${idx + 1}: le texte est requis`);
       
-      // Valider les réponses remplies
-      const filledChoices = q.choices.filter(c => c.imageId || c.text.trim());
-      if (filledChoices.length === 0) {
-        errors.push(`Question ${idx + 1}: au moins une réponse est requise (image ou texte)`);
-      }
-      
-      // Vérifier qu'au moins une réponse est marquée correcte
-      const correctAnswers = filledChoices.filter(c => c.isCorrect);
-      if (correctAnswers.length === 0) {
-        errors.push(`Question ${idx + 1}: au moins une réponse doit être marquée correcte`);
-      }
-      
-      // Pour mixed type, l'image question est requise
-      if (q.questionType === 'mixed' && !q.imageId) {
-        errors.push(`Question ${idx + 1}: une image est requise pour ce type de question`);
+      if (q.questionType === 'image_choice') {
+        // Pour image_choice: vérifier qu'au moins une image est sélectionnée
+        const choicesWithImages = q.choices.filter(c => c.imageId);
+        if (choicesWithImages.length === 0) {
+          errors.push(`Question ${idx + 1}: au moins une image est requise`);
+        }
+        
+        // Vérifier qu'au moins une réponse avec image est marquée correcte
+        const correctAnswers = choicesWithImages.filter(c => c.isCorrect);
+        if (correctAnswers.length === 0) {
+          errors.push(`Question ${idx + 1}: au moins une réponse doit être marquée correcte`);
+        }
+      } else if (q.questionType === 'image_text') {
+        // Pour image_text: vérifier qu'au moins un texte est saisi
+        const choicesWithText = q.choices.filter(c => c.text.trim());
+        if (choicesWithText.length === 0) {
+          errors.push(`Question ${idx + 1}: au moins une réponse texte est requise`);
+        }
+        
+        // Vérifier qu'au moins une réponse texte est marquée correcte
+        const correctAnswers = choicesWithText.filter(c => c.isCorrect);
+        if (correctAnswers.length === 0) {
+          errors.push(`Question ${idx + 1}: au moins une réponse doit être marquée correcte`);
+        }
+      } else if (q.questionType === 'mixed') {
+        // Pour mixed: vérifier qu'au moins une image + texte est saisi
+        const choicesWithImages = q.choices.filter(c => c.imageId || c.text.trim());
+        if (choicesWithImages.length === 0) {
+          errors.push(`Question ${idx + 1}: au moins une réponse (image + texte) est requise`);
+        }
+        
+        // Vérifier qu'au moins une réponse est marquée correcte
+        const correctAnswers = choicesWithImages.filter(c => c.isCorrect);
+        if (correctAnswers.length === 0) {
+          errors.push(`Question ${idx + 1}: au moins une réponse doit être marquée correcte`);
+        }
+        
+        // Image question est requise pour mixed
+        if (!q.imageId) {
+          errors.push(`Question ${idx + 1}: une image est requise pour ce type de question`);
+        }
       }
     });
 
@@ -252,7 +278,8 @@ const QuestionnaireCreation = () => {
           title,
           description: description.trim() || null,
           category,
-          owner_id: user.id
+          owner_id: user.id,
+          task_type: 'questionnaire'  // Distinguer des exercices normaux
         }])
         .select()
         .single();
