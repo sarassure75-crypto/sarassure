@@ -39,7 +39,7 @@ import { supabase } from '@/lib/supabaseClient';
         const { data: tasks, error: tasksError } = await supabase
           .from('tasks')
           .select(`
-            id, title, description, icon_name, pictogram_app_image_id, creation_status, category_id, category, video_url, created_at,
+            id, title, description, icon_name, pictogram_app_image_id, creation_status, category_id, category, video_url, created_at, task_type,
             versions (
               *,
               steps ( * )
