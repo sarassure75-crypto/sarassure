@@ -187,10 +187,101 @@ export default function AdminQuestionnaireValidation() {
   };
 
   const renderQuestion = (step, idx) => {
+    const expected = step.expected_input || {};
+    const questionType = expected.questionType || 'image_choice';
+    const choices = expected.choices || [];
+    const correctAnswers = expected.correctAnswers || [];
+    const questionImage = expected.imageName;
+
     return (
-      <div key={step.id} className="border rounded-lg p-4 mb-3 bg-gray-50">
-        <h4 className="font-semibold text-sm mb-2">Question {idx + 1}: {step.instruction}</h4>
-        <p className="text-xs text-gray-600">{step.expected_input}</p>
+      <div key={step.id} className="border rounded-lg p-4 mb-4 bg-white hover:shadow-md transition">
+        {/* En-tête question */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1">
+            <h4 className="font-bold text-base mb-1">Question {idx + 1}</h4>
+            <p className="text-gray-700 font-medium">{step.instruction}</p>
+          </div>
+          <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-100 text-blue-700">
+            {questionType === 'image_choice' && '📷 Images'}
+            {questionType === 'image_text' && '📝 Texte'}
+            {questionType === 'mixed' && '📷+📝 Mixte'}
+          </span>
+        </div>
+
+        {/* Image de la question */}
+        {questionImage && (
+          <div className="mb-3">
+            <img
+              src={`https://qcimwwhiymhhidkxtpzt.supabase.co/storage/v1/object/public/app-images/${questionImage}`}
+              alt="Question"
+              className="max-w-full h-auto rounded max-h-48 object-contain"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
+          </div>
+        )}
+
+        {/* Réponses possibles */}
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-gray-600">Réponses possibles:</p>
+          {choices.map((choice, choiceIdx) => {
+            const isCorrect = correctAnswers.includes(choice.id);
+            return (
+              <div
+                key={choice.id || choiceIdx}
+                className={`p-2 rounded border-l-4 ${
+                  isCorrect
+                    ? 'bg-green-50 border-green-500'
+                    : 'bg-gray-50 border-gray-300'
+                }`}
+              >
+                <div className="flex items-start gap-2">
+                  {/* Icône correcte/incorrecte */}
+                  {isCorrect ? (
+                    <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                  ) : (
+                    <div className="w-4 h-4 border border-gray-300 rounded flex-shrink-0 mt-0.5" />
+                  )}
+
+                  {/* Contenu réponse */}
+                  <div className="flex-1 min-w-0">
+                    {/* Image de réponse */}
+                    {choice.imageName && (
+                      <img
+                        src={`https://qcimwwhiymhhidkxtpzt.supabase.co/storage/v1/object/public/app-images/${choice.imageName}`}
+                        alt={choice.text || 'Réponse'}
+                        className="w-16 h-16 rounded object-cover mb-1"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    )}
+
+                    {/* Texte réponse */}
+                    {choice.text && (
+                      <p className="text-sm text-gray-700">
+                        {choice.text}
+                      </p>
+                    )}
+
+                    {!choice.text && !choice.imageName && (
+                      <p className="text-xs text-gray-400 italic">Réponse vide</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Statistiques */}
+        <div className="mt-3 pt-3 border-t text-xs text-gray-600">
+          <span className="font-semibold">Réponses correctes:</span> {correctAnswers.length} / {choices.length}
+          {correctAnswers.length === 0 && (
+            <span className="text-red-600 ml-2">⚠️ Aucune réponse correcte définie!</span>
+          )}
+        </div>
       </div>
     );
   };
