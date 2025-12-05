@@ -167,7 +167,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
       const { data, error } = await supabase
         .from('app_images')
         .select('*')
-        .eq('category', 'qcm')
+        .eq('category', 'QCM')
         .order('name');
 
       if (error) throw error;

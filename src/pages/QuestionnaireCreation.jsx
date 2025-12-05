@@ -31,11 +31,11 @@ const QuestionnaireCreation = () => {
 
   const loadImages = async () => {
     try {
-      // Charger uniquement les images de catégorie 'qcm'
+      // Charger uniquement les images de catégorie 'QCM'
       const { data, error } = await supabase
         .from('app_images')
         .select('id, name, file_path, description, category')
-        .eq('category', 'qcm')
+        .eq('category', 'QCM')
         .order('name');
 
       if (error) throw error;
