@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, getImageUrl } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
@@ -59,12 +59,16 @@ const QuestionnairePlayerPage = () => {
 
       setTask(taskData);
 
-      // Récupérer les questions
+      // Récupérer les questions avec les images associées
       const { data: questionsData, error: questionsError } = await supabase
         .from('questionnaire_questions')
         .select(`
           *,
-          questionnaire_choices (*)
+          app_images:image_id (id, name, file_path),
+          questionnaire_choices (
+            *,
+            app_images:image_id (id, name, file_path)
+          )
         `)
         .eq('task_id', taskId)
         .order('question_order');
@@ -81,17 +85,19 @@ const QuestionnairePlayerPage = () => {
         id: q.id,
         instruction: q.instruction,
         type: q.question_type,
-        image: {
-          id: q.image_id,
-          name: q.image_name
-        },
+        image: q.app_images ? {
+          id: q.app_images.id,
+          name: q.app_images.name,
+          filePath: q.app_images.file_path
+        } : null,
         choices: (q.questionnaire_choices || []).sort((a, b) => a.choice_order - b.choice_order).map(c => ({
           id: c.id,
           text: c.text,
-          image: {
-            id: c.image_id,
-            name: c.image_name
-          },
+          image: c.app_images ? {
+            id: c.app_images.id,
+            name: c.app_images.name,
+            filePath: c.app_images.file_path
+          } : null,
           isCorrect: c.is_correct
         }))
       }));
@@ -300,16 +306,29 @@ const QuestionnairePlayerPage = () => {
                 <CardHeader className="bg-blue-50 border-b-2 border-blue-500">
                   <CardTitle className="text-blue-700">{currentQuestion.instruction}</CardTitle>
                 </CardHeader>
-                <CardContent className="p-6">
-                  {/* Question Image */}
-                  {currentQuestion.image?.id && (
-                    <div className="mb-6 p-4 bg-gray-100 rounded-lg">
-                      <p className="text-sm text-gray-600">Image: {currentQuestion.image.name}</p>
+                <CardContent className="p-6 space-y-6">
+                  {/* Question Image - Conteneur dédié */}
+                  {currentQuestion.image?.filePath && (
+                    <div className="w-full bg-gradient-to-br from-blue-50 to-gray-50 border-2 border-blue-200 rounded-xl p-4">
+                      <p className="text-xs font-semibold text-blue-600 mb-2 uppercase tracking-wide">Image de la question</p>
+                      <div className="flex justify-center items-center min-h-40 bg-white rounded-lg overflow-hidden">
+                        <img
+                          src={getImageUrl(currentQuestion.image.filePath)}
+                          alt={currentQuestion.image.name}
+                          className="max-w-full max-h-56 object-contain"
+                          onError={(e) => {
+                            console.warn(`Failed to load image: ${currentQuestion.image.filePath}`);
+                            e.target.parentElement.innerHTML = '<div class="text-gray-400 text-sm">Image non disponible</div>';
+                          }}
+                        />
+                      </div>
                     </div>
                   )}
 
-                  {/* Choices */}
-                  <div className="space-y-3">
+                  {/* Choices - Conteneur */}
+                  <div>
+                    <p className="text-xs font-semibold text-gray-600 mb-3 uppercase tracking-wide">Sélectionnez votre réponse</p>
+                    <div className="space-y-3">
                     {currentQuestion.choices.map(choice => (
                       <motion.button
                         key={choice.id}
@@ -322,9 +341,10 @@ const QuestionnairePlayerPage = () => {
                             : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/50'
                         }`}
                       >
-                        <div className="flex items-center gap-3">
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3">
                           <div
-                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center mt-1 ${
                               selectedAnswerId === choice.id
                                 ? 'border-blue-500 bg-blue-500'
                                 : 'border-gray-300'
@@ -334,15 +354,27 @@ const QuestionnairePlayerPage = () => {
                               <div className="w-2 h-2 bg-white rounded-full"></div>
                             )}
                           </div>
-                          <span className="font-medium text-gray-800">{choice.text}</span>
+                          <div className="flex-1">
+                            <span className="font-medium text-gray-800">{choice.text}</span>
+                          </div>
                         </div>
-                        {choice.image?.id && (
-                          <div className="mt-2 text-sm text-gray-600">
-                            Image: {choice.image.name}
+                        {choice.image?.filePath && (
+                          <div className="ml-8 bg-white border border-gray-200 rounded-lg p-2 overflow-hidden">
+                            <img
+                              src={getImageUrl(choice.image.filePath)}
+                              alt={choice.image.name}
+                              className="max-w-full h-auto max-h-32 object-contain mx-auto"
+                              onError={(e) => {
+                                console.warn(`Failed to load choice image: ${choice.image.filePath}`);
+                                e.target.style.display = 'none';
+                              }}
+                            />
                           </div>
                         )}
+                      </div>
                       </motion.button>
                     ))}
+                    </div>
                   </div>
                 </CardContent>
               </Card>

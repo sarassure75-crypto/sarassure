@@ -11,7 +11,7 @@ import { Save, Trash2, XCircle, Plus, HelpCircle, Image as ImageIcon } from 'luc
 import { useAdmin } from '@/contexts/AdminContext';
 import { creationStatuses } from '@/data/tasks';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, getImageUrl } from '@/lib/supabaseClient';
 
 /**
  * AdminQuestionnaireEditor
@@ -340,10 +340,8 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
     }
   };
 
-  const getImageUrl = (imageName) => {
-    if (!imageName) return null;
-    return `https://qcimwwhiymhhidkxtpzt.supabase.co/storage/v1/object/public/app-images/${imageName}`;
-  };
+  // Use the global getImageUrl from supabaseClient for consistent image loading
+  // This uses the 'images' bucket and handles the publicUrl correctly
 
   return (
     <div className="space-y-6">
