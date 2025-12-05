@@ -1,0 +1,230 @@
+{
+  "migration_date": "2025-12-05T20:10:33.989Z",
+  "total_files": 32,
+  "wallpapers": [
+    {
+      "name": "Blue Gradient",
+      "filename": "blue-gradient.svg",
+      "category": "wallpaper",
+      "file_path": "wallpapers/blue-gradient.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Forest Green",
+      "filename": "forest-green.svg",
+      "category": "wallpaper",
+      "file_path": "wallpapers/forest-green.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Geometric Shapes",
+      "filename": "geometric-shapes.svg",
+      "category": "wallpaper",
+      "file_path": "wallpapers/geometric-shapes.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Green Circles",
+      "filename": "green-circles.svg",
+      "category": "wallpaper",
+      "file_path": "wallpapers/green-circles.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Green Forest Trees",
+      "filename": "green-forest-trees.svg",
+      "category": "wallpaper",
+      "file_path": "wallpapers/green-forest-trees.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Green Geometric Mesh",
+      "filename": "green-geometric-mesh.svg",
+      "category": "wallpaper",
+      "file_path": "wallpapers/green-geometric-mesh.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Green Hexagons",
+      "filename": "green-hexagons.svg",
+      "category": "wallpaper",
+      "file_path": "wallpapers/green-hexagons.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Green Hills Landscape",
+      "filename": "green-hills-landscape.svg",
+      "category": "wallpaper",
+      "file_path": "wallpapers/green-hills-landscape.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Green Triangles",
+      "filename": "green-triangles.svg",
+      "category": "wallpaper",
+      "file_path": "wallpapers/green-triangles.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Green Waves Abstract",
+      "filename": "green-waves-abstract.svg",
+      "category": "wallpaper",
+      "file_path": "wallpapers/green-waves-abstract.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Lavender",
+      "filename": "lavender.svg",
+      "category": "wallpaper",
+      "file_path": "wallpapers/lavender.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Mountain Sunrise",
+      "filename": "mountain-sunrise.svg",
+      "category": "wallpaper",
+      "file_path": "wallpapers/mountain-sunrise.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Ocean Waves",
+      "filename": "ocean-waves.svg",
+      "category": "wallpaper",
+      "file_path": "wallpapers/ocean-waves.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Soft Gray",
+      "filename": "soft-gray.svg",
+      "category": "wallpaper",
+      "file_path": "wallpapers/soft-gray.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Starry Night",
+      "filename": "starry-night.svg",
+      "category": "wallpaper",
+      "file_path": "wallpapers/starry-night.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Sunset Sky",
+      "filename": "sunset-sky.svg",
+      "category": "wallpaper",
+      "file_path": "wallpapers/sunset-sky.svg",
+      "type": "svg"
+    },
+    {
+      "name": "Blue Gradient",
+      "filename": "blue-gradient.png",
+      "category": "wallpaper",
+      "file_path": "wallpapers/png/blue-gradient.png",
+      "type": "png"
+    },
+    {
+      "name": "Forest Green",
+      "filename": "forest-green.png",
+      "category": "wallpaper",
+      "file_path": "wallpapers/png/forest-green.png",
+      "type": "png"
+    },
+    {
+      "name": "Geometric Shapes",
+      "filename": "geometric-shapes.png",
+      "category": "wallpaper",
+      "file_path": "wallpapers/png/geometric-shapes.png",
+      "type": "png"
+    },
+    {
+      "name": "Green Circles",
+      "filename": "green-circles.png",
+      "category": "wallpaper",
+      "file_path": "wallpapers/png/green-circles.png",
+      "type": "png"
+    },
+    {
+      "name": "Green Forest Trees",
+      "filename": "green-forest-trees.png",
+      "category": "wallpaper",
+      "file_path": "wallpapers/png/green-forest-trees.png",
+      "type": "png"
+    },
+    {
+      "name": "Green Geometric Mesh",
+      "filename": "green-geometric-mesh.png",
+      "category": "wallpaper",
+      "file_path": "wallpapers/png/green-geometric-mesh.png",
+      "type": "png"
+    },
+    {
+      "name": "Green Hexagons",
+      "filename": "green-hexagons.png",
+      "category": "wallpaper",
+      "file_path": "wallpapers/png/green-hexagons.png",
+      "type": "png"
+    },
+    {
+      "name": "Green Hills Landscape",
+      "filename": "green-hills-landscape.png",
+      "category": "wallpaper",
+      "file_path": "wallpapers/png/green-hills-landscape.png",
+      "type": "png"
+    },
+    {
+      "name": "Green Triangles",
+      "filename": "green-triangles.png",
+      "category": "wallpaper",
+      "file_path": "wallpapers/png/green-triangles.png",
+      "type": "png"
+    },
+    {
+      "name": "Green Waves Abstract",
+      "filename": "green-waves-abstract.png",
+      "category": "wallpaper",
+      "file_path": "wallpapers/png/green-waves-abstract.png",
+      "type": "png"
+    },
+    {
+      "name": "Lavender",
+      "filename": "lavender.png",
+      "category": "wallpaper",
+      "file_path": "wallpapers/png/lavender.png",
+      "type": "png"
+    },
+    {
+      "name": "Mountain Sunrise",
+      "filename": "mountain-sunrise.png",
+      "category": "wallpaper",
+      "file_path": "wallpapers/png/mountain-sunrise.png",
+      "type": "png"
+    },
+    {
+      "name": "Ocean Waves",
+      "filename": "ocean-waves.png",
+      "category": "wallpaper",
+      "file_path": "wallpapers/png/ocean-waves.png",
+      "type": "png"
+    },
+    {
+      "name": "Soft Gray",
+      "filename": "soft-gray.png",
+      "category": "wallpaper",
+      "file_path": "wallpapers/png/soft-gray.png",
+      "type": "png"
+    },
+    {
+      "name": "Starry Night",
+      "filename": "starry-night.png",
+      "category": "wallpaper",
+      "file_path": "wallpapers/png/starry-night.png",
+      "type": "png"
+    },
+    {
+      "name": "Sunset Sky",
+      "filename": "sunset-sky.png",
+      "category": "wallpaper",
+      "file_path": "wallpapers/png/sunset-sky.png",
+      "type": "png"
+    }
+  ]
+}

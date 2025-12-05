@@ -1,138 +1,52 @@
-import React from 'react';
-import { Download, Home, Image as ImageIcon } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Download, Home, Image as ImageIcon, Loader } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function WallpapersLibraryPage() {
-  const wallpapers = [
-    {
-      id: 'blue-gradient',
-      name: 'Dégradé Bleu Océan',
-      category: 'Couleurs',
-      description: 'Bleu professionnel apaisant',
-      file: 'blue-gradient.png',
-      preview: '/wallpapers/png/blue-gradient.png'
-    },
-    {
-      id: 'forest-green',
-      name: 'Dégradé Vert Forêt',
-      category: 'Couleurs',
-      description: 'Vert nature relaxant',
-      file: 'forest-green.png',
-      preview: '/wallpapers/png/forest-green.png'
-    },
-    {
-      id: 'sunset-sky',
-      name: 'Coucher de Soleil',
-      category: 'Ciel',
-      description: 'Dégradé chaleureux orange-rose',
-      file: 'sunset-sky.png',
-      preview: '/wallpapers/png/sunset-sky.png'
-    },
-    {
-      id: 'soft-gray',
-      name: 'Gris Doux',
-      category: 'Neutres',
-      description: 'Gris neutre pour apps système',
-      file: 'soft-gray.png',
-      preview: '/wallpapers/png/soft-gray.png'
-    },
-    {
-      id: 'lavender',
-      name: 'Lavande',
-      category: 'Couleurs',
-      description: 'Violet doux apaisant',
-      file: 'lavender.png',
-      preview: '/wallpapers/png/lavender.png'
-    },
-    {
-      id: 'geometric-shapes',
-      name: 'Formes Géométriques',
-      category: 'Abstrait',
-      description: 'Motifs géométriques modernes',
-      file: 'geometric-shapes.png',
-      preview: '/wallpapers/png/geometric-shapes.png'
-    },
-    {
-      id: 'ocean-waves',
-      name: 'Vagues Océan',
-      category: 'Paysages',
-      description: 'Vagues stylisées apaisantes',
-      file: 'ocean-waves.png',
-      preview: '/wallpapers/png/ocean-waves.png'
-    },
-    {
-      id: 'mountain-sunrise',
-      name: 'Lever de Soleil Montagne',
-      category: 'Paysages',
-      description: 'Silhouette montagne au lever du soleil',
-      file: 'mountain-sunrise.png',
-      preview: '/wallpapers/png/mountain-sunrise.png'
-    },
-    {
-      id: 'starry-night',
-      name: 'Ciel Étoilé',
-      category: 'Ciel',
-      description: 'Nuit étoilée avec voie lactée',
-      file: 'starry-night.png',
-      preview: '/wallpapers/png/starry-night.png'
-    },
-    {
-      id: 'green-circles',
-      name: 'Cercles Verts',
-      category: 'Abstrait',
-      description: 'Cercles géométriques sur fond vert',
-      file: 'green-circles.png',
-      preview: '/wallpapers/png/green-circles.png'
-    },
-    {
-      id: 'green-hexagons',
-      name: 'Hexagones Verts',
-      category: 'Abstrait',
-      description: 'Motifs hexagonaux vert turquoise',
-      file: 'green-hexagons.png',
-      preview: '/wallpapers/png/green-hexagons.png'
-    },
-    {
-      id: 'green-waves-abstract',
-      name: 'Vagues Vertes Abstraites',
-      category: 'Abstrait',
-      description: 'Vagues fluides dégradé vert',
-      file: 'green-waves-abstract.png',
-      preview: '/wallpapers/png/green-waves-abstract.png'
-    },
-    {
-      id: 'green-hills-landscape',
-      name: 'Collines Vertes',
-      category: 'Paysages',
-      description: 'Paysage collines avec soleil',
-      file: 'green-hills-landscape.png',
-      preview: '/wallpapers/png/green-hills-landscape.png'
-    },
-    {
-      id: 'green-triangles',
-      name: 'Triangles Verts',
-      category: 'Abstrait',
-      description: 'Formes triangulaires superposées',
-      file: 'green-triangles.png',
-      preview: '/wallpapers/png/green-triangles.png'
-    },
-    {
-      id: 'green-forest-trees',
-      name: 'Forêt Verte Stylisée',
-      category: 'Paysages',
-      description: 'Arbres géométriques vert forêt',
-      file: 'green-forest-trees.png',
-      preview: '/wallpapers/png/green-forest-trees.png'
-    },
-    {
-      id: 'green-geometric-mesh',
-      name: 'Grille Géométrique Verte',
-      category: 'Abstrait',
-      description: 'Grille circulaire design moderne',
-      file: 'green-geometric-mesh.png',
-      preview: '/wallpapers/png/green-geometric-mesh.png'
-    }
-  ];
+  const [wallpapers, setWallpapers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('Tous');
+
+  // Load wallpapers from app_images table (category = 'wallpaper')
+  useEffect(() => {
+    const loadWallpapers = async () => {
+      try {
+        setLoading(true);
+        const { data, error: queryError } = await supabase
+          .from('app_images')
+          .select('id, name, file_path, description, category')
+          .eq('category', 'wallpaper')
+          .order('name');
+
+        if (queryError) throw queryError;
+
+        // Format data for display
+        const formattedWallpapers = data.map(img => ({
+          id: img.id,
+          name: img.name,
+          category: 'Fonds d\'écran',
+          description: img.description || img.name,
+          file: img.file_path.split('/').pop(), // Get filename from path
+          file_path: img.file_path,
+          preview: supabase.storage.from('images').getPublicUrl(img.file_path).data?.publicUrl || img.file_path
+        }));
+
+        setWallpapers(formattedWallpapers);
+        setError(null);
+      } catch (err) {
+        console.error('Erreur chargement wallpapers:', err);
+        setError('Impossible de charger les fonds d\'écran. Veuillez réessayer.');
+        // Fallback to empty array
+        setWallpapers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadWallpapers();
+  }, []);
 
   const handleDownload = (wallpaper) => {
     const link = document.createElement('a');
@@ -143,8 +57,9 @@ export default function WallpapersLibraryPage() {
     document.body.removeChild(link);
   };
 
-  const categories = ['Tous', ...new Set(wallpapers.map(w => w.category))];
-  const [selectedCategory, setSelectedCategory] = React.useState('Tous');
+  const categories = wallpapers.length > 0 
+    ? ['Tous', ...new Set(wallpapers.map(w => w.category))] 
+    : ['Tous'];
 
   const filteredWallpapers = selectedCategory === 'Tous' 
     ? wallpapers 
@@ -197,60 +112,103 @@ export default function WallpapersLibraryPage() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex gap-2 flex-wrap">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                selectedCategory === cat
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+      {/* Error State */}
+      {error && (
+        <div className="container mx-auto px-4 py-6">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-red-800">{error}</p>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <div className="container mx-auto px-4 py-12 flex justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <Loader className="w-8 h-8 text-blue-600 animate-spin" />
+            <p className="text-gray-600">Chargement des fonds d'écran...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Filters */}
+      {!loading && wallpapers.length > 0 && (
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex gap-2 flex-wrap">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  selectedCategory === cat
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && wallpapers.length === 0 && !error && (
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center">
+            <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucun fond d'écran disponible</h3>
+            <p className="text-gray-600">Les fonds d'écran sont en cours de chargement. Veuillez réessayer.</p>
+          </div>
+        </div>
+      )}
 
       {/* Wallpapers Grid */}
-      <div className="container mx-auto px-4 pb-12">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {filteredWallpapers.map(wallpaper => (
-            <div key={wallpaper.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-              {/* Preview */}
-              <div className="aspect-[9/16] bg-gray-100 relative overflow-hidden">
-                <img
-                  src={wallpaper.preview}
-                  alt={wallpaper.name}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                />
-              </div>
-
-              {/* Info */}
-              <div className="p-3">
-                <div className="mb-2">
-                  <h3 className="font-semibold text-sm text-gray-900 truncate">{wallpaper.name}</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">{wallpaper.category}</p>
+      {!loading && wallpapers.length > 0 && (
+        <div className="container mx-auto px-4 pb-12">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {filteredWallpapers.map(wallpaper => (
+              <div key={wallpaper.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                {/* Preview */}
+                <div className="aspect-[9/16] bg-gray-100 relative overflow-hidden">
+                  <img
+                    src={wallpaper.preview}
+                    alt={wallpaper.name}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f3f4f6" width="100" height="100"/%3E%3C/svg%3E';
+                    }}
+                  />
                 </div>
-                
-                {/* Download Button */}
-                <button
-                  onClick={() => handleDownload(wallpaper)}
-                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Télécharger</span>
-                </button>
+
+                {/* Info */}
+                <div className="p-3">
+                  <div className="mb-2">
+                    <h3 className="font-semibold text-sm text-gray-900 truncate">{wallpaper.name}</h3>
+                    <p className="text-xs text-gray-500 mt-0.5">{wallpaper.description}</p>
+                  </div>
+                  
+                  {/* Download Button */}
+                  <button
+                    onClick={() => handleDownload(wallpaper)}
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Télécharger</span>
+                  </button>
+                </div>
               </div>
+            ))}
+          </div>
+
+          {filteredWallpapers.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-600">Aucun fond d'écran trouvé dans cette catégorie.</p>
             </div>
-          ))}
+          )}
         </div>
-      </div>
+      )}
 
       {/* Footer Info */}
       <div className="bg-white border-t mt-8">

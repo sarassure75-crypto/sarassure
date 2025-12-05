@@ -288,78 +288,91 @@ const QuestionnaireCreation = () => {
 
       if (taskError) throw taskError;
 
-      // Créer la version questionnaire
-      const { data: version, error: versionError } = await supabase
-        .from('versions')
-        .insert([{
-          task_id: task.id,
-          name: 'Version 1',
-          version: 1,
-          creation_status: 'pending'
-        }])
-        .select()
-        .single();
+      console.log('Task créée:', task.id);
 
-      if (versionError) throw versionError;
+      // Insérer les questions dans la table questionnaire_questions
+      const questionsDataForDB = questions.map((q, idx) => {
+        let questionType = 'text'; // Par défaut
+        let questionInstruction = q.text;
+        let questionImageId = null;
+        let questionImageName = '';
 
-      // Sauvegarder les questions avec leurs images ou réponses texte
-      const questionsData = questions.map((q, idx) => {
-        let questionData = {};
-        
-        if (q.questionType === 'image_choice') {
-          // Pour image_choice: filtrer UNIQUEMENT par imageId
-          const filledChoices = q.choices.filter(c => c.imageId);
-          questionData = {
-            type: 'image_choice',
-            choices: filledChoices.map(c => ({
-              id: c.id,
-              imageId: c.imageId,
-              imageName: c.imageName,
-              isCorrect: c.isCorrect
-            }))
-          };
+        // Pour les types mixed, on stocke l'image de la question
+        if (q.questionType === 'mixed') {
+          questionType = 'mixed';
+          questionImageId = q.imageId;
+          questionImageName = q.imageName;
+        } else if (q.questionType === 'image_choice') {
+          questionType = 'image_choice';
         } else if (q.questionType === 'image_text') {
-          // Pour image_text: filtrer UNIQUEMENT par texte
-          const filledChoices = q.choices.filter(c => c.text.trim());
-          questionData = {
-            type: 'image_text',
-            answers: filledChoices.map(c => ({
-              id: c.id,
-              text: c.text,
-              isCorrect: c.isCorrect
-            }))
-          };
-        } else if (q.questionType === 'mixed') {
-          // Pour mixed: filtrer par imageId OU texte
-          const filledChoices = q.choices.filter(c => c.imageId || c.text.trim());
-          questionData = {
-            type: 'mixed',
-            imageId: q.imageId,
-            imageName: q.imageName,
-            answers: filledChoices.map(c => ({
-              id: c.id,
-              imageId: c.imageId,
-              imageName: c.imageName,
-              text: c.text,
-              isCorrect: c.isCorrect
-            }))
-          };
+          questionType = 'image_text';
         }
-        
+
         return {
-          version_id: version.id,
-          step_order: idx + 1,
-          instruction: q.text,
-          expected_input: JSON.stringify(questionData)
+          task_id: task.id,
+          instruction: questionInstruction,
+          question_order: idx + 1,
+          question_type: questionType,
+          image_id: questionImageId,
+          image_name: questionImageName
         };
       });
 
-      // Insérer les questions comme des steps
-      const { error: stepsError } = await supabase
-        .from('steps')
-        .insert(questionsData);
+      const { data: insertedQuestions, error: questionsError } = await supabase
+        .from('questionnaire_questions')
+        .insert(questionsDataForDB)
+        .select();
 
-      if (stepsError) throw stepsError;
+      if (questionsError) {
+        console.error('Erreur création questions:', questionsError);
+        throw questionsError;
+      }
+
+      console.log('Questions créées:', insertedQuestions.length);
+
+      // Insérer les réponses (choices) pour chaque question
+      const allChoices = [];
+      
+      for (let i = 0; i < questions.length; i++) {
+        const q = questions[i];
+        const insertedQuestion = insertedQuestions[i];
+
+        // Filtrer les réponses remplies selon le type
+        let filledChoices = [];
+        
+        if (q.questionType === 'image_choice') {
+          filledChoices = q.choices.filter(c => c.imageId);
+        } else if (q.questionType === 'image_text') {
+          filledChoices = q.choices.filter(c => c.text.trim());
+        } else if (q.questionType === 'mixed') {
+          filledChoices = q.choices.filter(c => c.imageId || c.text.trim());
+        }
+
+        // Créer les enregistrements de choix
+        const choicesForQuestion = filledChoices.map((choice, choiceIdx) => ({
+          question_id: insertedQuestion.id,
+          text: choice.text || null,
+          choice_order: choiceIdx + 1,
+          is_correct: choice.isCorrect,
+          image_id: choice.imageId || null,
+          image_name: choice.imageName || ''
+        }));
+
+        allChoices.push(...choicesForQuestion);
+      }
+
+      if (allChoices.length > 0) {
+        const { error: choicesError } = await supabase
+          .from('questionnaire_choices')
+          .insert(allChoices);
+
+        if (choicesError) {
+          console.error('Erreur création réponses:', choicesError);
+          throw choicesError;
+        }
+
+        console.log('Réponses créées:', allChoices.length);
+      }
 
       toast({
         title: 'Succès!',
