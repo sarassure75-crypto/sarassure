@@ -39,11 +39,27 @@ const ExerciseStepsPreviewPage = () => {
       try {
         const { data: taskData, error: taskError } = await supabase
           .from('tasks')
-          .select('id, title, description, icon_name, video_url, pictogram_app_image_id')
+          .select('id, title, description, icon_name, video_url, pictogram_app_image_id, task_type')
           .eq('id', taskId)
           .single();
 
         if (taskError) throw taskError;
+
+        // Si c'est un questionnaire, rediriger directement vers le player
+        if (taskData.task_type === 'questionnaire') {
+          // Récupérer la première version disponible
+          const { data: versionsData, error: versionsError } = await supabase
+            .from('versions')
+            .select('id')
+            .eq('task_id', taskId)
+            .order('name', { ascending: true })
+            .limit(1);
+
+          if (!versionsError && versionsData && versionsData.length > 0) {
+            navigate(`/tache/${taskId}/version/${versionsData[0].id}`);
+            return;
+          }
+        }
 
         const { data: versionsData, error: versionsError } = await supabase
           .from('versions')

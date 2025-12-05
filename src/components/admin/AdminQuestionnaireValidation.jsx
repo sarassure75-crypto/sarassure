@@ -113,7 +113,11 @@ export default function AdminQuestionnaireValidation() {
     try {
       const { error } = await supabase
         .from('versions')
-        .update({ creation_status: 'published' })
+        .update({ 
+          creation_status: 'validated',
+          reviewer_id: currentUser.id,
+          reviewed_at: new Date().toISOString()
+        })
         .eq('id', versionId);
 
       if (error) throw error;

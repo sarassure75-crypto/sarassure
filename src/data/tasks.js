@@ -53,6 +53,17 @@ import { supabase } from '@/lib/supabaseClient';
           throw tasksError;
         }
 
+        console.log('=== DEBUG fetchTasks: Tâches brutes reçues ===', tasks);
+        
+        // Log spécial pour les questionnaires
+        const questionnairesTasks = tasks.filter(t => t.task_type === 'questionnaire');
+        if (questionnairesTasks.length > 0) {
+          console.log('=== DEBUG fetchTasks: Questionnaires trouvés ===', questionnairesTasks.length);
+          questionnairesTasks.forEach(q => {
+            console.log(`QCM "${q.title}": versions=${q.versions?.length || 0}`, q.versions);
+          });
+        }
+
         const processedTasks = tasks.map(task => ({
           ...task,
           versions: (task.versions || []).map(version => ({
@@ -60,6 +71,9 @@ import { supabase } from '@/lib/supabaseClient';
             steps: (version.steps || []).sort((a, b) => a.step_order - b.step_order)
           })).sort((a,b) => new Date(a.created_at) - new Date(b.created_at))
         }));
+        
+        console.log('=== DEBUG fetchTasks: Tâches traitées finales ===', processedTasks);
+        
         return processedTasks;
       } catch (error) {
         console.error('Error processing tasks in fetchTasks:', error);

@@ -5,12 +5,13 @@ import { fetchTasks } from '@/data/tasks';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Link, BarChart, XCircle, RefreshCw, TrendingUp, Zap } from 'lucide-react';
+import { Loader2, Link, BarChart, XCircle, RefreshCw, TrendingUp, Zap, HelpCircle } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { getUserById, unassignTrainerFromLearner } from '@/data/users';
 import { Button } from '@/components/ui/button';
 import ConfidenceSelector from '@/components/exercise/ConfidenceSelector';
 import { useConfidence } from '@/hooks/useConfidence';
+import { supabase } from '@/lib/supabaseClient';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -118,6 +119,7 @@ const LearnerProgressPage = () => {
     const [isLoadingTrainer, setIsLoadingTrainer] = useState(true);
     const [confidenceData, setConfidenceData] = useState([]);
     const [selectedPeriod, setSelectedPeriod] = useState('last-week');
+    const [questionnaireAttempts, setQuestionnaireAttempts] = useState([]);
     const { fetchConfidenceHistory, recordConfidenceAfter } = useConfidence();
 
     const fetchProgressData = useCallback(async () => {
@@ -131,16 +133,32 @@ const LearnerProgressPage = () => {
             const tasks = await fetchTasks();
             let progressData = [];
             let confidenceHistory = [];
+            let questionnaireData = [];
             setAllTasks(tasks || []);
             try {
                 progressData = await fetchUserProgressDetails(currentUser.id);
                 confidenceHistory = await fetchConfidenceHistory(currentUser.id);
+                
+                // Récupérer les tentatives de questionnaires
+                const { data: qcmAttempts, error: qcmError } = await supabase
+                    .from('questionnaire_attempts')
+                    .select('*')
+                    .eq('learner_id', currentUser.id)
+                    .eq('status', 'completed')
+                    .order('attempted_at', { ascending: false });
+                
+                if (!qcmError && qcmAttempts) {
+                    questionnaireData = qcmAttempts;
+                    console.log('QCM attempts loaded:', qcmAttempts);
+                }
+                
                 setProgressError(false);
             } catch (error) {
                 console.error('Error fetching progress:', error);
                 setProgressError(true);
                 progressData = [];
                 confidenceHistory = [];
+                questionnaireData = [];
             }
             
             // Crée une map pour retrouver la progression par version
@@ -155,29 +173,63 @@ const LearnerProgressPage = () => {
                 confidenceMap.set(`${c.versionId}`, c);
             });
             
-            // Construit la liste complète à afficher
-            const fullProgress = [];
+            // Séparer exercices et questionnaires
+            const exerciseProgress = [];
+            const qcmProgress = [];
+            
             tasks.forEach(task => {
-                (task.versions || []).forEach(version => {
-                    const key = `${task.id}-${version.id}`;
-                    const p = progressMap.get(key);
-                    const c = confidenceMap.get(version.id);
-                    fullProgress.push({
-                        id: key,
-                        versionId: version.id,
-                        task_title: task.title,
-                        version_name: version.name,
-                        attempts: p ? p.attempts : 0,
-                        first_time_seconds: p ? p.first_time_seconds : null,
-                        best_time_seconds: p ? p.best_time_seconds : null,
-                        completed_steps_history: p ? p.completed_steps_history : null,
-                        created_at: p ? p.created_at : new Date().toISOString(),
-                        confidence_before: c?.confidenceBefore || null,
-                        confidence_after: c?.confidenceAfter || null
+                // Si c'est un questionnaire
+                if (task.task_type === 'questionnaire') {
+                    // Récupérer toutes les tentatives pour ce questionnaire
+                    const attempts = questionnaireData.filter(qa => qa.questionnaire_id === task.id);
+                    
+                    if (attempts.length > 0) {
+                        // Trier par date (plus récent d'abord)
+                        const sortedAttempts = [...attempts].sort((a, b) => 
+                            new Date(b.attempted_at) - new Date(a.attempted_at)
+                        );
+                        
+                        // Calculer les métriques
+                        const firstAttempt = sortedAttempts[sortedAttempts.length - 1]; // Plus ancienne
+                        const bestAttempt = sortedAttempts.reduce((best, current) => 
+                            current.percentage > best.percentage ? current : best
+                        , sortedAttempts[0]);
+                        
+                        qcmProgress.push({
+                            id: task.id,
+                            task_title: task.title,
+                            totalAttempts: attempts.length,
+                            firstAttemptScore: firstAttempt.percentage,
+                            bestScore: bestAttempt.percentage,
+                            lastAttemptDate: sortedAttempts[0].attempted_at
+                        });
+                    }
+                } else {
+                    // Exercice normal - avec versions
+                    (task.versions || []).forEach(version => {
+                        const key = `${task.id}-${version.id}`;
+                        const p = progressMap.get(key);
+                        const c = confidenceMap.get(version.id);
+                        
+                        exerciseProgress.push({
+                            id: key,
+                            versionId: version.id,
+                            task_title: task.title,
+                            version_name: version.name,
+                            attempts: p ? p.attempts : 0,
+                            first_time_seconds: p ? p.first_time_seconds : null,
+                            best_time_seconds: p ? p.best_time_seconds : null,
+                            completed_steps_history: p ? p.completed_steps_history : null,
+                            created_at: p ? p.created_at : new Date().toISOString(),
+                            confidence_before: c?.confidenceBefore || null,
+                            confidence_after: c?.confidenceAfter || null
+                        });
                     });
-                });
+                }
             });
-            setProgress(fullProgress);
+            
+            setProgress(exerciseProgress);
+            setQuestionnaireAttempts(qcmProgress);
             setConfidenceData(confidenceHistory);
             
             if (!progressError) {
@@ -358,9 +410,13 @@ const LearnerProgressPage = () => {
                 </div>
             )}
 
-            <Card>
+            {/* Section Exercices */}
+            <Card className="mb-6">
                 <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-xl">Détail de vos exercices</CardTitle>
+                    <CardTitle className="text-xl flex items-center">
+                        <Zap className="mr-2 h-5 w-5 text-primary" />
+                        Détail de vos exercices
+                    </CardTitle>
                     <Button variant="outline" size="sm" onClick={fetchProgressData} disabled={isLoading}>
                         <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
                         Rafraîchir
@@ -426,6 +482,68 @@ const LearnerProgressPage = () => {
                                     })
                                 ) : (
                                     <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">Aucune tâche disponible ou progression.</TableCell></TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </ScrollArea>
+                </CardContent>
+            </Card>
+
+            {/* Section QCM */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-xl flex items-center">
+                        <HelpCircle className="mr-2 h-5 w-5 text-blue-600" />
+                        Détail de vos QCM
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {progressError && (
+                        <div className="text-red-600 mb-2">Erreur : Impossible de charger les QCM.</div>
+                    )}
+                    <ScrollArea className="h-[400px]">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="bg-blue-50">
+                                    <TableHead>QCM / Version</TableHead>
+                                    <TableHead className="text-center">Nombre de tentatives</TableHead>
+                                    <TableHead className="text-center">Taux bonne réponse 1ère fois</TableHead>
+                                    <TableHead className="text-center">Meilleur taux bonne réponse</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {isLoading && questionnaireAttempts.length === 0 ? (
+                                    <TableRow><TableCell colSpan={4} className="text-center"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></TableCell></TableRow>
+                                ) : questionnaireAttempts.length > 0 ? (
+                                    questionnaireAttempts.map((qcm, idx) => (
+                                        <TableRow key={idx} className="hover:bg-blue-50/50">
+                                            <TableCell>
+                                                <p className="font-medium text-blue-900">{qcm.task_title}</p>
+                                                <p className="text-sm text-muted-foreground">{qcm.version_name}</p>
+                                            </TableCell>
+                                            <TableCell className="text-center font-semibold">{qcm.totalAttempts}</TableCell>
+                                            <TableCell className="text-center">
+                                                <span className={`font-semibold px-3 py-1 rounded-full ${
+                                                    qcm.firstAttemptScore >= 80 ? 'bg-green-100 text-green-700' :
+                                                    qcm.firstAttemptScore >= 50 ? 'bg-yellow-100 text-yellow-700' :
+                                                    'bg-red-100 text-red-700'
+                                                }`}>
+                                                    {qcm.firstAttemptScore}%
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                <span className={`font-semibold px-3 py-1 rounded-full ${
+                                                    qcm.bestScore >= 80 ? 'bg-green-100 text-green-700' :
+                                                    qcm.bestScore >= 50 ? 'bg-yellow-100 text-yellow-700' :
+                                                    'bg-red-100 text-red-700'
+                                                }`}>
+                                                    {qcm.bestScore}%
+                                                </span>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">Aucun QCM complété pour le moment.</TableCell></TableRow>
                                 )}
                             </TableBody>
                         </Table>

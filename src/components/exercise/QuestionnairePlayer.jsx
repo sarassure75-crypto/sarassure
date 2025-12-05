@@ -210,9 +210,9 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
         <CardContent className="pt-8 text-center">
           <div className="mb-6">
             {finalScore.percentage >= 80 ? (
-              <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+              <CheckCircle className="w-16 h-16 text-blue-600 mx-auto mb-4" />
             ) : (
-              <AlertCircle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
+              <AlertCircle className="w-16 h-16 text-blue-400 mx-auto mb-4" />
             )}
           </div>
           <h2 className="text-3xl font-bold mb-4">Résultat: {finalScore.percentage}%</h2>
@@ -234,17 +234,17 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
   const selectedAnswers = answers[currentQuestion.id] || [];
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle>
+    <Card className="w-full max-w-4xl mx-auto border-2 border-blue-500">
+      <CardHeader className="bg-blue-50">
+        <CardTitle className="text-blue-700">
           Question {currentQuestionIndex + 1} / {questions.length}
         </CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-6">
         {/* Instruction de la question */}
-        <div>
-          <h3 className="text-lg font-semibold mb-2">{currentQuestion.instruction}</h3>
+        <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-600">
+          <h3 className="text-xl font-bold text-blue-900 mb-2">{currentQuestion.instruction}</h3>
 
           {/* Image de la question (si image_choice ou mixed) */}
           {currentQuestion.imageId && ['image_choice', 'mixed'].includes(currentQuestion.questionType) && (
@@ -265,7 +265,7 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
             const isSelected = selectedAnswers.includes(choiceId);
 
             return (
-              <div key={choiceId} className="flex items-start gap-3">
+              <div key={choiceId} className={`flex items-start gap-3 p-3 rounded-lg border-2 transition-all ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
                 {currentQuestion.questionType === 'image_choice' || currentQuestion.questionType === 'image_text' ? (
                   // Radio button
                   <input
@@ -273,7 +273,7 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
                     name={`question-${currentQuestion.id}`}
                     checked={isSelected}
                     onChange={() => handleSelectChoice(choiceId)}
-                    className="w-4 h-4 mt-1 cursor-pointer"
+                    className="w-5 h-5 mt-1 cursor-pointer accent-blue-600"
                   />
                 ) : (
                   // Checkbox (mixed)
@@ -281,7 +281,7 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
                     type="checkbox"
                     checked={isSelected}
                     onChange={() => handleSelectChoice(choiceId)}
-                    className="w-4 h-4 mt-1 cursor-pointer"
+                    className="w-5 h-5 mt-1 cursor-pointer accent-blue-600"
                   />
                 )}
 
@@ -320,14 +320,14 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
             <Button
               onClick={submitAttempt}
               disabled={submitting}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-blue-600 hover:bg-blue-700"
             >
               {submitting ? 'Soumission...' : 'Soumettre'}
             </Button>
           ) : (
             <Button
-              variant="outline"
               onClick={goToNextQuestion}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               Suivant
               <ChevronRight className="w-4 h-4 ml-2" />

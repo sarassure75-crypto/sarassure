@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Loader2, AlertTriangle, Video, List } from 'lucide-react';
+import { ArrowRight, Loader2, AlertTriangle, Video, List, HelpCircle } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { fetchTasks, fetchTaskCategories } from '@/data/tasks';
 import { fetchImages } from '@/data/images';
@@ -89,7 +89,8 @@ const TaskListPage = () => {
   };
 
   const renderTaskCard = (task) => {
-    const IconComponent = LucideIcons[toPascalCase(task.icon_name)] || List;
+    const isQuestionnaire = task.task_type === 'questionnaire';
+    const IconComponent = isQuestionnaire ? HelpCircle : (LucideIcons[toPascalCase(task.icon_name)] || List);
     const pictogram = task.pictogram_app_image_id ? images.get(task.pictogram_app_image_id) : null;
 
     return (
@@ -99,14 +100,14 @@ const TaskListPage = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <Link to={`/tache/${task.id}`} className="block h-full">
-          <Card className="flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-primary/50">
+        <Link to={isQuestionnaire ? `/questionnaire/${task.id}` : `/tache/${task.id}`} className="block h-full">
+          <Card className={`flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-xl ${isQuestionnaire ? 'border-blue-500/50 hover:border-blue-500' : 'hover:border-primary/50'}`}>
             <CardHeader className="flex-row items-start gap-4 space-y-0 p-4">
-              <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center bg-muted rounded-lg border">
+              <div className={`w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-lg border ${isQuestionnaire ? 'bg-blue-50 border-blue-300' : 'bg-muted'}`}>
                 {pictogram ? (
                   <img src={pictogram.publicUrl} alt={pictogram.name} className="w-full h-full object-contain p-1" />
                 ) : (
-                  <IconComponent className="w-8 h-8 text-primary" />
+                  <IconComponent className={`w-8 h-8 ${isQuestionnaire ? 'text-blue-600' : 'text-primary'}`} />
                 )}
               </div>
               <div className="flex-grow">
@@ -127,8 +128,8 @@ const TaskListPage = () => {
                   <Video className="h-5 w-5 text-blue-500" />
                 </Button>
               )}
-              <Button variant="outline" size="sm">
-                Voir les étapes <ArrowRight className="ml-2 h-4 w-4" />
+              <Button variant="outline" size="sm" className={isQuestionnaire ? 'border-blue-500 text-blue-600 hover:bg-blue-50' : ''}>
+                {isQuestionnaire ? 'Faire le QCM' : 'Voir les étapes'} <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </CardFooter>
           </Card>

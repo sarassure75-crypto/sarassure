@@ -89,7 +89,7 @@ const AdminTaskForm = ({ task: initialTask, onSave, onCancel, onDelete }) => {
             </div>
             <div>
               <Label htmlFor="status">Statut</Label>
-              <Select value={task.creation_status || 'to_create'} onValueChange={(value) => handleSelectChange('creation_status', value)}>
+              <Select value={task.creation_status || 'draft'} onValueChange={(value) => handleSelectChange('creation_status', value)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {creationStatuses.map(s => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}

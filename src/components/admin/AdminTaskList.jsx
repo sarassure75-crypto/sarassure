@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PlusCircle, Edit, Trash2, ChevronDown, ChevronUp, HelpCircle, Settings2, HelpCircle as QuestionIcon } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, HelpCircle, HelpCircle as QuestionIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { creationStatuses } from '@/data/tasks';
 import * as LucideIcons from 'lucide-react';
@@ -15,7 +15,6 @@ const toPascalCase = (str) => {
 };
 
 const TaskItem = ({ task, onSelectTask, onDeleteTask, imagesMap }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
   const statusInfo = creationStatuses.find(s => s.id === task.creation_status) || { label: 'Inconnu', color: 'bg-gray-400' };
   const IconComponent = LucideIcons[toPascalCase(task.icon_name)] || null;
   const PictogramInfo = task.pictogram_app_image_id ? imagesMap.get(task.pictogram_app_image_id) : null;
@@ -23,7 +22,7 @@ const TaskItem = ({ task, onSelectTask, onDeleteTask, imagesMap }) => {
 
   return (
     <div className="border rounded-lg overflow-hidden">
-      <div className={`flex items-center p-4 hover:bg-muted/50 cursor-pointer ${isQuestionnaire ? 'bg-blue-50' : 'bg-card'}`} onClick={() => setIsExpanded(!isExpanded)}>
+      <div className={`flex items-center p-4 hover:bg-muted/50 ${isQuestionnaire ? 'bg-blue-50' : 'bg-card'}`}>
         <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center mr-4 ${isQuestionnaire ? 'bg-blue-100' : 'bg-primary/10'}`}>
           {isQuestionnaire ? (
             <QuestionIcon className="h-6 w-6 text-blue-600" />
@@ -52,18 +51,9 @@ const TaskItem = ({ task, onSelectTask, onDeleteTask, imagesMap }) => {
           <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); onDeleteTask(task.id); }}>
             <Trash2 className="h-4 w-4" />
           </Button>
-          <ChevronDown className={`h-5 w-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
         </div>
       </div>
 
-      {isExpanded && (
-        <div className="p-4 border-t bg-background text-center">
-            <Button onClick={(e) => { e.stopPropagation(); onSelectTask(task); }}>
-                <Settings2 className="mr-2 h-4 w-4" />
-                {isQuestionnaire ? 'Gérer le questionnaire' : 'Gérer les versions et étapes'}
-            </Button>
-        </div>
-      )}
     </div>
   );
 };
@@ -121,22 +111,50 @@ const AdminTaskList = ({ tasks, onSelectTask, onAddNewTask, onCreateQuestionnair
             {(() => {
               const questionnaires = tasks.filter(t => t.task_type === 'questionnaire');
               if (questionnaires.length === 0) return null;
+              
+              // Grouper les QCM par catégorie
+              const groupedQCM = questionnaires.reduce((acc, task) => {
+                const cat = task.category || 'Sans catégorie';
+                if (!acc[cat]) acc[cat] = [];
+                acc[cat].push(task);
+                return acc;
+              }, {});
+
+              const categoryOrder = ['all', ...categories.map(c => c.name)];
+              const otherCats = Object.keys(groupedQCM).filter(k => k !== 'Sans catégorie' && !categoryOrder.includes(k));
+              const orderedQCMKeys = [...categories.map(c => c.name), ...otherCats, 'Sans catégorie'].filter((v, i, a) => a.indexOf(v) === i && groupedQCM[v]);
+
+              const qcmKeysToRender = selectedCategory === 'all'
+                ? orderedQCMKeys
+                : [selectedCategory].filter(k => groupedQCM[k]);
+
               return (
                 <div>
                   <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-blue-700">
                     <QuestionIcon className="h-5 w-5" />
                     Questionnaires (QCM)
                   </h3>
-                  <div className="space-y-4">
-                    {questionnaires.map(task => (
-                      <TaskItem
-                        key={task.id}
-                        task={task}
-                        onSelectTask={onSelectTask}
-                        onDeleteTask={onDeleteTask}
-                        imagesMap={imagesMap}
-                      />
-                    ))}
+                  <div className="space-y-6">
+                    {qcmKeysToRender.map(catName => {
+                      const items = groupedQCM[catName] || [];
+                      if (!items || items.length === 0) return null;
+                      return (
+                        <div key={catName}>
+                          <h4 className="text-sm font-semibold mb-2 text-blue-600">{catName}</h4>
+                          <div className="space-y-4">
+                            {items.map(task => (
+                              <TaskItem
+                                key={task.id}
+                                task={task}
+                                onSelectTask={onSelectTask}
+                                onDeleteTask={onDeleteTask}
+                                imagesMap={imagesMap}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );

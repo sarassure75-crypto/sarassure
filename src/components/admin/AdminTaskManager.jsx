@@ -8,9 +8,11 @@ import { PlusCircle, RefreshCw, ChevronLeft, Loader2 } from 'lucide-react';
 import AdminTaskList from './AdminTaskList';
 import AdminTaskForm from './AdminTaskForm';
 import AdminVersionList from './AdminVersionList';
+import AdminQuestionnaireEditor from './AdminQuestionnaireEditor';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/components/ui/use-toast';
 import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '@/lib/supabaseClient';
 
 const AdminTaskManager = () => {
   const { tasks, images, categories, fetchAllData, isLoading, error, deleteTask, updateTask, createTask } = useAdmin();
@@ -26,15 +28,10 @@ const AdminTaskManager = () => {
   }, [view, fetchAllData]);
 
   const handleSelectTask = useCallback((task) => {
-    // Si c'est un questionnaire, rediriger vers la page de validation des QCM
-    if (task.task_type === 'questionnaire') {
-      navigate('/admin/validation/questionnaires');
-    } else {
-      // Sinon, ouvrir le formulaire d'édition normal
-      setSelectedTask(task);
-      setView('form');
-    }
-  }, [navigate]);
+    // Ouvrir le formulaire d'édition pour tous les types de tâches
+    setSelectedTask(task);
+    setView('form');
+  }, []);
 
   const handleAddNewTask = () => {
     const newTask = {
@@ -60,16 +57,144 @@ const AdminTaskManager = () => {
 
   const handleSaveTask = async (taskData) => {
     try {
-      const { isNew, ...dataToSave } = taskData;
+      const { isNew, questions, ...dataToSave } = taskData;
       let savedTask;
 
       if (isNew) {
         // Explicitly use createTask for new tasks
         savedTask = await createTask(dataToSave);
         toast({ title: "Tâche créée", description: "Vous pouvez maintenant ajouter des versions." });
+        
+        // Si c'est un QCM avec des questions, créer les questions et réponses
+        if (dataToSave.task_type === 'questionnaire' && questions && questions.length > 0) {
+          try {
+            console.log('=== DEBUG: Sauvegarde questions pour nouveau QCM ===');
+            console.log('Questions reçues:', JSON.stringify(questions, null, 2));
+            
+            // Créer les questions
+            const questionsToInsert = questions.map((q, index) => ({
+              task_id: savedTask.id,
+              instruction: q.instruction,
+              question_order: index + 1,
+              question_type: q.questionType,
+              image_id: q.imageId,
+              image_name: q.imageName
+            }));
+
+            const { data: createdQuestions, error: questionsError } = await supabase
+              .from('questionnaire_questions')
+              .insert(questionsToInsert)
+              .select();
+
+            if (questionsError) throw questionsError;
+            console.log('Questions créées:', createdQuestions);
+
+            // Créer les réponses pour chaque question
+            const choicesToInsert = [];
+            createdQuestions.forEach((createdQuestion, qIndex) => {
+              const originalQuestion = questions[qIndex];
+              if (originalQuestion.choices && originalQuestion.choices.length > 0) {
+                originalQuestion.choices.forEach((choice, cIndex) => {
+                  choicesToInsert.push({
+                    question_id: createdQuestion.id,
+                    text: choice.text,
+                    choice_order: cIndex + 1,
+                    is_correct: originalQuestion.correctAnswers.includes(choice.id),
+                    image_id: choice.imageId,
+                    image_name: choice.imageName
+                  });
+                });
+              }
+            });
+
+            if (choicesToInsert.length > 0) {
+              const { data: choicesData, error: choicesError } = await supabase
+                .from('questionnaire_choices')
+                .insert(choicesToInsert)
+                .select();
+
+              if (choicesError) throw choicesError;
+              console.log('Réponses créées:', choicesData);
+            }
+
+            toast({ title: "Questions sauvegardées", description: "Les questions ont été créées avec succès." });
+          } catch (stepError) {
+            console.error('Erreur sauvegarde questions:', stepError);
+            toast({ title: "Attention", description: "Tâche créée mais erreur sur les questions: " + stepError.message, variant: "destructive" });
+          }
+        }
       } else {
         // Use updateTask for existing tasks
         savedTask = await updateTask(taskData.id, dataToSave);
+        
+        // Si c'est un QCM avec des questions, mettre à jour les questions et réponses
+        if (taskData.task_type === 'questionnaire' && questions && questions.length > 0) {
+          try {
+            console.log('=== DEBUG: Mise à jour questions pour QCM existant ===');
+            console.log('Questions reçues:', JSON.stringify(questions, null, 2));
+
+            // Supprimer les anciennes questions (qui supprimera en cascade les réponses)
+            const { error: deleteError } = await supabase
+              .from('questionnaire_questions')
+              .delete()
+              .eq('task_id', taskData.id);
+            
+            if (deleteError) throw deleteError;
+            console.log('Anciennes questions supprimées');
+
+            // Créer les nouvelles questions
+            const questionsToInsert = questions.map((q, index) => ({
+              task_id: taskData.id,
+              instruction: q.instruction,
+              question_order: index + 1,
+              question_type: q.questionType,
+              image_id: q.imageId,
+              image_name: q.imageName
+            }));
+
+            const { data: createdQuestions, error: questionsError } = await supabase
+              .from('questionnaire_questions')
+              .insert(questionsToInsert)
+              .select();
+
+            if (questionsError) throw questionsError;
+            console.log('Nouvelles questions créées:', createdQuestions);
+
+            // Créer les réponses pour chaque question
+            const choicesToInsert = [];
+            createdQuestions.forEach((createdQuestion, qIndex) => {
+              const originalQuestion = questions[qIndex];
+              if (originalQuestion.choices && originalQuestion.choices.length > 0) {
+                originalQuestion.choices.forEach((choice, cIndex) => {
+                  choicesToInsert.push({
+                    question_id: createdQuestion.id,
+                    text: choice.text,
+                    choice_order: cIndex + 1,
+                    is_correct: originalQuestion.correctAnswers.includes(choice.id),
+                    image_id: choice.imageId,
+                    image_name: choice.imageName
+                  });
+                });
+              }
+            });
+
+            if (choicesToInsert.length > 0) {
+              const { data: choicesData, error: choicesError } = await supabase
+                .from('questionnaire_choices')
+                .insert(choicesToInsert)
+                .select();
+
+              if (choicesError) throw choicesError;
+              console.log('Réponses créées:', choicesData);
+            }
+
+            toast({ title: "Questions mises à jour", description: "Les questions ont été mises à jour avec succès." });
+          } catch (stepError) {
+            console.error('Erreur sauvegarde questions:', stepError);
+            toast({ title: "Attention", description: "Tâche sauvegardée mais erreur sur les questions: " + stepError.message, variant: "destructive" });
+          }
+        }
+        
         toast({ title: "Tâche enregistrée", description: "Les modifications ont été sauvegardées." });
       }
       
@@ -169,14 +294,26 @@ const AdminTaskManager = () => {
           ) : (
             selectedTask && (
               <div>
-                <AdminTaskForm
-                  key={selectedTask.id}
-                  task={selectedTask}
-                  onSave={handleSaveTask}
-                  onCancel={handleBackToList}
-                  onDelete={handleDeleteTask}
-                />
-                {!selectedTask.isNew && <AdminVersionList task={selectedTask} />}
+                {selectedTask.task_type === 'questionnaire' ? (
+                  <AdminQuestionnaireEditor
+                    key={selectedTask.id}
+                    task={selectedTask}
+                    onSave={handleSaveTask}
+                    onCancel={handleBackToList}
+                    onDelete={handleDeleteTask}
+                  />
+                ) : (
+                  <>
+                    <AdminTaskForm
+                      key={selectedTask.id}
+                      task={selectedTask}
+                      onSave={handleSaveTask}
+                      onCancel={handleBackToList}
+                      onDelete={handleDeleteTask}
+                    />
+                    {!selectedTask.isNew && <AdminVersionList task={selectedTask} />}
+                  </>
+                )}
               </div>
             )
           )}

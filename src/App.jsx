@@ -23,6 +23,7 @@ const PageLoader = () => (
 const TaskListPage = lazy(() => import('@/pages/TaskListPage'));
 const ExercisePage = lazy(() => import('@/pages/ExercisePage'));
 const ExerciseStepsPreviewPage = lazy(() => import('@/pages/ExerciseStepsPreviewPage'));
+const QuestionnairePlayerPage = lazy(() => import('@/pages/QuestionnairePlayerPage'));
 const AdminPage = lazy(() => import('@/pages/AdminPage'));
 const TrainerDashboardPage = lazy(() => import('@/pages/TrainerDashboardPage'));
 const TrainerFaqPage = lazy(() => import('@/pages/TrainerFaqPage'));
@@ -74,8 +75,9 @@ function AppContent() {
             <Route path="/" element={<Layout pwaMode={true} />}>
               <Route index element={<PwaHomePage />} />
               <Route path="taches" element={<ProtectedRoute roles={[USER_ROLES.LEARNER, USER_ROLES.TRAINER, USER_ROLES.ADMIN]}><TaskListPage /></ProtectedRoute>} />
-            <Route path="tache/:taskId" element={<ProtectedRoute roles={[USER_ROLES.LEARNER, USER_ROLES.TRAINER, USER_ROLES.ADMIN]}><ExerciseStepsPreviewPage /></ProtectedRoute>} />
-            <Route path="tache/:taskId/version/:versionId" element={<ProtectedRoute roles={[USER_ROLES.LEARNER, USER_ROLES.TRAINER, USER_ROLES.ADMIN]}><ExercisePage /></ProtectedRoute>} />
+              <Route path="questionnaire/:taskId" element={<ProtectedRoute roles={[USER_ROLES.LEARNER, USER_ROLES.TRAINER, USER_ROLES.ADMIN]}><QuestionnairePlayerPage /></ProtectedRoute>} />
+              <Route path="tache/:taskId" element={<ProtectedRoute roles={[USER_ROLES.LEARNER, USER_ROLES.TRAINER, USER_ROLES.ADMIN]}><ExerciseStepsPreviewPage /></ProtectedRoute>} />
+              <Route path="tache/:taskId/version/:versionId" element={<ProtectedRoute roles={[USER_ROLES.LEARNER, USER_ROLES.TRAINER, USER_ROLES.ADMIN]}><ExercisePage /></ProtectedRoute>} />
             <Route path="formateur" element={<ProtectedRoute roles={[USER_ROLES.TRAINER, USER_ROLES.ADMIN]}><TrainerDashboardPage /></ProtectedRoute>} />
             <Route path="formateur/faq" element={<ProtectedRoute roles={[USER_ROLES.TRAINER, USER_ROLES.ADMIN]}><TrainerFaqPage /></ProtectedRoute>} />
             <Route path="mon-suivi" element={<ProtectedRoute roles={[USER_ROLES.LEARNER]}><LearnerProgressPage /></ProtectedRoute>} />
@@ -106,6 +108,7 @@ function AppContent() {
         <Route path="devenir-contributeur" element={<ContributorInfoPage />} />
         
         <Route path="taches" element={<ProtectedRoute roles={[USER_ROLES.LEARNER, USER_ROLES.TRAINER, USER_ROLES.ADMIN]}><TaskListPage /></ProtectedRoute>} />
+        <Route path="questionnaire/:taskId" element={<ProtectedRoute roles={[USER_ROLES.LEARNER, USER_ROLES.TRAINER, USER_ROLES.ADMIN]}><QuestionnairePlayerPage /></ProtectedRoute>} />
         <Route path="tache/:taskId" element={<ProtectedRoute roles={[USER_ROLES.LEARNER, USER_ROLES.TRAINER, USER_ROLES.ADMIN]}><ExerciseStepsPreviewPage /></ProtectedRoute>} />
         <Route path="tache/:taskId/version/:versionId" element={<ProtectedRoute roles={[USER_ROLES.LEARNER, USER_ROLES.TRAINER, USER_ROLES.ADMIN]}><ExercisePage /></ProtectedRoute>} />
         
