@@ -463,9 +463,10 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                     <Select
                       value={question.imageId || 'none'}
                       onValueChange={(value) => {
-                        const img = images.find(i => i.id === value);
                         updateQuestion(question.id, 'imageId', value === 'none' ? null : value);
-                        updateQuestion(question.id, 'imageName', value === 'none' ? null : img?.file_path || null);
+                        // imageName is now just for display - we'll get file_path from app_images when needed
+                        const img = images.find(i => i.id === value);
+                        updateQuestion(question.id, 'imageName', value === 'none' ? null : img?.name || null);
                       }}
                     >
                       <SelectTrigger>
@@ -480,12 +481,18 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                         ))}
                       </SelectContent>
                     </Select>
-                    {question.imageName && (
-                      <img
-                        src={getImageUrl(question.imageName)}
-                        alt="Aperçu"
-                        className="mt-2 max-h-32 rounded border"
-                      />
+                    {question.imageId && (
+                      <div className="mt-2 p-2 bg-gray-100 rounded">
+                        <img
+                          src={getImageUrl(images.find(i => i.id === question.imageId)?.file_path)}
+                          alt="Aperçu"
+                          className="max-h-32 rounded border"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.parentElement.innerHTML = '<p class="text-xs text-gray-500">Image non disponible</p>';
+                          }}
+                        />
+                      </div>
                     )}
                   </div>
 
@@ -521,9 +528,10 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                           <Select
                             value={choice.imageId || 'none'}
                             onValueChange={(value) => {
-                              const img = images.find(i => i.id === value);
                               updateChoice(question.id, choice.id, 'imageId', value === 'none' ? null : value);
-                              updateChoice(question.id, choice.id, 'imageName', value === 'none' ? null : img?.file_path || null);
+                              // imageName is now just for display
+                              const img = images.find(i => i.id === value);
+                              updateChoice(question.id, choice.id, 'imageName', value === 'none' ? null : img?.name || null);
                             }}
                           >
                             <SelectTrigger className="h-8 text-xs">
