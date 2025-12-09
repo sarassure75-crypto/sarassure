@@ -643,6 +643,11 @@ const QuestionnaireCreation = () => {
                                       <button
                                         key={img.id}
                                         onClick={() => {
+                                          console.log(`[DEBUG-image_choice] Image sélectionnée: id="${img.id}", name="${img.name}", type=${typeof img.id}`);
+                                          if (!img.id) {
+                                            console.error('❌ Image ID is undefined or null!', img);
+                                            return;
+                                          }
                                           handleUpdateChoiceText(question.id, choice.id, 'imageId', img.id);
                                           handleUpdateChoiceText(question.id, choice.id, 'imageName', img.name);
                                         }}
@@ -778,11 +783,17 @@ const QuestionnaireCreation = () => {
                                 {images.map(img => (
                                   <button
                                     key={img.id}
+                                    disabled={!img || !img.id}
                                     onClick={() => {
-                                      handleUpdateQuestionText(question.id, 'imageId', img.id);
-                                      handleUpdateQuestionText(question.id, 'imageName', img.name);
+                                      if (img && img.id) {
+                                        console.log(`✅ Image de question sélectionnée: ${img.name} (ID: ${img.id})`);
+                                        handleUpdateQuestionText(question.id, 'imageId', img.id);
+                                        handleUpdateQuestionText(question.id, 'imageName', img.name || img.id);
+                                      } else {
+                                        console.error('❌ Image invalide - pas d\'ID:', img);
+                                      }
                                     }}
-                                    className="p-2 text-center rounded hover:bg-blue-100 border border-gray-200 hover:border-blue-400 transition-colors bg-white"
+                                    className="p-2 text-center rounded hover:bg-blue-100 border border-gray-200 hover:border-blue-400 transition-colors bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
                                     <img 
                                       src={img.publicUrl} 
@@ -863,6 +874,11 @@ const QuestionnaireCreation = () => {
                                           <button
                                             key={img.id}
                                             onClick={() => {
+                                              console.log(`[DEBUG] Image sélectionnée: id="${img.id}", name="${img.name}", type=${typeof img.id}`);
+                                              if (!img.id) {
+                                                console.error('❌ Image ID is undefined or null!', img);
+                                                return;
+                                              }
                                               handleUpdateChoiceText(question.id, choice.id, 'imageId', img.id);
                                               handleUpdateChoiceText(question.id, choice.id, 'imageName', img.name);
                                             }}
