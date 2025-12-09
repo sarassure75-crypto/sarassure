@@ -7,6 +7,7 @@ import '@/index.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { QueryClient, QueryClientProvider } from 'react-query';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 const queryClient = new QueryClient();
 
@@ -26,7 +27,7 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 root.render(
-  <>
+  <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
@@ -35,5 +36,5 @@ root.render(
         </BrowserRouter>
       </AuthProvider>
     </QueryClientProvider>
-  </>
+  </ErrorBoundary>
 );

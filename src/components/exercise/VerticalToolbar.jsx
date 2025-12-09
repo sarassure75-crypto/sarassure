@@ -55,6 +55,7 @@ const VerticalToolbar = ({
         onClick={onZoomToggle}
         className={buttonClass}
         title={isZoomActive ? "Désactiver la loupe" : "Activer la loupe"}
+        aria-label={isZoomActive ? "Désactiver la loupe" : "Activer la loupe"}
       >
         {isZoomActive ? <X className={iconSize} /> : <Search className={iconSize} />}
       </button>
@@ -64,6 +65,7 @@ const VerticalToolbar = ({
         onClick={onInstructionsToggle}
         className={buttonClass}
         title={showInstructions ? "Masquer les instructions" : "Afficher les instructions"}
+        aria-label={showInstructions ? "Masquer les instructions" : "Afficher les instructions"}
       >
         <Info className={iconSize} />
       </button>
@@ -73,6 +75,7 @@ const VerticalToolbar = ({
         onClick={onHideActionZone}
         className={buttonClass}
         title={hideActionZone ? "Afficher la zone d'action" : "Masquer la zone d'action"}
+        aria-label={hideActionZone ? "Afficher la zone d'action" : "Masquer la zone d'action"}
       >
         {hideActionZone ? <Eye className={iconSize} /> : <EyeOff className={iconSize} />}
       </button>
@@ -83,6 +86,7 @@ const VerticalToolbar = ({
           onClick={() => onPlayAudio(currentStep.instruction)}
           className={buttonClass}
           title="Lire l'instruction audio"
+          aria-label="Lire l'instruction audio"
         >
           <Volume2 className={iconSize} />
         </button>

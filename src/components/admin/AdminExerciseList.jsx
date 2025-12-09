@@ -67,10 +67,21 @@ const AdminExerciseList = ({ exercises, onAdd, onEdit, onDelete, onSelect, selec
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onEdit(exercise.id); }}>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={(e) => { e.stopPropagation(); onEdit(exercise.id); }}
+                        aria-label="Éditer l'exercice"
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); handleDeleteClick(exercise.id); }}>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="text-destructive hover:text-destructive" 
+                        onClick={(e) => { e.stopPropagation(); handleDeleteClick(exercise.id); }}
+                        aria-label="Supprimer l'exercice"
+                      >
                         {isLoading && deleteAlert.exerciseId === exercise.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                       </Button>
                     </div>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { USER_ROLES } from '@/data/users';
 import { Loader2 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 const DashboardRedirector = () => {
   const { currentUser, loading } = useAuth();
@@ -10,7 +11,7 @@ const DashboardRedirector = () => {
 
   useEffect(() => {
     if (!loading) {
-      console.log('🔍 DashboardRedirector - User:', currentUser); // DEBUG
+      logger.log('🔍 DashboardRedirector - User:', currentUser); // DEBUG
       if (currentUser) {
         switch (currentUser.role) {
           case USER_ROLES.ADMIN:
@@ -26,7 +27,7 @@ const DashboardRedirector = () => {
             navigate('/contributeur');
             break;
           default:
-            console.log('⚠️ Rôle inconnu:', currentUser.role); // DEBUG
+            logger.log('⚠️ Rôle inconnu:', currentUser.role); // DEBUG
             navigate('/');
             break;
         }

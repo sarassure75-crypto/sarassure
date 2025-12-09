@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { AlertTriangle, ChevronLeft, CheckCircle, XCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { logger } from '@/lib/logger';
 
 /**
  * QuestionnairePlayerPage
@@ -73,7 +74,7 @@ const QuestionnairePlayerPage = () => {
         .eq('task_id', taskId)
         .order('question_order');
       
-      console.log('🔍 Raw questionsData from DB:', questionsData);
+      logger.log('🔍 Raw questionsData from DB:', questionsData);
 
       if (questionsError) throw questionsError;
 
@@ -104,7 +105,7 @@ const QuestionnairePlayerPage = () => {
         }))
       }));
       
-      console.log('✅ Formatted questions:', formattedQuestions);
+      logger.log('✅ Formatted questions:', formattedQuestions);
 
       setQuestions(formattedQuestions);
     } catch (err) {
@@ -157,13 +158,13 @@ const QuestionnairePlayerPage = () => {
   const saveAttempt = async () => {
     try {
       if (!currentUser) {
-        console.error('Pas de utilisateur connecté');
+        logger.error('Pas de utilisateur connecté');
         return;
       }
 
-      console.log('=== DEBUG: Sauvegarde tentative QCM ===');
-      console.log('Task ID:', taskId);
-      console.log('Learner ID:', currentUser.id);
+      logger.log('=== DEBUG: Sauvegarde tentative QCM ===');
+      logger.log('Task ID:', taskId);
+      logger.log('Learner ID:', currentUser.id);
 
       const correctAnswersCount = questions.reduce((count, question) => {
         const selectedChoiceId = userAnswers[question.id];
@@ -175,7 +176,7 @@ const QuestionnairePlayerPage = () => {
       }, 0);
 
       const percentage = Math.round((correctAnswersCount / questions.length) * 100);
-      console.log('Percentage calculé:', percentage);
+      logger.log('Percentage calculé:', percentage);
 
       // Vérifier si l'utilisateur a déjà des tentatives
       const { data: existingAttempts, error: selectError } = await supabase
@@ -185,16 +186,16 @@ const QuestionnairePlayerPage = () => {
         .eq('learner_id', currentUser.id);
 
       if (selectError) {
-        console.error('Erreur lors de la recherche de tentatives:', selectError);
+        logger.error('Erreur lors de la recherche de tentatives:', selectError);
         throw selectError;
       }
 
-      console.log('Tentatives existantes:', existingAttempts);
+      logger.log('Tentatives existantes:', existingAttempts);
 
       if (existingAttempts && existingAttempts.length > 0) {
         // Mettre à jour la tentative existante
         const existingAttempt = existingAttempts[0];
-        console.log('Mise à jour tentative existante:', existingAttempt.id);
+        logger.log('Mise à jour tentative existante:', existingAttempt.id);
         
         const { error } = await supabase
           .from('questionnaire_attempts')
@@ -207,13 +208,13 @@ const QuestionnairePlayerPage = () => {
           .eq('id', existingAttempt.id);
 
         if (error) {
-          console.error('Erreur mise à jour:', error);
+          logger.error('Erreur mise à jour:', error);
           throw error;
         }
-        console.log('Tentative mise à jour avec succès');
+        logger.log('Tentative mise à jour avec succès');
       } else {
         // Créer une nouvelle tentative
-        console.log('Création nouvelle tentative');
+        logger.log('Création nouvelle tentative');
         const { data: insertData, error } = await supabase
           .from('questionnaire_attempts')
           .insert({
@@ -227,10 +228,10 @@ const QuestionnairePlayerPage = () => {
           .select();
 
         if (error) {
-          console.error('Erreur insertion:', error);
+          logger.error('Erreur insertion:', error);
           throw error;
         }
-        console.log('Tentative créée:', insertData);
+        logger.log('Tentative créée:', insertData);
       }
 
       toast({
