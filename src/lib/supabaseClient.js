@@ -21,17 +21,21 @@ import { createClient } from '@supabase/supabase-js';
     }
 
     export const getImageUrl = (filePath) => {
-      if (!filePath) return null;
+      if (!filePath) {
+        console.warn('getImageUrl called with empty filePath');
+        return null;
+      }
       try {
         const { data } = supabase.storage.from('images').getPublicUrl(filePath);
         // The publicUrl property is on data, not data.publicUrl
         if (data && data.publicUrl) {
+          console.log('✅ getImageUrl generated URL:', { filePath, url: data.publicUrl });
           return data.publicUrl;
         }
-        console.warn("URL publique non générée pour le chemin:", filePath);
+        console.warn("⚠️ URL publique non générée pour le chemin:", filePath, "data:", data);
         return null;
       } catch (error) {
-        console.error("Error getting public URL:", error.message, "for path:", filePath);
+        console.error("❌ Error getting public URL:", error.message, "for path:", filePath);
         return null;
       }
     };

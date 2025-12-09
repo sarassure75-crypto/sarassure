@@ -72,6 +72,8 @@ const QuestionnairePlayerPage = () => {
         `)
         .eq('task_id', taskId)
         .order('question_order');
+      
+      console.log('🔍 Raw questionsData from DB:', questionsData);
 
       if (questionsError) throw questionsError;
 
@@ -101,6 +103,8 @@ const QuestionnairePlayerPage = () => {
           isCorrect: c.is_correct
         }))
       }));
+      
+      console.log('✅ Formatted questions:', formattedQuestions);
 
       setQuestions(formattedQuestions);
     } catch (err) {
@@ -308,22 +312,26 @@ const QuestionnairePlayerPage = () => {
                 </CardHeader>
                 <CardContent className="p-6 space-y-6">
                   {/* Question Image - Conteneur dédié */}
-                  {currentQuestion.image?.filePath && (
-                    <div className="w-full bg-gradient-to-br from-blue-50 to-gray-50 border-2 border-blue-200 rounded-xl p-4">
-                      <p className="text-xs font-semibold text-blue-600 mb-2 uppercase tracking-wide">Image de la question</p>
-                      <div className="flex justify-center items-center min-h-40 bg-white rounded-lg overflow-hidden">
-                        <img
-                          src={getImageUrl(currentQuestion.image.filePath)}
-                          alt={currentQuestion.image.name}
-                          className="max-w-full max-h-56 object-contain"
-                          onError={(e) => {
-                            console.warn(`Failed to load image: ${currentQuestion.image.filePath}`);
-                            e.target.parentElement.innerHTML = '<div class="text-gray-400 text-sm">Image non disponible</div>';
-                          }}
-                        />
+                  {currentQuestion.image?.filePath && (() => {
+                    const imageUrl = getImageUrl(currentQuestion.image.filePath);
+                    console.log('🖼️ Question image URL:', { filePath: currentQuestion.image.filePath, url: imageUrl });
+                    return imageUrl && (
+                      <div className="w-full bg-gradient-to-br from-blue-50 to-gray-50 border-2 border-blue-200 rounded-xl p-4">
+                        <p className="text-xs font-semibold text-blue-600 mb-2 uppercase tracking-wide">Image de la question</p>
+                        <div className="flex justify-center items-center min-h-40 bg-white rounded-lg overflow-hidden">
+                          <img
+                            src={imageUrl}
+                            alt={currentQuestion.image.name}
+                            className="max-w-full max-h-56 object-contain"
+                            onError={(e) => {
+                              console.warn(`Failed to load image: ${currentQuestion.image.filePath}`);
+                              e.target.parentElement.innerHTML = '<div class="text-gray-400 text-sm">Image non disponible</div>';
+                            }}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {/* Choices - Conteneur */}
                   <div>
@@ -358,19 +366,22 @@ const QuestionnairePlayerPage = () => {
                             <span className="font-medium text-gray-800">{choice.text}</span>
                           </div>
                         </div>
-                        {choice.image?.filePath && (
-                          <div className="ml-8 bg-white border border-gray-200 rounded-lg p-2 overflow-hidden">
-                            <img
-                              src={getImageUrl(choice.image.filePath)}
-                              alt={choice.image.name}
-                              className="max-w-full h-auto max-h-32 object-contain mx-auto"
-                              onError={(e) => {
-                                console.warn(`Failed to load choice image: ${choice.image.filePath}`);
-                                e.target.style.display = 'none';
-                              }}
-                            />
-                          </div>
-                        )}
+                        {choice.image?.filePath && (() => {
+                          const imageUrl = getImageUrl(choice.image.filePath);
+                          return imageUrl && (
+                            <div className="ml-8 bg-white border border-gray-200 rounded-lg p-2 overflow-hidden">
+                              <img
+                                src={imageUrl}
+                                alt={choice.image.name}
+                                className="max-w-full h-auto max-h-32 object-contain mx-auto"
+                                onError={(e) => {
+                                  console.warn(`Failed to load choice image: ${choice.image.filePath}`);
+                                  e.target.style.display = 'none';
+                                }}
+                              />
+                            </div>
+                          );
+                        })()}
                       </div>
                       </motion.button>
                     ))}

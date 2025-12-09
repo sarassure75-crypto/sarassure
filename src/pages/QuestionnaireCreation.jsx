@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, getImageUrl } from '@/lib/supabaseClient';
 import { Plus, Trash2, X, Image as ImageIcon, HelpCircle } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -39,7 +39,14 @@ const QuestionnaireCreation = () => {
         .order('name');
 
       if (error) throw error;
-      setImages(data || []);
+      
+      // Ajouter la publicUrl pour chaque image
+      const imagesWithUrls = (data || []).map(img => ({
+        ...img,
+        publicUrl: getImageUrl(img.file_path)
+      }));
+      
+      setImages(imagesWithUrls);
     } catch (error) {
       console.error('Erreur chargement images QCM:', error);
       // Continuer même si aucune image disponible
@@ -625,7 +632,7 @@ const QuestionnaireCreation = () => {
                                         className="p-2 text-center rounded hover:bg-blue-100 border border-gray-200 hover:border-blue-400 transition-colors bg-white"
                                       >
                                         <img 
-                                          src={img.file_path} 
+                                          src={img.publicUrl} 
                                           alt={img.name}
                                           className="w-full h-20 object-cover rounded mb-1"
                                           onError={(e) => {
@@ -761,7 +768,7 @@ const QuestionnaireCreation = () => {
                                     className="p-2 text-center rounded hover:bg-blue-100 border border-gray-200 hover:border-blue-400 transition-colors bg-white"
                                   >
                                     <img 
-                                      src={img.file_path} 
+                                      src={img.publicUrl} 
                                       alt={img.name}
                                       className="w-full h-20 object-cover rounded mb-1"
                                       onError={(e) => {
@@ -845,7 +852,7 @@ const QuestionnaireCreation = () => {
                                             className="p-1 text-center rounded hover:bg-blue-100 border border-gray-200 hover:border-blue-400 transition-colors bg-white"
                                           >
                                             <img 
-                                              src={img.file_path} 
+                                              src={img.publicUrl} 
                                               alt={img.name}
                                               className="w-full h-16 object-cover rounded mb-1"
                                               onError={(e) => {

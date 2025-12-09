@@ -112,9 +112,9 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
 
       canvas.toBlob(async (blob) => {
         if (blob) {
-          const fileExtension = selectedFile.name.split('.').pop() || 'jpg';
+          const fileExtension = 'jpg'; // Always save as JPG for consistency
           const fileName = `${uuidv4()}.${fileExtension}`;
-          const filePath = `public/${fileName}`;
+          const filePath = `${category}/${fileName}`;
           
           const processedFile = new File([blob], fileName, {
             type: `image/${fileExtension === 'png' ? 'png' : 'jpeg'}`,

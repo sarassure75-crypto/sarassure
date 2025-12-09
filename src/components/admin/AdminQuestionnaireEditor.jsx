@@ -164,16 +164,31 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
 
   const loadQCMImages = async () => {
     try {
+      console.log('=== DEBUG: Démarrage loadQCMImages ===');
       const { data, error } = await supabase
         .from('app_images')
         .select('*')
         .eq('category', 'QCM')
         .order('name');
 
+      console.log('=== DEBUG: Réponse Supabase ===', { data, error });
+      
       if (error) throw error;
-      setImages(data || []);
+      
+      // Ajouter la publicUrl pour chaque image
+      const imagesWithUrls = (data || []).map(img => ({
+        ...img,
+        publicUrl: getImageUrl(img.file_path)
+      }));
+      
+      console.log('=== DEBUG: Images QCM chargées ===', imagesWithUrls);
+      setImages(imagesWithUrls);
+      
+      if (!imagesWithUrls || imagesWithUrls.length === 0) {
+        console.warn('⚠️ ATTENTION: Aucune image QCM trouvée en BD!');
+      }
     } catch (error) {
-      console.error('Erreur chargement images QCM:', error);
+      console.error('❌ Erreur chargement images QCM:', error);
     }
   };
 
@@ -484,7 +499,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                     {question.imageId && (
                       <div className="mt-2 p-2 bg-gray-100 rounded">
                         <img
-                          src={getImageUrl(images.find(i => i.id === question.imageId)?.file_path)}
+                          src={images.find(i => i.id === question.imageId)?.publicUrl}
                           alt="Aperçu"
                           className="max-h-32 rounded border"
                           onError={(e) => {
