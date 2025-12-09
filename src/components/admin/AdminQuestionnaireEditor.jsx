@@ -24,6 +24,8 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
   const [questions, setQuestions] = useState([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [images, setImages] = useState([]);
+  const [expandedImageChoices, setExpandedImageChoices] = useState({});
+  const [expandedQuestionImage, setExpandedQuestionImage] = useState(null);
   const { categories, isLoading } = useAdmin();
   const { toast } = useToast();
 
@@ -244,17 +246,17 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
   };
 
   const removeQuestion = (questionId) => {
-    setQuestions(questions.filter(q => q.id !== questionId));
+    setQuestions(prevQuestions => prevQuestions.filter(q => q.id !== questionId));
   };
 
   const updateQuestion = (questionId, field, value) => {
-    setQuestions(questions.map(q => 
+    setQuestions(prevQuestions => prevQuestions.map(q => 
       q.id === questionId ? { ...q, [field]: value } : q
     ));
   };
 
   const addChoice = (questionId) => {
-    setQuestions(questions.map(q => {
+    setQuestions(prevQuestions => prevQuestions.map(q => {
       if (q.id === questionId) {
         const newChoice = {
           id: `choice-${Date.now()}`,
@@ -269,7 +271,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
   };
 
   const removeChoice = (questionId, choiceId) => {
-    setQuestions(questions.map(q => {
+    setQuestions(prevQuestions => prevQuestions.map(q => {
       if (q.id === questionId) {
         return { 
           ...q, 
@@ -282,7 +284,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
   };
 
   const updateChoice = (questionId, choiceId, field, value) => {
-    setQuestions(questions.map(q => {
+    setQuestions(prevQuestions => prevQuestions.map(q => {
       if (q.id === questionId) {
         return {
           ...q,
@@ -296,7 +298,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
   };
 
   const toggleCorrectAnswer = (questionId, choiceId) => {
-    setQuestions(questions.map(q => {
+    setQuestions(prevQuestions => prevQuestions.map(q => {
       if (q.id === questionId) {
         const isCorrect = q.correctAnswers.includes(choiceId);
         return {
@@ -308,6 +310,19 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
       }
       return q;
     }));
+  };
+
+  // Toggle image picker visibility for a choice
+  const toggleImagePicker = (choiceId) => {
+    setExpandedImageChoices(prev => ({
+      ...prev,
+      [choiceId]: !prev[choiceId]
+    }));
+  };
+
+  // Toggle image picker visibility for a question
+  const toggleQuestionImagePicker = (questionId) => {
+    setExpandedQuestionImage(prev => prev === questionId ? null : questionId);
   };
 
   const handleSave = async () => {
