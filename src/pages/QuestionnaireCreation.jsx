@@ -31,14 +31,26 @@ const QuestionnaireCreation = () => {
 
   const loadImages = async () => {
     try {
-      // Charger uniquement les images de catégorie 'QCM'
-      const { data, error } = await supabase
+      // Charger uniquement les images de catégorie 'QCM', avec fallback à toutes les images
+      let { data, error } = await supabase
         .from('app_images')
         .select('id, name, file_path, description, category')
         .eq('category', 'QCM')
         .order('name');
 
       if (error) throw error;
+      
+      // If no QCM images found, load all images as fallback
+      if (!data || data.length === 0) {
+        console.warn('⚠️ Aucune image avec category="QCM". Chargement de TOUTES les images...');
+        const { data: allImages, error: allError } = await supabase
+          .from('app_images')
+          .select('id, name, file_path, description, category')
+          .order('name');
+
+        if (allError) throw allError;
+        data = allImages;
+      }
       
       // Ajouter la publicUrl pour chaque image
       const imagesWithUrls = (data || []).map(img => ({

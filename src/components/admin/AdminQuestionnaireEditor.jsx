@@ -165,15 +165,29 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
   const loadQCMImages = async () => {
     try {
       console.log('=== DEBUG: Démarrage loadQCMImages ===');
-      const { data, error } = await supabase
+      // Try to load QCM-specific images first, then fallback to all images if none found
+      let { data, error } = await supabase
         .from('app_images')
         .select('*')
         .eq('category', 'QCM')
         .order('name');
 
-      console.log('=== DEBUG: Réponse Supabase ===', { data, error });
+      console.log('=== DEBUG: Réponse Supabase (QCM category) ===', { data, error });
       
       if (error) throw error;
+      
+      // If no QCM images found, load all images as fallback
+      if (!data || data.length === 0) {
+        console.warn('⚠️ Aucune image avec category="QCM" trouvée. Chargement de TOUTES les images...');
+        const { data: allImages, error: allError } = await supabase
+          .from('app_images')
+          .select('*')
+          .order('name');
+        
+        if (allError) throw allError;
+        data = allImages;
+        console.log('=== DEBUG: Toutes les images chargées (fallback) ===', data);
+      }
       
       // Ajouter la publicUrl pour chaque image
       const imagesWithUrls = (data || []).map(img => ({
@@ -185,7 +199,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
       setImages(imagesWithUrls);
       
       if (!imagesWithUrls || imagesWithUrls.length === 0) {
-        console.warn('⚠️ ATTENTION: Aucune image QCM trouvée en BD!');
+        console.warn('⚠️ ATTENTION: Aucune image trouvée en BD!');
       }
     } catch (error) {
       console.error('❌ Erreur chargement images QCM:', error);
