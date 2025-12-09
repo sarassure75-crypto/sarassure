@@ -41,6 +41,8 @@ const QuestionnaireCreation = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [draftSaved, setDraftSaved] = useState(false);
+  const [expandedImageChoices, setExpandedImageChoices] = useState({}); // Track which choices are showing image picker
+  const [expandedQuestionImage, setExpandedQuestionImage] = useState(null); // Track which question is showing image picker for its image
 
   // Charger les images et catégories disponibles
   useEffect(() => {
@@ -203,14 +205,27 @@ const QuestionnaireCreation = () => {
     ));
   };
 
+  // Toggle image picker visibility for a choice
+  const toggleImagePicker = (choiceId) => {
+    setExpandedImageChoices(prev => ({
+      ...prev,
+      [choiceId]: !prev[choiceId]
+    }));
+  };
+
+  // Toggle image picker visibility for a question
+  const toggleQuestionImagePicker = (questionId) => {
+    setExpandedQuestionImage(prev => prev === questionId ? null : questionId);
+  };
+
   // Valider le formulaire
-  const validateForm = () => {
+  const validateForm = (questionsToValidate = questions) => {
     const errors = [];
     if (!title.trim()) errors.push('Le titre est requis');
     if (!category) errors.push('La catégorie est requise');
-    if (questions.length === 0) errors.push('Au moins une question est requise');
+    if (questionsToValidate.length === 0) errors.push('Au moins une question est requise');
     
-    questions.forEach((q, idx) => {
+    questionsToValidate.forEach((q, idx) => {
       if (!q.text.trim()) errors.push(`Question ${idx + 1}: le texte de la question est requis`);
       
       if (q.questionType === 'image_choice') {
@@ -295,7 +310,7 @@ const QuestionnaireCreation = () => {
 
   // Soumettre le questionnaire
   const handleSubmit = async () => {
-    const errors = validateForm();
+    const errors = validateForm(questions);
     if (errors.length > 0) {
       toast({
         title: 'Erreurs de validation',
@@ -654,26 +669,28 @@ const QuestionnaireCreation = () => {
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => handleAddChoice(question.id, choice.id)}
+                                    onClick={() => toggleImagePicker(choice.id)}
                                     className="text-blue-600 hover:text-blue-700"
                                   >
                                     Changer
                                   </Button>
                                 </div>
-                              ) : (
+                              ) : null}
+                              
+                              {!choice.imageName || expandedImageChoices[choice.id] ? (
                                 <div className="mb-3 max-h-60 overflow-y-auto border rounded-lg bg-gray-50">
                                   <div className="grid grid-cols-3 gap-2 p-2">
                                     {images.map(img => (
                                       <button
                                         key={img.id}
                                         onClick={() => {
-                                          console.log(`[DEBUG-image_choice] Image sélectionnée: id="${img.id}", name="${img.name}", type=${typeof img.id}`);
                                           if (!img.id) {
                                             console.error('❌ Image ID is undefined or null!', img);
                                             return;
                                           }
                                           handleUpdateChoiceText(question.id, choice.id, 'imageId', img.id);
                                           handleUpdateChoiceText(question.id, choice.id, 'imageName', img.name);
+                                          toggleImagePicker(choice.id); // Close picker after selection
                                         }}
                                         className="p-2 text-center rounded hover:bg-blue-100 border border-gray-200 hover:border-blue-400 transition-colors bg-white"
                                       >
@@ -690,7 +707,7 @@ const QuestionnaireCreation = () => {
                                     ))}
                                   </div>
                                 </div>
-                              )}
+                              ) : null}
                             </div>
                           );
                         })}
@@ -792,16 +809,15 @@ const QuestionnaireCreation = () => {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => {
-                                  handleUpdateQuestionText(question.id, 'imageId', null);
-                                  handleUpdateQuestionText(question.id, 'imageName', '');
-                                }}
+                                onClick={() => toggleQuestionImagePicker(question.id)}
                                 className="text-blue-600 hover:text-blue-700"
                               >
                                 Changer
                               </Button>
                             </div>
-                          ) : (
+                          ) : null}
+                          
+                          {!question.imageId || expandedQuestionImage === question.id ? (
                             <div className="max-h-60 overflow-y-auto border rounded-lg bg-gray-50">
                               <div className="grid grid-cols-3 gap-2 p-2">
                                 {images.map(img => (
@@ -813,6 +829,7 @@ const QuestionnaireCreation = () => {
                                         console.log(`✅ Image de question sélectionnée: ${img.name} (ID: ${img.id})`);
                                         handleUpdateQuestionText(question.id, 'imageId', img.id);
                                         handleUpdateQuestionText(question.id, 'imageName', img.name || img.id);
+                                        toggleQuestionImagePicker(question.id); // Close picker after selection
                                       } else {
                                         console.error('❌ Image invalide - pas d\'ID:', img);
                                       }
@@ -832,7 +849,7 @@ const QuestionnaireCreation = () => {
                                 ))}
                               </div>
                             </div>
-                          )}
+                          ) : null}
                         </div>
 
                         <div>
@@ -898,7 +915,6 @@ const QuestionnaireCreation = () => {
                                           <button
                                             key={img.id}
                                             onClick={() => {
-                                              console.log(`[DEBUG] Image sélectionnée: id="${img.id}", name="${img.name}", type=${typeof img.id}`);
                                               if (!img.id) {
                                                 console.error('❌ Image ID is undefined or null!', img);
                                                 return;
