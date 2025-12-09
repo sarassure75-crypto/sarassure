@@ -194,6 +194,14 @@ const QuestionnaireCreation = () => {
   const handleChangeQuestionType = (questionId, questionType) => {
     setQuestions(prevQuestions => prevQuestions.map(q => {
       if (q.id !== questionId) return q;
+      // When changing to image_choice, ensure all text fields are empty strings
+      if (questionType === 'image_choice') {
+        return { 
+          ...q, 
+          questionType,
+          choices: q.choices.map(c => ({ ...c, text: '' }))
+        };
+      }
       return { ...q, questionType };
     }));
   };
@@ -414,7 +422,7 @@ const QuestionnaireCreation = () => {
         // Créer les enregistrements de choix
         const choicesForQuestion = filledChoices.map((choice, choiceIdx) => ({
           question_id: insertedQuestion.id,
-          text: choice.text || '',  // Empty string instead of null for DB constraint
+          text: (choice.text && choice.text.trim()) || '',  // Always ensure empty string, never null
           choice_order: choiceIdx + 1,
           is_correct: choice.isCorrect,
           image_id: choice.imageId || null,
