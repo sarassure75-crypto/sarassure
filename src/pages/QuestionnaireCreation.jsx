@@ -8,6 +8,25 @@ import { supabase, getImageUrl } from '@/lib/supabaseClient';
 import { Plus, Trash2, X, Image as ImageIcon, HelpCircle } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
+/**
+ * QUESTIONNAIRE CREATION - Types de questions supportés:
+ * 
+ * 1. image_choice: 
+ *    - Question: TEXTE UNIQUEMENT
+ *    - Réponses: IMAGE UNIQUEMENT (au minimum 1 image, 1 marquée correcte)
+ *    - Cas d'usage: Trier/identifier des images
+ * 
+ * 2. image_text (ou text):
+ *    - Question: TEXTE UNIQUEMENT
+ *    - Réponses: TEXTE UNIQUEMENT (au minimum 1 texte, 1 marqué correct)
+ *    - Cas d'usage: Questions texte standard
+ * 
+ * 3. mixed:
+ *    - Question: IMAGE REQUISE
+ *    - Réponses: IMAGE + TEXTE (TOUS les champs requis pour chaque réponse)
+ *    - Cas d'usage: Questions avec contexte visuel et réponses libellées
+ */
+
 const QuestionnaireCreation = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
@@ -192,48 +211,50 @@ const QuestionnaireCreation = () => {
     if (questions.length === 0) errors.push('Au moins une question est requise');
     
     questions.forEach((q, idx) => {
-      if (!q.text.trim()) errors.push(`Question ${idx + 1}: le texte est requis`);
+      if (!q.text.trim()) errors.push(`Question ${idx + 1}: le texte de la question est requis`);
       
       if (q.questionType === 'image_choice') {
-        // Pour image_choice: vérifier qu'au moins une image est sélectionnée
+        // image_choice: Choix avec IMAGES UNIQUEMENT (pas de texte, juste des images)
+        // Au moins 1 choix avec image, au moins 1 marqué correct
         const choicesWithImages = q.choices.filter(c => c.imageId);
         if (choicesWithImages.length === 0) {
-          errors.push(`Question ${idx + 1}: au moins une image est requise`);
+          errors.push(`Question ${idx + 1} (Image Choice): au moins une image est requise`);
+        } else {
+          const correctAnswers = choicesWithImages.filter(c => c.isCorrect);
+          if (correctAnswers.length === 0) {
+            errors.push(`Question ${idx + 1} (Image Choice): au moins une réponse doit être marquée correcte`);
+          }
         }
-        
-        // Vérifier qu'au moins une réponse avec image est marquée correcte
-        const correctAnswers = choicesWithImages.filter(c => c.isCorrect);
-        if (correctAnswers.length === 0) {
-          errors.push(`Question ${idx + 1}: au moins une réponse doit être marquée correcte`);
-        }
-      } else if (q.questionType === 'image_text') {
-        // Pour image_text: vérifier qu'au moins un texte est saisi
+      } 
+      else if (q.questionType === 'image_text') {
+        // image_text: Texte UNIQUEMENT (pas d'image pour la question, juste du texte pour les réponses)
+        // Au moins 1 choix avec texte, au moins 1 marqué correct
         const choicesWithText = q.choices.filter(c => c.text.trim());
         if (choicesWithText.length === 0) {
-          errors.push(`Question ${idx + 1}: au moins une réponse texte est requise`);
+          errors.push(`Question ${idx + 1} (Texte): au moins une réponse texte est requise`);
+        } else {
+          const correctAnswers = choicesWithText.filter(c => c.isCorrect);
+          if (correctAnswers.length === 0) {
+            errors.push(`Question ${idx + 1} (Texte): au moins une réponse doit être marquée correcte`);
+          }
         }
+      } 
+      else if (q.questionType === 'mixed') {
+        // mixed: Image REQUISE pour la question + Réponses avec IMAGE + TEXTE
+        // La question DOIT avoir une image, chaque choix DOIT avoir une image ET du texte
         
-        // Vérifier qu'au moins une réponse texte est marquée correcte
-        const correctAnswers = choicesWithText.filter(c => c.isCorrect);
-        if (correctAnswers.length === 0) {
-          errors.push(`Question ${idx + 1}: au moins une réponse doit être marquée correcte`);
-        }
-      } else if (q.questionType === 'mixed') {
-        // Pour mixed: vérifier qu'au moins une image + texte est saisi
-        const choicesWithImages = q.choices.filter(c => c.imageId || c.text.trim());
-        if (choicesWithImages.length === 0) {
-          errors.push(`Question ${idx + 1}: au moins une réponse (image + texte) est requise`);
-        }
-        
-        // Vérifier qu'au moins une réponse est marquée correcte
-        const correctAnswers = choicesWithImages.filter(c => c.isCorrect);
-        if (correctAnswers.length === 0) {
-          errors.push(`Question ${idx + 1}: au moins une réponse doit être marquée correcte`);
-        }
-        
-        // Image question est requise pour mixed
         if (!q.imageId) {
-          errors.push(`Question ${idx + 1}: une image est requise pour ce type de question`);
+          errors.push(`Question ${idx + 1} (Mixte): l'image de la question est REQUISE`);
+        }
+        
+        const choicesWithBoth = q.choices.filter(c => c.imageId && c.text.trim());
+        if (choicesWithBoth.length === 0) {
+          errors.push(`Question ${idx + 1} (Mixte): chaque réponse DOIT avoir une image ET un label texte`);
+        } else {
+          const correctAnswers = choicesWithBoth.filter(c => c.isCorrect);
+          if (correctAnswers.length === 0) {
+            errors.push(`Question ${idx + 1} (Mixte): au moins une réponse doit être marquée correcte`);
+          }
         }
       }
     });
@@ -365,11 +386,14 @@ const QuestionnaireCreation = () => {
         let filledChoices = [];
         
         if (q.questionType === 'image_choice') {
+          // image_choice: Garder UNIQUEMENT les choix avec une image
           filledChoices = q.choices.filter(c => c.imageId);
         } else if (q.questionType === 'image_text') {
+          // image_text: Garder UNIQUEMENT les choix avec du texte
           filledChoices = q.choices.filter(c => c.text.trim());
         } else if (q.questionType === 'mixed') {
-          filledChoices = q.choices.filter(c => c.imageId || c.text.trim());
+          // mixed: Garder UNIQUEMENT les choix avec IMAGE ET TEXTE (les deux obligatoires)
+          filledChoices = q.choices.filter(c => c.imageId && c.text.trim());
         }
 
         // Créer les enregistrements de choix

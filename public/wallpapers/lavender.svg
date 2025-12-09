@@ -1,9 +1,0 @@
-<svg width="1080" height="1920" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="lavenderGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#E6E6FA;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#B19CD9;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-  <rect width="1080" height="1920" fill="url(#lavenderGrad)"/>
-</svg>
