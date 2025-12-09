@@ -6,6 +6,7 @@ import { getImageSubcategories, DEFAULT_SUBCATEGORIES } from "../data/images";
 import { actionTypes } from "../data/tasks";
 import { linkExerciseToRequest } from "../data/exerciseRequests";
 import CGUWarningBanner from "../components/CGUWarningBanner";
+import { sanitizeHTML } from "@/lib/validation";
 import { 
   Save, 
   Send, 

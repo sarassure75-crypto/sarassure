@@ -59,6 +59,8 @@ const ImageFromSupabase = forwardRef(({ imageId, alt, className, onLoad, style }
       className={className}
       style={style}
       onLoad={onLoad}
+      loading="lazy"
+      decoding="async"
       crossOrigin="anonymous"
     />
   );

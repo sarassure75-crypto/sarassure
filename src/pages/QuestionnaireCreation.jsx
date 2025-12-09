@@ -7,6 +7,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase, getImageUrl } from '@/lib/supabaseClient';
 import { Plus, Trash2, X, Image as ImageIcon, HelpCircle } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import { validateQuestionnaire, sanitizeHTML } from '@/lib/validation';
 
 /**
  * QUESTIONNAIRE CREATION - Types de questions supportés:
@@ -318,11 +319,22 @@ const QuestionnaireCreation = () => {
 
   // Soumettre le questionnaire
   const handleSubmit = async () => {
-    const errors = validateForm(questions);
-    if (errors.length > 0) {
+    // Validation stricte du questionnaire
+    try {
+      validateQuestionnaire({
+        title: title.trim(),
+        description: description.trim(),
+        questions: questions.map(q => ({
+          question_text: q.text,
+          question_type: q.questionType,
+          choices: q.choices,
+          is_correct: q.choices.some(c => c.isCorrect)
+        }))
+      });
+    } catch (validationError) {
       toast({
         title: 'Erreurs de validation',
-        description: errors.join('\n'),
+        description: validationError.message,
         variant: 'destructive'
       });
       return;

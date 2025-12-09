@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trash2, Edit, Search, X, Loader2, AlertTriangle, ImageDown as ImageUp, FolderPlus, FolderMinus, Layers, Paintbrush } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
+import { debounce } from '@/lib/performance';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -240,8 +241,18 @@ const AdminImageGallery = () => {
   const { toast } = useToast();
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [subcategoryFilter, setSubcategoryFilter] = useState('all');
+  
+  // Debounce search term
+  useEffect(() => {
+    const debouncedUpdate = debounce(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+    
+    debouncedUpdate();
+  }, [searchTerm]);
   const [availableSubcategories, setAvailableSubcategories] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editImage, setEditImage] = useState(null);
@@ -275,7 +286,7 @@ const AdminImageGallery = () => {
   const filteredImages = useMemo(() => {
     return images
       .filter(image => {
-        const term = searchTerm.toLowerCase();
+        const term = debouncedSearchTerm.toLowerCase();
         const matchesSearch = image.name?.toLowerCase().includes(term) ||
                              image.description?.toLowerCase().includes(term);
         const matchesCategory = categoryFilter === 'all' || image.category === categoryFilter;
@@ -283,7 +294,7 @@ const AdminImageGallery = () => {
         return matchesSearch && matchesCategory && matchesSubcategory;
       })
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  }, [images, searchTerm, categoryFilter, subcategoryFilter]);
+  }, [images, debouncedSearchTerm, categoryFilter, subcategoryFilter]);
 
 
   const handleImageProcessedAndUploaded = async (filePath, metadata, category = 'default') => {

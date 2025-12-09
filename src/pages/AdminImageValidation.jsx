@@ -29,13 +29,18 @@ export default function AdminImageValidation() {
   const [rejectReason, setRejectReason] = useState('');
   const [imageToReject, setImageToReject] = useState(null);
   const loadingRef = useRef(false);
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const ITEMS_PER_PAGE = 20;
 
   // Charger les images en attente de validation
   useEffect(() => {
     loadPendingImages();
   }, []);
 
-  const loadPendingImages = async () => {
+  const loadPendingImages = async (page = 0) => {
     // Protection contre les appels multiples simultanés
     if (loadingRef.current) {
       console.log('⚠️ Chargement déjà en cours, annulation...');
@@ -46,6 +51,19 @@ export default function AdminImageValidation() {
     setLoading(true);
     
     try {
+      // Compter le total d'images en attente
+      const { count, error: countError } = await supabase
+        .from('images_metadata')
+        .select('*', { count: 'exact', head: true })
+        .eq('moderation_status', 'pending');
+
+      if (countError) throw countError;
+      setTotalCount(count || 0);
+
+      // Charger la page demandée
+      const from = page * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+
       const { data, error } = await supabase
         .from('images_metadata')
         .select(`
@@ -59,11 +77,13 @@ export default function AdminImageValidation() {
           )
         `)
         .eq('moderation_status', 'pending')
-        .order('uploaded_at', { ascending: false });
+        .order('uploaded_at', { ascending: false })
+        .range(from, to);
 
       if (error) throw error;
       
       setImages(data || []);
+      setCurrentPage(page);
       if (data && data.length > 0) {
         setSelectedImage(data[0]);
         setCurrentIndex(0);
@@ -474,8 +494,36 @@ export default function AdminImageValidation() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full">
             <div className="p-4 border-b bg-gray-50">
               <h3 className="font-semibold text-gray-900">
-                En attente ({images.length})
+                En attente ({totalCount})
               </h3>
+              <p className="text-xs text-gray-500 mt-1">
+                Page {currentPage + 1} / {Math.ceil(totalCount / ITEMS_PER_PAGE)}
+              </p>
+            </div>
+
+            {/* Contrôles de pagination */}
+            <div className="flex items-center justify-between px-4 py-2 border-b bg-gray-50">
+              <button
+                onClick={() => loadPendingImages(currentPage - 1)}
+                disabled={currentPage === 0 || loading}
+                className="flex items-center gap-1 px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Page précédente"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Préc.
+              </button>
+              <span className="text-sm text-gray-600">
+                {currentPage * ITEMS_PER_PAGE + 1} - {Math.min((currentPage + 1) * ITEMS_PER_PAGE, totalCount)} / {totalCount}
+              </span>
+              <button
+                onClick={() => loadPendingImages(currentPage + 1)}
+                disabled={(currentPage + 1) * ITEMS_PER_PAGE >= totalCount || loading}
+                className="flex items-center gap-1 px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Page suivante"
+              >
+                Suiv.
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
 
             <div className="flex-1 overflow-y-auto">

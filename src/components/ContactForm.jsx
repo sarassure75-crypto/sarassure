@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { sendContactMessage } from '@/data/contactMessages';
 import { MessageSquare, Send } from 'lucide-react';
+import { sanitizeHTML, validateEmail } from '@/lib/validation';
 
 export default function ContactForm({ onSuccess }) {
   const [formData, setFormData] = useState({
@@ -36,9 +37,8 @@ export default function ContactForm({ onSuccess }) {
       return;
     }
 
-    // Validation email basique
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
+    // Validation email
+    if (!validateEmail(formData.email)) {
       toast({
         title: 'Email invalide',
         description: 'Veuillez entrer une adresse email valide',
@@ -49,7 +49,16 @@ export default function ContactForm({ onSuccess }) {
 
     try {
       setIsSubmitting(true);
-      const result = await sendContactMessage(formData);
+      
+      // Sanitize all inputs before sending
+      const sanitizedData = {
+        name: sanitizeHTML(formData.name.trim()),
+        email: formData.email.trim(),
+        subject: sanitizeHTML(formData.subject.trim()),
+        message: sanitizeHTML(formData.message.trim())
+      };
+      
+      const result = await sendContactMessage(sanitizedData);
       
       if (!result) {
         throw new Error('Erreur lors de l\'enregistrement du message');
