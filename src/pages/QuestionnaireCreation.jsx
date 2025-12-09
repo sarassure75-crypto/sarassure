@@ -53,11 +53,16 @@ const QuestionnaireCreation = () => {
       }
       
       // Ajouter la publicUrl pour chaque image
-      const imagesWithUrls = (data || []).map(img => ({
-        ...img,
-        publicUrl: getImageUrl(img.file_path)
-      }));
+      const imagesWithUrls = (data || []).map(img => {
+        const publicUrl = getImageUrl(img.file_path);
+        console.log(`📸 Image: ${img.name}, file_path: "${img.file_path}", publicUrl: ${publicUrl ? '✅ Generated' : '❌ NULL'}`);
+        return {
+          ...img,
+          publicUrl: publicUrl
+        };
+      });
       
+      console.log(`📊 QuestionnaireCreation: Chargé ${imagesWithUrls.length} images, ${imagesWithUrls.filter(i => i.publicUrl).length} avec URL valide`);
       setImages(imagesWithUrls);
     } catch (error) {
       console.error('Erreur chargement images QCM:', error);

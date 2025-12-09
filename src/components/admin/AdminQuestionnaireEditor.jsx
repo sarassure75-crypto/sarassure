@@ -190,12 +190,17 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
       }
       
       // Ajouter la publicUrl pour chaque image
-      const imagesWithUrls = (data || []).map(img => ({
-        ...img,
-        publicUrl: getImageUrl(img.file_path)
-      }));
+      const imagesWithUrls = (data || []).map(img => {
+        const publicUrl = getImageUrl(img.file_path);
+        console.log(`📸 Image: ${img.name}, file_path: "${img.file_path}", publicUrl: ${publicUrl ? '✅ Generated' : '❌ NULL'}`);
+        return {
+          ...img,
+          publicUrl: publicUrl
+        };
+      });
       
       console.log('=== DEBUG: Images QCM chargées ===', imagesWithUrls);
+      console.log(`📊 Total images: ${imagesWithUrls.length}, avec URL valide: ${imagesWithUrls.filter(i => i.publicUrl).length}`);
       setImages(imagesWithUrls);
       
       if (!imagesWithUrls || imagesWithUrls.length === 0) {
