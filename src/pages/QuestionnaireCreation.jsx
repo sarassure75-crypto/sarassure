@@ -130,19 +130,19 @@ const QuestionnaireCreation = () => {
 
   // Supprimer une question
   const handleDeleteQuestion = (questionId) => {
-    setQuestions(questions.filter(q => q.id !== questionId));
+    setQuestions(prevQuestions => prevQuestions.filter(q => q.id !== questionId));
   };
 
   // Mettre à jour le texte de la question
   const handleUpdateQuestionText = (questionId, field, value) => {
-    setQuestions(questions.map(q => 
+    setQuestions(prevQuestions => prevQuestions.map(q => 
       q.id === questionId ? { ...q, [field]: value } : q
     ));
   };
 
   // Ajouter une réponse supplémentaire
   const handleAddChoice = (questionId) => {
-    setQuestions(questions.map(q => {
+    setQuestions(prevQuestions => prevQuestions.map(q => {
       if (q.id !== questionId) return q;
       if (q.choices.length >= 6) return q;
       return {
@@ -154,7 +154,7 @@ const QuestionnaireCreation = () => {
 
   // Supprimer une réponse
   const handleDeleteChoice = (questionId, choiceId) => {
-    setQuestions(questions.map(q => {
+    setQuestions(prevQuestions => prevQuestions.map(q => {
       if (q.id !== questionId) return q;
       if (q.choices.length <= 2) return q;
       return {
@@ -166,7 +166,7 @@ const QuestionnaireCreation = () => {
 
   // Mettre à jour un champ d'une réponse (text, imageId, imageName, etc.)
   const handleUpdateChoiceText = (questionId, choiceId, field, value) => {
-    setQuestions(questions.map(q => {
+    setQuestions(prevQuestions => prevQuestions.map(q => {
       if (q.id !== questionId) return q;
       return {
         ...q,
@@ -179,7 +179,7 @@ const QuestionnaireCreation = () => {
 
   // Marquer/Demarquer la réponse correcte (plusieurs possibles)
   const handleToggleCorrect = (questionId, choiceId) => {
-    setQuestions(questions.map(q => {
+    setQuestions(prevQuestions => prevQuestions.map(q => {
       if (q.id !== questionId) return q;
       return {
         ...q,
@@ -192,7 +192,7 @@ const QuestionnaireCreation = () => {
 
   // Gérer le type de question
   const handleChangeQuestionType = (questionId, questionType) => {
-    setQuestions(questions.map(q => {
+    setQuestions(prevQuestions => prevQuestions.map(q => {
       if (q.id !== questionId) return q;
       return { ...q, questionType };
     }));
@@ -200,7 +200,7 @@ const QuestionnaireCreation = () => {
 
   // Sélectionner l'image pour image_text ou mixed
   const handleSelectImageForQuestion = (questionId, imageId, imageName) => {
-    setQuestions(questions.map(q =>
+    setQuestions(prevQuestions => prevQuestions.map(q =>
       q.id === questionId ? { ...q, imageId, imageName } : q
     ));
   };
