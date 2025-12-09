@@ -76,7 +76,7 @@ const Header = ({ pwaMode = false }) => {
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="SARASSURE Logo" className="h-10 w-auto" />
+            <img src="/logo_192.png" alt="SARASSURE Logo" className="h-10 w-auto" />
           </Link>
 
           {!pwaMode && (
@@ -129,7 +129,7 @@ const Header = ({ pwaMode = false }) => {
                 <div className="flex justify-between items-center mb-6">
                    <SheetClose asChild>
                      <Link to="/" className="flex items-center gap-2">
-                        <img src="/logo.png" alt="SARASSURE Logo" className="h-8 w-auto" />
+                        <img src="/logo_192.png" alt="SARASSURE Logo" className="h-8 w-auto" />
                      </Link>
                    </SheetClose>
                   <SheetClose asChild>

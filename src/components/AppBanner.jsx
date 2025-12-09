@@ -114,9 +114,9 @@ const AppBanner = () => {
           {/* Logo Circulaire */}
           <div className="flex-shrink-0">
             <div className="relative w-12 h-12 rounded-full bg-white/15 backdrop-blur-sm border-1.5 border-white/40 flex items-center justify-center shadow-lg flex-shrink-0 overflow-hidden">
-              {/* Logo SVG */}
+              {/* Logo PNG - optimized for mobile */}
               <img 
-                src="/logo.svg" 
+                src="/logo_192.png" 
                 alt="SARASSURE" 
                 className="w-full h-full object-cover"
               />
