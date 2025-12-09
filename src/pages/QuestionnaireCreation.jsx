@@ -414,7 +414,7 @@ const QuestionnaireCreation = () => {
         // Créer les enregistrements de choix
         const choicesForQuestion = filledChoices.map((choice, choiceIdx) => ({
           question_id: insertedQuestion.id,
-          text: choice.text || null,
+          text: choice.text || '',  // Empty string instead of null for DB constraint
           choice_order: choiceIdx + 1,
           is_correct: choice.isCorrect,
           image_id: choice.imageId || null,
@@ -442,7 +442,7 @@ const QuestionnaireCreation = () => {
         description: 'Votre questionnaire a été créé et soumis pour validation'
       });
 
-      navigate('/contributeur/mes-contributions');
+      navigate('/contributeur');  // Redirect to contributor dashboard instead of exercises list
     } catch (error) {
       console.error('Erreur:', error);
       toast({
