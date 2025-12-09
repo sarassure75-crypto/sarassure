@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, getImageUrl } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { CheckCircle, XCircle, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
@@ -249,8 +249,8 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
           {/* Image de la question (si image_choice ou mixed) */}
           {currentQuestion.imageId && ['image_choice', 'mixed'].includes(currentQuestion.questionType) && (
             <div className="mb-4">
-              <img
-                src={`https://qcimwwhiymhhidkxtpzt.supabase.co/storage/v1/object/public/app-images/${currentQuestion.imageName}`}
+              <ImageFromSupabase
+                imageId={currentQuestion.imageId}
                 alt="Question"
                 className="max-w-full h-auto rounded-lg max-h-80 mx-auto"
               />
@@ -289,8 +289,8 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
                   {/* Image de la réponse (si available) */}
                   {choice.imageId && ['image_choice', 'mixed'].includes(currentQuestion.questionType) && (
                     <div className="mb-2">
-                      <img
-                        src={`https://qcimwwhiymhhidkxtpzt.supabase.co/storage/v1/object/public/app-images/${choice.imageName}`}
+                      <ImageFromSupabase
+                        imageId={choice.imageId}
                         alt={choice.text || 'Réponse'}
                         className="w-20 h-20 rounded object-cover cursor-pointer"
                       />
