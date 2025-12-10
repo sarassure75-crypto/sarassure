@@ -353,7 +353,7 @@ export default function NewContribution() {
 
   // Nouvelle soumission normale
   const handleNewSubmission = async () => {
-    // Créer la tâche (exercice) dans la table tasks
+    // Créer la tâche (exercice) dans la table tasks avec task_type = 'normal'
     const { data: task, error: taskError } = await supabase
       .from('tasks')
       .insert([{
@@ -363,6 +363,7 @@ export default function NewContribution() {
         icon_name: 'help-circle',
         owner_id: currentUser.id,
         is_public: false,
+        task_type: 'normal',  // ✅ Ajouter le type de tâche
         creation_status: {
           status: 'pending',
           difficulty,
@@ -397,15 +398,48 @@ export default function NewContribution() {
         version_int: idx + 1
       }));
 
-      const { error: versionsError } = await supabase
-        .from('versions')
-        .insert(versionsData);
-
-      if (versionsError) throw versionsError;
+      // Essayer d'utiliser la RPC function si disponible, sinon fallback à insert direct
+      let versionsResult = [];
+      
+      for (const versionData of versionsData) {
+        try {
+          // Essayer la RPC function d'abord
+          const { data: rpcData, error: rpcError } = await supabase
+            .rpc('create_version', {
+              p_task_id: versionData.task_id,
+              p_description: versionData.name || null,
+              p_video_url: null
+            });
+          
+          if (!rpcError && rpcData && rpcData.length > 0) {
+            versionsResult.push(rpcData[0]);
+          } else {
+            // Fallback: insert direct
+            const { data: fallbackData, error: fallbackError } = await supabase
+              .from('versions')
+              .insert(versionData)
+              .select()
+              .single();
+            
+            if (fallbackError) throw fallbackError;
+            versionsResult.push(fallbackData);
+          }
+        } catch (versionError) {
+          console.warn('Erreur création version, fallback:', versionError);
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('versions')
+            .insert(versionData)
+            .select()
+            .single();
+          
+          if (fallbackError) throw fallbackError;
+          versionsResult.push(fallbackData);
+        }
+      }
 
       // Créer les étapes pour chaque version
       for (let i = 0; i < versions.length; i++) {
-        const versionData = versionsData[i];
+        const versionData = versionsResult[i];
         const versionSteps = versions[i].steps || [];
         
         if (versionSteps.length > 0) {
@@ -429,11 +463,47 @@ export default function NewContribution() {
             };
           });
 
-          const { error: stepsError } = await supabase
-            .from('steps')
-            .insert(stepsData);
-
-          if (stepsError) throw stepsError;
+          // Essayer la RPC function pour créer les étapes
+          let stepsCreated = [];
+          
+          for (const stepData of stepsData) {
+            try {
+              const { data: rpcData, error: rpcError } = await supabase
+                .rpc('create_step', {
+                  p_version_id: stepData.version_id,
+                  p_step_order: stepData.step_order,
+                  p_step_type: stepData.action_type,
+                  p_content_text: stepData.instruction || null,
+                  p_areas: {
+                    app_image_id: stepData.app_image_id,
+                    [stepData.action_type?.startsWith('swipe') || stepData.action_type === 'scroll' ? 'start_area' : 'target_area']: 
+                      stepData.target_area || stepData.start_area || stepData.text_input_area || null
+                  }
+                });
+              
+              if (!rpcError && rpcData && rpcData.length > 0) {
+                stepsCreated.push(rpcData[0]);
+              } else {
+                // Fallback: insert direct
+                const { data: fallbackData, error: fallbackError } = await supabase
+                  .from('steps')
+                  .insert(stepData)
+                  .select();
+                
+                if (fallbackError) throw fallbackError;
+                stepsCreated = stepsCreated.concat(fallbackData);
+              }
+            } catch (stepError) {
+              console.warn('Erreur création étape, fallback:', stepError);
+              const { data: fallbackData, error: fallbackError } = await supabase
+                .from('steps')
+                .insert(stepData)
+                .select();
+              
+              if (fallbackError) throw fallbackError;
+              stepsCreated = stepsCreated.concat(fallbackData);
+            }
+          }
         }
       }
     }
