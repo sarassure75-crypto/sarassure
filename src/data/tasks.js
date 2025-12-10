@@ -124,10 +124,35 @@ import { supabase } from '@/lib/supabaseClient';
     };
 
     export const addTask = async (taskData) => {
-      const { data, error } = await supabase.from('tasks').insert(taskData).select();
-      if (error) throw error;
-      if (!data || data.length === 0) throw new Error("La création de la tâche a échoué.");
-      return data[0];
+      try {
+        // Utiliser la RPC function sécurisée si disponible
+        const { data, error } = await supabase.rpc('create_task', {
+          p_title: taskData.title,
+          p_description: taskData.description || null,
+          p_icon_name: taskData.icon_name || null,
+          p_creation_status: taskData.creation_status || 'draft',
+          p_category_id: taskData.category_id || null,
+          p_task_type: taskData.task_type || 'normal'
+        });
+        
+        if (error) {
+          console.error('Error creating task via RPC:', error);
+          // Fallback: créer directement via table insert
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('tasks')
+            .insert(taskData)
+            .select();
+          if (fallbackError) throw fallbackError;
+          if (!fallbackData || fallbackData.length === 0) throw new Error("La création de la tâche a échoué.");
+          return fallbackData[0];
+        }
+        
+        if (!data || data.length === 0) throw new Error("La création de la tâche a échoué.");
+        return data[0];
+      } catch (error) {
+        console.error('Error in addTask:', error);
+        throw error;
+      }
     };
 
     export const updateTask = async (taskId, updates) => {
@@ -170,10 +195,43 @@ import { supabase } from '@/lib/supabaseClient';
     };
 
     export const upsertVersion = async (versionData) => {
-      const { data, error } = await supabase.from('versions').upsert(versionData, { onConflict: 'id' }).select();
-      if (error) throw error;
-      if (!data || data.length === 0) throw new Error("L'enregistrement de la version a échoué.");
-      return data[0];
+      try {
+        // Si c'est une nouvelle version (pas d'ID), utiliser la RPC function
+        if (!versionData.id) {
+          const { data, error } = await supabase.rpc('create_version', {
+            p_task_id: versionData.task_id,
+            p_description: versionData.description || null,
+            p_video_url: versionData.video_url || null
+          });
+          
+          if (error) {
+            console.error('Error creating version via RPC:', error);
+            // Fallback: créer via insert
+            const { data: fallbackData, error: fallbackError } = await supabase
+              .from('versions')
+              .insert(versionData)
+              .select();
+            if (fallbackError) throw fallbackError;
+            if (!fallbackData || fallbackData.length === 0) throw new Error("L'enregistrement de la version a échoué.");
+            return fallbackData[0];
+          }
+          
+          if (!data || data.length === 0) throw new Error("L'enregistrement de la version a échoué.");
+          return data[0];
+        } else {
+          // Pour les mises à jour, utiliser le upsert direct
+          const { data, error } = await supabase
+            .from('versions')
+            .upsert(versionData, { onConflict: 'id' })
+            .select();
+          if (error) throw error;
+          if (!data || data.length === 0) throw new Error("L'enregistrement de la version a échoué.");
+          return data[0];
+        }
+      } catch (error) {
+        console.error('Error in upsertVersion:', error);
+        throw error;
+      }
     };
 
     export const deleteVersion = async (versionId) => {
@@ -183,17 +241,65 @@ import { supabase } from '@/lib/supabaseClient';
     };
 
     export const upsertManySteps = async (stepsData) => {
-        const cleanStepsData = stepsData.map(({ isNew, ...rest }) => rest);
-        const { data, error } = await supabase
-            .from('steps')
-            .upsert(cleanStepsData, { onConflict: 'id' })
-            .select();
+        try {
+            const cleanStepsData = stepsData.map(({ isNew, ...rest }) => rest);
             
-        if (error) {
+            // Séparer les nouvelles étapes des mises à jour
+            const newSteps = cleanStepsData.filter(s => !s.id);
+            const updateSteps = cleanStepsData.filter(s => s.id);
+            
+            let allData = [];
+            
+            // Créer les nouvelles étapes via RPC
+            if (newSteps.length > 0) {
+              for (const step of newSteps) {
+                try {
+                  const { data, error } = await supabase.rpc('create_step', {
+                    p_version_id: step.version_id,
+                    p_step_order: step.step_order,
+                    p_step_type: step.step_type,
+                    p_content_text: step.content_text || null,
+                    p_areas: step.areas || null
+                  });
+                  
+                  if (error) {
+                    console.warn('RPC create_step failed, falling back to direct insert:', error);
+                    // Fallback: insérer directement
+                    const { data: fallbackData, error: fallbackError } = await supabase
+                      .from('steps')
+                      .insert(step)
+                      .select();
+                    if (fallbackError) throw fallbackError;
+                    allData = allData.concat(fallbackData);
+                  } else if (data) {
+                    allData = allData.concat(data);
+                  }
+                } catch (stepError) {
+                  console.error('Error creating step:', stepError);
+                  throw stepError;
+                }
+              }
+            }
+            
+            // Mettre à jour les étapes existantes
+            if (updateSteps.length > 0) {
+              const { data, error } = await supabase
+                .from('steps')
+                .upsert(updateSteps, { onConflict: 'id' })
+                .select();
+              
+              if (error) {
+                console.error("Error updating steps:", error);
+                throw error;
+              }
+              allData = allData.concat(data || []);
+            }
+            
+            return allData;
+        } catch (error) {
             console.error("Error in upsertManySteps:", error);
             throw error;
         }
-        return data;
     }
 
     export const deleteStep = async (stepId) => {
