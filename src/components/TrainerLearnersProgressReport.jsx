@@ -13,6 +13,8 @@ export default function TrainerLearnersProgressReport({ trainerId, learners }) {
     averageCompletionRate: 0,
     totalLearningTime: 0,
     mostActiveLearner: null,
+    totalQCMCompleted: 0,
+    averageQCMScore: 0,
   });
 
   useEffect(() => {
@@ -22,7 +24,20 @@ export default function TrainerLearnersProgressReport({ trainerId, learners }) {
   const loadProgressData = async () => {
     try {
       setLoading(true);
-      const learnerIds = learners.map(l => l.id);
+      
+      // Si learners n'est pas fourni, charger depuis la BD
+      let learnerIds = [];
+      if (learners && learners.length > 0) {
+        learnerIds = learners.map(l => l.id);
+      } else if (trainerId) {
+        // Charger les apprenants du formateur
+        const { data: learnersData } = await supabase
+          .from('profiles')
+          .select('id, first_name, email')
+          .eq('assigned_trainer_id', trainerId)
+          .eq('role', 'apprenant');
+        learnerIds = learnersData?.map(l => l.id) || [];
+      }
       
       if (learnerIds.length === 0) {
         setProgressData([]);
@@ -48,7 +63,18 @@ export default function TrainerLearnersProgressReport({ trainerId, learners }) {
         throw error;
       }
 
-      // Récupérer les versions pour avoir le nombre total - inclure le lien avec tasks
+      // Récupérer les apprenants si non fourni
+      let learnersToUse = learners || [];
+      if (!learners || learners.length === 0) {
+        const { data: learnersData } = await supabase
+          .from('profiles')
+          .select('id, first_name, email')
+          .eq('assigned_trainer_id', trainerId)
+          .eq('role', 'apprenant');
+        learnersToUse = learnersData || [];
+      }
+
+      // Récupérer les versions pour avoir le nombre total
       const { data: versions, error: versionsError } = await supabase
         .from('versions')
         .select('id, name, task_id');
@@ -62,7 +88,7 @@ export default function TrainerLearnersProgressReport({ trainerId, learners }) {
 
       // Organiser les données par apprenant
       const dataByLearner = {};
-      learners.forEach(learner => {
+      learnersToUse.forEach(learner => {
         dataByLearner[learner.id] = {
           id: learner.id,
           name: learner.first_name || 'Apprenant',
@@ -72,10 +98,13 @@ export default function TrainerLearnersProgressReport({ trainerId, learners }) {
           totalTime: 0,
           lastActivity: null,
           completionRate: 0,
+          qcmAttempts: 0,
+          qcmBestScore: 0,
+          qcmAverageScore: 0,
         };
       });
 
-      // Remplir les données
+      // Remplir les données d'exercices
       progressList?.forEach(progress => {
         if (dataByLearner[progress.user_id]) {
           dataByLearner[progress.user_id].completedExercises += 1;
@@ -89,6 +118,42 @@ export default function TrainerLearnersProgressReport({ trainerId, learners }) {
           }
         }
       });
+
+      // Récupérer les données QCM
+      const { data: qcmList, error: qcmError } = await supabase
+        .from('questionnaire_responses')
+        .select('learner_id, score, max_score, percentage, best_percentage, attempted_at')
+        .in('learner_id', learnerIds);
+
+      if (!qcmError && qcmList) {
+        // Traiter les données QCM
+        qcmList.forEach(qcm => {
+          if (dataByLearner[qcm.learner_id]) {
+            dataByLearner[qcm.learner_id].qcmAttempts += 1;
+            const percentage = qcm.best_percentage || qcm.percentage || 0;
+            dataByLearner[qcm.learner_id].qcmBestScore = Math.max(
+              dataByLearner[qcm.learner_id].qcmBestScore,
+              percentage
+            );
+            dataByLearner[qcm.learner_id].qcmAverageScore += (percentage || 0);
+            
+            const qcmActivity = new Date(qcm.attempted_at);
+            if (!dataByLearner[qcm.learner_id].lastActivity || 
+                qcmActivity > new Date(dataByLearner[qcm.learner_id].lastActivity)) {
+              dataByLearner[qcm.learner_id].lastActivity = qcm.attempted_at;
+            }
+          }
+        });
+
+        // Calculer la moyenne des QCM
+        Object.keys(dataByLearner).forEach(learnerId => {
+          if (dataByLearner[learnerId].qcmAttempts > 0) {
+            dataByLearner[learnerId].qcmAverageScore = Math.round(
+              dataByLearner[learnerId].qcmAverageScore / dataByLearner[learnerId].qcmAttempts
+            );
+          }
+        });
+      }
 
       // Calculer les taux de complétion
       const progressArray = Object.values(dataByLearner).map(learner => ({
@@ -105,12 +170,19 @@ export default function TrainerLearnersProgressReport({ trainerId, learners }) {
       const mostActive = progressArray.reduce((max, l) => 
         l.completedExercises > (max?.completedExercises || 0) ? l : max, null);
 
+      const totalQCM = progressArray.reduce((sum, l) => sum + l.qcmAttempts, 0);
+      const averageQCMScore = progressArray.length > 0 && totalQCM > 0
+        ? Math.round(progressArray.reduce((sum, l) => sum + l.qcmAverageScore, 0) / progressArray.filter(l => l.qcmAttempts > 0).length)
+        : 0;
+
       setProgressData(progressArray);
       setStats({
         totalExercisesCompleted: totalCompleted,
         averageCompletionRate: averageRate,
         totalLearningTime: totalTime,
         mostActiveLearner: mostActive,
+        totalQCMCompleted: totalQCM,
+        averageQCMScore: averageQCMScore,
       });
     } catch (error) {
       console.error('Erreur lors du chargement du suivi:', error);
@@ -150,7 +222,7 @@ export default function TrainerLearnersProgressReport({ trainerId, learners }) {
       className="space-y-6"
     >
       {/* Stats globales */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
@@ -204,6 +276,31 @@ export default function TrainerLearnersProgressReport({ trainerId, learners }) {
             <p className="text-xs text-gray-500 mt-1">
               {stats.mostActiveLearner ? `${stats.mostActiveLearner.completedExercises} exercices` : 'Aucune donnée'}
             </p>
+          </CardContent>
+        </Card>
+
+        {/* QCM Stats */}
+        <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-indigo-700 flex items-center gap-2">
+              📝 Total QCM
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-indigo-900">{stats.totalQCMCompleted}</div>
+            <p className="text-xs text-indigo-700 mt-1">QCM tentés</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-violet-50 to-violet-100 border-violet-200">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-violet-700 flex items-center gap-2">
+              ✓ Score Moyen QCM
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-violet-900">{stats.averageQCMScore}%</div>
+            <p className="text-xs text-violet-700 mt-1">Score moyen</p>
           </CardContent>
         </Card>
       </div>

@@ -10,6 +10,7 @@ import AdminErrorReportViewer from '@/components/admin/AdminErrorReportViewer';
 import AdminContactManager from '@/components/admin/AdminContactManager';
 import AdminTrash from '@/components/admin/AdminTrash';
 import AdminCategoryManager from '@/components/admin/AdminCategoryManager';
+import AdminLearnerReviews from '@/components/admin/AdminLearnerReviews';
 import ExerciseRequestsManager from '@/components/admin/ExerciseRequestsManager';
 import AdminPointsManager from '@/components/admin/AdminPointsManager';
 import AdminQuestionnaireValidation from '@/components/admin/AdminQuestionnaireValidation';
@@ -19,10 +20,12 @@ import AdminExerciseValidationDebug from './AdminExerciseValidationDebug';
 import AdminTabNavigation from '@/components/admin/AdminTabNavigation';
 import { useAdminCounters } from '@/hooks/useAdminCounters';
 import { Home, Image, ListTodo, Users, MessageSquare, AlertTriangle, Mail, Trash, LayoutGrid, CheckCircle, DollarSign, Zap } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AdminPage = () => {
     const location = useLocation();
     const navigate = useNavigateRouter();
+    const { currentUser } = useAuth();
     const pathSegment = location.pathname.split('/admin/')[1] || 'dashboard';
     
     // Convertir les chemins en IDs d'onglet
@@ -36,6 +39,7 @@ const AdminPage = () => {
     else if (pathSegment === 'revenus') currentTab = 'revenus';
     else if (pathSegment === 'points') currentTab = 'points';
     else if (pathSegment === 'requests') currentTab = 'requests';
+    else if (pathSegment === 'reviews') currentTab = 'reviews';
     else if (pathSegment === 'users') currentTab = 'users';
     else if (pathSegment === 'faq') currentTab = 'faq';
     else if (pathSegment === 'errors') currentTab = 'errors';
@@ -69,6 +73,7 @@ const AdminPage = () => {
                         <Route path="validation/exercices" element={<AdminExerciseValidation />} />
                         <Route path="validation/questionnaires" element={<AdminQuestionnaireValidation />} />
                         <Route path="requests" element={<ExerciseRequestsManager />} />
+                        <Route path="reviews" element={<AdminLearnerReviews currentUser={currentUser} />} />
                         <Route path="users" element={<AdminUserManagement />} />
                         <Route path="faq" element={<AdminFaqManager />} />
                         <Route path="errors" element={<AdminErrorReportViewer />} />

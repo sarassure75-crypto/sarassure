@@ -264,10 +264,15 @@ import { supabase } from '@/lib/supabaseClient';
                   
                   if (error) {
                     console.warn('RPC create_step failed, falling back to direct insert:', error);
-                    // Fallback: insérer directement
+                    // Fallback: insérer directement avec created_at
+                    const stepWithTimestamp = {
+                      ...step,
+                      created_at: step.created_at || new Date().toISOString(),
+                      updated_at: step.updated_at || new Date().toISOString()
+                    };
                     const { data: fallbackData, error: fallbackError } = await supabase
                       .from('steps')
-                      .insert(step)
+                      .insert(stepWithTimestamp)
                       .select();
                     if (fallbackError) throw fallbackError;
                     allData = allData.concat(fallbackData);

@@ -5,7 +5,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient';
-import { BarChart3, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { BarChart3, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
+import { getTrainerLicenses } from '@/data/licenses';
 
 export default function TrainerLicensesOverview({ trainerId }) {
   const [licenses, setLicenses] = useState({});
@@ -23,30 +24,40 @@ export default function TrainerLicensesOverview({ trainerId }) {
     try {
       setLoading(true);
 
-      // Récupérer les licences achetées par le formateur
-      const { data: purchasesData, error: purchasesError } = await supabase
-        .from('license_purchases')
-        .select('*')
-        .eq('trainer_id', trainerId);
+      // Récupérer les licences du formateur avec les catégories
+      const licensesData = await getTrainerLicenses(trainerId);
 
-      if (purchasesError) throw purchasesError;
+      if (!licensesData || licensesData.length === 0) {
+        setLicenses({});
+        setLearnerLicenses([]);
+        return;
+      }
 
-      // Compter les licences par catégorie
-      const licenseCounts = {};
-      purchasesData?.forEach(purchase => {
-        const categoryId = purchase.category_id;
-        licenseCounts[categoryId] = (licenseCounts[categoryId] || 0) + purchase.quantity;
+      // Transformer les données
+      const licensesMap = {};
+      licensesData.forEach(license => {
+        const categoryId = license.category_id;
+        const categoryName = license.category?.name || `Catégorie ${categoryId}`;
+        
+        licensesMap[categoryId] = {
+          name: categoryName,
+          is_active: license.is_active,
+          expires_at: license.expires_at,
+          created_at: license.created_at
+        };
       });
 
-      setLicenses(licenseCounts);
-      setLearnerLicenses([]); // Pas d'apprenants détaillés pour maintenant
+      setLicenses(licensesMap);
+      setLearnerLicenses([]);
     } catch (error) {
-      console.error('Erreur:', error);
+      console.error('Erreur lors du chargement des licences:', error);
       toast({
         title: 'Erreur',
         description: error.message || 'Impossible de charger les données',
         variant: 'destructive'
       });
+      setLicenses({});
+      setLearnerLicenses([]);
     } finally {
       setLoading(false);
     }
@@ -80,54 +91,61 @@ export default function TrainerLicensesOverview({ trainerId }) {
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Vous n'avez pas encore acheté de licences. Rendez-vous dans l'onglet "Acheter des licences" pour en acquérir.
+                Vous n'avez pas encore de licences. Rendez-vous dans l'onglet "Acheter des licences" pour en acquérir.
               </AlertDescription>
             </Alert>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {Object.entries(licenses).map(([categoryId, total]) => {
-                const attributed = attributedLicenses[categoryId] || 0;
-                const remaining = total - attributed;
-                const percentage = total > 0 ? Math.round((attributed / total) * 100) : 0;
-
+              {Object.entries(licenses).map(([categoryId, licenseInfo]) => {
+                const isExpired = licenseInfo.expires_at && new Date(licenseInfo.expires_at) < new Date();
+                const isActive = licenseInfo.is_active && !isExpired;
+                
                 return (
                   <div
                     key={categoryId}
-                    className="p-4 border rounded-lg space-y-3 bg-gradient-to-br from-muted/50 to-muted/20"
+                    className={`p-4 border rounded-lg space-y-3 ${
+                      isActive 
+                        ? 'bg-gradient-to-br from-green-50 to-green-100 border-green-200' 
+                        : 'bg-gradient-to-br from-red-50 to-red-100 border-red-200'
+                    }`}
                   >
                     <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-sm">Catégorie {categoryId}</h3>
+                      <h3 className="font-semibold text-sm">{licenseInfo.name}</h3>
                       <Badge
-                        variant={remaining > 0 ? 'default' : 'secondary'}
-                        className="text-xs"
+                        className={isActive ? 'bg-green-600' : 'bg-red-600'}
+                        variant="default"
                       >
-                        {remaining > 0 ? 'Disponibles' : 'Épuisées'}
+                        {isActive ? 'Active' : isExpired ? 'Expirée' : 'Inactive'}
                       </Badge>
                     </div>
 
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Achetées</span>
-                        <span className="font-bold">{total}</span>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Statut</span>
+                        <span className="font-medium">
+                          {isActive ? '✓ Active' : '✗ Inactive'}
+                        </span>
                       </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Attribuées</span>
-                        <span className="font-bold text-green-600">{attributed}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Disponibles</span>
-                        <span className="font-bold text-blue-600">{remaining}</span>
+                      
+                      {licenseInfo.expires_at && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            Expire le
+                          </span>
+                          <span className="font-medium">
+                            {new Date(licenseInfo.expires_at).toLocaleDateString('fr-FR')}
+                          </span>
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Créée le</span>
+                        <span className="font-medium">
+                          {new Date(licenseInfo.created_at).toLocaleDateString('fr-FR')}
+                        </span>
                       </div>
                     </div>
-
-                    {/* Barre de progression */}
-                    <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
-                      <div
-                        className="h-full bg-green-600 transition-all duration-300"
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground text-center">{percentage}% attribuées</p>
                   </div>
                 );
               })}

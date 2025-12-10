@@ -456,12 +456,12 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
       )}
 
       {/* Image avec zone */}
-      <div ref={containerRef} className="relative mx-auto border-4 border-gray-400 rounded-lg bg-gray-900 overflow-hidden shadow-2xl" style={{ maxWidth: '360px', maxHeight: '640px', aspectRatio: '9/16' }}>
+      <div ref={containerRef} className="relative mx-auto border-4 border-gray-400 rounded-lg bg-gray-900 overflow-auto shadow-2xl" style={{ maxWidth: '100%', maxHeight: '85vh', aspectRatio: '9/16' }}>
         <img
           ref={imageRef}
           src={imageUrl}
           alt="Aperçu de l'étape"
-          className="w-full h-full object-cover select-none"
+          className="w-full h-full object-contain select-none"
           onDragStart={(e) => e.preventDefault()}
         />
         {localArea && (
