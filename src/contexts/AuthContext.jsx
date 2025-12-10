@@ -22,8 +22,8 @@ export const AuthProvider = ({ children }) => {
       const userWithProfile = profile ? { ...user, ...profile } : user;
       setCurrentUser(userWithProfile);
     } catch (error) {
-      console.error("Error fetching profile on auth state change:", error);
-      setCurrentUser(user); // Fallback to session user if profile fetch fails
+      console.error("Error fetching profile:", error);
+      setCurrentUser(user);
     }
   }, []);
 
@@ -49,26 +49,35 @@ export const AuthProvider = ({ children }) => {
     return () => {
       subscription?.unsubscribe();
     };
-  }, []); // Retirer la dépendance fetchProfile pour éviter les re-renders inutiles
+  }, [fetchProfile]);
 
   const loginWithLearnerCode = async (learnerCode) => {
+    console.log('🔍 Recherche du code apprenant:', learnerCode);
+    
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('email')
+      .select('email, learner_code, role')
       .eq('learner_code', learnerCode)
       .single();
 
+    console.log('📊 Résultat recherche profile:', { profile, profileError });
+
     if (profileError || !profile) {
+      console.error('❌ Code non trouvé dans la table profiles');
       throw new Error("Code apprenant invalide.");
     }
+
+    console.log('✅ Profile trouvé, tentative de connexion avec:', profile.email);
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email: profile.email,
       password: learnerCode,
     });
 
+    console.log('🔐 Résultat connexion:', { data: data?.user?.email, error });
+
     if (error) {
-      console.error("Learner login failed:", error.message);
+      console.error("❌ Échec connexion:", error.message);
       throw new Error("La connexion a échoué. Veuillez vérifier votre code et réessayer.");
     }
 

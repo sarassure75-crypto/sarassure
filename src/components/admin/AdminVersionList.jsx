@@ -152,7 +152,7 @@ const AdminVersionList = ({ task }) => {
 
     {/* Alert Dialog for delete confirmation */}
     <AlertDialog open={!!deleteConfirmVersion} onOpenChange={(open) => !open && setDeleteConfirmVersion(null)}>
-      <AlertDialogContent>
+      <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
         <AlertDialogHeader>
           <AlertDialogTitle>Êtes-vous sûr(e) ?</AlertDialogTitle>
           <AlertDialogDescription>

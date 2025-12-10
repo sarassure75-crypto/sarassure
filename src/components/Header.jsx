@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/s
 import { Menu, X, User, LogOut, UserCog, LayoutDashboard, BookOpen, HelpCircle, BarChart3, Download, MessageSquare as MessageSquareWarning, FileText, Image, Folder } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { USER_ROLES } from '@/data/users';
+import ThemeSwitcher from '@/components/ui/ThemeSwitcher';
 import LearnerCredentialsModal from '@/components/LearnerCredentialsModal';
 
 const Header = ({ pwaMode = false }) => {
@@ -91,6 +92,7 @@ const Header = ({ pwaMode = false }) => {
 
           <div className="flex items-center gap-2">
             {deferredPrompt && !pwaMode && (
+                  <ThemeSwitcher />
               <Button variant="outline" size="sm" onClick={handleInstallPrompt}>
                 <Download className="mr-2 h-4 w-4" />
                 Installer

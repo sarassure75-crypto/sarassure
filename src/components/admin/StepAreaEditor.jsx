@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 
 // Convert RGB string to HEX for color input
 const rgbToHex = (rgb) => {
@@ -24,9 +25,10 @@ const ResizableArea = ({ area, imageDimensions, onMouseDown, onResizeMouseDown }
   const widthPx = (area.width_percent || 0) * imageDimensions.width / 100;
   const heightPx = (area.height_percent || 0) * imageDimensions.height / 100;
 
-  // Get color with opacity
-  const color = area.color || "rgb(239, 68, 68)";
-  const opacity = area.opacity !== undefined ? area.opacity : 0.5;
+  // Get color with opacity - if not visible, use opacity 0
+  const color = area.color || "rgb(59, 130, 246)";
+  const isVisible = area.is_visible !== undefined ? area.is_visible : true;
+  const opacity = isVisible ? (area.opacity !== undefined ? area.opacity : 0.5) : 0;
   const backgroundColor = `${color.replace(')', `, ${opacity})`)}`;
   const solidColor = color;
 
@@ -37,27 +39,55 @@ const ResizableArea = ({ area, imageDimensions, onMouseDown, onResizeMouseDown }
     height: `${heightPx}px`,
     backgroundColor: backgroundColor,
     borderColor: solidColor,
-    borderRadius: area.shape === 'ellipse' ? '50%' : '4px',
+    borderRadius: area.shape === 'ellipse' ? '50%' : '8px',
     position: 'absolute',
-    borderWidth: '2px',
-    borderStyle: 'dashed',
-    cursor: 'move',
+    borderWidth: '3px',
+    borderStyle: 'solid',
+    cursor: 'grab',
     boxSizing: 'border-box',
+    boxShadow: `0 0 0 2px rgba(59, 130, 246, 0.3), inset 0 0 0 1px rgba(255,255,255,0.4)`,
+    transition: 'box-shadow 0.2s ease',
   };
 
   const handles = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
 
   return (
-    <div style={style} onMouseDown={onMouseDown}>
+    <div 
+      style={style} 
+      onMouseDown={onMouseDown}
+      className="group hover:shadow-lg"
+      title={isVisible ? "Cliquez et glissez pour déplacer" : "Zone invisible - Cliquez et glissez pour déplacer"}
+    >
+      {/* Poignée de déplacement - visible même si zone transparente */}
+      {isVisible && (
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+          <div className="flex flex-col items-center gap-0.5 opacity-60">
+            <div className="w-6 h-1 bg-white rounded-full"></div>
+            <div className="w-6 h-1 bg-white rounded-full"></div>
+            <div className="w-6 h-1 bg-white rounded-full"></div>
+          </div>
+        </div>
+      )}
+
+      {/* Étiquette "⋮⋮" - visible même si zone transparente */}
+      {isVisible && (
+        <div className="absolute top-1 left-1 text-xs font-bold text-white opacity-75 pointer-events-none">
+          ⋮⋮
+        </div>
+      )}
+
+      {/* Poignées de redimensionnement - toujours visibles */}
       {handles.map(handleName => (
         <div
           key={handleName}
-          className={`absolute bg-white border-2 border-primary rounded-full w-3 h-3 -m-1.5 
+          className={`absolute bg-white border-2 border-blue-500 rounded-full w-4 h-4 -m-2 shadow-md z-10
               ${handleName.includes('left') ? 'left-0' : 'right-0'}
               ${handleName.includes('top') ? 'top-0' : 'bottom-0'}
               cursor-${(handleName.includes('top') && handleName.includes('left')) || (handleName.includes('bottom') && handleName.includes('right')) ? 'nwse' : 'nesw'}-resize
+              hover:bg-blue-100 hover:scale-125 transition-all
           `}
           onMouseDown={(e) => onResizeMouseDown(e, handleName)}
+          title={`Redimensionner: ${handleName}`}
         />
       ))}
     </div>
@@ -82,6 +112,7 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
         color: 'rgb(59, 130, 246)',
         opacity: 0.5,
         shape: 'rect',
+        is_visible: true,
       };
       setLocalArea(defaultArea);
       onAreaChange(defaultArea);
@@ -92,6 +123,7 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
         color: area.color || 'rgb(59, 130, 246)',
         opacity: area.opacity !== undefined ? area.opacity : 0.5,
         shape: area.shape || 'rect',
+        is_visible: area.is_visible !== undefined ? area.is_visible : true,
       };
       setLocalArea(areaWithDefaults);
     } else if (!localArea) {
@@ -104,6 +136,7 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
         color: 'rgb(59, 130, 246)',
         opacity: 0.5,
         shape: 'rect',
+        is_visible: true,
       };
       setLocalArea(defaultArea);
     }
@@ -246,6 +279,7 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
         color: localArea.color || 'rgb(59, 130, 246)',
         opacity: localArea.opacity !== undefined ? localArea.opacity : 0.3,
         shape: localArea.shape || 'rect',
+        is_visible: localArea.is_visible !== undefined ? localArea.is_visible : true,
       };
 
       onAreaChange(updatedArea);
@@ -278,6 +312,12 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
 
   const handleShapeChange = (newShape) => {
     const updated = { ...localArea, shape: newShape };
+    setLocalArea(updated);
+    onAreaChange(updated);
+  };
+
+  const handleVisibilityChange = (newVisibility) => {
+    const updated = { ...localArea, is_visible: newVisibility };
     setLocalArea(updated);
     onAreaChange(updated);
   };
@@ -370,6 +410,22 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Visibilité */}
+            <div>
+              <Label htmlFor="area-visibility" className="text-sm font-medium block mb-2">Affichage</Label>
+              <div className="flex gap-2 items-center h-10">
+                <span className="text-sm text-gray-600">
+                  {localArea?.is_visible !== undefined ? (localArea.is_visible ? '👁️ Visible' : '👁️‍🗨️ Invisible') : '👁️ Visible'}
+                </span>
+                <Switch
+                  id="area-visibility"
+                  checked={localArea?.is_visible !== undefined ? localArea.is_visible : true}
+                  onCheckedChange={handleVisibilityChange}
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-2">Quand <strong>invisible</strong>, la zone reste déplaçable avec les poignées visibles</p>
+            </div>
           </div>
         </div>
       )}
@@ -397,13 +453,15 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
             </div>
           </div>
         </div>
-      )}      {/* Image avec zone */}
-      <div ref={containerRef} className="relative mx-auto border rounded-md bg-gray-200 overflow-hidden" style={{ maxWidth: '360px' }}>
+      )}
+
+      {/* Image avec zone */}
+      <div ref={containerRef} className="relative mx-auto border-4 border-gray-400 rounded-lg bg-gray-900 overflow-hidden shadow-2xl" style={{ maxWidth: '360px', maxHeight: '640px', aspectRatio: '9/16' }}>
         <img
           ref={imageRef}
           src={imageUrl}
           alt="Aperçu de l'étape"
-          className="w-full h-auto object-contain select-none"
+          className="w-full h-full object-cover select-none"
           onDragStart={(e) => e.preventDefault()}
         />
         {localArea && (
@@ -416,14 +474,15 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
         )}
       </div>
       
-      <div className="space-y-2 text-xs p-3 bg-green-50 rounded border border-green-200">
-        <p className="font-semibold text-green-900">
-          ✓ Interaction sur la zone:
+      <div className="space-y-2 text-xs p-3 bg-blue-50 rounded border-l-4 border-l-blue-500 border border-blue-200">
+        <p className="font-semibold text-blue-900 flex items-center gap-2">
+          📱 <span>Mode Smartphone - Interaction sur la zone:</span>
         </p>
-        <ul className="list-disc list-inside space-y-1 text-green-800">
-          <li><strong>Déplacer:</strong> Cliquez et glissez la zone</li>
-          <li><strong>Redimensionner:</strong> Utilisez les 4 poignées blanches aux coins</li>
-          <li><strong>Couleur & Transparence:</strong> Contrôlez au-dessus</li>
+        <ul className="list-disc list-inside space-y-1 text-blue-800">
+          <li><strong>Déplacer la zone:</strong> Cliquez et glissez la boîte bleue (comme sur votre téléphone)</li>
+          <li><strong>Redimensionner:</strong> Utilisez les 4 points blancs aux coins</li>
+          <li><strong>Personnaliser:</strong> Changez couleur, transparence et forme au-dessus</li>
+          <li><strong>Texte blanc:</strong> Les trois lignes ⋮⋮ indiquent le point de saisie</li>
         </ul>
       </div>
     </div>

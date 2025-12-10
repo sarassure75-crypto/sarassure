@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { User, KeyRound, Copy, LogOut, Loader2, Link } from 'lucide-react';
+import SatisfactionSurvey from '@/components/SatisfactionSurvey';
 import { supabase } from '@/lib/supabaseClient';
 
 const LearnerAccountPage = () => {
@@ -154,6 +155,14 @@ const LearnerAccountPage = () => {
             <Button variant="ghost" size="icon" className="ml-auto" onClick={() => handleCopy(currentUser.first_name, "Prénom")}>
               <Copy className="h-5 w-5" />
             </Button>
+          </div>
+          {/* Satisfaction survey */}
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-semibold mb-4">Donnez votre avis</h3>
+            <p className="text-sm text-muted-foreground mb-3">Votre retour nous aide à améliorer l'application. Ce questionnaire est court et anonyme.</p>
+            <SatisfactionSurvey onSubmitted={async () => {
+              // Optionally refetch profile or show something
+            }} />
           </div>
           <div className="flex items-center p-4 bg-muted/50 rounded-lg border">
             <KeyRound className="h-6 w-6 text-muted-foreground mr-4" />

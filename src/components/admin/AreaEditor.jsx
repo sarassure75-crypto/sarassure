@@ -6,12 +6,15 @@ import React from 'react';
         const scaleX = imageDimensions.width / imageDimensions.naturalWidth;
         const scaleY = imageDimensions.height / imageDimensions.naturalHeight;
 
+        const isVisible = area.is_visible !== undefined ? area.is_visible : true;
+        const opacity = isVisible ? 0.5 : 0;
+
         const style = {
             left: `${area.x * scaleX}px`,
             top: `${area.y * scaleY}px`,
             width: `${area.width * scaleX}px`,
             height: `${area.height * scaleY}px`,
-            backgroundColor: area.color || "rgba(239, 68, 68, 0.5)",
+            backgroundColor: area.color ? area.color.replace('0.5', opacity.toString()) : `rgba(239, 68, 68, ${opacity})`,
             borderColor: area.color ? area.color.replace('0.5', '1') : "rgba(239, 68, 68, 1)",
             cursor: 'move',
         };

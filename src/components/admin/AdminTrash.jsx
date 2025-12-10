@@ -78,7 +78,7 @@ const AdminTrash = () => {
                         <Trash2 className="mr-2 h-4 w-4" /> Supprimer
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
                       <AlertDialogHeader>
                         <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
                         <AlertDialogDescription>

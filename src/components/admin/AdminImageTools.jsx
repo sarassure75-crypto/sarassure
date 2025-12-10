@@ -195,7 +195,7 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
       />
 
       <Dialog open={isDialogOpen} onOpenChange={(isOpen) => { if(!isOpen) resetState(); else setIsDialogOpen(true);}}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto flex flex-col">
           <DialogHeader>
             <DialogTitle>Redimensionner & Compresser</DialogTitle>
             <DialogDescription>

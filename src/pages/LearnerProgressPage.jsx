@@ -359,7 +359,7 @@ const LearnerProgressPage = () => {
                                   <XCircle className="mr-2 h-4 w-4" /> Modifier la liaison
                                 </Button>
                               </AlertDialogTrigger>
-                              <AlertDialogContent>
+                              <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>Voulez-vous vraiment vous délier ?</AlertDialogTitle>
                                   <AlertDialogDescription>

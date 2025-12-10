@@ -141,7 +141,7 @@ const AdminTaskForm = ({ task: initialTask, onSave, onCancel, onDelete }) => {
 
       {/* Confirmation de suppression */}
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle>Êtes-vous sûr(e) ?</AlertDialogTitle>
             <AlertDialogDescription>

@@ -155,7 +155,7 @@ const AdminTrainerManager = ({ onTrainerCreated }) => {
                                     <Plus className="mr-2 h-4 w-4" /> Créer un formateur
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent>
+                            <DialogContent className="max-h-[90vh] overflow-y-auto">
                                 <DialogHeader>
                                     <DialogTitle>Créer un nouveau formateur</DialogTitle>
                                     <DialogDescription>
@@ -259,7 +259,7 @@ const AdminTrainerManager = ({ onTrainerCreated }) => {
                                                             <AlertDialogTrigger asChild>
                                                                 <Button variant="ghost" size="icon" title="Supprimer"><Trash2 className="h-4 w-4 text-destructive"/></Button>
                                                             </AlertDialogTrigger>
-                                                            <AlertDialogContent>
+                                                            <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
                                                                 <AlertDialogHeader>
                                                                     <AlertDialogTitle>Supprimer {trainer.first_name}?</AlertDialogTitle>
                                                                     <AlertDialogDescription>

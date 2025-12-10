@@ -145,7 +145,7 @@ const AdminErrorReportViewer = () => {
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
+                      <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
                           <AlertDialogHeader>
                               <AlertDialogTitle>Supprimer ce rapport ?</AlertDialogTitle>
                               <AlertDialogDescription>
@@ -166,7 +166,7 @@ const AdminErrorReportViewer = () => {
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="sm:max-w-[600px]">
+          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
             <DialogHeader>
               <DialogTitle>Détails du Rapport d'Erreur</DialogTitle>
               <DialogDescription>

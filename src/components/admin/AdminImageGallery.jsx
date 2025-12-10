@@ -66,7 +66,7 @@ function EditDialog({ open, onOpenChange, editImage, onSubmit, isEditing, adminC
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Modifier l'image</DialogTitle>
           <DialogDescription>Modifiez le nom, la description et les métadonnées de l'image.</DialogDescription>
@@ -182,7 +182,7 @@ function CategoryManager({ open, onOpenChange, adminCategories, refreshImageCate
       <DialogTrigger asChild>
         <Button variant="outline"><Layers className="mr-2 h-4 w-4"/>Gérer les catégories</Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Gérer les catégories d'images</DialogTitle>
           <DialogDescription>Ajoutez, supprimez ou gérez les catégories utilisées pour la galerie d'images.</DialogDescription>
@@ -530,7 +530,7 @@ const AdminImageGallery = () => {
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
                       <AlertDialogHeader>
                         <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
                         <AlertDialogDescription>

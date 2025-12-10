@@ -36,8 +36,33 @@
       }
 
       .dark {
-        /* Define dark mode colors if needed, or adjust existing ones */
-        /* For now, we'll stick to a light theme as per the logo's feel */
+        --background: 152 18% 10%; /* Dark green-gray */
+        --foreground: 90 15% 90%; /* Light gray */
+
+        --card: 152 18% 12%;
+        --card-foreground: 90 15% 90%;
+
+        --popover: 152 18% 12%;
+        --popover-foreground: 90 15% 90%;
+
+        --primary: 148 22% 45%; /* Lighter primary for dark mode */
+        --primary-foreground: 0 0% 100%;
+
+        --secondary: 128 20% 55%; /* Lighter secondary for dark mode */
+        --secondary-foreground: 0 0% 100%;
+
+        --muted: 152 10% 25%;
+        --muted-foreground: 90 15% 70%;
+
+        --accent: 88 18% 50%;
+        --accent-foreground: 0 0% 100%;
+
+        --destructive: 0 62.8% 50.6%;
+        --destructive-foreground: 0 0% 98%;
+
+        --border: 152 18% 20%;
+        --input: 152 18% 20%;
+        --ring: 148 22% 45%;
       }
     }
 
@@ -94,4 +119,50 @@
     
     .animate-slide-down {
       animation: slide-down 0.5s ease-out;
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: -1000px 0;
+      }
+      100% {
+        background-position: 1000px 0;
+      }
+    }
+
+    .animate-shimmer {
+      animation: shimmer 3s infinite;
+      background: linear-gradient(
+        to right,
+        transparent 0%,
+        rgba(255, 255, 255, 0.1) 50%,
+        transparent 100%
+      );
+      background-size: 1000px 100%;
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-20px);
+      }
+    }
+
+    .animate-float {
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% {
+        box-shadow: 0 0 5px rgba(58, 90, 64, 0.5);
+      }
+      50% {
+        box-shadow: 0 0 20px rgba(58, 90, 64, 0.8);
+      }
+    }
+
+    .animate-pulse-glow {
+      animation: pulse-glow 2s ease-in-out infinite;
     }

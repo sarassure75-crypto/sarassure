@@ -11,7 +11,6 @@ const DashboardRedirector = () => {
 
   useEffect(() => {
     if (!loading) {
-      logger.log('🔍 DashboardRedirector - User:', currentUser); // DEBUG
       if (currentUser) {
         switch (currentUser.role) {
           case USER_ROLES.ADMIN:
@@ -27,12 +26,10 @@ const DashboardRedirector = () => {
             navigate('/contributeur');
             break;
           default:
-            logger.log('⚠️ Rôle inconnu:', currentUser.role); // DEBUG
             navigate('/');
             break;
         }
       } else {
-        // If no user is found after loading, redirect to login
         navigate('/login');
       }
     }

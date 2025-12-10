@@ -146,7 +146,7 @@ const AdminCategoryManager = () => {
             <DialogTrigger asChild>
               <Button size="sm" className="flex-1"><PlusCircle className="mr-2 h-4 w-4" /> Ajouter une Catégorie</Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
               <form onSubmit={(e) => { e.preventDefault(); handleAddCategory(); }}>
                 <DialogHeader>
                   <DialogTitle>Ajouter une nouvelle catégorie</DialogTitle>
@@ -178,7 +178,7 @@ const AdminCategoryManager = () => {
             <DialogTrigger asChild>
               <Button size="sm" className="flex-1" variant="outline"><PlusCircle className="mr-2 h-4 w-4" /> Ajouter une Sous-Catégorie</Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
               <form onSubmit={(e) => { e.preventDefault(); handleAddSubcategory(); }}>
                 <DialogHeader>
                   <DialogTitle>Ajouter une sous-catégorie</DialogTitle>

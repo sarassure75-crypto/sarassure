@@ -483,7 +483,7 @@ const AdminContributorManager = ({ onContributorCreated }) => {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle>Révoquer le rôle contributeur</AlertDialogTitle>
             <AlertDialogDescription>

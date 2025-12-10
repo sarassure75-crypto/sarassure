@@ -28,7 +28,7 @@ const LearnerLoginPage = () => {
     setIsSubmitting(true);
     try {
       await loginWithLearnerCode(learnerCode);
-      // Redirection will be handled by AuthRedirect
+      // AuthRedirect will handle the navigation
     } catch (error) {
       toast({
         title: 'Erreur de connexion',
@@ -41,13 +41,29 @@ const LearnerLoginPage = () => {
 
   return (
     <AuthRedirect>
-      <div className="flex items-center justify-center min-h-[calc(100vh-10rem)] bg-background">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-sky-100 via-indigo-50 to-purple-100 p-4">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
+          className="flex flex-col items-center w-full max-w-md"
         >
-          <Card className="w-full max-w-md mx-auto shadow-xl">
+          {/* Logo */}
+          <div className="h-32 w-32 mb-6 flex items-center justify-center">
+            <img 
+              src="/logo_large.png" 
+              alt="Logo" 
+              className="max-h-full max-w-full object-contain" 
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
+          </div>
+
+          {/* Titre */}
+          <h1 className="text-4xl font-bold text-primary mb-8">SARASSURE</h1>
+
+          <Card className="w-full shadow-xl">
             <CardHeader className="text-center">
               <CardTitle className="text-2xl">Accès Apprenant</CardTitle>
               <CardDescription>Entrez votre code à 6 chiffres pour vous connecter.</CardDescription>

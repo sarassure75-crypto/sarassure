@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { HelpCircle } from 'lucide-react';
 import {
   Popover,
@@ -120,6 +121,26 @@ const SwipeDragZoneEditor = ({
               className="text-sm h-8"
             />
           </div>
+        </div>
+
+        {/* Visibilité */}
+        <div className="pt-3 mt-3 border-t border-green-300 space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-semibold">Affichage</Label>
+            <div className="flex gap-2 items-center">
+              <span className="text-xs text-green-700">
+                {startArea?.is_visible !== undefined ? (startArea.is_visible ? '👁️ Visible' : '👁️‍🗨️ Invisible') : '👁️ Visible'}
+              </span>
+              <Switch
+                checked={startArea?.is_visible !== undefined ? startArea.is_visible : true}
+                onCheckedChange={(checked) => onStartAreaChange({
+                  ...startArea,
+                  is_visible: checked,
+                })}
+              />
+            </div>
+          </div>
+          <p className="text-xs text-green-600 italic">Invisible = zone déplaçable avec poignées visibles, mais sans couleur</p>
         </div>
       </div>
     </div>

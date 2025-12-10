@@ -211,7 +211,7 @@ const AdminLearnerManager = () => {
                                                                 <AlertDialogTrigger asChild>
                                                                     <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive"/></Button>
                                                                 </AlertDialogTrigger>
-                                                                <AlertDialogContent>
+                                                                <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
                                                                     <AlertDialogHeader>
                                                                         <AlertDialogTitle>Supprimer {learner.first_name}?</AlertDialogTitle>
                                                                         <AlertDialogDescription>

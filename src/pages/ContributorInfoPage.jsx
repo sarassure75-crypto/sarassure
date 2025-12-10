@@ -1,4 +1,5 @@
 import React from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -129,12 +130,37 @@ const ContributorInfoPage = () => {
     }
   ];
 
-  const stats = [
-    { label: "Contributeurs actifs", value: "50+", icon: Users },
-    { label: "Exercices créés", value: "200+", icon: Award },
-    { label: "Images disponibles", value: "500+", icon: Sparkles },
-    { label: "Formateurs satisfaits", value: "100+", icon: Heart }
-  ];
+  const [stats, setStats] = React.useState([
+    { label: "Contributeurs actifs", value: '—', icon: Users },
+    { label: "Exercices créés", value: '—', icon: Award },
+    { label: "Images disponibles", value: '—', icon: Sparkles },
+    { label: "Formateurs satisfaits", value: '—', icon: Heart }
+  ]);
+
+  React.useEffect(() => {
+    let mounted = true;
+    const fetch = async () => {
+      try {
+        const [{ count: contributors }, { count: tasks }, { count: images }] = await Promise.all([
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).neq('role', null).eq('role', 'contributeur'),
+          supabase.from('tasks').select('id', { count: 'exact', head: true }),
+          supabase.from('app_images').select('id', { count: 'exact', head: true })
+        ]);
+
+        if (!mounted) return;
+        setStats([
+          { label: 'Contributeurs actifs', value: `${contributors || 0}+`, icon: Users },
+          { label: 'Exercices créés', value: `${tasks || 0}+`, icon: Award },
+          { label: 'Images disponibles', value: `${images || 0}+`, icon: Sparkles },
+          { label: 'Formateurs satisfaits', value: 'En cours', icon: Heart }
+        ]);
+      } catch (err) {
+        console.error('Erreur stats contributeur:', err);
+      }
+    };
+    fetch();
+    return () => { mounted = false; };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
