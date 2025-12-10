@@ -54,34 +54,43 @@ export const AuthProvider = ({ children }) => {
   const loginWithLearnerCode = async (learnerCode) => {
     console.log('🔍 Recherche du code apprenant:', learnerCode);
     
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('email, learner_code, role')
-      .eq('learner_code', learnerCode)
-      .single();
+    try {
+      // Utiliser la RPC function sécurisée pour récupérer le profil
+      const { data: profileArray, error: profileError } = await supabase
+        .rpc('get_profile_by_learner_code', { input_learner_code: learnerCode });
 
-    console.log('📊 Résultat recherche profile:', { profile, profileError });
+      console.log('📊 Résultat recherche profile via RPC:', { profileArray, profileError });
 
-    if (profileError || !profile) {
-      console.error('❌ Code non trouvé dans la table profiles');
-      throw new Error("Code apprenant invalide.");
+      if (profileError) {
+        console.error('❌ Erreur RPC:', profileError);
+        throw new Error("Code apprenant invalide.");
+      }
+
+      if (!profileArray || profileArray.length === 0) {
+        console.error('❌ Code non trouvé');
+        throw new Error("Code apprenant invalide.");
+      }
+
+      const profile = profileArray[0];
+      console.log('✅ Profile trouvé, tentative de connexion avec:', profile.email);
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: profile.email,
+        password: learnerCode,
+      });
+
+      console.log('🔐 Résultat connexion:', { data: data?.user?.email, error });
+
+      if (error) {
+        console.error("❌ Échec connexion:", error.message);
+        throw new Error("La connexion a échoué. Veuillez vérifier votre code et réessayer.");
+      }
+
+      return data;
+    } catch (error) {
+      console.error('❌ Erreur dans loginWithLearnerCode:', error);
+      throw error;
     }
-
-    console.log('✅ Profile trouvé, tentative de connexion avec:', profile.email);
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: profile.email,
-      password: learnerCode,
-    });
-
-    console.log('🔐 Résultat connexion:', { data: data?.user?.email, error });
-
-    if (error) {
-      console.error("❌ Échec connexion:", error.message);
-      throw new Error("La connexion a échoué. Veuillez vérifier votre code et réessayer.");
-    }
-
-    return data;
   };
   
   const refetchUser = useCallback(async () => {
