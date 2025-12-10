@@ -25,15 +25,28 @@ export const USER_ROLES = {
     };
 
     export const getUserById = async (userId) => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-      if (error && error.code !== 'PGRST116') {
-        throw error;
+      try {
+        // Utiliser la function Supabase secure (avec RLS + search_path)
+        const { data, error } = await supabase
+          .rpc('get_user_profile', { input_user_id: userId });
+        if (error) {
+          console.error('Error fetching profile via RPC:', error);
+          // Fallback: essayer l'accès direct si la function échoue
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+          if (fallbackError && fallbackError.code !== 'PGRST116') {
+            throw fallbackError;
+          }
+          return fallbackData;
+        }
+        return data && data.length > 0 ? data[0] : null;
+      } catch (error) {
+        console.error('getUserById error:', error);
+        return null;
       }
-      return data;
     };
 
     export const getLearnersByTrainer = async (trainerId) => {
