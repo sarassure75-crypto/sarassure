@@ -96,8 +96,11 @@ export const AuthProvider = ({ children }) => {
     await supabase.auth.signOut();
   }, []);
 
+  const isAuthenticated = Boolean(currentUser && currentUser.id);
+
   const value = {
     currentUser,
+    isAuthenticated,
     loading,
     login: (email, password) => supabase.auth.signInWithPassword({ email, password }),
     logout,

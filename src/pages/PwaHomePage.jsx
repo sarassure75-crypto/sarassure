@@ -34,7 +34,7 @@ const PwaHomePage = () => {
             onClick={() => navigate('/taches')} 
             className="w-full max-w-sm h-20 text-2xl mb-6 bg-green-500 hover:bg-green-600 text-white shadow-xl transform hover:scale-105 transition-transform duration-200"
           >
-            <BookOpen className="mr-4 h-8 w-8" /> Mes Exercices{currentUser.firstName ? `, ${currentUser.firstName}` : ''}
+            <BookOpen className="mr-4 h-8 w-8" /> Mes Exercices{currentUser.first_name ? `, ${currentUser.first_name}` : ''}
           </Button>
           
           <Button onClick={handleLogout} variant="outline" className="w-full max-w-sm text-lg">
