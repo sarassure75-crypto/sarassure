@@ -13,15 +13,15 @@ const InputAnimator = ({
   imageHeight = 640,
   isMobileLayout = false 
 }) => {
-  const [isInputActive, setIsInputActive] = useState(false);
-  const [showKeyboard, setShowKeyboard] = useState(false);
-  const inputRef = useRef(null);
-
+  // Check condition FIRST - BEFORE hooks
   if (!targetArea || !['number_input', 'text_input'].includes(actionType)) {
     return null;
   }
 
-  const isNumberInput = actionType === 'number_input';
+  // THEN hooks - only called if condition passed
+  const [isInputActive, setIsInputActive] = useState(false);
+  const [showKeyboard, setShowKeyboard] = useState(false);
+  const inputRef = useRef(null);
 
   // Clavier numérique
   const numberPadKeys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'];
