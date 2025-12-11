@@ -7,14 +7,15 @@ const ActionAnimator = ({
   hideActionZone = false,
   isMobileLayout = false 
 }) => {
-  const [clickedZone, setClickedZone] = useState(null);
-  
-  // Afficher la zone pour les actions de geste (swipe, tap, double_tap, long_press, drag)
+  // Check condition first, BEFORE hooks
   const shouldUseZones = ['tap', 'double_tap', 'long_press', 'swipe_left', 'swipe_right', 'swipe_up', 'swipe_down', 'drag_and_drop'].includes(actionType);
   
   if (!shouldUseZones || !startArea) {
     return null;
   }
+
+  // THEN hooks - only called if we didn't return null
+  const [clickedZone, setClickedZone] = useState(null);
 
   // Utiliser la couleur et l'opacité admin, jamais de vert ou valeur par défaut
   const borderColor = startArea.color || '#3b82f6';
