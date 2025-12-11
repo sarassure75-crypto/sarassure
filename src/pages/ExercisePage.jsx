@@ -731,6 +731,16 @@ const ExercisePage = () => {
     isPhysicalButtonAction(currentStep?.action_type) || 
     forceShowPhoneFrame
   );
+  
+  // Debug log
+  console.log('PhoneFrame Debug:', {
+    shouldShowPhoneFrame,
+    hasPhoneButtonActions,
+    currentActionType: currentStep?.action_type,
+    isPhysicalButton: isPhysicalButtonAction(currentStep?.action_type),
+    buttonConfig: currentStep?.button_config,
+    forceShowPhoneFrame
+  });
 
   const sortedVersions = task.versions ? [...task.versions].sort((a, b) => a.name.localeCompare(b.name)) : [];
   const currentIndexInAllVersions = sortedVersions.findIndex(ex => ex.id === currentVersion.id);
@@ -813,7 +823,7 @@ const ExercisePage = () => {
           }
         }}
       >
-        <div className="flex-grow min-h-0 w-full max-w-sm mx-auto aspect-[9/16] bg-black rounded-lg overflow-hidden relative">
+        <div className="flex-grow min-h-0 w-full aspect-[9/16] bg-black rounded-lg overflow-hidden relative">
           <ZoomableImage
             imageId={currentStep?.app_image_id}
             alt={`Capture d'écran pour l'étape`}
@@ -942,35 +952,50 @@ const ExercisePage = () => {
 
         {/* Zone capture d'écran avec zone d'action */}
         <div className="flex-1">
-          <div className="relative w-full h-full flex items-start justify-start">
-            <ZoomableImage
-            imageId={currentStep?.app_image_id}
-            alt={`Capture d'écran pour l'étape`}
-            targetArea={currentStep?.target_area}
-            actionType={currentStep?.action_type}
-            startArea={currentStep?.start_area}
-            onInteraction={handleInteraction}
-            imageContainerClassName=""
-            isMobileLayout={false}
-            isZoomActive={isZoomActive}
-            hideActionZone={hideActionZone}
-            keyboardAutoShow={currentStep?.keyboard_auto_show || false}
-            expectedInput={currentStep?.expected_input || ''}
-          />
-          {/* Animation pour les swipes et drag */}
-          <ActionAnimator
-            actionType={currentStep?.action_type}
-            startArea={currentStep?.start_area}
-            hideActionZone={hideActionZone}
-            isMobileLayout={false}
-          />
-          {/* Overlay Bravo */}
-          <BravoOverlay
-            isOpen={showBravoOverlay}
-            onClose={() => setShowBravoOverlay(false)}
-            onReturnToTasks={() => navigate('/taches')}
-          />
-          </div>
+          <PhoneFrame 
+            showPhoneFrame={shouldShowPhoneFrame}
+            buttonConfig={currentStep?.button_config || 'samsung'}
+            onButtonClick={(buttonId) => {
+              const buttonToActionMap = {
+                'power': 'button_power',
+                'volumeUp': 'button_volume_up',
+                'volumeDown': 'button_volume_down'
+              };
+              if (buttonToActionMap[buttonId] === currentStep?.action_type) {
+                handleInteraction(true);
+              }
+            }}
+          >
+            <div className="relative w-full h-full flex items-start justify-start">
+              <ZoomableImage
+              imageId={currentStep?.app_image_id}
+              alt={`Capture d'écran pour l'étape`}
+              targetArea={currentStep?.target_area}
+              actionType={currentStep?.action_type}
+              startArea={currentStep?.start_area}
+              onInteraction={handleInteraction}
+              imageContainerClassName=""
+              isMobileLayout={false}
+              isZoomActive={isZoomActive}
+              hideActionZone={hideActionZone}
+              keyboardAutoShow={currentStep?.keyboard_auto_show || false}
+              expectedInput={currentStep?.expected_input || ''}
+            />
+            {/* Animation pour les swipes et drag */}
+            <ActionAnimator
+              actionType={currentStep?.action_type}
+              startArea={currentStep?.start_area}
+              hideActionZone={hideActionZone}
+              isMobileLayout={false}
+            />
+            {/* Overlay Bravo */}
+            <BravoOverlay
+              isOpen={showBravoOverlay}
+              onClose={() => setShowBravoOverlay(false)}
+              onReturnToTasks={() => navigate('/taches')}
+            />
+            </div>
+          </PhoneFrame>
         </div>
       </div>
       

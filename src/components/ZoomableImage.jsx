@@ -345,15 +345,26 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
     // Si show_border est explicitement false, pas de bordure
     if (area.show_border === false) return {};
     
+    // Réduire la visibilité de la bordure si la zone est masquée
+    const borderWidth = hideActionZone ? '1px' : '2px';
+    const borderOpacity = hideActionZone ? 0.1 : 1;
+    
+    let finalBorderColor = borderColor;
+    if (hideActionZone && borderColor.includes('rgba')) {
+      finalBorderColor = borderColor.replace(/([\d.]+)\)$/, `${borderOpacity})`);
+    } else if (hideActionZone && borderColor.includes('rgb(')) {
+      finalBorderColor = borderColor.replace('rgb', 'rgba').replace(')', `, ${borderOpacity})`);
+    }
+    
     return {
-      border: `2px dashed ${borderColor}`,
+      border: `${borderWidth} dashed ${finalBorderColor}`,
     };
   };
 
   const getAreaBackgroundStyle = (area) => {
     // Récupérer les paramètres de couleur depuis les données admin
     const bgColor = area.color || 'rgba(59, 130, 246, 0.3)'; // Bleu par défaut
-    const bgOpacity = area.opacity !== undefined ? area.opacity : 0.3;
+    const bgOpacity = hideActionZone ? 0.02 : (area.opacity !== undefined ? area.opacity : 0.3);
     
     // Convertir rgba/rgb en format avec opacité personnalisée
     if (bgColor.includes('rgba')) {
@@ -501,7 +512,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
         />
       </div>
       
-      {actionArea && !hideActionZone && (
+      {actionArea && (
         <motion.div
           data-action-zone
           style={{ 
@@ -510,15 +521,16 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
             ...getAreaBackgroundStyle(actionArea),
             touchAction: 'none', 
             WebkitUserSelect: 'none', 
-            WebkitTouchCallout: 'none' 
+            WebkitTouchCallout: 'none',
+            pointerEvents: 'auto'
           }}
           className={cn(
             "z-10",
             actionType === 'drag_and_drop' && "cursor-grab",
             actionType !== 'drag_and_drop' && "cursor-pointer"
           )}
-          animate={getAnimationVariants()}
-          whileHover={{ scale: 1.02 }}
+          animate={hideActionZone ? { opacity: 1 } : getAnimationVariants()}
+          whileHover={hideActionZone ? {} : { scale: 1.02 }}
           onContextMenu={handleContextMenu}
           onDragStart={() => setIsDragging(true)}
           onDragEnd={handleDragEnd}
