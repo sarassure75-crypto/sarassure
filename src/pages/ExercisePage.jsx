@@ -27,7 +27,7 @@ import BravoOverlay from '@/components/exercise/BravoOverlay';
 import ConfidenceBeforeModal from '@/components/exercise/ConfidenceBeforeModal';
 import ConfidenceAfterModal from '@/components/exercise/ConfidenceAfterModal';
 import { useConfidence } from '@/hooks/useConfidence';
-import { retryWithBackoff, cacheData, getCachedData } from '@/lib/retryUtils';
+import { cacheData, getCachedData } from '@/lib/retryUtils';
 
 
 const toPascalCase = (str) => {
@@ -462,49 +462,40 @@ const ExercisePage = () => {
             }
             
             // Refresh in background
-            try {
-              const freshData = await retryWithBackoff(
-                () => supabase
+            (async () => {
+              try {
+                const { data: freshData, error: fetchError } = await supabase
                   .from('tasks')
                   .select('id, title, video_url, task_type, versions(*, steps(*))')
                   .eq('id', taskId)
-                  .maybeSingle()
-                  .then(r => {
-                    if (r.error) throw r.error;
-                    return r.data;
-                  }),
-                3, 500, 5000
-              );
-              
-              if (freshData) {
-                cacheData(cacheKey, freshData, 3600000);
-                const freshVersion = freshData.versions.find(e => e.id === versionId);
-                if (freshVersion) {
-                  freshVersion.steps = freshVersion.steps ? freshVersion.steps.sort((a, b) => a.step_order - b.step_order) : [];
-                  setTask(freshData);
-                  setCurrentVersion(freshVersion);
+                  .maybeSingle();
+
+                if (fetchError) throw fetchError;
+                
+                if (freshData) {
+                  cacheData(cacheKey, freshData, 3600000);
+                  const freshVersion = freshData.versions.find(e => e.id === versionId);
+                  if (freshVersion) {
+                    freshVersion.steps = freshVersion.steps ? freshVersion.steps.sort((a, b) => a.step_order - b.step_order) : [];
+                    setTask(freshData);
+                    setCurrentVersion(freshVersion);
+                  }
                 }
+              } catch (bgError) {
+                console.warn('Background refresh failed, using cached data:', bgError);
               }
-            } catch (bgError) {
-              console.warn('Background refresh failed, using cached data:', bgError);
-            }
+            })();
             return;
           }
 
           // No cache, fetch fresh data
-          const taskResult = await retryWithBackoff(
-            () => supabase
-              .from('tasks')
-              .select('id, title, video_url, task_type, versions(*, steps(*))')
-              .eq('id', taskId)
-              .maybeSingle()
-              .then(r => {
-                if (r.error) throw r.error;
-                return r.data;
-              }),
-            3, 500, 5000
-          );
+          const { data: taskResult, error: taskError } = await supabase
+            .from('tasks')
+            .select('id, title, video_url, task_type, versions(*, steps(*))')
+            .eq('id', taskId)
+            .maybeSingle();
 
+          if (taskError) throw taskError;
           taskData = taskResult;
           
           if (taskData) {
