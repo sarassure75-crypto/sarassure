@@ -211,10 +211,14 @@ const CompletionScreen = ({ onBackToList, isMobileLayout }) => (
 
 // Modal pour notes/captures
 const NotesModal = ({ open, onClose, taskId, versionId, stepId, userId }) => {
+  // HOOKS FIRST - before any conditions
   const [note, setNote] = useState("");
   const [images, setImages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  
+  // Then conditional rendering
+  if (!open) return null;
   
   const handleSave = async () => {
     if (!note.trim() && images.length === 0) {
