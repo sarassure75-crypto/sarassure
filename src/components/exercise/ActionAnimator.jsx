@@ -55,14 +55,14 @@ const ActionAnimator = ({
           backgroundColor: bgColor,
           borderRadius: '8px',
         }}
-        initial={{ opacity: hideActionZone ? 0 : 0.3, scale: 1 }}
+        initial={{ opacity: hideActionZone ? 0.05 : 0.3, scale: 1 }}
         animate={{ 
-          opacity: hideActionZone ? 0 : [0.3, 0.8, 0.3],
+          opacity: hideActionZone ? [0.05, 0.1, 0.05] : [0.3, 0.8, 0.3],
           scale: hideActionZone ? 1 : [1, 1.05, 1]
         }}
         transition={{ 
           duration: 1.5, 
-          repeat: hideActionZone ? 0 : Infinity,
+          repeat: Infinity,
           ease: 'easeInOut'
         }}
       />
