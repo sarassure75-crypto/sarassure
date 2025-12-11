@@ -367,6 +367,8 @@ const ExercisePage = () => {
     window.addEventListener('openNotesModal', handler);
     return () => window.removeEventListener('openNotesModal', handler);
   }, []);
+
+  useEffect(() => {
     const originalOverflow = document.body.style.overflow;
     const originalPosition = document.body.style.position;
     const originalTop = document.body.style.top;
