@@ -538,7 +538,7 @@ const ExercisePage = () => {
     };
 
     fetchAndSetData();
-  }, [taskId, versionId, isPreviewMode, toast, adminContext, location.search]);
+  }, [taskId, versionId, isPreviewMode, location.search, adminContext?.tasks?.length]);
 
   // Afficher le modal de confiance avant au premier chargement
   useEffect(() => {
