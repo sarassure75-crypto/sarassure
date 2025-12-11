@@ -21,6 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import ActionAnimator from '@/components/exercise/ActionAnimator';
 import PhoneFrame from '@/components/exercise/PhoneFrame';
 import InformationPanel from '@/components/exercise/InformationPanel';
+import { isPhysicalButtonAction } from '@/lib/buttonUtils';
 import LearnerNotesViewer from '@/components/exercise/LearnerNotesViewer';
 import useDisableTouchGestures from '@/hooks/useDisableTouchGestures';
 import BravoOverlay from '@/components/exercise/BravoOverlay';
@@ -427,6 +428,16 @@ const ExercisePage = () => {
     startTimeRef.current = Date.now();
   }, [versionId]);
 
+  // Afficher le phone frame si des boutons sont utilisés
+  useEffect(() => {
+    if (currentVersion && currentVersion.steps && currentVersion.steps.length > 0) {
+      const hasPhoneButtonActions = currentVersion.steps.some(step => 
+        isPhysicalButtonAction(step.action_type)
+      );
+      setShowPhoneFrame(hasPhoneButtonActions);
+    }
+  }, [currentVersion]);
+
   useEffect(() => {
     const fetchAndSetData = async () => {
       setIsLoading(true);
@@ -689,16 +700,6 @@ const ExercisePage = () => {
     return <div className="flex justify-center items-center h-screen"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
-  // Afficher le phone frame si des boutons sont utilisés - MUST BE BEFORE EARLY RETURNS
-  useEffect(() => {
-    if (currentVersion && currentVersion.steps && currentVersion.steps.length > 0) {
-      const hasPhoneButtonActions = currentVersion.steps.some(step => 
-        ['button_power', 'button_volume_up', 'button_volume_down'].includes(step.action_type)
-      );
-      setShowPhoneFrame(hasPhoneButtonActions);
-    }
-  }, [currentVersion]);
-  
   if (error) {
      return (
       <div className="flex flex-col items-center justify-center text-center p-4 h-full">
@@ -722,12 +723,12 @@ const ExercisePage = () => {
 
   // Détecter si des actions de boutons physiques sont utilisées dans cette version
   const hasPhoneButtonActions = currentVersion.steps.some(step => 
-    ['button_power', 'button_volume_up', 'button_volume_down'].includes(step.action_type)
+    isPhysicalButtonAction(step.action_type)
   );
 
   // Déterminer si afficher le phone frame : soit parce que le step courant a un bouton, soit si l'utilisateur l'a forcé
   const shouldShowPhoneFrame = hasPhoneButtonActions && (
-    ['button_power', 'button_volume_up', 'button_volume_down'].includes(currentStep?.action_type) || 
+    isPhysicalButtonAction(currentStep?.action_type) || 
     forceShowPhoneFrame
   );
 
@@ -800,6 +801,7 @@ const ExercisePage = () => {
       )}
       <PhoneFrame 
         showPhoneFrame={shouldShowPhoneFrame}
+        buttonConfig={currentStep?.button_config || 'samsung'}
         onButtonClick={(buttonId) => {
           const buttonToActionMap = {
             'power': 'button_power',

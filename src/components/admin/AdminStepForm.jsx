@@ -10,6 +10,7 @@ import { actionTypes } from '@/data/tasks';
 import { useAdmin } from '@/contexts/AdminContext';
 import { Loader2, Save, Trash2, XCircle, HelpCircle } from 'lucide-react';
 import StepAreaEditor from '@/components/admin/StepAreaEditor';
+import ButtonConfigSelector from '@/components/admin/ButtonConfigSelector';
 import * as LucideIcons from 'lucide-react';
 import { getImageSubcategories, DEFAULT_SUBCATEGORIES } from '@/data/images';
 
@@ -87,10 +88,15 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
     let dataToSave = { ...initialStep, ...data };
     
     const selectedActionType = watch('action_type');
+    
+    // Les boutons physiques ne nécessitent PAS de zone d'action
+    const isPhysicalButton = ['button_power', 'button_volume_up', 'button_volume_down', 'button_power_volume_down', 'button_power_volume_up', 'button_volume_up_down'].includes(selectedActionType);
+    
     const zoneKey = ['swipe_left', 'swipe_right', 'swipe_up', 'swipe_down', 'scroll', 'drag_and_drop', 'tap', 'double_tap', 'long_press'].includes(selectedActionType) ? 'start_area' : 'target_area';
     
     // Convert px values from editor to percentage before saving
-    if (dataToSave[zoneKey] && editorImageDimensions.width > 0 && editorImageDimensions.height > 0) {
+    // MAIS PAS pour les boutons physiques !
+    if (!isPhysicalButton && dataToSave[zoneKey] && editorImageDimensions.width > 0 && editorImageDimensions.height > 0) {
       const { x, y, width, height, ...restOfArea } = dataToSave[zoneKey];
       // Make sure all values are numbers
       const numX = Number(x) || 0;
@@ -157,6 +163,17 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
             )}
           />
         </div>
+
+        {/* Sélecteur de modèle de téléphone pour les boutons physiques */}
+        {['button_power', 'button_volume_up', 'button_volume_down', 'button_power_volume_down', 'button_power_volume_up', 'button_volume_up_down'].includes(watch('action_type')) && (
+          <div>
+            <ButtonConfigSelector
+              value={watch('button_config') || 'samsung'}
+              onChange={(config) => setValue('button_config', config)}
+            />
+          </div>
+        )}
+
         <div>
           <Label htmlFor="app_image_id">Capture d'écran</Label>
           {availableSubcategories.length > 0 && (
@@ -219,7 +236,10 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
       </div>
 
       {/* Zone éditeur visuel avec drag-drop sur la capture */}
-      {watch('action_type') && watch('action_type') !== 'bravo' && selectedImage && (
+      {/* NE PAS afficher pour les boutons physiques */}
+      {watch('action_type') && watch('action_type') !== 'bravo' && 
+       !['button_power', 'button_volume_up', 'button_volume_down', 'button_power_volume_down', 'button_power_volume_up', 'button_volume_up_down'].includes(watch('action_type')) &&
+       selectedImage && (
         <div className="border rounded-lg p-4 bg-gray-50 space-y-4">
           {watch('action_type')?.includes('input') ? (
             <>
@@ -273,6 +293,23 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
           <p className="text-sm text-blue-800">
             🎉 <strong>Étape de félicitations :</strong> Cette étape affichera uniquement la capture d'écran sans zone d'action à cliquer. Parfait pour montrer un message de réussite ou le résultat final.
           </p>
+        </div>
+      )}
+
+      {/* Message pour les boutons physiques */}
+      {['button_power', 'button_volume_up', 'button_volume_down', 'button_power_volume_down', 'button_power_volume_up', 'button_volume_up_down'].includes(watch('action_type')) && selectedImage && (
+        <div className="border rounded-lg p-4 bg-purple-50 border-purple-200">
+          <p className="text-sm text-purple-800 mb-2">
+            📱 <strong>Bouton physique :</strong> Aucune zone d'action n'est nécessaire !
+          </p>
+          <ul className="text-xs text-purple-700 list-disc list-inside space-y-1">
+            <li>Les boutons (Power, Volume+, Volume-) sont automatiquement positionnés sur les côtés du téléphone</li>
+            <li>Leur position dépend du modèle de téléphone sélectionné</li>
+            <li>L'apprenant cliquera directement sur les boutons visibles</li>
+            {watch('action_type')?.includes('_') && watch('action_type') !== 'button_volume_up' && watch('action_type') !== 'button_volume_down' && (
+              <li className="font-semibold text-purple-900">⚠️ Action combinée : l'apprenant devra cliquer sur 2 boutons simultanément</li>
+            )}
+          </ul>
         </div>
       )}
 

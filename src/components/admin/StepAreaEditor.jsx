@@ -18,6 +18,9 @@ const rgbToHex = (rgb) => {
 const ResizableArea = ({ area, imageDimensions, onMouseDown, onResizeMouseDown }) => {
   if (!area || !imageDimensions.width) return null;
   
+  // Define resize handles for corners
+  const handles = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+  
   // Convert percent to px for display
   const xPx = (area.x_percent || 0) * imageDimensions.width / 100;
   const yPx = (area.y_percent || 0) * imageDimensions.height / 100;

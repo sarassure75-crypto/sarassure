@@ -15,6 +15,10 @@ import { supabase } from '@/lib/supabaseClient';
       { id: 'button_power', label: '⏻ Bouton Power' },
       { id: 'button_volume_up', label: '🔊 Bouton Volume+' },
       { id: 'button_volume_down', label: '🔉 Bouton Volume-' },
+      // Actions combinées (2 boutons simultanés)
+      { id: 'button_power_volume_down', label: '⏻+🔉 Power + Volume-', combo: true },
+      { id: 'button_power_volume_up', label: '⏻+🔊 Power + Volume+', combo: true },
+      { id: 'button_volume_up_down', label: '🔊+🔉 Volume+ + Volume-', combo: true },
       { id: 'bravo', label: '🎉 Bravo (sans zone d\'action)' },
     ];
 
@@ -291,9 +295,18 @@ import { supabase } from '@/lib/supabaseClient';
             
             // Mettre à jour les étapes existantes
             if (updateSteps.length > 0) {
+              // Pour les updates: ne pas toucher à created_at, juste mettre à jour updated_at
+              const stepsWithTimestamps = updateSteps.map(step => {
+                const { created_at, ...stepWithoutCreatedAt } = step;
+                return {
+                  ...stepWithoutCreatedAt,
+                  updated_at: new Date().toISOString()
+                };
+              });
+              
               const { data, error } = await supabase
                 .from('steps')
-                .upsert(updateSteps, { onConflict: 'id' })
+                .upsert(stepsWithTimestamps, { onConflict: 'id' })
                 .select();
               
               if (error) {
