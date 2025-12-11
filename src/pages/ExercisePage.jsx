@@ -19,6 +19,7 @@ import QuestionnairePlayer from '@/components/exercise/QuestionnairePlayer';
 import { recordCompletion } from '@/data/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import ActionAnimator from '@/components/exercise/ActionAnimator';
+import PhoneFrame from '@/components/exercise/PhoneFrame';
 import InformationPanel from '@/components/exercise/InformationPanel';
 import LearnerNotesViewer from '@/components/exercise/LearnerNotesViewer';
 import useDisableTouchGestures from '@/hooks/useDisableTouchGestures';
@@ -347,6 +348,8 @@ const ExercisePage = () => {
   const [error, setError] = useState(null);
   const [showInformationPanel, setShowInformationPanel] = useState(false);
   const [hideActionZone, setHideActionZone] = useState(false);
+  const [showPhoneFrame, setShowPhoneFrame] = useState(false);
+  const [forceShowPhoneFrame, setForceShowPhoneFrame] = useState(false); // Override to show phone frame on any step
   const [showBravoOverlay, setShowBravoOverlay] = useState(false);
   const [taskType, setTaskType] = useState('exercise'); // 'exercise' ou 'questionnaire'
   
@@ -652,6 +655,23 @@ const ExercisePage = () => {
   const currentStep = currentVersion.steps[currentStepIndex];
   const totalSteps = currentVersion.steps.length;
 
+  // Détecter si des actions de boutons physiques sont utilisées dans cette version
+  const hasPhoneButtonActions = currentVersion.steps.some(step => 
+    ['button_power', 'button_volume_up', 'button_volume_down'].includes(step.action_type)
+  );
+
+  // Déterminer si afficher le phone frame : soit parce que le step courant a un bouton, soit si l'utilisateur l'a forcé
+  const shouldShowPhoneFrame = hasPhoneButtonActions && (
+    ['button_power', 'button_volume_up', 'button_volume_down'].includes(currentStep?.action_type) || 
+    forceShowPhoneFrame
+  );
+
+  // Afficher le phone frame si des boutons sont utilisés
+  useEffect(() => {
+    // Si l'exercice a des actions de boutons, permettre de les afficher
+    setShowPhoneFrame(hasPhoneButtonActions);
+  }, [hasPhoneButtonActions]);
+
   const sortedVersions = task.versions ? [...task.versions].sort((a, b) => a.name.localeCompare(b.name)) : [];
   const currentIndexInAllVersions = sortedVersions.findIndex(ex => ex.id === currentVersion.id);
   const prevVersionOverall = currentIndexInAllVersions > 0 ? sortedVersions[currentIndexInAllVersions - 1] : null;
@@ -719,22 +739,35 @@ const ExercisePage = () => {
           iconName={currentStep?.icon_name}
         />
       )}
-      <div className="flex-grow min-h-0 w-full max-w-sm mx-auto aspect-[9/16] bg-black rounded-lg overflow-hidden relative">
-        <ZoomableImage
-          imageId={currentStep?.app_image_id}
-          alt={`Capture d'écran pour l'étape`}
-          targetArea={currentStep?.target_area}
-          actionType={currentStep?.action_type}
-          startArea={currentStep?.start_area}
-          onInteraction={handleInteraction}
-          imageContainerClassName="w-full h-full"
-          isMobileLayout={true}
-          isZoomActive={isZoomActive}
-          hideActionZone={hideActionZone}
-          keyboardAutoShow={currentStep?.keyboard_auto_show || false}
-          expectedInput={currentStep?.expected_input || ''}
-        />
-        {/* Animation pour les swipes et drag - Mobile */}
+      <PhoneFrame 
+        showPhoneFrame={shouldShowPhoneFrame}
+        onButtonClick={(buttonId) => {
+          const buttonToActionMap = {
+            'power': 'button_power',
+            'volumeUp': 'button_volume_up',
+            'volumeDown': 'button_volume_down'
+          };
+          if (buttonToActionMap[buttonId] === currentStep?.action_type) {
+            handleInteraction(true);
+          }
+        }}
+      >
+        <div className="flex-grow min-h-0 w-full max-w-sm mx-auto aspect-[9/16] bg-black rounded-lg overflow-hidden relative">
+          <ZoomableImage
+            imageId={currentStep?.app_image_id}
+            alt={`Capture d'écran pour l'étape`}
+            targetArea={currentStep?.target_area}
+            actionType={currentStep?.action_type}
+            startArea={currentStep?.start_area}
+            onInteraction={handleInteraction}
+            imageContainerClassName="w-full h-full"
+            isMobileLayout={true}
+            isZoomActive={isZoomActive}
+            hideActionZone={hideActionZone}
+            keyboardAutoShow={currentStep?.keyboard_auto_show || false}
+            expectedInput={currentStep?.expected_input || ''}
+          />
+          {/* Animation pour les swipes et drag - Mobile */}
         <ActionAnimator
           actionType={currentStep?.action_type}
           startArea={currentStep?.start_area}
@@ -747,7 +780,8 @@ const ExercisePage = () => {
           onClose={() => setShowBravoOverlay(false)}
           onReturnToTasks={() => navigate('/taches')}
         />
-      </div>
+        </div>
+      </PhoneFrame>
       <div className="shrink-0 mt-1.5">
         <ExerciseToolbar
           isZoomActive={isZoomActive}
@@ -756,6 +790,9 @@ const ExercisePage = () => {
           onInstructionsToggle={() => setShowInstructions(s => !s)}
           hideActionZone={hideActionZone}
           onHideActionZone={() => setHideActionZone(h => !h)}
+          hasPhoneButtonActions={hasPhoneButtonActions}
+          forceShowPhoneFrame={forceShowPhoneFrame}
+          onForceShowPhoneFrame={() => setForceShowPhoneFrame(f => !f)}
           versions={sortedVersions}
           currentVersionId={versionId}
           onVersionChange={handleTabChange}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Search, Replace, Info, Eye, EyeOff, Maximize2, Bug } from 'lucide-react';
+import { Search, Replace, Info, Eye, EyeOff, Maximize2, Bug, Smartphone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -21,6 +21,9 @@ const ExerciseToolbar = ({
   taskId,
   versionId,
   currentStepIndex,
+  hasPhoneButtonActions,
+  forceShowPhoneFrame,
+  onForceShowPhoneFrame,
 }) => {
   const navigate = useNavigate();
   const buttonSizeClass = isMobileLayout ? "h-7 w-7" : "h-8 w-8";
@@ -57,6 +60,15 @@ const ExerciseToolbar = ({
       >
         {hideActionZone ? <EyeOff className={isMobileLayout ? "h-4 w-4" : "h-5 w-5"} /> : <Eye className={isMobileLayout ? "h-4 w-4" : "h-5 w-5"} />}
       </button>
+      {hasPhoneButtonActions && (
+        <button 
+          onClick={onForceShowPhoneFrame} 
+          className={cn("flex-shrink-0 rounded-md flex items-center justify-center transition-colors", buttonSizeClass, forceShowPhoneFrame ? "bg-blue-600 text-white" : "bg-primary/80 hover:bg-primary/90 text-white")}
+          title="Afficher l'entourage du téléphone"
+        >
+          <Smartphone className={isMobileLayout ? "h-4 w-4" : "h-5 w-5"} />
+        </button>
+      )}
       <Popover>
         <PopoverTrigger asChild>
           <button 

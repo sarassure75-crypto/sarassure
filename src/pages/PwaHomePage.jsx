@@ -8,7 +8,7 @@ import { BookOpen, LogIn } from 'lucide-react';
 const PwaHomePage = () => {
   const navigate = useNavigate();
   const { currentUser, isAuthenticated, logout } = useAuth();
-  const LOGO_URL = "/logo_large.png";
+  const LOGO_URL = "/logo-large.png";
 
   const handleLogout = () => {
     logout();
