@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const ActionAnimator = ({ 
   actionType, 
@@ -7,6 +7,8 @@ const ActionAnimator = ({
   hideActionZone = false,
   isMobileLayout = false 
 }) => {
+  const [clickedZone, setClickedZone] = useState(null);
+  
   // Afficher la zone pour les actions de geste (swipe, tap, double_tap, long_press, drag)
   const shouldUseZones = ['tap', 'double_tap', 'long_press', 'swipe_left', 'swipe_right', 'swipe_up', 'swipe_down', 'drag_and_drop'].includes(actionType);
   
@@ -38,11 +40,29 @@ const ActionAnimator = ({
     }
   }
 
+  const handleZoneClick = () => {
+    if (hideActionZone) {
+      setClickedZone({
+        x: startArea.x_percent ?? 0,
+        y: startArea.y_percent ?? 0,
+        width: startArea.width_percent ?? 0,
+        height: startArea.height_percent ?? 0,
+        color: borderColor,
+        bgColor: bgColor,
+        timestamp: Date.now()
+      });
+      
+      // Auto-clear après animation
+      setTimeout(() => setClickedZone(null), 600);
+    }
+  };
+
   return (
     <div className="absolute inset-0 pointer-events-none">
       {/* Animation continue: clignotement et légère pulsation */}
       <motion.div
         key={hideActionZone ? 'hidden' : 'visible'}
+        onClick={hideActionZone ? handleZoneClick : undefined}
         style={{
           position: 'absolute',
           left: `${startArea.x_percent ?? 0}%`,
@@ -54,6 +74,8 @@ const ActionAnimator = ({
           borderColor: borderColor,
           backgroundColor: bgColor,
           borderRadius: '8px',
+          cursor: hideActionZone ? 'pointer' : 'default',
+          pointerEvents: hideActionZone ? 'auto' : 'none',
         }}
         initial={{ opacity: hideActionZone ? 0.05 : 0.3, scale: 1 }}
         animate={{ 
@@ -66,6 +88,76 @@ const ActionAnimator = ({
           ease: 'easeInOut'
         }}
       />
+
+      {/* Effet de capture/mouvement au clic */}
+      <AnimatePresence>
+        {clickedZone && (
+          <>
+            {/* Flash initial */}
+            <motion.div
+              key={`flash-${clickedZone.timestamp}`}
+              style={{
+                position: 'absolute',
+                left: `${clickedZone.x}%`,
+                top: `${clickedZone.y}%`,
+                width: `${clickedZone.width}%`,
+                height: `${clickedZone.height}%`,
+                borderWidth: '2px',
+                borderStyle: 'solid',
+                borderColor: clickedZone.color,
+                backgroundColor: clickedZone.bgColor,
+                borderRadius: '8px',
+                pointerEvents: 'none',
+              }}
+              initial={{ 
+                opacity: 1,
+                scale: 1,
+                boxShadow: `0 0 20px ${clickedZone.color}40`
+              }}
+              animate={{ 
+                opacity: [1, 0.5],
+                scale: [1, 1.15],
+                boxShadow: `0 0 30px ${clickedZone.color}80`
+              }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+            />
+
+            {/* Ondes de pulsion */}
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={`pulse-${clickedZone.timestamp}-${i}`}
+                style={{
+                  position: 'absolute',
+                  left: `${clickedZone.x + clickedZone.width / 2}%`,
+                  top: `${clickedZone.y + clickedZone.height / 2}%`,
+                  width: `${clickedZone.width}%`,
+                  height: `${clickedZone.height}%`,
+                  borderWidth: '2px',
+                  borderStyle: 'solid',
+                  borderColor: clickedZone.color,
+                  borderRadius: '8px',
+                  pointerEvents: 'none',
+                  transform: 'translate(-50%, -50%)',
+                }}
+                initial={{ 
+                  opacity: 0.8,
+                  scale: 0.8,
+                }}
+                animate={{ 
+                  opacity: 0,
+                  scale: 2,
+                }}
+                transition={{ 
+                  duration: 0.6,
+                  delay: i * 0.1,
+                  ease: 'easeOut'
+                }}
+              />
+            ))}
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
