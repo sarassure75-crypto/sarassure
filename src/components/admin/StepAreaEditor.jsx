@@ -2,7 +2,6 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 
 // Convert RGB string to HEX for color input
 const rgbToHex = (rgb) => {
@@ -25,10 +24,9 @@ const ResizableArea = ({ area, imageDimensions, onMouseDown, onResizeMouseDown }
   const widthPx = (area.width_percent || 0) * imageDimensions.width / 100;
   const heightPx = (area.height_percent || 0) * imageDimensions.height / 100;
 
-  // Get color with opacity - if not visible, use opacity 0
+  // Get color with opacity
   const color = area.color || "rgb(59, 130, 246)";
-  const isVisible = area.is_visible !== undefined ? area.is_visible : true;
-  const opacity = isVisible ? (area.opacity !== undefined ? area.opacity : 0.5) : 0;
+  const opacity = area.opacity !== undefined ? area.opacity : 0.5;
   const backgroundColor = `${color.replace(')', `, ${opacity})`)}`;
   const solidColor = color;
 
@@ -49,32 +47,26 @@ const ResizableArea = ({ area, imageDimensions, onMouseDown, onResizeMouseDown }
     transition: 'box-shadow 0.2s ease',
   };
 
-  const handles = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
-
   return (
     <div 
       style={style} 
       onMouseDown={onMouseDown}
       className="group hover:shadow-lg"
-      title={isVisible ? "Cliquez et glissez pour déplacer" : "Zone invisible - Cliquez et glissez pour déplacer"}
+      title="Cliquez et glissez pour déplacer"
     >
-      {/* Poignée de déplacement - visible même si zone transparente */}
-      {isVisible && (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-          <div className="flex flex-col items-center gap-0.5 opacity-60">
-            <div className="w-6 h-1 bg-white rounded-full"></div>
-            <div className="w-6 h-1 bg-white rounded-full"></div>
-            <div className="w-6 h-1 bg-white rounded-full"></div>
-          </div>
+      {/* Poignée de déplacement */}
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+        <div className="flex flex-col items-center gap-0.5 opacity-60">
+          <div className="w-6 h-1 bg-white rounded-full"></div>
+          <div className="w-6 h-1 bg-white rounded-full"></div>
+          <div className="w-6 h-1 bg-white rounded-full"></div>
         </div>
-      )}
+      </div>
 
-      {/* Étiquette "⋮⋮" - visible même si zone transparente */}
-      {isVisible && (
-        <div className="absolute top-1 left-1 text-xs font-bold text-white opacity-75 pointer-events-none">
-          ⋮⋮
-        </div>
-      )}
+      {/* Étiquette "⋮⋮" */}
+      <div className="absolute top-1 left-1 text-xs font-bold text-white opacity-75 pointer-events-none">
+        ⋮⋮
+      </div>
 
       {/* Poignées de redimensionnement - toujours visibles */}
       {handles.map(handleName => (
@@ -316,12 +308,6 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
     onAreaChange(updated);
   };
 
-  const handleVisibilityChange = (newVisibility) => {
-    const updated = { ...localArea, is_visible: newVisibility };
-    setLocalArea(updated);
-    onAreaChange(updated);
-  };
-
   return (
     <div className="space-y-4">
       {/* Vérifier que localArea est initialisé */}
@@ -409,22 +395,6 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
                   <SelectItem value="ellipse">◯ Ellipse</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            {/* Visibilité */}
-            <div>
-              <Label htmlFor="area-visibility" className="text-sm font-medium block mb-2">Affichage</Label>
-              <div className="flex gap-2 items-center h-10">
-                <span className="text-sm text-gray-600">
-                  {localArea?.is_visible !== undefined ? (localArea.is_visible ? '👁️ Visible' : '👁️‍🗨️ Invisible') : '👁️ Visible'}
-                </span>
-                <Switch
-                  id="area-visibility"
-                  checked={localArea?.is_visible !== undefined ? localArea.is_visible : true}
-                  onCheckedChange={handleVisibilityChange}
-                />
-              </div>
-              <p className="text-xs text-gray-500 mt-2">Quand <strong>invisible</strong>, la zone reste déplaçable avec les poignées visibles</p>
             </div>
           </div>
         </div>
