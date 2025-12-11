@@ -351,15 +351,17 @@ const ExercisePage = () => {
   const { toast } = useToast();
   const outletContext = useOutletContext();
   const { currentUser: user } = useAuth();
-  const isMobileLayout = outletContext?.isMobileView || false;
   const adminContext = useAdmin();
-  const isPreviewMode = location.pathname.includes('/admin/preview');
   const { recordConfidenceBefore, recordConfidenceAfter, fetchConfidence } = useConfidence();
-  const showDebugButtons = false;
   const startTimeRef = useRef(null);
 
   // Désactiver les gestes tactiles natifs
   useDisableTouchGestures();
+
+  // Computed values from hooks
+  const isMobileLayout = outletContext?.isMobileView || false;
+  const isPreviewMode = location.pathname.includes('/admin/preview');
+  const showDebugButtons = false;
 
   // Open notes modal on event
   useEffect(() => {
