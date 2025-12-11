@@ -319,23 +319,10 @@ const NotesModal = ({ open, onClose, taskId, versionId, stepId, userId }) => {
 
 const ExercisePage = () => {
   console.log('🔴 ExercisePage chargé - VERSION AVEC BOUTON NOTES - ' + new Date().toISOString());
+  
+  // ============ ALL STATES FIRST ============
   const [notesModalOpen, setNotesModalOpen] = useState(false);
   const [notesViewerOpen, setNotesViewerOpen] = useState(false);
-  useEffect(() => {
-    const handler = () => setNotesModalOpen(true);
-    window.addEventListener('openNotesModal', handler);
-    return () => window.removeEventListener('openNotesModal', handler);
-  }, []);
-  const { taskId, versionId } = useParams();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { toast } = useToast();
-  const outletContext = useOutletContext();
-  const { currentUser: user } = useAuth();
-  const isMobileLayout = outletContext?.isMobileView || false;
-  const adminContext = useAdmin();
-  const isPreviewMode = location.pathname.includes('/admin/preview');
-
   const [task, setTask] = useState(null);
   const [currentVersion, setCurrentVersion] = useState(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -353,23 +340,33 @@ const ExercisePage = () => {
   const [forceShowPhoneFrame, setForceShowPhoneFrame] = useState(false); // Override to show phone frame on any step
   const [showBravoOverlay, setShowBravoOverlay] = useState(false);
   const [taskType, setTaskType] = useState('exercise'); // 'exercise' ou 'questionnaire'
-  
-  // Confidence modals states
   const [showConfidenceBeforeModal, setShowConfidenceBeforeModal] = useState(false);
   const [showConfidenceAfterModal, setShowConfidenceAfterModal] = useState(false);
   const [confidenceBefore, setConfidenceBefore] = useState(null);
-  
-  // Confidence hook
+
+  // ============ ALL HOOKS AFTER STATES ============
+  const { taskId, versionId } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { toast } = useToast();
+  const outletContext = useOutletContext();
+  const { currentUser: user } = useAuth();
+  const isMobileLayout = outletContext?.isMobileView || false;
+  const adminContext = useAdmin();
+  const isPreviewMode = location.pathname.includes('/admin/preview');
   const { recordConfidenceBefore, recordConfidenceAfter, fetchConfidence } = useConfidence();
-  
-  // Toggle to show debug buttons in the toolbar without removing code
   const showDebugButtons = false;
+  const startTimeRef = useRef(null);
 
   // Désactiver les gestes tactiles natifs
   useDisableTouchGestures();
-  
-  // Empêcher le body de scroller seulement quand un champ reçoit le focus (évite le décalage au clavier)
+
+  // Open notes modal on event
   useEffect(() => {
+    const handler = () => setNotesModalOpen(true);
+    window.addEventListener('openNotesModal', handler);
+    return () => window.removeEventListener('openNotesModal', handler);
+  }, []);
     const originalOverflow = document.body.style.overflow;
     const originalPosition = document.body.style.position;
     const originalTop = document.body.style.top;
@@ -419,8 +416,6 @@ const ExercisePage = () => {
       window.removeEventListener('focusout', onFocusOut);
     };
   }, []);
-
-  const startTimeRef = useRef(null);
 
   useEffect(() => {
     startTimeRef.current = Date.now();
