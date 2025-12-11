@@ -688,6 +688,16 @@ const ExercisePage = () => {
   if (isLoading) {
     return <div className="flex justify-center items-center h-screen"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
+
+  // Afficher le phone frame si des boutons sont utilisés - MUST BE BEFORE EARLY RETURNS
+  useEffect(() => {
+    if (currentVersion && currentVersion.steps && currentVersion.steps.length > 0) {
+      const hasPhoneButtonActions = currentVersion.steps.some(step => 
+        ['button_power', 'button_volume_up', 'button_volume_down'].includes(step.action_type)
+      );
+      setShowPhoneFrame(hasPhoneButtonActions);
+    }
+  }, [currentVersion]);
   
   if (error) {
      return (
@@ -720,12 +730,6 @@ const ExercisePage = () => {
     ['button_power', 'button_volume_up', 'button_volume_down'].includes(currentStep?.action_type) || 
     forceShowPhoneFrame
   );
-
-  // Afficher le phone frame si des boutons sont utilisés
-  useEffect(() => {
-    // Si l'exercice a des actions de boutons, permettre de les afficher
-    setShowPhoneFrame(hasPhoneButtonActions);
-  }, [hasPhoneButtonActions]);
 
   const sortedVersions = task.versions ? [...task.versions].sort((a, b) => a.name.localeCompare(b.name)) : [];
   const currentIndexInAllVersions = sortedVersions.findIndex(ex => ex.id === currentVersion.id);
