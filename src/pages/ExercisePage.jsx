@@ -27,6 +27,7 @@ import BravoOverlay from '@/components/exercise/BravoOverlay';
 import ConfidenceBeforeModal from '@/components/exercise/ConfidenceBeforeModal';
 import ConfidenceAfterModal from '@/components/exercise/ConfidenceAfterModal';
 import { useConfidence } from '@/hooks/useConfidence';
+import { retryWithBackoff, cacheData, getCachedData } from '@/lib/retryUtils';
 
 
 const toPascalCase = (str) => {
@@ -439,14 +440,76 @@ const ExercisePage = () => {
           }
           taskData = adminContext.tasks.find(t => t.id === taskId);
         } else {
-          const { data: taskResult, error: taskError } = await supabase
-            .from('tasks')
-            .select('id, title, video_url, task_type, versions(*, steps(*))')
-            .eq('id', taskId)
-            .maybeSingle();
+          // Try cache first
+          const cacheKey = `exercise:${taskId}`;
+          const cached = getCachedData(cacheKey);
+          
+          if (cached) {
+            taskData = cached;
+            setTask(taskData);
+            const foundVersion = taskData.versions.find(e => e.id === versionId);
+            if (foundVersion) {
+              foundVersion.steps = foundVersion.steps ? foundVersion.steps.sort((a, b) => a.step_order - b.step_order) : [];
+              setTaskType(taskData.task_type || 'exercise');
+              setCurrentVersion(foundVersion);
+              
+              const queryParams = new URLSearchParams(location.search);
+              const stepParam = queryParams.get('step');
+              const initialStepIndex = stepParam ? parseInt(stepParam, 10) - 1 : 0;
+              setCurrentStepIndex(initialStepIndex >= 0 && initialStepIndex < foundVersion.steps.length ? initialStepIndex : 0);
+              setIsCompleted(false);
+              setIsLoading(false);
+            }
+            
+            // Refresh in background
+            try {
+              const freshData = await retryWithBackoff(
+                () => supabase
+                  .from('tasks')
+                  .select('id, title, video_url, task_type, versions(*, steps(*))')
+                  .eq('id', taskId)
+                  .maybeSingle()
+                  .then(r => {
+                    if (r.error) throw r.error;
+                    return r.data;
+                  }),
+                3, 500, 5000
+              );
+              
+              if (freshData) {
+                cacheData(cacheKey, freshData, 3600000);
+                const freshVersion = freshData.versions.find(e => e.id === versionId);
+                if (freshVersion) {
+                  freshVersion.steps = freshVersion.steps ? freshVersion.steps.sort((a, b) => a.step_order - b.step_order) : [];
+                  setTask(freshData);
+                  setCurrentVersion(freshVersion);
+                }
+              }
+            } catch (bgError) {
+              console.warn('Background refresh failed, using cached data:', bgError);
+            }
+            return;
+          }
 
-          if (taskError) throw taskError;
+          // No cache, fetch fresh data
+          const taskResult = await retryWithBackoff(
+            () => supabase
+              .from('tasks')
+              .select('id, title, video_url, task_type, versions(*, steps(*))')
+              .eq('id', taskId)
+              .maybeSingle()
+              .then(r => {
+                if (r.error) throw r.error;
+                return r.data;
+              }),
+            3, 500, 5000
+          );
+
           taskData = taskResult;
+          
+          if (taskData) {
+            cacheData(cacheKey, taskData, 3600000);
+          }
         }
         
         if (!taskData) {
@@ -478,7 +541,7 @@ const ExercisePage = () => {
 
       } catch (err) {
         console.error("Error fetching data:", err);
-        setError("Impossible de charger les données de l'exercice.");
+        setError("Impossible de charger les données de l'exercice. Vérifiez votre connexion Internet.");
       } finally {
         setIsLoading(false);
       }

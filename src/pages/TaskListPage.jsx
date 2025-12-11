@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import VideoPlayerModal from '@/components/VideoPlayerModal';
 import { motion } from 'framer-motion';
 import SafetyBanner from '@/components/exercise/SafetyBanner';
+import { retryWithBackoff, cacheData, getCachedData } from '@/lib/retryUtils';
 
 const toPascalCase = (str) => {
   if (!str) return null;
@@ -36,18 +37,58 @@ const TaskListPage = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const [tasksData, categoriesData, imagesData] = await Promise.all([
-          fetchTasks(),
-          fetchTaskCategories(),
-          fetchImages()
-        ]);
-        setTasks(tasksData || []);
-        setCategories(categoriesData || []);
-        setImages(imagesData || new Map());
+        // Try to use cache first (for offline support)
+        const cachedTasks = getCachedData('tasks');
+        const cachedCategories = getCachedData('task-categories');
+        const cachedImages = getCachedData('images');
+
+        if (cachedTasks && cachedCategories && cachedImages) {
+          setTasks(cachedTasks);
+          setCategories(cachedCategories);
+          setImages(new Map(cachedImages));
+          setIsLoading(false);
+          
+          // Refresh data in background
+          try {
+            const [tasksData, categoriesData, imagesData] = await Promise.all([
+              retryWithBackoff(() => fetchTasks(), 3, 500, 5000),
+              retryWithBackoff(() => fetchTaskCategories(), 3, 500, 5000),
+              retryWithBackoff(() => fetchImages(), 3, 500, 5000)
+            ]);
+            
+            setTasks(tasksData || []);
+            setCategories(categoriesData || []);
+            setImages(imagesData || new Map());
+            
+            // Cache the fresh data
+            cacheData('tasks', tasksData, 3600000);
+            cacheData('task-categories', categoriesData, 3600000);
+            cacheData('images', Array.from(imagesData.entries()), 3600000);
+          } catch (bgError) {
+            console.warn('Background refresh failed, using cached data:', bgError);
+          }
+        } else {
+          // No cache available, fetch fresh data
+          const [tasksData, categoriesData, imagesData] = await Promise.all([
+            retryWithBackoff(() => fetchTasks(), 3, 500, 5000),
+            retryWithBackoff(() => fetchTaskCategories(), 3, 500, 5000),
+            retryWithBackoff(() => fetchImages(), 3, 500, 5000)
+          ]);
+          
+          setTasks(tasksData || []);
+          setCategories(categoriesData || []);
+          setImages(imagesData || new Map());
+          
+          // Cache the data
+          cacheData('tasks', tasksData, 3600000);
+          cacheData('task-categories', categoriesData, 3600000);
+          cacheData('images', Array.from(imagesData.entries()), 3600000);
+          
+          setIsLoading(false);
+        }
       } catch (err) {
         console.error("Error loading task list data:", err);
-        setError("Impossible de charger les tâches. Veuillez réessayer.");
-      } finally {
+        setError("Impossible de charger les tâches. Les données en cache (si disponibles) seront utilisées.");
         setIsLoading(false);
       }
     };

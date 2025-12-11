@@ -5,6 +5,7 @@ import { USER_ROLES } from '@/data/users';
 import { AdminProvider } from '@/contexts/AdminContext';
 import PwaInstallButton from '@/components/PwaInstallButton';
 import OfflineIndicator from '@/components/OfflineIndicator';
+import LoadingFallback from '@/components/LoadingFallback';
 
 // Pages chargées immédiatement (critiques pour le démarrage)
 import Layout from '@/pages/Layout';
@@ -12,11 +13,9 @@ import HomePage from '@/pages/HomePage';
 import LoginPage from '@/pages/LoginPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 
-// Composant de chargement
+// Composant de chargement amélioré
 const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-  </div>
+  <LoadingFallback message="Chargement de la page..." />
 );
 
 // Pages chargées à la demande (lazy loading)

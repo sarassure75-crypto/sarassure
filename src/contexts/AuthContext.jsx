@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { getUserById } from '@/data/users';
+import { retryWithBackoff } from '@/lib/retryUtils';
 
 const AuthContext = createContext();
 
@@ -18,35 +19,59 @@ export const AuthProvider = ({ children }) => {
         return;
     }
     try {
-      const profile = await getUserById(user.id);
+      const profile = await retryWithBackoff(
+        () => getUserById(user.id),
+        2,
+        300,
+        3000
+      );
       const userWithProfile = profile ? { ...user, ...profile } : user;
       setCurrentUser(userWithProfile);
     } catch (error) {
       console.error("Error fetching profile:", error);
+      // Still set user even if profile fetch fails
       setCurrentUser(user);
     }
   }, []);
 
   useEffect(() => {
+    let isMounted = true;
+    let timeoutId;
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      await fetchProfile(session?.user);
-      setLoading(false);
+      if (isMounted) {
+        await fetchProfile(session?.user);
+        setLoading(false);
+      }
     });
 
     const checkSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        await fetchProfile(session?.user);
+        if (isMounted) {
+          await fetchProfile(session?.user);
+          setLoading(false);
+        }
       } catch (error) {
         console.error("Error checking session:", error);
-      } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     checkSession();
+    
+    // Fallback timeout: force loading to false after 8 seconds max
+    timeoutId = setTimeout(() => {
+      if (isMounted) {
+        setLoading(false);
+      }
+    }, 8000);
 
     return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
       subscription?.unsubscribe();
     };
   }, [fetchProfile]);
