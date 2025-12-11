@@ -284,8 +284,6 @@ const NotesModal = ({ open, onClose, taskId, versionId, stepId, userId }) => {
     }
   };
   
-  if (!open) return null;
-  
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={onClose}>
       <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm mx-4" onClick={e => e.stopPropagation()}>
