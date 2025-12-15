@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { User, KeyRound, Copy, LogOut, Loader2, Link } from 'lucide-react';
 import SatisfactionSurvey from '@/components/SatisfactionSurvey';
+import { LanguagePreferenceSelector } from '@/components/LanguagePreferenceSelector';
 import { supabase } from '@/lib/supabaseClient';
 
 const LearnerAccountPage = () => {
@@ -173,6 +174,11 @@ const LearnerAccountPage = () => {
             <Button variant="ghost" size="icon" className="ml-auto" onClick={() => handleCopy(currentUser.learner_code, "Code Secret")}>
               <Copy className="h-5 w-5" />
             </Button>
+          </div>
+
+          {/* Section Sélection Langue */}
+          <div className="border-t pt-6">
+            <LanguagePreferenceSelector />
           </div>
 
           {/* Section Liaison Formateur */}

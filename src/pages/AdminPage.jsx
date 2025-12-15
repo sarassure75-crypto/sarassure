@@ -17,6 +17,8 @@ import AdminQuestionnaireValidation from '@/components/admin/AdminQuestionnaireV
 import AdminImageValidation from './AdminImageValidation';
 import AdminExerciseValidation from './AdminExerciseValidation';
 import AdminExerciseValidationDebug from './AdminExerciseValidationDebug';
+import AdminGlossaryManager from '@/components/admin/AdminGlossaryManager';
+import { AdminTranslationManager } from '@/components/TranslationComponents';
 import AdminTabNavigation from '@/components/admin/AdminTabNavigation';
 import { useAdminCounters } from '@/hooks/useAdminCounters';
 import { Home, Image, ListTodo, Users, MessageSquare, AlertTriangle, Mail, Trash, LayoutGrid, CheckCircle, DollarSign, Zap } from 'lucide-react';
@@ -42,6 +44,8 @@ const AdminPage = () => {
     else if (pathSegment === 'reviews') currentTab = 'reviews';
     else if (pathSegment === 'users') currentTab = 'users';
     else if (pathSegment === 'faq') currentTab = 'faq';
+    else if (pathSegment === 'lexique') currentTab = 'lexique';
+    else if (pathSegment === 'traductions') currentTab = 'traductions';
     else if (pathSegment === 'errors') currentTab = 'errors';
     else if (pathSegment === 'trash') currentTab = 'trash';
     else if (pathSegment === 'contact') currentTab = 'contact';
@@ -76,6 +80,8 @@ const AdminPage = () => {
                         <Route path="reviews" element={<AdminLearnerReviews currentUser={currentUser} />} />
                         <Route path="users" element={<AdminUserManagement />} />
                         <Route path="faq" element={<AdminFaqManager />} />
+                        <Route path="lexique" element={<AdminGlossaryManager />} />
+                        <Route path="traductions" element={<AdminTranslationManager />} />
                         <Route path="errors" element={<AdminErrorReportViewer />} />
                         <Route path="trash" element={<AdminTrash />} />
                         <Route path="contact" element={<AdminContactManager />} />

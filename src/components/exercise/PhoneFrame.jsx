@@ -11,7 +11,8 @@ const PhoneFrame = ({
   showPhoneFrame = false,
   hideActionZones = false,
   onButtonClick = () => {},
-  buttonConfig = DEFAULT_BUTTON_CONFIG // 'samsung', 'iphone', 'pixel', etc.
+  buttonConfig = DEFAULT_BUTTON_CONFIG, // 'samsung', 'iphone', 'pixel', etc.
+  hideButtons = false // Masquer les boutons (ex: pendant le Bravo)
 }) => {
   if (!showPhoneFrame) {
     return children;
@@ -40,7 +41,7 @@ const PhoneFrame = ({
       </div>
 
       {/* Rendu des boutons au niveau du parent PhoneFrame */}
-      {Object.entries(buttons).map(([key, button]) => {
+      {!hideButtons && Object.entries(buttons).map(([key, button]) => {
         const isRight = button.position.side === 'right';
         
         return (
@@ -51,27 +52,27 @@ const PhoneFrame = ({
               [isRight ? 'right' : 'left']: '0px',
               top: button.position.top,
               transform: 'translateY(-50%)',
-              minWidth: '44px',
-              width: button.width || '44px',
-              height: button.height || '48px',
-              padding: '6px',
-              backgroundColor: button.color,
-              borderRadius: '10px',
+              minWidth: '32px',
+              width: button.width || '32px',
+              height: button.height ? Math.max(32, parseInt(button.height) * 0.75) : '36px',
+              padding: '4px',
+              backgroundColor: '#000000',
+              borderRadius: '8px',
               cursor: 'pointer',
               zIndex: 9999,
-              boxShadow: '0 6px 16px rgba(0,0,0,0.4)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: button.fontSize || '18px',
-              color: 'white',
+              fontSize: '14px',
+              color: '#ffffff',
               fontWeight: '700',
               transition: 'all 0.18s ease',
               userSelect: 'none',
               pointerEvents: 'auto',
               overflow: 'visible',
               margin: 0,
-              border: '2px solid rgba(255,255,255,0.2)'
+              border: '2px solid rgba(255,255,255,0.3)'
             }}
             className="hover:scale-110 hover:shadow-2xl active:scale-95"
             onClick={() => onButtonClick(button.id)}

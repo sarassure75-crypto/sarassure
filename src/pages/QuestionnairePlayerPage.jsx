@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { AlertTriangle, ChevronLeft, CheckCircle, XCircle } from 'lucide-react';
+import { AlertTriangle, ChevronLeft, CheckCircle, XCircle, Home, Volume2, Type } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 
 /**
@@ -29,6 +30,8 @@ const QuestionnairePlayerPage = () => {
   const [error, setError] = useState(null);
   const [showCompletionScreen, setShowCompletionScreen] = useState(false);
   const [score, setScore] = useState(0);
+  const [textZoom, setTextZoom] = useState(1);
+  const [showTextZoomMenu, setShowTextZoomMenu] = useState(false);
 
   useEffect(() => {
     fetchQuestionnaireData();
@@ -137,6 +140,37 @@ const QuestionnairePlayerPage = () => {
   const handlePrevious = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
+  };
+
+  const playAudio = (textToSpeak) => {
+    if ('speechSynthesis' in window && textToSpeak) {
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.lang = 'fr-FR';
+      utterance.rate = 1;
+      utterance.pitch = 1.2;
+      utterance.volume = 1;
+      
+      // Chercher une voix féminine française
+      const voices = window.speechSynthesis.getVoices();
+      const femaleVoice = voices.find(voice => 
+        voice.lang.startsWith('fr') && voice.name.toLowerCase().includes('female')
+      ) || voices.find(voice => 
+        voice.lang.startsWith('fr')
+      );
+      
+      if (femaleVoice) {
+        utterance.voice = femaleVoice;
+      }
+      
+      window.speechSynthesis.cancel(); 
+      window.speechSynthesis.speak(utterance);
+    } else {
+      toast({
+        title: "Audio non disponible",
+        description: "La lecture audio n'est pas supportée par votre navigateur.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -276,12 +310,78 @@ const QuestionnairePlayerPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <div className="max-w-2xl mx-auto p-4 md:p-6">
+        {/* Barre d'outils */}
+        <div className="flex gap-2 bg-white border-2 border-gray-300 rounded-lg p-3 shadow-md mb-6">
+          {/* Bouton Accueil */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/taches')}
+            title="Retour à la liste des exercices"
+            className="flex items-center gap-2 hover:bg-gray-100"
+          >
+            <Home className="h-4 w-4" />
+            <span className="hidden sm:inline">Accueil</span>
+          </Button>
+
+          {/* Bouton Lecture Audio */}
+          {currentQuestion?.instruction && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => playAudio(currentQuestion.instruction)}
+              title="Lire l'instruction audio"
+              className="flex items-center gap-2 hover:bg-gray-100"
+            >
+              <Volume2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Écouter</span>
+            </Button>
+          )}
+
+          {/* Bouton Taille de Texte */}
+          <div className="relative ml-auto">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowTextZoomMenu(!showTextZoomMenu)}
+              title={`Taille du texte (${Math.round(textZoom * 100)}%)`}
+              className="flex items-center gap-2 hover:bg-gray-100"
+            >
+              <Type className="h-4 w-4" />
+              <span className="hidden sm:inline">Texte</span>
+            </Button>
+
+            {/* Menu déroulant zoom texte */}
+            {showTextZoomMenu && (
+              <div 
+                className="absolute bg-white border-2 border-gray-300 rounded-lg shadow-xl z-50 min-w-[160px] top-full mt-2 right-0"
+              >
+                <div className="p-2">
+                  <p className="text-xs font-semibold text-gray-600 mb-2 px-2">Taille du texte:</p>
+                  {[1, 1.25, 1.5, 2].map((zoom) => (
+                    <button
+                      key={zoom}
+                      onClick={() => {
+                        setTextZoom(zoom);
+                        setShowTextZoomMenu(false);
+                      }}
+                      className={cn(
+                        "w-full text-left px-3 py-2 text-sm rounded hover:bg-blue-50 transition-colors",
+                        textZoom === zoom && "bg-blue-100 font-semibold text-blue-800"
+                      )}
+                    >
+                      {Math.round(zoom * 100)}%
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <Button variant="ghost" onClick={() => navigate('/taches')}>
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Retour
-          </Button>
+          <div className="w-24"></div>
           <h1 className="text-2xl font-bold text-blue-700">{task.title}</h1>
           <div className="w-24"></div>
         </div>
@@ -309,7 +409,7 @@ const QuestionnairePlayerPage = () => {
               {/* Question Card */}
               <Card className="border-2 border-blue-500 shadow-lg mb-6">
                 <CardHeader className="bg-blue-50 border-b-2 border-blue-500">
-                  <CardTitle className="text-blue-700">{currentQuestion.instruction}</CardTitle>
+                  <CardTitle className="text-blue-700" style={{ fontSize: `${100 * textZoom}%` }}>{currentQuestion.instruction}</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6 space-y-6">
                   {/* Question Image - Conteneur dédié */}
@@ -364,7 +464,7 @@ const QuestionnairePlayerPage = () => {
                             )}
                           </div>
                           <div className="flex-1">
-                            <span className="font-medium text-gray-800">{choice.text}</span>
+                            <span className="font-medium text-gray-800" style={{ fontSize: `${100 * textZoom}%` }}>{choice.text}</span>
                           </div>
                         </div>
                         {choice.image?.filePath && (() => {

@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 
-const SatisfactionSurvey = ({ onSubmitted }) => {
+const SatisfactionSurvey = ({ onSubmitted, taskId = null, trainerId = null }) => {
   const { currentUser } = useAuth();
   const { toast } = useToast();
   const [rating, setRating] = useState(5);
@@ -26,8 +26,14 @@ const SatisfactionSurvey = ({ onSubmitted }) => {
     setLoading(true);
     try {
       const { error } = await supabase
-        .from('satisfaction_responses')
-        .insert({ learner_id: currentUser.id, rating: parseInt(rating, 10), comment });
+        .from('learner_reviews')
+        .insert({ 
+          learner_id: currentUser.id, 
+          rating: parseInt(rating, 10), 
+          comment: comment || null,
+          task_id: taskId || null,
+          trainer_id: trainerId || null
+        });
 
       if (error) throw error;
 

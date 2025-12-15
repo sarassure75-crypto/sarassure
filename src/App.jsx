@@ -62,6 +62,7 @@ const AdminRevenueDashboard = lazy(() => import('@/pages/AdminRevenueDashboard')
 // Ressources
 const WallpapersLibraryPage = lazy(() => import('@/pages/WallpapersLibraryPage'));
 const ExerciseRequestsList = lazy(() => import('@/pages/ExerciseRequestsList'));
+const AdminGlossaryManager = lazy(() => import('@/components/admin/AdminGlossaryManager'));
 
 function AppContent() {
   const location = useLocation();
@@ -116,6 +117,9 @@ function AppContent() {
         <Route path="report-error" element={<ProtectedRoute roles={[USER_ROLES.LEARNER, USER_ROLES.TRAINER, USER_ROLES.ADMIN]}><ReportErrorPage /></ProtectedRoute>} />
         <Route path="mon-suivi" element={<ProtectedRoute roles={[USER_ROLES.LEARNER]}><LearnerProgressPage /></ProtectedRoute>} />
         <Route path="compte-apprenant" element={<ProtectedRoute roles={[USER_ROLES.LEARNER]}><LearnerAccountPage /></ProtectedRoute>} />
+
+        {/* Route Admin - Gestion du Lexique */}
+        <Route path="admin/lexique" element={<ProtectedRoute roles={[USER_ROLES.ADMIN]}><AdminGlossaryManager /></ProtectedRoute>} />
 
         <Route path="admin/*" element={
           <ProtectedRoute roles={[USER_ROLES.ADMIN]}>

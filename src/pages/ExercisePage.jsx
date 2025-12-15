@@ -29,6 +29,8 @@ import ConfidenceBeforeModal from '@/components/exercise/ConfidenceBeforeModal';
 import ConfidenceAfterModal from '@/components/exercise/ConfidenceAfterModal';
 import { useConfidence } from '@/hooks/useConfidence';
 import { cacheData, getCachedData } from '@/lib/retryUtils';
+import { HighlightGlossaryTerms } from '@/components/GlossaryComponents';
+import { InstructionTranslator, TranslatableText } from '@/components/TranslationComponents';
 
 
 const toPascalCase = (str) => {
@@ -39,14 +41,21 @@ const toPascalCase = (str) => {
     .join('');
 };
 
-const ExerciseHeader = ({ taskTitle, currentStep, onPlayAudio, showInstructions, textZoom, isMobileLayout }) => {
+const ExerciseHeader = ({ taskTitle, currentStep, onPlayAudio, showInstructions, textZoom, isMobileLayout, currentLanguage = 'fr' }) => {
   const IconComponent = currentStep?.icon_name ? LucideIcons[toPascalCase(currentStep.icon_name)] : null;
   
   return (
     <div className={cn("flex justify-between items-center shrink-0 relative bg-white p-4 rounded-lg shadow", isMobileLayout ? "mb-1 p-2" : "mb-4")}>
       {/* Titre à gauche */}
       <div className="flex items-center gap-1 flex-grow min-w-0">
-        <h1 className={cn("font-bold text-primary line-clamp-3", isMobileLayout ? "text-xs" : "text-xl sm:text-2xl")} style={{ fontSize: `${100 * textZoom}%` }}>{taskTitle}</h1>
+        <div className={cn("font-bold text-primary line-clamp-3", isMobileLayout ? "text-xs" : "text-xl sm:text-2xl")} style={{ fontSize: `${100 * textZoom}%` }}>
+          <TranslatableText 
+            key={`title-${currentLanguage}`}
+            text={taskTitle}
+            language={currentLanguage}
+            className="w-full"
+          />
+        </div>
       </div>
       
       {/* Instructions à droite (affichées par défaut, masquées sur très petit mobile) */}
@@ -58,9 +67,14 @@ const ExerciseHeader = ({ taskTitle, currentStep, onPlayAudio, showInstructions,
             </div>
           )}
           <div className="flex items-center gap-2">
-            <p className="text-gray-700 text-base" style={{ fontSize: `${100 * textZoom}%` }}>
-              {currentStep?.instruction || 'Aucune instruction'}
-            </p>
+            <div className="text-gray-700 text-base" style={{ fontSize: `${100 * textZoom}%` }}>
+              <TranslatableText 
+                key={`instr-${currentLanguage}`}
+                text={currentStep?.instruction || 'Aucune instruction'}
+                language={currentLanguage}
+                className="w-full"
+              />
+            </div>
           </div>
         </div>
       )}
@@ -151,7 +165,7 @@ const ExerciseTabs = ({ versions, currentVersionId, onTabChange, isMobileLayout 
   );
 };
 
-const StepDisplay = ({ currentStep, currentStepIndex, totalSteps, showInstructions, isMobileLayout, onPlayAudio, iconName }) => {
+const StepDisplay = ({ currentStep, currentStepIndex, totalSteps, showInstructions, isMobileLayout, onPlayAudio, iconName, currentLanguage }) => {
   if (!currentStep) return null;
   const IconComponent = LucideIcons[toPascalCase(iconName)] || null;
   
@@ -175,9 +189,14 @@ const StepDisplay = ({ currentStep, currentStepIndex, totalSteps, showInstructio
             <HelpCircle className={cn("object-contain text-muted-foreground", isMobileLayout ? "h-5 w-5" : "h-8 w-8")} />
           )}
         </div>
-        <p className={cn("text-foreground leading-snug flex-grow", isMobileLayout ? "text-xs" : "text-sm sm:text-md")}> 
-          {currentStep.instruction}
-        </p>
+        <div className={cn("text-foreground leading-snug flex-grow", isMobileLayout ? "text-xs" : "text-sm sm:text-md")}> 
+          <TranslatableText 
+            key={`step-instr-${currentLanguage}`}
+            text={currentStep.instruction}
+            language={currentLanguage}
+            className=""
+          />
+        </div>
       </div>
       {/* Message d'action affiché ici sous les icônes, toujours visible */}
       {currentStep.hint && (
@@ -346,6 +365,8 @@ const ExercisePage = () => {
   const [showConfidenceBeforeModal, setShowConfidenceBeforeModal] = useState(false);
   const [showConfidenceAfterModal, setShowConfidenceAfterModal] = useState(false);
   const [confidenceBefore, setConfidenceBefore] = useState(null);
+  const [currentLanguage, setCurrentLanguageState] = useState('fr'); // Sera mis à jour après la récupération de user
+  const [preferredLanguageFromProfile, setPreferredLanguageFromProfile] = useState('en'); // La vraie langue préférée du profil
 
   // ============ ALL HOOKS AFTER STATES ============
   const { taskId, versionId } = useParams();
@@ -357,6 +378,59 @@ const ExercisePage = () => {
   const adminContext = useAdmin();
   const { recordConfidenceBefore, recordConfidenceAfter, fetchConfidence } = useConfidence();
   const startTimeRef = useRef(null);
+
+  // ============ LANGUAGE MANAGEMENT (AFTER user IS DEFINED) ============
+  // Wrapper pour sauvegarder la langue (dans le profil ET localStorage)
+  const setCurrentLanguage = useCallback(async (lang) => {
+    setCurrentLanguageState(lang);
+    try {
+      localStorage.setItem('preferredLanguage', lang);
+      // Sauvegarder dans le profil utilisateur SEULEMENT si ce n'est pas le français (FR est la langue par défaut)
+      if (user?.id && lang !== 'fr') {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ preferred_translation_language: lang })
+          .eq('id', user.id);
+        
+        if (error) {
+          console.error('Error saving language to profile:', error);
+        }
+      }
+    } catch (error) {
+      console.error('Error saving language preference:', error);
+    }
+  }, [user?.id]);
+
+  // Charger la langue préférée du profil au démarrage
+  useEffect(() => {
+    const loadUserLanguage = async () => {
+      if (user?.id) {
+        try {
+          const { data } = await supabase
+            .from('profiles')
+            .select('preferred_translation_language')
+            .eq('id', user.id)
+            .single();
+          
+          if (data?.preferred_translation_language) {
+            // Sauvegarder la vraie langue préférée du profil
+            const prefLang = data.preferred_translation_language;
+            setPreferredLanguageFromProfile(prefLang);
+            localStorage.setItem('preferredLanguage', prefLang);
+            
+            // Si la langue préférée n'est pas FR, la charger comme langue actuelle
+            if (prefLang !== 'fr') {
+              setCurrentLanguageState(prefLang);
+            }
+          }
+        } catch (error) {
+          console.error('Error loading user language preference:', error);
+        }
+      }
+    };
+
+    loadUserLanguage();
+  }, [user?.id]);
 
   // Désactiver les gestes tactiles natifs
   useDisableTouchGestures();
@@ -685,6 +759,22 @@ const ExercisePage = () => {
     if ('speechSynthesis' in window && textToSpeak) {
         const utterance = new SpeechSynthesisUtterance(textToSpeak);
         utterance.lang = 'fr-FR';
+        utterance.rate = 1;
+        utterance.pitch = 1.2;
+        utterance.volume = 1;
+        
+        // Chercher une voix féminine française
+        const voices = window.speechSynthesis.getVoices();
+        const femaleVoice = voices.find(voice => 
+          voice.lang.startsWith('fr') && voice.name.toLowerCase().includes('female')
+        ) || voices.find(voice => 
+          voice.lang.startsWith('fr')
+        );
+        
+        if (femaleVoice) {
+          utterance.voice = femaleVoice;
+        }
+        
         window.speechSynthesis.cancel(); 
         window.speechSynthesis.speak(utterance);
     } else {
@@ -807,11 +897,13 @@ const ExercisePage = () => {
           isMobileLayout={true}
           onPlayAudio={playInstructionAudio}
           iconName={currentStep?.icon_name}
+          currentLanguage={currentLanguage}
         />
       )}
       <PhoneFrame 
         showPhoneFrame={shouldShowPhoneFrame}
         buttonConfig={currentStep?.button_config || 'samsung'}
+        hideButtons={showBravoOverlay}
         onButtonClick={(buttonId) => {
           const buttonToActionMap = {
             'power': 'button_power',
@@ -948,6 +1040,9 @@ const ExercisePage = () => {
           versionId={versionId}
           currentStepIndex={currentStepIndex}
           totalSteps={totalSteps}
+          currentLanguage={currentLanguage}
+          onLanguageChange={setCurrentLanguage}
+          preferredLanguage={preferredLanguageFromProfile}
         />
 
         {/* Zone capture d'écran avec zone d'action */}
@@ -1023,6 +1118,7 @@ const ExercisePage = () => {
           showInstructions={showInstructions}
           textZoom={textZoom}
           isMobileLayout={isMobileLayout}
+          currentLanguage={currentLanguage}
         />
         <NotesModal 
           open={notesModalOpen} 

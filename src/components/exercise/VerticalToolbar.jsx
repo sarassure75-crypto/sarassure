@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Search, X, Eye, EyeOff, Home, FileText, FolderOpen, ChevronLeft, ChevronRight, Layers, Info, Volume2, Type, Bug } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, X, Eye, EyeOff, Home, FileText, FolderOpen, ChevronLeft, ChevronRight, Layers, Info, Volume2, Type, Bug, Globe, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { getAvailableLanguages } from '@/data/translation';
 
 /**
  * Barre d'outils verticale verte avec icônes blanches
@@ -32,10 +33,17 @@ const VerticalToolbar = ({
   taskId,
   versionId,
   currentStepIndex,
-  totalSteps
+  totalSteps,
+  currentLanguage,
+  onLanguageChange,
+  preferredLanguage = 'en' // La vraie langue préférée du profil utilisateur
 }) => {
   const navigate = useNavigate();
   const [showVersionMenu, setShowVersionMenu] = useState(false);
+  const [showTextZoomMenu, setShowTextZoomMenu] = useState(false);
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  const [languages, setLanguages] = useState([]);
+  const [loadingLanguages, setLoadingLanguages] = useState(false);
   const iconSize = isMobileLayout ? "h-5 w-5" : "h-6 w-6";
   const buttonClass = "w-full p-3 flex items-center justify-center text-white hover:bg-green-600 transition-colors border-b border-green-600";
   
@@ -47,6 +55,23 @@ const VerticalToolbar = ({
     if (currentStepIndex !== undefined && currentStepIndex >= 0) params.append('stepIndex', currentStepIndex);
     navigate(`/report-error?${params.toString()}`);
   };
+
+  // Charger les langues disponibles
+  useEffect(() => {
+    const loadLanguages = async () => {
+      setLoadingLanguages(true);
+      try {
+        const langs = await getAvailableLanguages();
+        setLanguages(langs);
+      } catch (error) {
+        console.error('Erreur lors du chargement des langues:', error);
+      } finally {
+        setLoadingLanguages(false);
+      }
+    };
+
+    loadLanguages();
+  }, []);
 
   return (
     <div className="flex flex-col bg-green-700 rounded-lg shadow-lg overflow-y-auto h-auto">
@@ -95,13 +120,7 @@ const VerticalToolbar = ({
       {/* Zoom texte (agrandir/réduire instructions et header) */}
       <div className="relative w-full">
         <button
-          onClick={() => {
-            // Créer un menu popup pour le zoom
-            const menu = document.getElementById('text-zoom-menu');
-            if (menu) {
-              menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-            }
-          }}
+          onClick={() => setShowTextZoomMenu(!showTextZoomMenu)}
           className={buttonClass}
           title={`Taille du texte (${Math.round(textZoom * 100)}%)`}
         >
@@ -109,30 +128,31 @@ const VerticalToolbar = ({
         </button>
 
         {/* Menu déroulant zoom texte */}
-        <div 
-          id="text-zoom-menu"
-          className="fixed bg-white border-2 border-green-700 rounded-lg shadow-2xl z-50 min-w-[180px] pointer-events-auto hidden" 
-          style={{ top: '240px', right: '20px' }}
-        >
-          <div className="p-2">
-            <p className="text-xs font-semibold text-gray-600 mb-2 px-2">Taille du texte:</p>
-            {[1, 1.25, 1.5].map((zoom) => (
-              <button
-                key={zoom}
-                onClick={() => {
-                  onTextZoomChange(zoom);
-                  document.getElementById('text-zoom-menu').style.display = 'none';
-                }}
-                className={cn(
-                  "w-full text-left px-3 py-2 text-sm rounded hover:bg-green-50 transition-colors",
-                  textZoom === zoom && "bg-green-100 font-semibold text-green-800"
-                )}
-              >
-                {Math.round(zoom * 100)}%
-              </button>
-            ))}
+        {showTextZoomMenu && (
+          <div 
+            className="fixed bg-white border-2 border-green-700 rounded-lg shadow-2xl z-50 min-w-[180px] pointer-events-auto" 
+            style={{ top: '150px', right: '20px' }}
+          >
+            <div className="p-2">
+              <p className="text-xs font-semibold text-gray-600 mb-2 px-2">Taille du texte:</p>
+              {[1, 1.25, 1.5, 2].map((zoom) => (
+                <button
+                  key={zoom}
+                  onClick={() => {
+                    onTextZoomChange(zoom);
+                    setShowTextZoomMenu(false);
+                  }}
+                  className={cn(
+                    "w-full text-left px-3 py-2 text-sm rounded hover:bg-green-50 transition-colors",
+                    textZoom === zoom && "bg-green-100 font-semibold text-green-800"
+                  )}
+                >
+                  {Math.round(zoom * 100)}%
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Changer de version */}
@@ -215,6 +235,22 @@ const VerticalToolbar = ({
         title="Étape suivante"
       >
         <ChevronRight className={iconSize} />
+      </button>
+
+      {/* Bouton Toggle Langue - Simple FR / Langue préférée */}
+      <button
+        onClick={() => {
+          const newLang = currentLanguage === 'fr' ? preferredLanguage : 'fr';
+          onLanguageChange?.(newLang);
+        }}
+        className={buttonClass}
+        title={currentLanguage === 'fr' ? 'Cliquez pour voir la traduction' : 'Cliquez pour revenir au français'}
+        aria-label="Changer la langue"
+      >
+        <div className="flex flex-col items-center justify-center w-full">
+          <Globe className={iconSize} />
+          <span className="text-xs font-bold text-white mt-1">{currentLanguage.toUpperCase()}</span>
+        </div>
       </button>
 
       {/* Accueil (Tâches) */}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, LayoutGrid, Image, CheckCircle, Users, MessageSquare, AlertTriangle, Mail, ListTodo, DollarSign, ClipboardList, Zap, HelpCircle, Star } from 'lucide-react';
+import { Home, LayoutGrid, Image, CheckCircle, Users, MessageSquare, AlertTriangle, Mail, ListTodo, DollarSign, ClipboardList, Zap, HelpCircle, Star, Book, Languages } from 'lucide-react';
 
 export default function AdminTabNavigation({ counters = {} }) {
   const navigate = useNavigate();
@@ -20,6 +20,8 @@ export default function AdminTabNavigation({ counters = {} }) {
   else if (pathSegment === 'points') currentTab = 'points';
   else if (pathSegment === 'users') currentTab = 'users';
   else if (pathSegment === 'faq') currentTab = 'faq';
+  else if (pathSegment === 'lexique') currentTab = 'lexique';
+  else if (pathSegment === 'traductions') currentTab = 'traductions';
   else if (pathSegment === 'reviews') currentTab = 'reviews';
   else if (pathSegment === 'errors') currentTab = 'errors';
   else if (pathSegment === 'contact') currentTab = 'contact';
@@ -37,6 +39,8 @@ export default function AdminTabNavigation({ counters = {} }) {
     { id: 'reviews', label: 'Avis', icon: Star, path: '/admin/reviews', count: 0 },
     { id: 'users', label: 'Utilisateurs', icon: Users, path: '/admin/users', count: 0 },
     { id: 'faq', label: 'FAQ', icon: MessageSquare, path: '/admin/faq', count: counters.pendingFaq || 0 },
+    { id: 'lexique', label: 'Lexique', icon: Book, path: '/admin/lexique', count: 0 },
+    { id: 'traductions', label: 'Traductions', icon: Languages, path: '/admin/traductions', count: 0 },
     { id: 'errors', label: 'Rapports', icon: AlertTriangle, path: '/admin/errors', count: 0 },
     { id: 'contact', label: 'Messages', icon: Mail, path: '/admin/contact', count: counters.pendingMessages || 0 },
   ];

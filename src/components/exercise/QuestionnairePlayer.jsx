@@ -4,8 +4,11 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { supabase, getImageUrl } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { CheckCircle, XCircle, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { CheckCircle, XCircle, ChevronLeft, ChevronRight, AlertCircle, Home, Volume2, Type } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import ImageFromSupabase from '@/components/ImageFromSupabase';
+import { HighlightGlossaryTerms } from '@/components/GlossaryComponents';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -16,6 +19,7 @@ import { v4 as uuidv4 } from 'uuid';
 export default function QuestionnairePlayer({ versionId, taskId, learner_id, onComplete }) {
   const { currentUser } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -25,6 +29,8 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
   const [attemptId, setAttemptId] = useState(null);
   const [isCompleted, setIsCompleted] = useState(false);
   const [finalScore, setFinalScore] = useState(null);
+  const [textZoom, setTextZoom] = useState(1);
+  const [showTextZoomMenu, setShowTextZoomMenu] = useState(false);
 
   // Charger les questions du questionnaire
   useEffect(() => {
@@ -133,6 +139,37 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
     }
   };
 
+  const playAudio = (textToSpeak) => {
+    if ('speechSynthesis' in window && textToSpeak) {
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        utterance.lang = 'fr-FR';
+        utterance.rate = 1;
+        utterance.pitch = 1.2;
+        utterance.volume = 1;
+        
+        // Chercher une voix féminine française
+        const voices = window.speechSynthesis.getVoices();
+        const femaleVoice = voices.find(voice => 
+          voice.lang.startsWith('fr') && voice.name.toLowerCase().includes('female')
+        ) || voices.find(voice => 
+          voice.lang.startsWith('fr')
+        );
+        
+        if (femaleVoice) {
+          utterance.voice = femaleVoice;
+        }
+        
+        window.speechSynthesis.cancel(); 
+        window.speechSynthesis.speak(utterance);
+    } else {
+        toast({
+            title: "Audio non disponible",
+            description: "La lecture audio n'est pas supportée par votre navigateur.",
+            variant: "destructive"
+        });
+    }
+  };
+
   const submitAttempt = async () => {
     if (!attemptId || !currentQuestion) return;
 
@@ -234,17 +271,90 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
   const selectedAnswers = answers[currentQuestion.id] || [];
 
   return (
-    <Card className="w-full max-w-4xl mx-auto border-2 border-blue-500">
-      <CardHeader className="bg-blue-50">
-        <CardTitle className="text-blue-700">
-          Question {currentQuestionIndex + 1} / {questions.length}
-        </CardTitle>
-      </CardHeader>
+    <div className="flex flex-col w-full max-w-4xl mx-auto gap-4">
+      {/* Barre d'outils */}
+      <div className="flex gap-2 bg-white border-2 border-gray-300 rounded-lg p-3 shadow-md sticky top-0 z-10">
+        {/* Bouton Accueil */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/taches')}
+          title="Retour à la liste des exercices"
+          className="flex items-center gap-2 hover:bg-gray-100"
+        >
+          <Home className="h-4 w-4" />
+          <span className="hidden sm:inline">Accueil</span>
+        </Button>
 
-      <CardContent className="space-y-6">
-        {/* Instruction de la question */}
-        <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-600">
-          <h3 className="text-xl font-bold text-blue-900 mb-2">{currentQuestion.instruction}</h3>
+        {/* Bouton Lecture Audio */}
+        {currentQuestion?.instruction && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => playAudio(currentQuestion.instruction)}
+            title="Lire l'instruction audio"
+            className="flex items-center gap-2 hover:bg-gray-100"
+          >
+            <Volume2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Écouter</span>
+          </Button>
+        )}
+
+        {/* Bouton Taille de Texte */}
+        <div className="relative ml-auto">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowTextZoomMenu(!showTextZoomMenu)}
+            title={`Taille du texte (${Math.round(textZoom * 100)}%)`}
+            className="flex items-center gap-2 hover:bg-gray-100"
+          >
+            <Type className="h-4 w-4" />
+            <span className="hidden sm:inline">Texte</span>
+          </Button>
+
+          {/* Menu déroulant zoom texte */}
+          {showTextZoomMenu && (
+            <div 
+              className="absolute bg-white border-2 border-gray-300 rounded-lg shadow-xl z-50 min-w-[160px] top-full mt-2 right-0"
+            >
+              <div className="p-2">
+                <p className="text-xs font-semibold text-gray-600 mb-2 px-2">Taille du texte:</p>
+                {[1, 1.25, 1.5, 2].map((zoom) => (
+                  <button
+                    key={zoom}
+                    onClick={() => {
+                      setTextZoom(zoom);
+                      setShowTextZoomMenu(false);
+                    }}
+                    className={cn(
+                      "w-full text-left px-3 py-2 text-sm rounded hover:bg-blue-50 transition-colors",
+                      textZoom === zoom && "bg-blue-100 font-semibold text-blue-800"
+                    )}
+                  >
+                    {Math.round(zoom * 100)}%
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Question Card */}
+      <Card className="w-full max-w-4xl mx-auto border-2 border-blue-500">
+        <CardHeader className="bg-blue-50">
+          <CardTitle className="text-blue-700">
+            Question {currentQuestionIndex + 1} / {questions.length}
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="space-y-6">
+          {/* Instruction de la question */}
+          <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-600">
+            <h3 className="text-xl font-bold text-blue-900 mb-2" style={{ fontSize: `${100 * textZoom}%` }}>
+              <HighlightGlossaryTerms text={currentQuestion.instruction} />
+            </h3>
 
           {/* Image de la question (si image_choice ou mixed) */}
           {currentQuestion.imageId && ['image_choice', 'mixed'].includes(currentQuestion.questionType) && (
@@ -298,7 +408,7 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
                   )}
 
                   {/* Texte de la réponse */}
-                  {choice.text && <p className="text-base">{choice.text}</p>}
+                  {choice.text && <p className="text-base" style={{ fontSize: `${100 * textZoom}%` }}><HighlightGlossaryTerms text={choice.text} /></p>}
                 </label>
               </div>
             );
@@ -346,5 +456,6 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 }
