@@ -9,6 +9,11 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
+// ===== Sentry Initialization =====
+import { initSentry } from '@/lib/sentry';
+initSentry();
+// ===============================
+
 const queryClient = new QueryClient();
 
 // Service Worker - désactiver en développement, activer en production
@@ -30,7 +35,7 @@ root.render(
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <BrowserRouter>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <App />
           <Toaster />
         </BrowserRouter>

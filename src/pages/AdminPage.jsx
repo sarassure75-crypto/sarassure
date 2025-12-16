@@ -18,6 +18,7 @@ import AdminImageValidation from './AdminImageValidation';
 import AdminExerciseValidation from './AdminExerciseValidation';
 import AdminExerciseValidationDebug from './AdminExerciseValidationDebug';
 import AdminGlossaryManager from '@/components/admin/AdminGlossaryManager';
+import AdminQuestionnaireTranslationManager from '@/components/admin/AdminQuestionnaireTranslationManager';
 import { AdminTranslationManager } from '@/components/TranslationComponents';
 import AdminTabNavigation from '@/components/admin/AdminTabNavigation';
 import { useAdminCounters } from '@/hooks/useAdminCounters';
@@ -46,6 +47,7 @@ const AdminPage = () => {
     else if (pathSegment === 'faq') currentTab = 'faq';
     else if (pathSegment === 'lexique') currentTab = 'lexique';
     else if (pathSegment === 'traductions') currentTab = 'traductions';
+    else if (pathSegment === 'traductions-qcm') currentTab = 'traductions-qcm';
     else if (pathSegment === 'errors') currentTab = 'errors';
     else if (pathSegment === 'trash') currentTab = 'trash';
     else if (pathSegment === 'contact') currentTab = 'contact';
@@ -82,6 +84,7 @@ const AdminPage = () => {
                         <Route path="faq" element={<AdminFaqManager />} />
                         <Route path="lexique" element={<AdminGlossaryManager />} />
                         <Route path="traductions" element={<AdminTranslationManager />} />
+                        <Route path="traductions-qcm" element={<AdminQuestionnaireTranslationManager />} />
                         <Route path="errors" element={<AdminErrorReportViewer />} />
                         <Route path="trash" element={<AdminTrash />} />
                         <Route path="contact" element={<AdminContactManager />} />
