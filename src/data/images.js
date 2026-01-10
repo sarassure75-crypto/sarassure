@@ -33,13 +33,16 @@ const saveCustomCategories = (categories) => {
 
 export const fetchImages = async (forceRefresh = false) => {
   if (imagesCache && !forceRefresh) {
+    console.log('📦 [images.js] Returning cached images (', imagesCache.size, 'items)');
     return imagesCache;
   }
 
   if (imagesPromise && !forceRefresh) {
+    console.log('⏳ [images.js] Returning pending imagesPromise...');
     return imagesPromise;
   }
 
+  console.log('🔄 [images.js] Fetching fresh images from Supabase... (forceRefresh:', forceRefresh, ')');
   imagesPromise = (async () => {
     const { data, error } = await supabase
       .from('app_images')
@@ -70,6 +73,7 @@ export const fetchImages = async (forceRefresh = false) => {
     });
 
     imagesCache = new Map(imagesWithUrls.map(img => [img.id, img]));
+    console.log('✅ [images.js] Fetched', imagesCache.size, 'images from Supabase');
     imagesPromise = null; 
     return imagesCache;
   })();
@@ -103,6 +107,7 @@ export const getImageCategories = async (forceRefresh = false) => {
 };
 
 const invalidateCache = () => {
+  console.log('🗑️ [images.js] Invalidating imagesCache and imagesPromise');
   imagesCache = null;
   imagesPromise = null;
 };
@@ -164,22 +169,75 @@ export const updateImage = async (id, updates) => {
 };
 
 export const deleteImage = async (id, filePath) => {
-    if (filePath) {
-        const { error: fileError } = await supabase.storage.from('images').remove([filePath]);
-        if (fileError && fileError.statusCode !== '404') {
-            console.error('Error deleting image file from storage:', fileError);
-            // Don't throw, just log, as we want to delete DB record anyway
-        }
-    }
+  console.log('🗑️ [images.js] deleteImage called with id:', id, 'filePath:', filePath);
+  // Attempt to remove file from storage using several normalized path variants
+  if (filePath) {
+    const sanitize = (s) => {
+      try {
+        return s.normalize('NFKD').replace(/\p{Diacritic}/gu, '').replace(/[^a-zA-Z0-9._\/-]/g, '-').replace(/-+/g, '-');
+      } catch (e) {
+        return s.replace(/[^a-zA-Z0-9._\/-]/g, '-');
+      }
+    };
 
-    const { error: dbError } = await supabase.from('app_images').delete().eq('id', id);
-    if (dbError) {
-        console.error('Error deleting image data from database:', dbError);
-        throw dbError;
+    const candidates = [];
+    candidates.push(filePath);
+    if (filePath.startsWith('public/')) candidates.push(filePath.replace(/^public\//, ''));
+    if (!filePath.startsWith('public/')) candidates.push(`public/${filePath}`);
+    // sanitized variant
+    candidates.push(sanitize(filePath));
+    if (filePath.startsWith('public/')) candidates.push(`public/${sanitize(filePath.replace(/^public\//, ''))}`);
+
+    let removed = false;
+    for (const p of [...new Set(candidates)]) {
+      if (!p) continue;
+      try {
+        const { error: fileError } = await supabase.storage.from('images').remove([p]);
+        if (!fileError) {
+          removed = true;
+          break;
+        }
+        // If the error indicates the key is invalid or not found, continue to next candidate
+        if (fileError && (fileError.statusCode === '404' || /Invalid key/i.test(fileError.message || ''))) {
+          console.warn('Storage remove attempt failed for', p, fileError.message || fileError);
+          continue;
+        }
+        // For any other error, log and continue
+        console.error('Error deleting image file from storage (attempt):', p, fileError);
+      } catch (e) {
+        console.error('Unexpected error while deleting storage object for', p, e);
+      }
     }
-    invalidateCache();
-    invalidateCategoriesCache();
-    invalidateSubcategoriesCache();
+    if (!removed) {
+      console.warn('Could not remove image file from storage for any candidate path. Proceeding to DB delete.');
+    }
+  }
+
+  // Delete DB record. Avoid using `.select().single()` here because
+  // PostgREST can return 406 / PGRST116 when no rows are returned or
+  // when content-negotiation headers are not acceptable. Instead,
+  // perform a plain delete and check the returned error/status.
+  console.log('🗑️ [images.js] Attempting to delete image from DB with id:', id);
+  const { data: deletedData, error: dbError } = await supabase.from('app_images').delete().eq('id', id);
+  
+  if (dbError) {
+    // If the error indicates no rows were found, log and return gracefully
+    if (dbError.code === 'PGRST116' || /contains 0 rows/i.test(dbError.message || '')) {
+      console.warn('No image DB row deleted (not found):', { id, filePath, dbError });
+      // Invalidate caches to ensure UI sync and return
+      invalidateCache();
+      invalidateCategoriesCache();
+      invalidateSubcategoriesCache();
+      return;
+    }
+    console.error('❌ [images.js] Error deleting image from database:', { code: dbError.code, message: dbError.message, dbError });
+    throw dbError;
+  }
+  
+  console.log('✅ [images.js] Database deletion successful for id:', id, '| deletedData:', deletedData);
+  invalidateCache();
+  invalidateCategoriesCache();
+  invalidateSubcategoriesCache();
 };
 
 export const addImageCategory = async (categoryName) => {

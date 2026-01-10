@@ -3,26 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useContributionActions, useContributorStats } from "../hooks/useContributions";
 import { useAuth } from "../contexts/AuthContext";
 import { useContributorRevenue } from "../hooks/useContributorRevenue";
-import { createClient } from "@supabase/supabase-js";
-import { 
-  FileText, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
-  Edit, 
-  Trash2, 
-  Eye,
-  Filter,
-  Search,
-  Calendar,
-  TrendingUp,
-  Image as ImageIcon
-} from 'lucide-react';
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+import { supabase } from '@/lib/supabaseClient';
+import { Edit, Trash2, Eye, Filter, Search, Calendar, TrendingUp, Image as ImageIcon } from 'lucide-react';
 
 export default function MyContributions() {
   const navigate = useNavigate();

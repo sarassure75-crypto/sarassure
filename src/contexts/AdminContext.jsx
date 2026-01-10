@@ -22,7 +22,7 @@ import {
   restoreTask,
   permanentlyDeleteTask
 } from '@/data/tasks';
-import { fetchImages, getImageCategories } from '@/data/images';
+import { fetchImages, getImageCategories, deleteImage as apiDeleteImage } from '@/data/images';
 
 const AdminContext = createContext();
 
@@ -73,6 +73,23 @@ export const AdminProvider = ({ children }) => {
         setIsLoading(false);
       }
   }, []); // Supprime toast des dépendances pour éviter la boucle
+
+  const deleteImage = async (imageId, filePath) => {
+    console.log('🗑️ [AdminContext] deleteImage called with id:', imageId);
+    try {
+      await apiDeleteImage(imageId, filePath);
+    } catch (e) {
+      console.error('AdminContext.deleteImage: error deleting image', e);
+      // If deletion fails, refresh full data to reconcile state
+      await fetchAllData(true);
+      throw e;
+    }
+
+    // Refresh all data after successful deletion to ensure UI is consistent
+    // This removes the image from the Map and refreshes categories
+    console.log('✅ [AdminContext] Deletion successful, refreshing all data...');
+    await fetchAllData(true);
+  };
 
   useEffect(() => {
     fetchAllData();
@@ -179,6 +196,8 @@ export const AdminProvider = ({ children }) => {
     restoreTask,
     permanentlyDeleteTask,
     refreshImageCategories
+    ,
+    deleteImage
   };
 
   return <AdminContext.Provider value={value}>{children}</AdminContext.Provider>;

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { USER_ROLES } from '@/data/users';
 import { useAdminCounters } from '@/hooks/useAdminCounters';
+import { Sparkles } from 'lucide-react';
 
 const NavLink = ({ to, icon: Icon, children, onClick, count = 0 }) => (
   <Link to={to} onClick={onClick} className="flex items-center justify-between p-3 text-lg rounded-md hover:bg-primary/10 transition-colors relative">
@@ -66,6 +67,7 @@ const AppBanner = () => {
             <NavLink to="/admin/faq" icon={MessageSquare} onClick={closeSheet} count={counters.pendingFaq}>FAQ</NavLink>
             <NavLink to="/admin/errors" icon={AlertTriangle} onClick={closeSheet}>Rapports</NavLink>
             <NavLink to="/admin/trash" icon={Trash} onClick={closeSheet}>Corbeille</NavLink>
+            <NavLink to="/admin/icons" icon={Sparkles} onClick={closeSheet}>Gérer Icônes</NavLink>
             <NavLink to="/admin/contact" icon={Mail} onClick={closeSheet} count={counters.pendingMessages}>Messages</NavLink>
             <NavLink to="/taches" icon={BookOpen} onClick={closeSheet}>Liste des Tâches</NavLink>
           </>

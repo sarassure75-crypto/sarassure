@@ -19,13 +19,10 @@ import {
   Loader2
 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabaseClient';
 import StepAreaEditor from '../components/admin/StepAreaEditor';
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+// using centralized supabase client from src/lib/supabaseClient
 
 export default function NewContribution() {
   const navigate = useNavigate();

@@ -3,12 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, CreditCard, HelpCircle, User } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+import { supabase } from '@/lib/supabaseClient';
 
 export default function TrainerDashboard() {
   const { currentUser } = useAuth();

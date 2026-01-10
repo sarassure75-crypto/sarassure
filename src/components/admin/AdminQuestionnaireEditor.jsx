@@ -7,11 +7,124 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Save, Trash2, XCircle, Plus, HelpCircle, Image as ImageIcon } from 'lucide-react';
+import { Save, Trash2, XCircle, Plus, HelpCircle, Image as ImageIcon, X,
+  // Lucide icons for QCM responses
+  CheckCircle, AlertCircle, Info, Home, Settings, User, Users, Lock, Unlock, Eye, EyeOff,
+  Download, Upload, Trash, Edit, Copy, Share2, Heart, Star, Flag, MessageSquare,
+  Clock, Calendar, MapPin, Phone, Mail, Link, Globe, Zap,
+  // Contact icons
+  PhoneCall, PhoneOff, PhoneMissed, Smartphone, MessageCircle,
+  // Actions with variants
+  Check, PlusIcon, Minus, ChevronUp, ChevronDown, ChevronLeft, ChevronRight,
+  // More utilities
+  Search, Filter, Sliders, Settings2, MoreVertical, MoreHorizontal,
+  // Status indicators
+  Circle, CheckCircle2, AlertTriangle, ActivitySquare,
+  // Navigation
+  Navigation, Compass, Map, Waypoints,
+  // Communication
+  Send, Reply, Forward, Share,
+  // File & Document
+  FileText, File, Folder, FolderOpen, Archive,
+  // Media
+  Image, ImageOff, Music, Volume2, Volume, Mic, Mic2,
+  // Misc
+  Package, Gift, Lightbulb, Target, Trophy, Award, ZapOff
+} from 'lucide-react';
 import { useAdmin } from '@/contexts/AdminContext';
 import { creationStatuses } from '@/data/tasks';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase, getImageUrl } from '@/lib/supabaseClient';
+
+// Icônes Lucide disponibles comme options pour les QCM - Groupées par catégorie
+const LUCIDE_ICONS = [
+  // === STATUT & VALIDATION ===
+  { id: 'lucide-check-circle', name: '✓ Correct', component: CheckCircle, category: 'Statut' },
+  { id: 'lucide-check', name: '✓ Check', component: Check, category: 'Statut' },
+  { id: 'lucide-x-circle', name: '✗ Incorrect', component: XCircle, category: 'Statut' },
+  { id: 'lucide-alert-circle', name: '⚠ Alerte', component: AlertCircle, category: 'Statut' },
+  { id: 'lucide-alert-triangle', name: '⚠ Attention', component: AlertTriangle, category: 'Statut' },
+  { id: 'lucide-info', name: 'ⓘ Info', component: Info, category: 'Statut' },
+  { id: 'lucide-circle', name: '● Point', component: Circle, category: 'Statut' },
+  
+  // === CONTACT & COMMUNICATION ===
+  { id: 'lucide-phone', name: '☎ Téléphone', component: Phone, category: 'Contact' },
+  { id: 'lucide-phone-call', name: '📞 Appel', component: PhoneCall, category: 'Contact' },
+  { id: 'lucide-phone-off', name: '🚫 Appel Off', component: PhoneOff, category: 'Contact' },
+  { id: 'lucide-phone-missed', name: '❌ Appel Manqué', component: PhoneMissed, category: 'Contact' },
+  { id: 'lucide-smartphone', name: '📱 Smartphone', component: Smartphone, category: 'Contact' },
+  { id: 'lucide-mail', name: '✉ Email', component: Mail, category: 'Contact' },
+  { id: 'lucide-message', name: '💬 Message', component: MessageSquare, category: 'Contact' },
+  { id: 'lucide-message-circle', name: '💭 Chat', component: MessageCircle, category: 'Contact' },
+  { id: 'lucide-send', name: '📤 Envoyer', component: Send, category: 'Contact' },
+  { id: 'lucide-reply', name: '↩ Répondre', component: Reply, category: 'Contact' },
+  { id: 'lucide-forward', name: '⤳ Transférer', component: Forward, category: 'Contact' },
+  
+  // === ACTIONS AVEC VARIANTES ===
+  { id: 'lucide-plus', name: '➕ Ajouter', component: PlusIcon, category: 'Actions' },
+  { id: 'lucide-minus', name: '➖ Retirer', component: Minus, category: 'Actions' },
+  { id: 'lucide-edit', name: '✏ Éditer', component: Edit, category: 'Actions' },
+  { id: 'lucide-copy', name: '📋 Copier', component: Copy, category: 'Actions' },
+  { id: 'lucide-trash', name: '🗑 Supprimer', component: Trash, category: 'Actions' },
+  { id: 'lucide-download', name: '⬇ Télécharger', component: Download, category: 'Actions' },
+  { id: 'lucide-upload', name: '⬆ Uploader', component: Upload, category: 'Actions' },
+  { id: 'lucide-search', name: '🔍 Chercher', component: Search, category: 'Actions' },
+  { id: 'lucide-filter', name: '⧉ Filtrer', component: Filter, category: 'Actions' },
+  { id: 'lucide-share', name: '↗ Partager', component: Share, category: 'Actions' },
+  
+  // === NAVIGATION ===
+  { id: 'lucide-chevron-up', name: '⬆ Haut', component: ChevronUp, category: 'Navigation' },
+  { id: 'lucide-chevron-down', name: '⬇ Bas', component: ChevronDown, category: 'Navigation' },
+  { id: 'lucide-chevron-left', name: '◀ Gauche', component: ChevronLeft, category: 'Navigation' },
+  { id: 'lucide-chevron-right', name: '▶ Droite', component: ChevronRight, category: 'Navigation' },
+  { id: 'lucide-home', name: '🏠 Accueil', component: Home, category: 'Navigation' },
+  { id: 'lucide-map', name: '🗺 Carte', component: Map, category: 'Navigation' },
+  { id: 'lucide-compass', name: '🧭 Boussole', component: Compass, category: 'Navigation' },
+  { id: 'lucide-navigation', name: '🧭 Navigation', component: Navigation, category: 'Navigation' },
+  
+  // === UTILISATEURS ===
+  { id: 'lucide-user', name: '👤 Utilisateur', component: User, category: 'Utilisateurs' },
+  { id: 'lucide-users', name: '👥 Groupe', component: Users, category: 'Utilisateurs' },
+  { id: 'lucide-lock', name: '🔒 Verrouillé', component: Lock, category: 'Utilisateurs' },
+  { id: 'lucide-unlock', name: '🔓 Déverrouillé', component: Unlock, category: 'Utilisateurs' },
+  { id: 'lucide-eye', name: '👁 Visible', component: Eye, category: 'Utilisateurs' },
+  { id: 'lucide-eye-off', name: '👁‍🗨 Masqué', component: EyeOff, category: 'Utilisateurs' },
+  
+  // === FICHIERS & DOSSIERS ===
+  { id: 'lucide-file', name: '📄 Fichier', component: File, category: 'Fichiers' },
+  { id: 'lucide-file-text', name: '📃 Texte', component: FileText, category: 'Fichiers' },
+  { id: 'lucide-folder', name: '📁 Dossier', component: Folder, category: 'Fichiers' },
+  { id: 'lucide-folder-open', name: '📂 Ouvert', component: FolderOpen, category: 'Fichiers' },
+  { id: 'lucide-archive', name: '📦 Archive', component: Archive, category: 'Fichiers' },
+  
+  // === MÉDIA ===
+  { id: 'lucide-image', name: '🖼 Image', component: Image, category: 'Média' },
+  { id: 'lucide-music', name: '🎵 Musique', component: Music, category: 'Média' },
+  { id: 'lucide-volume', name: '🔊 Son', component: Volume2, category: 'Média' },
+  { id: 'lucide-mic', name: '🎤 Micro', component: Mic, category: 'Média' },
+  
+  // === PARAMÈTRES & OUTILS ===
+  { id: 'lucide-settings', name: '⚙ Paramètres', component: Settings, category: 'Outils' },
+  { id: 'lucide-settings2', name: '⚙ Réglages', component: Settings2, category: 'Outils' },
+  { id: 'lucide-sliders', name: '≡ Curseurs', component: Sliders, category: 'Outils' },
+  { id: 'lucide-more-vertical', name: '⋮ Plus (V)', component: MoreVertical, category: 'Outils' },
+  { id: 'lucide-more-horizontal', name: '⋯ Plus (H)', component: MoreHorizontal, category: 'Outils' },
+  
+  // === FAVORIS & ÉVALUATIONS ===
+  { id: 'lucide-heart', name: '❤ J\'aime', component: Heart, category: 'Évaluation' },
+  { id: 'lucide-star', name: '⭐ Favori', component: Star, category: 'Évaluation' },
+  { id: 'lucide-flag', name: '🚩 Signaler', component: Flag, category: 'Évaluation' },
+  { id: 'lucide-trophy', name: '🏆 Trophée', component: Trophy, category: 'Évaluation' },
+  { id: 'lucide-award', name: '🎖 Récompense', component: Award, category: 'Évaluation' },
+  
+  // === DIVERS ===
+  { id: 'lucide-zap', name: '⚡ Électrique', component: Zap, category: 'Divers' },
+  { id: 'lucide-lightbulb', name: '💡 Idée', component: Lightbulb, category: 'Divers' },
+  { id: 'lucide-target', name: '🎯 Cible', component: Target, category: 'Divers' },
+  { id: 'lucide-package', name: '📦 Paquet', component: Package, category: 'Divers' },
+  { id: 'lucide-gift', name: '🎁 Cadeau', component: Gift, category: 'Divers' },
+  { id: 'lucide-help-circle', name: '❓ Aide', component: HelpCircle, category: 'Divers' },
+];
 
 /**
  * AdminQuestionnaireEditor
@@ -26,6 +139,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
   const [images, setImages] = useState([]);
   const [expandedImageChoices, setExpandedImageChoices] = useState({});
   const [expandedQuestionImage, setExpandedQuestionImage] = useState(null);
+  const [imagePickerTab, setImagePickerTab] = useState({}); // Pour les onglets Images/Icônes
   const { categories, isLoading } = useAdmin();
   const { toast } = useToast();
 
@@ -560,51 +674,163 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                     </div>
 
                     {question.choices.map((choice, cIndex) => (
-                      <div key={choice.id} className="flex items-start gap-2 p-3 border rounded bg-background">
-                        <input
-                          type="checkbox"
-                          checked={question.correctAnswers.includes(choice.id)}
-                          onChange={() => toggleCorrectAnswer(question.id, choice.id)}
-                          className="mt-2 h-4 w-4 accent-green-600"
-                          title="Cocher si c'est une bonne réponse"
-                        />
-                        <div className="flex-1 space-y-2">
-                          <Input
-                            value={choice.text}
-                            onChange={(e) => updateChoice(question.id, choice.id, 'text', e.target.value)}
-                            placeholder={`Réponse ${cIndex + 1}`}
-                          />
-                          <Select
-                            value={choice.imageId || 'none'}
-                            onValueChange={(value) => {
-                              updateChoice(question.id, choice.id, 'imageId', value === 'none' ? null : value);
-                              // imageName is now just for display
-                              const img = images.find(i => i.id === value);
-                              updateChoice(question.id, choice.id, 'imageName', value === 'none' ? null : img?.name || null);
-                            }}
-                          >
-                            <SelectTrigger className="h-8 text-xs">
-                              <SelectValue placeholder="Image (opt.)" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">Aucune</SelectItem>
-                              {images.map(img => (
-                                <SelectItem key={img.id} value={img.id}>
-                                  {img.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeChoice(question.id, choice.id)}
-                          className="text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      <Card key={choice.id} className="border">
+                        <CardContent className="pt-4 space-y-3">
+                          {/* Ligne 1: Checkbox + texte + supprimer */}
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="checkbox"
+                              checked={question.correctAnswers.includes(choice.id)}
+                              onChange={() => toggleCorrectAnswer(question.id, choice.id)}
+                              className="h-4 w-4 accent-green-600"
+                              title="Cocher si c'est une bonne réponse"
+                            />
+                            <div className="flex-1">
+                              <Input
+                                value={choice.text}
+                                onChange={(e) => updateChoice(question.id, choice.id, 'text', e.target.value)}
+                                placeholder={`Proposition texte ${cIndex + 1} (optionnelle)`}
+                                className="text-sm"
+                              />
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeChoice(question.id, choice.id)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+
+                          {/* Image/Icône sélectionnée */}
+                          {choice.imageName && (
+                            <div className="p-2 bg-blue-50 rounded border border-blue-200 flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                {choice.imageId?.startsWith('lucide-') ? (
+                                  (() => {
+                                    const icon = LUCIDE_ICONS.find(i => i.id === choice.imageId);
+                                    if (icon) {
+                                      const IconComponent = icon.component;
+                                      return <IconComponent className="w-4 h-4 text-blue-600" />;
+                                    }
+                                    return <ImageIcon className="w-4 h-4 text-blue-600" />;
+                                  })()
+                                ) : (
+                                  <ImageIcon className="w-4 h-4 text-blue-600" />
+                                )}
+                                <span className="text-sm text-blue-900">{choice.imageName}</span>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  updateChoice(question.id, choice.id, 'imageId', null);
+                                  updateChoice(question.id, choice.id, 'imageName', '');
+                                }}
+                                className="text-blue-600 hover:text-blue-700 p-0 h-6"
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          )}
+
+                          {/* Sélecteur avec onglets */}
+                          {!choice.imageName && (
+                            <div className="border rounded bg-gray-50">
+                              <div className="flex border-b">
+                                <button
+                                  onClick={() => setImagePickerTab(prev => ({ ...prev, [choice.id]: 'images' }))}
+                                  className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
+                                    (imagePickerTab[choice.id] || 'images') === 'images'
+                                      ? 'border-b-2 border-blue-500 text-blue-600 bg-white'
+                                      : 'border-b-2 border-gray-200 text-gray-600 hover:text-gray-900 bg-gray-50'
+                                  }`}
+                                >
+                                  📸 Images
+                                </button>
+                                <button
+                                  onClick={() => setImagePickerTab(prev => ({ ...prev, [choice.id]: 'icons' }))}
+                                  className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
+                                    (imagePickerTab[choice.id] || 'images') === 'icons'
+                                      ? 'border-b-2 border-blue-500 text-blue-600 bg-white'
+                                      : 'border-b-2 border-gray-200 text-gray-600 hover:text-gray-900 bg-gray-50'
+                                  }`}
+                                >
+                                  ⭐ Icônes
+                                </button>
+                              </div>
+                              
+                              <div className="max-h-48 overflow-y-auto">
+                                {/* Onglet Images */}
+                                {(imagePickerTab[choice.id] || 'images') === 'images' && (
+                                  <div className="grid grid-cols-3 gap-2 p-2">
+                                    {images.map(img => (
+                                      <button
+                                        key={img.id}
+                                        onClick={() => {
+                                          updateChoice(question.id, choice.id, 'imageId', img.id);
+                                          updateChoice(question.id, choice.id, 'imageName', img.name);
+                                        }}
+                                        className="p-1 text-center rounded hover:bg-blue-100 border border-gray-200 hover:border-blue-400 transition-colors bg-white"
+                                      >
+                                        <img 
+                                          src={img.publicUrl} 
+                                          alt={img.name}
+                                          className="w-full h-14 object-contain bg-gray-100 rounded mb-1"
+                                          onError={(e) => {
+                                            e.target.style.display = 'none';
+                                          }}
+                                        />
+                                        <p className="text-xs text-gray-600 line-clamp-1">{img.name}</p>
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                                
+                                {/* Onglet Icônes */}
+                                {(imagePickerTab[choice.id] || 'images') === 'icons' && (
+                                  <div className="p-2">
+                                    {(() => {
+                                      const groupedIcons = {};
+                                      LUCIDE_ICONS.forEach(icon => {
+                                        const cat = icon.category || 'Autre';
+                                        if (!groupedIcons[cat]) groupedIcons[cat] = [];
+                                        groupedIcons[cat].push(icon);
+                                      });
+                                      
+                                      return Object.entries(groupedIcons).map(([category, icons]) => (
+                                        <div key={category} className="mb-3">
+                                          <h4 className="text-xs font-bold text-gray-600 uppercase mb-2 px-2">{category}</h4>
+                                          <div className="grid grid-cols-4 gap-2">
+                                            {icons.map(icon => {
+                                              const IconComponent = icon.component;
+                                              return (
+                                                <button
+                                                  key={icon.id}
+                                                  onClick={() => {
+                                                    updateChoice(question.id, choice.id, 'imageId', icon.id);
+                                                    updateChoice(question.id, choice.id, 'imageName', icon.name);
+                                                  }}
+                                                  className="p-2 text-center rounded hover:bg-blue-100 border border-gray-200 hover:border-blue-400 transition-colors bg-white flex flex-col items-center gap-1"
+                                                  title={icon.name}
+                                                >
+                                                  <IconComponent className="w-5 h-5 text-blue-600" />
+                                                  <p className="text-xs text-gray-700 line-clamp-1">{icon.name}</p>
+                                                </button>
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
+                                      ));
+                                    })()}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
                     ))}
 
                     {question.choices.length === 0 && (

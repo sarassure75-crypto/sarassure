@@ -100,10 +100,7 @@ export default function ContributorImageLibrary() {
     const loadExercisesAndAdminImages = async () => {
       setExercisesLoading(true);
       try {
-        const supabase = createClient(
-          import.meta.env.VITE_SUPABASE_URL,
-          import.meta.env.VITE_SUPABASE_ANON_KEY
-        );
+        const { supabase } = await import('@/lib/supabaseClient');
 
         // Récupérer l'ID de l'admin
         const { data: adminProfile } = await supabase

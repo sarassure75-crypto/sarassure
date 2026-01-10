@@ -41,6 +41,7 @@ import ImageEditor from '@/components/ImageEditor';
 function EditDialog({ open, onOpenChange, editImage, onSubmit, isEditing, adminCategories }) {
   const [selectedCategory, setSelectedCategory] = useState(editImage?.category || '');
   const [availableSubcategories, setAvailableSubcategories] = useState(DEFAULT_SUBCATEGORIES);
+  const uniqueCats = useMemo(() => Array.from(new Set(adminCategories || [])), [adminCategories]);
   
   // Load subcategories when category changes
   useEffect(() => {
@@ -93,7 +94,7 @@ function EditDialog({ open, onOpenChange, editImage, onSubmit, isEditing, adminC
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
-                {(adminCategories || []).filter(c => c !== 'all').map(cat => (
+                {(uniqueCats || []).filter(c => c !== 'all').map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
@@ -138,6 +139,7 @@ function CategoryManager({ open, onOpenChange, adminCategories, refreshImageCate
   const { toast } = useToast();
   const [newCategory, setNewCategory] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const uniqueCats = useMemo(() => Array.from(new Set(adminCategories || [])), [adminCategories]);
 
   const handleAddCategory = async () => {
     if (!newCategory.trim()) return;
@@ -199,9 +201,9 @@ function CategoryManager({ open, onOpenChange, adminCategories, refreshImageCate
               {isLoading ? <Loader2 className="animate-spin h-4 w-4" /> : <FolderPlus className="h-4 w-4"/>}
             </Button>
           </form>
-          <ScrollArea className="h-48">
+            <ScrollArea className="h-48">
             <ul className="space-y-2">
-              {adminCategories.filter(c => c !== 'all').map(cat => (
+              {uniqueCats.filter(c => c !== 'all').map(cat => (
                 <li key={cat} className="flex justify-between items-center p-2 border rounded-md">
                   <span>{cat}</span>
                   <Button 
@@ -237,7 +239,8 @@ const formatBytes = (bytes, decimals = 2) => {
 
 
 const AdminImageGallery = () => {
-  const { images: imagesMap, fetchAllData, imageCategories: adminCategories, refreshImageCategories } = useAdmin();
+  const { images: imagesMap, fetchAllData, imageCategories: adminCategories, refreshImageCategories, deleteImage } = useAdmin();
+  const uniqueCategories = useMemo(() => Array.from(new Set(adminCategories || [])), [adminCategories]);
   const { toast } = useToast();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -309,7 +312,7 @@ const AdminImageGallery = () => {
             metadata: { size: metadata.size, mimeType: metadata.mimeType }
         });
         toast({ title: "Succès", description: "Image ajoutée à la galerie." });
-        await fetchAllData();
+        await fetchAllData(true);
     } catch(e) {
         console.error("Error adding image to db", e);
         toast({ title: "Erreur Base de données", description: "L'image a été téléversée mais n'a pas pu être ajoutée à la base de données.", variant: "destructive" });
@@ -336,7 +339,7 @@ const AdminImageGallery = () => {
     try {
       await apiUpdateImage(editImage.id, { name, description, category, subcategory, android_version });
       toast({ title: "Succès", description: "Image mise à jour." });
-      await fetchAllData();
+      await fetchAllData(true);
       setIsEditDialogOpen(false);
       setEditImage(null);
     } catch (error) {
@@ -349,9 +352,8 @@ const AdminImageGallery = () => {
 
   const handleDelete = async (image) => {
     try {
-      await apiDeleteImage(image.id, image.file_path);
+      await deleteImage(image.id, image.file_path);
       toast({ title: "Succès", description: "Image supprimée." });
-      await fetchAllData();
     } catch (error) {
       console.error("Error deleting image:", error);
       toast({ title: "Erreur de suppression", description: error.message, variant: "destructive" });
@@ -418,7 +420,7 @@ const AdminImageGallery = () => {
       
       setIsImageEditorOpen(false);
       setImageToEdit(null);
-      await fetchAllData();
+      await fetchAllData(true);
     } catch (error) {
       console.error("Error saving edited image:", error);
       toast({ 
@@ -454,7 +456,7 @@ const AdminImageGallery = () => {
       </div>
 
       <div className="flex flex-wrap gap-2 mb-4">
-        {adminCategories.map(cat => (
+        {uniqueCategories.map(cat => (
           <Button
             key={cat}
             variant={categoryFilter === cat ? 'secondary' : 'outline'}

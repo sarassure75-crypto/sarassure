@@ -12,6 +12,19 @@ import { supabase } from '@/lib/supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
 import { DEFAULT_SUBCATEGORIES, getImageSubcategories } from '@/data/images';
 
+// Sanitize a segment for storage keys: remove diacritics and replace unsafe chars
+function sanitizeSegment(seg) {
+  if (!seg) return 'default';
+  try {
+    // Normalize to decompose accents then strip combining marks
+    const normalized = seg.normalize('NFKD').replace(/\p{Diacritic}/gu, '');
+    // Replace any remaining non-alphanumeric (and allowed . _ -) with '-'
+    return normalized.replace(/[^a-zA-Z0-9._-]/g, '-').replace(/-+/g, '-').replace(/(^-|-$)/g, '').toLowerCase();
+  } catch (e) {
+    return seg.replace(/[^a-zA-Z0-9._-]/g, '-').toLowerCase();
+  }
+}
+
 const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
   const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState(null);
@@ -98,7 +111,8 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
         if (blob) {
           const fileExtension = 'jpg'; // Always save as JPG for consistency
           const fileName = `${uuidv4()}.${fileExtension}`;
-          const filePath = `${category}/${fileName}`;
+          const safeCategory = sanitizeSegment(category || 'default');
+          const filePath = `${safeCategory}/${fileName}`;
           
           const processedFile = new File([blob], fileName, {
             type: `image/${fileExtension === 'png' ? 'png' : 'jpeg'}`,

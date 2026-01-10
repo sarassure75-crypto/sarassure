@@ -20,7 +20,8 @@ export const validateQuestion = (question) => {
   }
 
   // Au moins une réponse correcte
-  const hasCorrectAnswer = question.choices?.some(c => c.is_correct);
+  // Support both camelCase (isCorrect) and snake_case (is_correct)
+  const hasCorrectAnswer = question.choices?.some(c => c.is_correct || c.isCorrect);
   if (!hasCorrectAnswer) {
     errors.push('Au moins une réponse correcte est requise');
   }
@@ -28,7 +29,8 @@ export const validateQuestion = (question) => {
   // Validation selon le type
   if (question.question_type === 'image_choice') {
     // Toutes les réponses doivent avoir une image
-    const allHaveImages = question.choices?.every(c => c.image_id);
+    // Support both camelCase (imageId) and snake_case (image_id)
+    const allHaveImages = question.choices?.every(c => c.image_id || c.imageId);
     if (!allHaveImages) {
       errors.push('Toutes les réponses doivent avoir une image (type image_choice)');
     }
@@ -43,10 +45,11 @@ export const validateQuestion = (question) => {
   }
 
   if (question.question_type === 'mixed') {
-    // Toutes les réponses doivent avoir image ET texte
-    const allHaveBoth = question.choices?.every(c => c.image_id && c.text?.trim());
-    if (!allHaveBoth) {
-      errors.push('Toutes les réponses doivent avoir une image ET du texte (type mixed)');
+    // Au moins une réponse doit avoir image OU texte
+    // Support both camelCase and snake_case
+    const allHaveAtLeastOne = question.choices?.every(c => (c.image_id || c.imageId) || c.text?.trim());
+    if (!allHaveAtLeastOne) {
+      errors.push('Chaque réponse doit avoir au moins une image OU du texte (type mixed)');
     }
   }
 
