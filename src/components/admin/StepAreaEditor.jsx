@@ -12,6 +12,7 @@ import * as MaterialIcons from 'react-icons/md';
 import * as FeatherIcons from 'react-icons/fi';
 import * as HeroiconsIcons from 'react-icons/hi2';
 import * as AntIcons from 'react-icons/ai';
+import { Icon as IconifyIcon } from '@iconify/react';
 
 // Convert RGB string to HEX for color input
 const rgbToHex = (rgb) => {
@@ -28,6 +29,15 @@ const rgbToHex = (rgb) => {
 // Helper to get icon component from icon string
 const getIconComponent = (iconString) => {
   if (!iconString) return null;
+  
+  // Pour les icônes Iconify (logos:, skill-icons:, devicon:)
+  if (iconString.includes(':') && (
+    iconString.startsWith('logos:') || 
+    iconString.startsWith('skill-icons:') || 
+    iconString.startsWith('devicon:')
+  )) {
+    return (props) => <IconifyIcon icon={iconString} {...props} />;
+  }
   
   const [library, name] = iconString.split(':');
   

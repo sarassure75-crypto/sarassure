@@ -9,15 +9,16 @@ import * as MaterialIcons from 'react-icons/md';
 import * as FeatherIcons from 'react-icons/fi';
 import * as HeroiconsIcons from 'react-icons/hi2';
 import * as AntIcons from 'react-icons/ai';
+import { Icon as IconifyIcon } from '@iconify/react';
 
 /**
- * Sélecteur d'icônes réutilisable
+ * Sélecteur d'icônes réutilisable avec support des icônes colorées
  * 
  * Props:
  * - selectedIcon: { library, name, component, displayName } (optionnel)
  * - onSelect: fonction appelée quand l'utilisateur sélectionne une icône
  * - onRemove: fonction appelée quand on supprime l'icône
- * - libraries: ['lucide', 'fa6', 'bs', 'md', 'fi', 'hi2', 'ai'] ou tous
+ * - libraries: ['lucide', 'fa6', 'bs', 'md', 'fi', 'hi2', 'ai', 'logos', 'skill', 'devicon'] ou tous
  * - defaultCategory: catégorie à afficher par défaut
  * - showSearch: afficher la barre de recherche (défaut: true)
  * 
@@ -26,18 +27,61 @@ import * as AntIcons from 'react-icons/ai';
  *   selectedIcon={selectedIcon}
  *   onSelect={(icon) => setSelectedIcon(icon)}
  *   onRemove={() => setSelectedIcon(null)}
- *   libraries={['lucide', 'fa6']}
+ *   libraries={['fa6', 'logos']}
  * />
  */
 
+// Liste des icônes colorées Iconify disponibles (logos d'applications populaires sur Android)
+const ICONIFY_LOGOS = [
+  'logos:whatsapp-icon',
+  'logos:google-chrome',
+  'logos:firefox',
+  'logos:youtube-icon',
+  'logos:facebook',
+  'logos:instagram-icon',
+  'logos:twitter',
+  'logos:tiktok-icon',
+  'logos:spotify-icon',
+  'logos:netflix-icon',
+  'logos:gmail',
+  'logos:google-maps',
+  'logos:android-icon',
+  'logos:apple',
+  'logos:microsoft',
+  'logos:zoom-icon',
+  'logos:slack-icon',
+  'logos:telegram',
+  'logos:skype',
+  'logos:linkedin-icon',
+  'logos:pinterest',
+  'logos:reddit-icon',
+  'logos:snapchat-icon',
+  'logos:twitch',
+  'logos:amazon',
+  'logos:ebay',
+  'logos:paypal',
+  'logos:uber',
+  'logos:airbnb',
+  'devicon:chrome',
+  'devicon:firefox',
+  'devicon:android',
+  'skill-icons:gmail-light',
+  'skill-icons:instagram',
+  'skill-icons:linkedin',
+  'skill-icons:twitter',
+];
+
 const IconLibraryMap = {
-  lucide: { module: LucideIcons || {}, prefix: '', color: '#181818', label: 'Lucide' },
-  fa6: { module: FontAwesome6 || {}, prefix: 'fa', color: '#0184BC', label: 'Font Awesome 6' },
-  bs: { module: BootstrapIcons || {}, prefix: 'bs', color: '#7952B3', label: 'Bootstrap Icons' },
-  md: { module: MaterialIcons || {}, prefix: 'md', color: '#00BCD4', label: 'Material Design' },
-  fi: { module: FeatherIcons || {}, prefix: 'fi', color: '#000000', label: 'Feather' },
-  hi2: { module: HeroiconsIcons || {}, prefix: 'hi', color: '#6366F1', label: 'Heroicons' },
-  ai: { module: AntIcons || {}, prefix: 'ai', color: '#1890FF', label: 'Ant Design' },
+  lucide: { module: LucideIcons || {}, prefix: '', color: '#181818', label: 'Lucide', colored: false },
+  fa6: { module: FontAwesome6 || {}, prefix: 'fa', color: '#0184BC', label: 'Font Awesome 6', colored: false },
+  bs: { module: BootstrapIcons || {}, prefix: 'bs', color: '#7952B3', label: 'Bootstrap Icons', colored: false },
+  md: { module: MaterialIcons || {}, prefix: 'md', color: '#00BCD4', label: 'Material Design', colored: false },
+  fi: { module: FeatherIcons || {}, prefix: 'fi', color: '#000000', label: 'Feather', colored: false },
+  hi2: { module: HeroiconsIcons || {}, prefix: 'hi', color: '#6366F1', label: 'Heroicons', colored: false },
+  ai: { module: AntIcons || {}, prefix: 'ai', color: '#1890FF', label: 'Ant Design', colored: false },
+  logos: { module: null, prefix: 'iconify', color: '#FF6B35', label: '🎨 Logos Colorés (Apps Android)', colored: true },
+  skill: { module: null, prefix: 'iconify', color: '#4CAF50', label: '🎨 Skill Icons', colored: true },
+  devicon: { module: null, prefix: 'iconify', color: '#9C27B0', label: '🎨 Devicon Colorés', colored: true },
 };
 
 const ICON_CATEGORIES = {
@@ -82,8 +126,59 @@ export default function IconSelector({
   // Récupérer les icônes disponibles pour la bibliothèque sélectionnée
   const getAvailableIcons = () => {
     const libraryData = IconLibraryMap[selectedLibrary];
-    if (!libraryData || !libraryData.module) return [];
+    if (!libraryData) return [];
 
+    // Pour les bibliothèques Iconify (logos, skill, devicon)
+    if (libraryData.colored && libraryData.prefix === 'iconify') {
+      if (selectedLibrary === 'logos') {
+        return ICONIFY_LOGOS.filter(iconName => 
+          iconName.startsWith('logos:')
+        ).filter(iconName => 
+          !searchTerm || iconName.toLowerCase().includes(searchTerm.toLowerCase())
+        ).map(iconName => ({
+          id: iconName,
+          library: 'logos',
+          name: iconName,
+          component: (props) => <IconifyIcon icon={iconName} {...props} />,
+          displayName: iconName.replace('logos:', '').replace(/-/g, ' '),
+          isIconify: true,
+        }));
+      }
+      
+      if (selectedLibrary === 'skill') {
+        return ICONIFY_LOGOS.filter(iconName => 
+          iconName.startsWith('skill-icons:')
+        ).filter(iconName => 
+          !searchTerm || iconName.toLowerCase().includes(searchTerm.toLowerCase())
+        ).map(iconName => ({
+          id: iconName,
+          library: 'skill',
+          name: iconName,
+          component: (props) => <IconifyIcon icon={iconName} {...props} />,
+          displayName: iconName.replace('skill-icons:', '').replace(/-/g, ' '),
+          isIconify: true,
+        }));
+      }
+      
+      if (selectedLibrary === 'devicon') {
+        return ICONIFY_LOGOS.filter(iconName => 
+          iconName.startsWith('devicon:')
+        ).filter(iconName => 
+          !searchTerm || iconName.toLowerCase().includes(searchTerm.toLowerCase())
+        ).map(iconName => ({
+          id: iconName,
+          library: 'devicon',
+          name: iconName,
+          component: (props) => <IconifyIcon icon={iconName} {...props} />,
+          displayName: iconName.replace('devicon:', '').replace(/-/g, ' '),
+          isIconify: true,
+        }));
+      }
+      
+      return [];
+    }
+
+    // Pour les bibliothèques React Icons classiques
     const module = libraryData.module;
     
     // Defensive check to ensure module is a valid object
@@ -118,6 +213,7 @@ export default function IconSelector({
           name,
           component,
           displayName: name.replace(/([A-Z])/g, ' $1').trim(),
+          isIconify: false,
         }))
         .slice(0, 500); // Limiter à 500 pour les performances
     } catch (error) {
@@ -173,15 +269,20 @@ export default function IconSelector({
       {selectedIcon && (
         <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 flex items-center justify-center">
+            <div className="w-12 h-12 flex items-center justify-center bg-white rounded">
               {selectedIcon.component && (
-                <selectedIcon.component className="w-8 h-8" />
+                selectedIcon.isIconify ? (
+                  <selectedIcon.component style={{ width: '32px', height: '32px', fontSize: '32px' }} />
+                ) : (
+                  <selectedIcon.component className="w-8 h-8" />
+                )
               )}
             </div>
             <div>
               <p className="font-semibold text-sm">{selectedIcon.displayName}</p>
               <p className="text-xs text-gray-600">
                 {IconLibraryMap[selectedIcon.library]?.label}
+                {selectedIcon.isIconify && ' (Couleur)'}
               </p>
             </div>
           </div>
@@ -275,6 +376,9 @@ export default function IconSelector({
                 if (!icon.component) {
                   return null;
                 }
+                
+                const isColoredIcon = icon.isIconify || false;
+                
                 return (
                   <button
                     type="button"
@@ -283,10 +387,16 @@ export default function IconSelector({
                       onSelect(icon);
                       setIsOpen(false);
                     }}
-                    className="p-2 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center border border-transparent hover:border-blue-300"
+                    className={`p-2 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center border border-transparent hover:border-blue-300 ${
+                      isColoredIcon ? 'bg-white' : ''
+                    }`}
                     title={icon.displayName}
                   >
-                    <icon.component className="w-5 h-5" />
+                    {isColoredIcon ? (
+                      <icon.component className="w-6 h-6" style={{ fontSize: '24px' }} />
+                    ) : (
+                      <icon.component className="w-5 h-5" />
+                    )}
                   </button>
                 );
               })

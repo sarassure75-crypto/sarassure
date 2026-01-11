@@ -12,10 +12,20 @@ import * as MaterialIcons from 'react-icons/md';
 import * as FeatherIcons from 'react-icons/fi';
 import * as HeroiconsIcons from 'react-icons/hi2';
 import * as AntIcons from 'react-icons/ai';
+import { Icon as IconifyIcon } from '@iconify/react';
 
 // Helper to get icon component from icon string
 const getIconComponent = (iconString) => {
   if (!iconString) return null;
+  
+  // Support pour les icônes Iconify colorées (logos, skill-icons, devicon)
+  if (iconString.includes(':') && (
+    iconString.startsWith('logos:') || 
+    iconString.startsWith('skill-icons:') || 
+    iconString.startsWith('devicon:')
+  )) {
+    return (props) => <IconifyIcon icon={iconString} {...props} />;
+  }
   
   const [library, name] = iconString.split(':');
   
