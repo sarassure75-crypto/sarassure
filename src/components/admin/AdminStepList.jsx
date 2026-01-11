@@ -7,6 +7,33 @@ import { useToast } from '@/components/ui/use-toast';
 import AdminStepForm from './AdminStepForm';
 import { v4 as uuidv4 } from 'uuid';
 import * as LucideIcons from 'lucide-react';
+import * as FontAwesome6 from 'react-icons/fa6';
+import * as BootstrapIcons from 'react-icons/bs';
+import * as MaterialIcons from 'react-icons/md';
+import * as FeatherIcons from 'react-icons/fi';
+import * as HeroiconsIcons from 'react-icons/hi2';
+import * as AntIcons from 'react-icons/ai';
+
+const IconLibraryMap = {
+  lucide: { module: LucideIcons, prefix: '', color: '#181818', label: 'Lucide' },
+  fa6: { module: FontAwesome6, prefix: 'fa', color: '#0184BC', label: 'Font Awesome 6' },
+  bs: { module: BootstrapIcons, prefix: 'bs', color: '#7952B3', label: 'Bootstrap Icons' },
+  md: { module: MaterialIcons, prefix: 'md', color: '#00BCD4', label: 'Material Design' },
+  fi: { module: FeatherIcons, prefix: 'fi', color: '#000000', label: 'Feather' },
+  hi2: { module: HeroiconsIcons, prefix: 'hi', color: '#6366F1', label: 'Heroicons' },
+  ai: { module: AntIcons, prefix: 'ai', color: '#1890FF', label: 'Ant Design' },
+};
+
+const getIconComponent = (iconString) => {
+  if (!iconString) return null;
+  
+  const [library, name] = iconString.split(':');
+  const libraryData = IconLibraryMap[library];
+  if (!libraryData) return null;
+  
+  const module = libraryData.module;
+  return module[name] || null;
+};
 
 const toPascalCase = (str) => {
   if (!str) return null;
@@ -102,7 +129,7 @@ const AdminStepList = ({ version }) => {
           {steps && steps.length > 0 ? (
             steps.map((step, index) => {
               const pictogramInfo = step.pictogram_app_image_id ? imageArray.find(img => img.id === step.pictogram_app_image_id) : null;
-              const IconComponent = LucideIcons[toPascalCase(step.icon_name)] || null;
+              const IconComponent = getIconComponent(step.icon_name);
               return (
                 <li
                   key={step.id}

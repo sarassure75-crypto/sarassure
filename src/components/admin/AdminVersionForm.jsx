@@ -4,11 +4,45 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Save, Trash2, XCircle, PlayCircle, ListChecks } from 'lucide-react';
+import { Save, Trash2, XCircle, PlayCircle, ListChecks, Copy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import * as LucideIcons from 'lucide-react';
+import * as FontAwesome6 from 'react-icons/fa6';
+import * as BootstrapIcons from 'react-icons/bs';
+import * as MaterialIcons from 'react-icons/md';
+import * as FeatherIcons from 'react-icons/fi';
+import * as HeroiconsIcons from 'react-icons/hi2';
+import * as AntIcons from 'react-icons/ai';
+import IconSelector from '@/components/IconSelector';
 import { useAdmin } from '@/contexts/AdminContext';
 import { creationStatuses } from '@/data/tasks';
+
+const IconLibraryMap = {
+  lucide: { module: LucideIcons, prefix: '', color: '#181818', label: 'Lucide' },
+  fa6: { module: FontAwesome6, prefix: 'fa', color: '#0184BC', label: 'Font Awesome 6' },
+  bs: { module: BootstrapIcons, prefix: 'bs', color: '#7952B3', label: 'Bootstrap Icons' },
+  md: { module: MaterialIcons, prefix: 'md', color: '#00BCD4', label: 'Material Design' },
+  fi: { module: FeatherIcons, prefix: 'fi', color: '#000000', label: 'Feather' },
+  hi2: { module: HeroiconsIcons, prefix: 'hi', color: '#6366F1', label: 'Heroicons' },
+  ai: { module: AntIcons, prefix: 'ai', color: '#1890FF', label: 'Ant Design' },
+};
+
+const getIconComponent = (iconString) => {
+  if (!iconString) return LucideIcons.ListChecks;
+  
+  const [library, name] = iconString.split(':');
+  const libraryData = IconLibraryMap[library];
+  if (!libraryData) return LucideIcons.ListChecks;
+  
+  const module = libraryData.module;
+  return module[name] || LucideIcons.ListChecks;
+};
+
+const parseIconString = (iconString) => {
+  if (!iconString) return null;
+  const [library, name] = iconString.split(':');
+  return { library, name };
+};
 
 const AdminVersionForm = ({ version: initialVersion, onSave, onCancel, onDelete }) => {
   const [version, setVersion] = useState(initialVersion);
@@ -46,9 +80,30 @@ const AdminVersionForm = ({ version: initialVersion, onSave, onCancel, onDelete 
     };
     onSave(dataToSave);
   };
+
+  const handleDuplicate = () => {
+    const duplicatedVersion = {
+      ...version,
+      id: null, // Nouveau ID sera généré
+      name: `${version.name} (Copie)`,
+      isNew: true
+    };
+    onSave(duplicatedVersion);
+  };
   
   const pictogramInfo = imageArray.find(img => img.id === version.pictogram_app_image_id);
-  const IconComponent = LucideIcons[version.icon_name] || LucideIcons.ListChecks;
+  const IconComponent = getIconComponent(version.icon_name);
+
+  const handleIconSelect = (icon) => {
+    const iconString = icon ? `${icon.library}:${icon.name}` : '';
+    setVersion(prev => ({ ...prev, icon_name: iconString }));
+  };
+
+  const handleIconRemove = () => {
+    setVersion(prev => ({ ...prev, icon_name: '' }));
+  };
+
+  const selectedIcon = parseIconString(version.icon_name);
 
   return (
     <Card className="mt-4 border-primary">
@@ -80,11 +135,20 @@ const AdminVersionForm = ({ version: initialVersion, onSave, onCancel, onDelete 
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="versionIconName">Icône (Nom Lucide Icon)</Label>
-              <div className="flex items-center space-x-2">
-                  <IconComponent className="h-5 w-5 text-muted-foreground" />
-                  <Input id="versionIconName" name="icon_name" value={version.icon_name || ''} onChange={handleChange} placeholder="Ex: ListChecks" />
-              </div>
+              <Label htmlFor="versionIconName">Icône</Label>
+              <IconSelector
+                selectedIcon={selectedIcon ? {
+                  library: selectedIcon.library,
+                  name: selectedIcon.name,
+                  component: IconComponent,
+                  displayName: selectedIcon.name
+                } : null}
+                onSelect={handleIconSelect}
+                onRemove={handleIconRemove}
+                libraries={['lucide', 'fa6', 'bs', 'md', 'fi', 'hi2', 'ai']}
+                showSearch={true}
+                showLibraryTabs={true}
+              />
             </div>
             <div>
               <Label htmlFor="versionPictogram">Pictogramme (facultatif)</Label>
@@ -123,6 +187,11 @@ const AdminVersionForm = ({ version: initialVersion, onSave, onCancel, onDelete 
           </Button>
 
           <div className="flex items-center gap-2">
+            {!version.isNew && (
+              <Button type="button" variant="secondary" size="sm" onClick={handleDuplicate}>
+                <Copy className="mr-2 h-4 w-4" /> Dupliquer
+              </Button>
+            )}
             <Button type="button" variant="outline" size="sm" onClick={onCancel}><XCircle className="mr-2 h-4 w-4" /> Annuler</Button>
             <Button type="submit" size="sm" disabled={isLoading}><Save className="mr-2 h-4 w-4" /> Sauvegarder</Button>
              {version.task_id && !version.isNew && (

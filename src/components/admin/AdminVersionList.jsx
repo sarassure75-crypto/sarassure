@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { PlusCircle, Edit, Trash2, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Loader2, ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import { creationStatuses } from '@/data/tasks';
 import { useAdmin } from '@/contexts/AdminContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -69,6 +69,16 @@ const AdminVersionList = ({ task }) => {
     }
   };
 
+  const handleDuplicateVersion = (version) => {
+    const duplicatedVersion = {
+      ...version,
+      id: uuidv4(),
+      name: `${version.name} (Copie)`,
+      isNew: true
+    };
+    setEditingVersion(duplicatedVersion);
+  };
+
   const toggleVersionSteps = (versionId) => {
     setSelectedVersionId(prevId => (prevId === versionId ? null : versionId));
   };
@@ -117,6 +127,9 @@ const AdminVersionList = ({ task }) => {
                     <div className="flex items-center space-x-1">
                       <Button variant="ghost" size="icon" onClick={() => handleEditVersion(version)}>
                         <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDuplicateVersion(version)}>
+                        <Copy className="h-4 w-4" />
                       </Button>
                       <Button 
                         variant="ghost" 

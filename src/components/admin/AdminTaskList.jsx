@@ -1,10 +1,37 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PlusCircle, Edit, Trash2, HelpCircle, HelpCircle as QuestionIcon } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, HelpCircle, HelpCircle as QuestionIcon, Copy } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { creationStatuses } from '@/data/tasks';
 import * as LucideIcons from 'lucide-react';
+import * as FontAwesome6 from 'react-icons/fa6';
+import * as BootstrapIcons from 'react-icons/bs';
+import * as MaterialIcons from 'react-icons/md';
+import * as FeatherIcons from 'react-icons/fi';
+import * as HeroiconsIcons from 'react-icons/hi2';
+import * as AntIcons from 'react-icons/ai';
+
+const IconLibraryMap = {
+  lucide: { module: LucideIcons, prefix: '', color: '#181818', label: 'Lucide' },
+  fa6: { module: FontAwesome6, prefix: 'fa', color: '#0184BC', label: 'Font Awesome 6' },
+  bs: { module: BootstrapIcons, prefix: 'bs', color: '#7952B3', label: 'Bootstrap Icons' },
+  md: { module: MaterialIcons, prefix: 'md', color: '#00BCD4', label: 'Material Design' },
+  fi: { module: FeatherIcons, prefix: 'fi', color: '#000000', label: 'Feather' },
+  hi2: { module: HeroiconsIcons, prefix: 'hi', color: '#6366F1', label: 'Heroicons' },
+  ai: { module: AntIcons, prefix: 'ai', color: '#1890FF', label: 'Ant Design' },
+};
+
+const getIconComponent = (iconString) => {
+  if (!iconString) return null;
+  
+  const [library, name] = iconString.split(':');
+  const libraryData = IconLibraryMap[library];
+  if (!libraryData) return null;
+  
+  const module = libraryData.module;
+  return module[name] || null;
+};
 
 const toPascalCase = (str) => {
   if (!str) return null;
@@ -14,9 +41,9 @@ const toPascalCase = (str) => {
     .join('');
 };
 
-const TaskItem = ({ task, onSelectTask, onDeleteTask, imagesMap }) => {
+const TaskItem = ({ task, onSelectTask, onDeleteTask, onDuplicateTask, imagesMap }) => {
   const statusInfo = creationStatuses.find(s => s.id === task.creation_status) || { label: 'Inconnu', color: 'bg-gray-400' };
-  const IconComponent = LucideIcons[toPascalCase(task.icon_name)] || null;
+  const IconComponent = getIconComponent(task.icon_name);
   const PictogramInfo = task.pictogram_app_image_id ? imagesMap.get(task.pictogram_app_image_id) : null;
   const isQuestionnaire = task.task_type === 'questionnaire';
 
@@ -48,6 +75,9 @@ const TaskItem = ({ task, onSelectTask, onDeleteTask, imagesMap }) => {
           <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onSelectTask(task); }}>
             <Edit className="h-4 w-4" />
           </Button>
+          <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDuplicateTask(task); }}>
+            <Copy className="h-4 w-4" />
+          </Button>
           <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); onDeleteTask(task.id); }}>
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -58,7 +88,7 @@ const TaskItem = ({ task, onSelectTask, onDeleteTask, imagesMap }) => {
   );
 };
 
-const AdminTaskList = ({ tasks, onSelectTask, onAddNewTask, onCreateQuestionnaire, onDeleteTask, imagesMap, categories = [] }) => {
+const AdminTaskList = ({ tasks, onSelectTask, onAddNewTask, onCreateQuestionnaire, onDeleteTask, onDuplicateTask, imagesMap, categories = [] }) => {
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   // Group tasks by category name (use task.category or 'Sans catégorie')
@@ -148,6 +178,7 @@ const AdminTaskList = ({ tasks, onSelectTask, onAddNewTask, onCreateQuestionnair
                                 task={task}
                                 onSelectTask={onSelectTask}
                                 onDeleteTask={onDeleteTask}
+                                onDuplicateTask={onDuplicateTask}
                                 imagesMap={imagesMap}
                               />
                             ))}
@@ -200,6 +231,7 @@ const AdminTaskList = ({ tasks, onSelectTask, onAddNewTask, onCreateQuestionnair
                                 task={task}
                                 onSelectTask={onSelectTask}
                                 onDeleteTask={onDeleteTask}
+                                onDuplicateTask={onDuplicateTask}
                                 imagesMap={imagesMap}
                               />
                             ))}

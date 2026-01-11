@@ -234,6 +234,17 @@ const AdminTaskManager = () => {
     }
   };
 
+  const handleDuplicateTask = (task) => {
+    const duplicatedTask = {
+      ...task,
+      id: uuidv4(),
+      title: `${task.title} (Copie)`,
+      isNew: true
+    };
+    setSelectedTask(duplicatedTask);
+    setView('form');
+  };
+
   const sortedTasks = useMemo(() => {
     if (!tasks) return [];
     return [...tasks].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -288,6 +299,7 @@ const AdminTaskManager = () => {
               onAddNewTask={handleAddNewTask}
               onCreateQuestionnaire={handleCreateQuestionnaire}
               onDeleteTask={handleDeleteTask}
+              onDuplicateTask={handleDuplicateTask}
               imagesMap={imagesMap}
               categories={categories}
             />

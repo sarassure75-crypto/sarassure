@@ -31,10 +31,12 @@ import { Save, Trash2, XCircle, Plus, HelpCircle, Image as ImageIcon, X,
   // Misc
   Package, Gift, Lightbulb, Target, Trophy, Award, ZapOff
 } from 'lucide-react';
+import * as FA from 'react-icons/fa6';
 import { useAdmin } from '@/contexts/AdminContext';
 import { creationStatuses } from '@/data/tasks';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase, getImageUrl } from '@/lib/supabaseClient';
+import { EMOTION_ICONS, COMMUNICATION_ICONS, MEDICAL_ICONS, TRANSPORT_ICONS, COMMERCE_ICONS, EDUCATION_ICONS } from '@/lib/iconConfigs';
 
 // Icônes Lucide disponibles comme options pour les QCM - Groupées par catégorie
 const LUCIDE_ICONS = [
@@ -124,6 +126,48 @@ const LUCIDE_ICONS = [
   { id: 'lucide-package', name: '📦 Paquet', component: Package, category: 'Divers' },
   { id: 'lucide-gift', name: '🎁 Cadeau', component: Gift, category: 'Divers' },
   { id: 'lucide-help-circle', name: '❓ Aide', component: HelpCircle, category: 'Divers' },
+];
+
+// Intégration des icônes Font Awesome 6
+const emotionIconsWithComponent = EMOTION_ICONS.map(icon => ({
+  ...icon,
+  component: FA[icon.id.split('-')[1]]
+})).filter(icon => icon.component);
+
+const communicationIconsWithComponent = COMMUNICATION_ICONS.map(icon => ({
+  ...icon,
+  component: FA[icon.id.split('-')[1]]
+})).filter(icon => icon.component);
+
+const medicalIconsWithComponent = MEDICAL_ICONS.map(icon => ({
+  ...icon,
+  component: FA[icon.id.split('-')[1]]
+})).filter(icon => icon.component);
+
+const transportIconsWithComponent = TRANSPORT_ICONS.map(icon => ({
+  ...icon,
+  component: FA[icon.id.split('-')[1]]
+})).filter(icon => icon.component);
+
+const commerceIconsWithComponent = COMMERCE_ICONS.map(icon => ({
+  ...icon,
+  component: FA[icon.id.split('-')[1]]
+})).filter(icon => icon.component);
+
+const educationIconsWithComponent = EDUCATION_ICONS.map(icon => ({
+  ...icon,
+  component: FA[icon.id.split('-')[1]]
+})).filter(icon => icon.component);
+
+// Array combiné de toutes les icônes disponibles
+const ALL_ICONS = [
+  ...LUCIDE_ICONS,
+  ...emotionIconsWithComponent,
+  ...communicationIconsWithComponent,
+  ...medicalIconsWithComponent,
+  ...transportIconsWithComponent,
+  ...commerceIconsWithComponent,
+  ...educationIconsWithComponent
 ];
 
 /**
@@ -503,6 +547,16 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
     }
   };
 
+  const handleDuplicate = () => {
+    const duplicatedTask = {
+      ...task,
+      id: null, // Nouveau ID sera généré
+      title: `${task.title} (Copie)`,
+      isNew: true
+    };
+    onSave(duplicatedTask);
+  };
+
   // Use the global getImageUrl from supabaseClient for consistent image loading
   // This uses the 'images' bucket and handles the publicUrl correctly
 
@@ -707,12 +761,20 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                           {choice.imageName && (
                             <div className="p-2 bg-blue-50 rounded border border-blue-200 flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                {choice.imageId?.startsWith('lucide-') ? (
+                                {choice.imageId?.startsWith('lucide-') || choice.imageId?.startsWith('fa-') ? (
                                   (() => {
-                                    const icon = LUCIDE_ICONS.find(i => i.id === choice.imageId);
+                                    const icon = ALL_ICONS.find(i => i.id === choice.imageId);
                                     if (icon) {
-                                      const IconComponent = icon.component;
-                                      return <IconComponent className="w-4 h-4 text-blue-600" />;
+                                      let IconComponent = icon.component;
+                                      
+                                      if (!IconComponent && choice.imageId.startsWith('fa-')) {
+                                        const iconName = choice.imageId.split('-')[1];
+                                        IconComponent = FA[iconName];
+                                      }
+                                      
+                                      if (IconComponent) {
+                                        return <IconComponent className="w-4 h-4 text-blue-600" />;
+                                      }
                                     }
                                     return <ImageIcon className="w-4 h-4 text-blue-600" />;
                                   })()
@@ -735,100 +797,109 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                             </div>
                           )}
 
-                          {/* Sélecteur avec onglets */}
-                          {!choice.imageName && (
-                            <div className="border rounded bg-gray-50">
-                              <div className="flex border-b">
-                                <button
-                                  onClick={() => setImagePickerTab(prev => ({ ...prev, [choice.id]: 'images' }))}
-                                  className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
-                                    (imagePickerTab[choice.id] || 'images') === 'images'
-                                      ? 'border-b-2 border-blue-500 text-blue-600 bg-white'
-                                      : 'border-b-2 border-gray-200 text-gray-600 hover:text-gray-900 bg-gray-50'
-                                  }`}
-                                >
-                                  📸 Images
-                                </button>
-                                <button
-                                  onClick={() => setImagePickerTab(prev => ({ ...prev, [choice.id]: 'icons' }))}
-                                  className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
-                                    (imagePickerTab[choice.id] || 'images') === 'icons'
-                                      ? 'border-b-2 border-blue-500 text-blue-600 bg-white'
-                                      : 'border-b-2 border-gray-200 text-gray-600 hover:text-gray-900 bg-gray-50'
-                                  }`}
-                                >
-                                  ⭐ Icônes
-                                </button>
-                              </div>
-                              
-                              <div className="max-h-48 overflow-y-auto">
-                                {/* Onglet Images */}
-                                {(imagePickerTab[choice.id] || 'images') === 'images' && (
-                                  <div className="grid grid-cols-3 gap-2 p-2">
-                                    {images.map(img => (
-                                      <button
-                                        key={img.id}
-                                        onClick={() => {
-                                          updateChoice(question.id, choice.id, 'imageId', img.id);
-                                          updateChoice(question.id, choice.id, 'imageName', img.name);
-                                        }}
-                                        className="p-1 text-center rounded hover:bg-blue-100 border border-gray-200 hover:border-blue-400 transition-colors bg-white"
-                                      >
-                                        <img 
-                                          src={img.publicUrl} 
-                                          alt={img.name}
-                                          className="w-full h-14 object-contain bg-gray-100 rounded mb-1"
-                                          onError={(e) => {
-                                            e.target.style.display = 'none';
-                                          }}
-                                        />
-                                        <p className="text-xs text-gray-600 line-clamp-1">{img.name}</p>
-                                      </button>
-                                    ))}
-                                  </div>
-                                )}
-                                
-                                {/* Onglet Icônes */}
-                                {(imagePickerTab[choice.id] || 'images') === 'icons' && (
-                                  <div className="p-2">
-                                    {(() => {
-                                      const groupedIcons = {};
-                                      LUCIDE_ICONS.forEach(icon => {
-                                        const cat = icon.category || 'Autre';
-                                        if (!groupedIcons[cat]) groupedIcons[cat] = [];
-                                        groupedIcons[cat].push(icon);
-                                      });
-                                      
-                                      return Object.entries(groupedIcons).map(([category, icons]) => (
-                                        <div key={category} className="mb-3">
-                                          <h4 className="text-xs font-bold text-gray-600 uppercase mb-2 px-2">{category}</h4>
-                                          <div className="grid grid-cols-4 gap-2">
-                                            {icons.map(icon => {
-                                              const IconComponent = icon.component;
-                                              return (
-                                                <button
-                                                  key={icon.id}
-                                                  onClick={() => {
-                                                    updateChoice(question.id, choice.id, 'imageId', icon.id);
-                                                    updateChoice(question.id, choice.id, 'imageName', icon.name);
-                                                  }}
-                                                  className="p-2 text-center rounded hover:bg-blue-100 border border-gray-200 hover:border-blue-400 transition-colors bg-white flex flex-col items-center gap-1"
-                                                  title={icon.name}
-                                                >
-                                                  <IconComponent className="w-5 h-5 text-blue-600" />
-                                                  <p className="text-xs text-gray-700 line-clamp-1">{icon.name}</p>
-                                                </button>
-                                              );
-                                            })}
-                                          </div>
-                                        </div>
-                                      ));
-                                    })()}
-                                  </div>
-                                )}
-                              </div>
+                          {/* Sélecteur avec onglets - Afficher en permanence pour le mode mixed */}
+                          <div className="border rounded bg-gray-50">
+                            <div className="flex border-b">
+                              <button
+                                onClick={() => setImagePickerTab(prev => ({ ...prev, [choice.id]: 'images' }))}
+                                className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
+                                  (imagePickerTab[choice.id] || 'images') === 'images'
+                                    ? 'border-b-2 border-blue-500 text-blue-600 bg-white'
+                                    : 'border-b-2 border-gray-200 text-gray-600 hover:text-gray-900 bg-gray-50'
+                                }`}
+                              >
+                                📸 Images
+                              </button>
+                              <button
+                                onClick={() => setImagePickerTab(prev => ({ ...prev, [choice.id]: 'icons' }))}
+                                className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
+                                  (imagePickerTab[choice.id] || 'images') === 'icons'
+                                    ? 'border-b-2 border-blue-500 text-blue-600 bg-white'
+                                    : 'border-b-2 border-gray-200 text-gray-600 hover:text-gray-900 bg-gray-50'
+                                }`}
+                              >
+                                ⭐ Icônes
+                              </button>
                             </div>
-                          )}
+                            
+                            <div className="max-h-48 overflow-y-auto">
+                              {/* Onglet Images */}
+                              {(imagePickerTab[choice.id] || 'images') === 'images' && (
+                                <div className="grid grid-cols-3 gap-2 p-2">
+                                  {images.map(img => (
+                                    <button
+                                      key={img.id}
+                                      onClick={() => {
+                                        updateChoice(question.id, choice.id, 'imageId', img.id);
+                                        updateChoice(question.id, choice.id, 'imageName', img.name);
+                                      }}
+                                      className="p-1 text-center rounded hover:bg-blue-100 border border-gray-200 hover:border-blue-400 transition-colors bg-white"
+                                    >
+                                      <img 
+                                        src={img.publicUrl} 
+                                        alt={img.name}
+                                        className="w-full h-14 object-contain bg-gray-100 rounded mb-1"
+                                        onError={(e) => {
+                                          e.target.style.display = 'none';
+                                        }}
+                                      />
+                                      <p className="text-xs text-gray-600 line-clamp-1">{img.name}</p>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                              
+                              {/* Onglet Icônes */}
+                              {(imagePickerTab[choice.id] || 'images') === 'icons' && (
+                                <div className="p-2">
+                                  {(() => {
+                                    const groupedIcons = {};
+                                    ALL_ICONS.forEach(icon => {
+                                      const cat = icon.category || 'Autre';
+                                      if (!groupedIcons[cat]) groupedIcons[cat] = [];
+                                      groupedIcons[cat].push(icon);
+                                    });
+                                    
+                                    return Object.entries(groupedIcons).map(([category, icons]) => (
+                                      <div key={category} className="mb-3">
+                                        <h4 className="text-xs font-bold text-gray-600 uppercase mb-2 px-2">{category}</h4>
+                                        <div className="grid grid-cols-4 gap-2">
+                                          {icons.map(icon => {
+                                            // Charger dynamiquement le composant s'il n'existe pas
+                                            let IconComponent = icon.component;
+                                            
+                                            if (!IconComponent && icon.id.startsWith('fa-')) {
+                                              const iconName = icon.id.split('-')[1];
+                                              IconComponent = FA[iconName];
+                                            }
+                                            
+                                            if (!IconComponent) {
+                                              return null; // Sauter si aucun composant n'est disponible
+                                            }
+                                            
+                                            return (
+                                              <button
+                                                key={icon.id}
+                                                onClick={() => {
+                                                  updateChoice(question.id, choice.id, 'imageId', icon.id);
+                                                  updateChoice(question.id, choice.id, 'imageName', icon.name);
+                                                }}
+                                                className="p-2 text-center rounded hover:bg-blue-100 border border-gray-200 hover:border-blue-400 transition-colors bg-white flex flex-col items-center gap-1"
+                                                title={icon.name}
+                                              >
+                                                <IconComponent className="w-5 h-5 text-blue-600" />
+                                                <p className="text-xs text-gray-700 line-clamp-1">{icon.name}</p>
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                    ));
+                                  })()}
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </CardContent>
                       </Card>
                     ))}
@@ -859,6 +930,12 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
               <XCircle className="mr-2 h-4 w-4" />
               Annuler
             </Button>
+            {!task.isNew && (
+              <Button variant="secondary" onClick={handleDuplicate}>
+                <Copy className="mr-2 h-4 w-4" />
+                Dupliquer
+              </Button>
+            )}
             {!task.isNew && (
               <Button
                 variant="destructive"

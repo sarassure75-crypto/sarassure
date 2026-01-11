@@ -12,7 +12,41 @@ import { Loader2, Save, Trash2, XCircle, HelpCircle } from 'lucide-react';
 import StepAreaEditor from '@/components/admin/StepAreaEditor';
 import ButtonConfigSelector from '@/components/admin/ButtonConfigSelector';
 import * as LucideIcons from 'lucide-react';
+import * as FontAwesome6 from 'react-icons/fa6';
+import * as BootstrapIcons from 'react-icons/bs';
+import * as MaterialIcons from 'react-icons/md';
+import * as FeatherIcons from 'react-icons/fi';
+import * as HeroiconsIcons from 'react-icons/hi2';
+import * as AntIcons from 'react-icons/ai';
+import IconSelector from '@/components/IconSelector';
 import { getImageSubcategories, DEFAULT_SUBCATEGORIES } from '@/data/images';
+
+const IconLibraryMap = {
+  lucide: { module: LucideIcons, prefix: '', color: '#181818', label: 'Lucide' },
+  fa6: { module: FontAwesome6, prefix: 'fa', color: '#0184BC', label: 'Font Awesome 6' },
+  bs: { module: BootstrapIcons, prefix: 'bs', color: '#7952B3', label: 'Bootstrap Icons' },
+  md: { module: MaterialIcons, prefix: 'md', color: '#00BCD4', label: 'Material Design' },
+  fi: { module: FeatherIcons, prefix: 'fi', color: '#000000', label: 'Feather' },
+  hi2: { module: HeroiconsIcons, prefix: 'hi', color: '#6366F1', label: 'Heroicons' },
+  ai: { module: AntIcons, prefix: 'ai', color: '#1890FF', label: 'Ant Design' },
+};
+
+const getIconComponent = (iconString) => {
+  if (!iconString) return null;
+  
+  const [library, name] = iconString.split(':');
+  const libraryData = IconLibraryMap[library];
+  if (!libraryData) return null;
+  
+  const module = libraryData.module;
+  return module[name] || null;
+};
+
+const parseIconString = (iconString) => {
+  if (!iconString) return null;
+  const [library, name] = iconString.split(':');
+  return { library, name };
+};
 
 const toPascalCase = (str) => {
   if (!str) return null;
@@ -44,7 +78,18 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
   const selectedPictogram = imageArray.find(img => img.id === selectedPictogramId);
 
   const watchedIconName = watch('icon_name');
-  const IconComponent = LucideIcons[toPascalCase(watchedIconName)] || null;
+  const IconComponent = getIconComponent(watchedIconName);
+
+  const handleIconSelect = (icon) => {
+    const iconString = icon ? `${icon.library}:${icon.name}` : '';
+    setValue('icon_name', iconString, { shouldDirty: true });
+  };
+
+  const handleIconRemove = () => {
+    setValue('icon_name', '', { shouldDirty: true });
+  };
+
+  const selectedIcon = parseIconString(watchedIconName);
 
   // Load subcategories for "Capture d'écran" category
   useEffect(() => {
@@ -315,11 +360,20 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <Label htmlFor="icon_name">Icône (Nom Lucide)</Label>
-          <div className="flex items-center space-x-2 mt-1">
-            {IconComponent ? <IconComponent className="h-5 w-5 text-muted-foreground" /> : <HelpCircle className="h-5 w-5 text-muted-foreground" />}
-            <Input id="icon_name" {...register('icon_name')} placeholder="Ex: Phone, Search..." />
-          </div>
+          <Label htmlFor="icon_name">Icône</Label>
+          <IconSelector
+            selectedIcon={selectedIcon ? {
+              library: selectedIcon.library,
+              name: selectedIcon.name,
+              component: IconComponent,
+              displayName: selectedIcon.name
+            } : null}
+            onSelect={handleIconSelect}
+            onRemove={handleIconRemove}
+            libraries={['lucide', 'fa6', 'bs', 'md', 'fi', 'hi2', 'ai']}
+            showSearch={true}
+            showLibraryTabs={true}
+          />
         </div>
         <div>
           <Label htmlFor="pictogram_app_image_id">Pictogramme de l'étape (Image)</Label>

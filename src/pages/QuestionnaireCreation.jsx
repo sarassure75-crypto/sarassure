@@ -31,8 +31,10 @@ import {
   // Misc
   Package, Gift, Lightbulb, Target, Trophy, Award, Zap as ZapIcon
 } from 'lucide-react';
+import * as FA from 'react-icons/fa6';
 import { v4 as uuidv4 } from 'uuid';
 import { validateQuestionnaire, sanitizeHTML } from '@/lib/validation';
+import { EMOTION_ICONS, COMMUNICATION_ICONS, MEDICAL_ICONS, TRANSPORT_ICONS, COMMERCE_ICONS, EDUCATION_ICONS } from '@/lib/iconConfigs';
 
 /**
  * QUESTIONNAIRE CREATION - Types de questions supportés:
@@ -152,6 +154,48 @@ const LUCIDE_ICONS = [
   { id: 'lucide-package', name: '📦 Paquet', component: Package, category: 'Divers' },
   { id: 'lucide-gift', name: '🎁 Cadeau', component: Gift, category: 'Divers' },
   { id: 'lucide-help-circle', name: '❓ Aide', component: HelpCircle, category: 'Divers' },
+];
+
+// Intégration des icônes Font Awesome 6
+const emotionIconsWithComponent = EMOTION_ICONS.map(icon => ({
+  ...icon,
+  component: FA[icon.id.split('-')[1]]
+}));
+
+const communicationIconsWithComponent = COMMUNICATION_ICONS.map(icon => ({
+  ...icon,
+  component: FA[icon.id.split('-')[1]]
+}));
+
+const medicalIconsWithComponent = MEDICAL_ICONS.map(icon => ({
+  ...icon,
+  component: FA[icon.id.split('-')[1]]
+}));
+
+const transportIconsWithComponent = TRANSPORT_ICONS.map(icon => ({
+  ...icon,
+  component: FA[icon.id.split('-')[1]]
+}));
+
+const commerceIconsWithComponent = COMMERCE_ICONS.map(icon => ({
+  ...icon,
+  component: FA[icon.id.split('-')[1]]
+}));
+
+const educationIconsWithComponent = EDUCATION_ICONS.map(icon => ({
+  ...icon,
+  component: FA[icon.id.split('-')[1]]
+}));
+
+// Array combiné de toutes les icônes disponibles
+const ALL_ICONS = [
+  ...LUCIDE_ICONS,
+  ...emotionIconsWithComponent,
+  ...communicationIconsWithComponent,
+  ...medicalIconsWithComponent,
+  ...transportIconsWithComponent,
+  ...commerceIconsWithComponent,
+  ...educationIconsWithComponent
 ];
 
 const QuestionnaireCreation = () => {
@@ -825,13 +869,21 @@ const QuestionnaireCreation = () => {
                               {choice.imageName ? (
                                 <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200 flex items-center justify-between">
                                   <div className="flex items-center gap-2">
-                                    {choice.imageId?.startsWith('lucide-') ? (
-                                      // Afficher l'icône Lucide
+                                    {choice.imageId?.startsWith('lucide-') || choice.imageId?.startsWith('fa-') ? (
+                                      // Afficher l'icône Lucide ou Font Awesome
                                       (() => {
-                                        const icon = LUCIDE_ICONS.find(i => i.id === choice.imageId);
+                                        const icon = ALL_ICONS.find(i => i.id === choice.imageId);
                                         if (icon) {
-                                          const IconComponent = icon.component;
-                                          return <IconComponent className="w-5 h-5 text-blue-600" />;
+                                          let IconComponent = icon.component;
+                                          
+                                          if (!IconComponent && choice.imageId.startsWith('fa-')) {
+                                            const iconName = choice.imageId.split('-')[1];
+                                            IconComponent = FA[iconName];
+                                          }
+                                          
+                                          if (IconComponent) {
+                                            return <IconComponent className="w-5 h-5 text-blue-600" />;
+                                          }
                                         }
                                         return <ImageIcon className="w-4 h-4 text-blue-600" />;
                                       })()
@@ -917,7 +969,7 @@ const QuestionnaireCreation = () => {
                                         {(() => {
                                           // Grouper les icônes par catégorie
                                           const groupedIcons = {};
-                                          LUCIDE_ICONS.forEach(icon => {
+                                          ALL_ICONS.forEach(icon => {
                                             const cat = icon.category || 'Autre';
                                             if (!groupedIcons[cat]) groupedIcons[cat] = [];
                                             groupedIcons[cat].push(icon);
@@ -928,7 +980,17 @@ const QuestionnaireCreation = () => {
                                               <h4 className="text-xs font-bold text-gray-600 uppercase mb-2 px-2">{category}</h4>
                                               <div className="grid grid-cols-4 gap-2">
                                                 {icons.map(icon => {
-                                                  const IconComponent = icon.component;
+                                                  let IconComponent = icon.component;
+                                                  
+                                                  if (!IconComponent && icon.id.startsWith('fa-')) {
+                                                    const iconName = icon.id.split('-')[1];
+                                                    IconComponent = FA[iconName];
+                                                  }
+                                                  
+                                                  if (!IconComponent) {
+                                                    return null; // Sauter si aucun composant n'est disponible
+                                                  }
+                                                  
                                                   return (
                                                     <button
                                                       key={icon.id}
@@ -1145,12 +1207,20 @@ const QuestionnaireCreation = () => {
                                   {choice.imageName ? (
                                     <div className="mb-2 p-2 bg-blue-50 rounded border border-blue-200 flex items-center justify-between">
                                       <div className="flex items-center gap-2">
-                                        {choice.imageId?.startsWith('lucide-') ? (
+                                        {choice.imageId?.startsWith('lucide-') || choice.imageId?.startsWith('fa-') ? (
                                           (() => {
-                                            const icon = LUCIDE_ICONS.find(i => i.id === choice.imageId);
+                                            const icon = ALL_ICONS.find(i => i.id === choice.imageId);
                                             if (icon) {
-                                              const IconComponent = icon.component;
-                                              return <IconComponent className="w-4 h-4 text-blue-600" />;
+                                              let IconComponent = icon.component;
+                                              
+                                              if (!IconComponent && choice.imageId.startsWith('fa-')) {
+                                                const iconName = choice.imageId.split('-')[1];
+                                                IconComponent = FA[iconName];
+                                              }
+                                              
+                                              if (IconComponent) {
+                                                return <IconComponent className="w-4 h-4 text-blue-600" />;
+                                              }
                                             }
                                             return <ImageIcon className="w-4 h-4 text-blue-600" />;
                                           })()
@@ -1235,7 +1305,7 @@ const QuestionnaireCreation = () => {
                                             {(() => {
                                               // Grouper les icônes par catégorie
                                               const groupedIcons = {};
-                                              LUCIDE_ICONS.forEach(icon => {
+                                              ALL_ICONS.forEach(icon => {
                                                 const cat = icon.category || 'Autre';
                                                 if (!groupedIcons[cat]) groupedIcons[cat] = [];
                                                 groupedIcons[cat].push(icon);
@@ -1246,7 +1316,17 @@ const QuestionnaireCreation = () => {
                                                   <h4 className="text-xs font-bold text-gray-600 uppercase mb-2 px-2">{category}</h4>
                                                   <div className="grid grid-cols-4 gap-2">
                                                     {icons.map(icon => {
-                                                      const IconComponent = icon.component;
+                                                      let IconComponent = icon.component;
+                                                      
+                                                      if (!IconComponent && icon.id.startsWith('fa-')) {
+                                                        const iconName = icon.id.split('-')[1];
+                                                        IconComponent = FA[iconName];
+                                                      }
+                                                      
+                                                      if (!IconComponent) {
+                                                        return null; // Sauter si aucun composant n'est disponible
+                                                      }
+                                                      
                                                       return (
                                                         <button
                                                           key={icon.id}
