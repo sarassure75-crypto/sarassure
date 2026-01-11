@@ -148,7 +148,7 @@ const AppBanner = () => {
               <SheetHeader>
                 <SheetTitle className="text-2xl">Menu</SheetTitle>
               </SheetHeader>
-              <nav className="mt-8 flex flex-col gap-4">
+              <nav className="mt-8 flex flex-col gap-4 max-h-[calc(100vh-100px)] overflow-y-auto pr-2">
                 {renderNavLinks()}
                 {currentUser && (
                   <>

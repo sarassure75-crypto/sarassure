@@ -409,25 +409,14 @@ const { data: imageData } = await supabase
 // Utiliser imageData.id dans les FK
 ```
 
-### **3. Questionnaires - 3 Types**
+### **3. Questionnaires - Mode Unifié**
 
 ```jsx
-// QuestionnaireCreation.jsx ligne 12-27
-
-// TYPE 1: image_choice
-// - Question: TEXTE uniquement
-// - Réponses: IMAGES uniquement (pas de texte)
-// - Validation: au moins 2 réponses avec imageId
-
-// TYPE 2: image_text
-// - Question: TEXTE uniquement
-// - Réponses: TEXTE uniquement (pas d'images)
-// - Validation: au moins 2 réponses avec texte
-
-// TYPE 3: mixed
-// - Question: IMAGE OBLIGATOIRE + texte
-// - Réponses: IMAGE + TEXTE obligatoires (les deux)
-// - Validation stricte: imageId AND text (logic AND pas OR)
+// All QCM questions now use MIXED mode:
+// - Question: TEXTE + IMAGE OPTIONNELLE
+// - Réponses: Chaque réponse peut avoir IMAGE OU TEXTE OU LES DEUX
+// - Utilisateur peut sélectionner plusieurs réponses (checkbox mode)
+// - Validation: au moins une réponse avec image OU texte
 ```
 
 **⚠️ IMPORTANT - Stale Closure :**
@@ -442,8 +431,6 @@ const handleUpdateChoice = (questionId, choiceId, value) => {
   setQuestions(prevQuestions => prevQuestions.map(q => ...)); // Always current
 };
 ```
-
-**Voir commits :** `2d05b9c`, `5f5987f`, `5504295`
 
 ### **4. Système de Contribution**
 
@@ -529,21 +516,19 @@ const isPwaMode = window.matchMedia('(display-mode: standalone)').matches;
 **Fichier :** `src/pages/QuestionnaireCreation.jsx`
 
 ```
-1. Choisir type de question (image_choice, image_text, mixed)
+1. Mode unifié: Toutes les questions utilisent le mode mixte
    ↓
-2. Saisir question
+2. Saisir la question
    ↓
-3. Si type mixed → sélectionner image pour question
+3. Sélectionner une image pour la question (optionnel)
    ↓
 4. Ajouter réponses (2 minimum, 6 maximum)
    ↓
-5. Pour chaque réponse :
-   - Si type image_choice ou mixed : sélectionner image
-   - Si type image_text ou mixed : saisir texte
+5. Pour chaque réponse: Saisir texte ET/OU sélectionner image/icône
    ↓
-6. Marquer la réponse correcte
+6. Marquer au moins une réponse comme correcte
    ↓
-7. Validation stricte avant soumission
+7. Validation: Au moins une réponse doit avoir image OU texte
    ↓
 8. Sauvegarde dans tables :
    - tasks (type='questionnaire')
@@ -553,11 +538,14 @@ const isPwaMode = window.matchMedia('(display-mode: standalone)').matches;
 
 **Validation :**
 ```jsx
-// QuestionnaireCreation.jsx ligne 223-296
+// QuestionnaireCreation.jsx
 
-if (questionType === 'image_choice') {
-  // Au moins 2 réponses avec imageId
-  const valid = choices.filter(c => c.imageId).length >= 2;
+// Mixed mode only: each response needs image OR text
+if (q.questionType === 'mixed') {
+  const choicesWithAtLeastOne = q.choices.filter(c => c.imageId || c.text.trim());
+  if (choicesWithAtLeastOne.length === 0) {
+    errors.push(`Question ${idx + 1}: chaque réponse doit avoir au moins une image OU un label texte`);
+  }
 }
 
 if (questionType === 'image_text') {

@@ -5,6 +5,34 @@ import { Search, X } from 'lucide-react';
 import ImageFromSupabase from './ImageFromSupabase';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
+import * as LucideIcons from 'lucide-react';
+import * as FontAwesome6 from 'react-icons/fa6';
+import * as BootstrapIcons from 'react-icons/bs';
+import * as MaterialIcons from 'react-icons/md';
+import * as FeatherIcons from 'react-icons/fi';
+import * as HeroiconsIcons from 'react-icons/hi2';
+import * as AntIcons from 'react-icons/ai';
+
+// Helper to get icon component from icon string
+const getIconComponent = (iconString) => {
+  if (!iconString) return null;
+  
+  const [library, name] = iconString.split(':');
+  
+  // Import icon libraries
+  const libraries = {
+    lucide: LucideIcons,
+    fa6: FontAwesome6,
+    bs: BootstrapIcons,
+    md: MaterialIcons,
+    fi: FeatherIcons,
+    hi2: HeroiconsIcons,
+    ai: AntIcons,
+  };
+  
+  const lib = libraries[library];
+  return lib ? lib[name] : null;
+};
 
 const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInteraction, imageContainerClassName, isMobileLayout, isZoomActive: initialZoom = false, hideActionZone = false, keyboardAutoShow = false, expectedInput = '' }) => {
   const [isZoomed, setIsZoomed] = useState(initialZoom);
@@ -525,7 +553,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
             pointerEvents: 'auto'
           }}
           className={cn(
-            "z-10",
+            "z-10 flex items-center justify-center",
             actionType === 'drag_and_drop' && "cursor-grab",
             actionType !== 'drag_and_drop' && "cursor-pointer"
           )}
@@ -537,7 +565,20 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
           drag={actionType === 'drag_and_drop'}
           dragConstraints={containerRef}
           dragElastic={0.1}
-        />
+        >
+          {/* Afficher l'icône si présente */}
+          {actionArea.icon_name && (
+            (() => {
+              const IconComponent = getIconComponent(actionArea.icon_name);
+              return IconComponent ? (
+                <IconComponent 
+                  className="text-white drop-shadow-lg" 
+                  style={{ fontSize: '3rem', pointerEvents: 'none' }} 
+                />
+              ) : null;
+            })()
+          )}
+        </motion.div>
       )}
 
       {showTextInput && targetArea && (

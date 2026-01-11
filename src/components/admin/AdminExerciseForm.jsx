@@ -123,7 +123,7 @@ const AdminExerciseForm = ({ exercise: initialExercise, onSave, onCancel, onDele
                 } : null}
                 onSelect={handleIconSelect}
                 onRemove={handleIconRemove}
-                libraries={['lucide', 'fa6', 'bs', 'md', 'fi', 'hi2', 'ai']}
+                libraries={['fa6', 'bs', 'md', 'fi', 'hi2', 'ai']}
                 showSearch={true}
                 showLibraryTabs={true}
               />

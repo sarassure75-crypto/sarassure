@@ -276,6 +276,11 @@ export default defineConfig({
 		cssCodeSplit: true,
 		sourcemap: false,
 		minify: 'esbuild',
-		target: 'es2015'
+		target: 'es2015',
+		esbuild: {
+			// Préserver les console.log pour le débogage
+			drop: ['debugger'],
+			keepNames: true
+		}
 	}
 });

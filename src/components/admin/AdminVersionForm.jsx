@@ -78,6 +78,13 @@ const AdminVersionForm = ({ version: initialVersion, onSave, onCancel, onDelete 
       pictogram_app_image_id: version.pictogram_app_image_id,
       icon_name: version.icon_name,
     };
+    
+    // Passer les flags locaux via une clé spéciale pour le post-traitement
+    dataToSave._metadata = {
+      isNew: version.isNew,
+      originalVersionId: version.originalVersionId,
+    };
+    
     onSave(dataToSave);
   };
 
@@ -145,7 +152,7 @@ const AdminVersionForm = ({ version: initialVersion, onSave, onCancel, onDelete 
                 } : null}
                 onSelect={handleIconSelect}
                 onRemove={handleIconRemove}
-                libraries={['lucide', 'fa6', 'bs', 'md', 'fi', 'hi2', 'ai']}
+                libraries={['fa6', 'bs', 'md', 'fi', 'hi2', 'ai']}
                 showSearch={true}
                 showLibraryTabs={true}
               />

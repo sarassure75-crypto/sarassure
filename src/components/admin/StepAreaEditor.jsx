@@ -2,6 +2,16 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
+import IconSelector from '@/components/IconSelector';
+import * as LucideIcons from 'lucide-react';
+import * as FontAwesome6 from 'react-icons/fa6';
+import * as BootstrapIcons from 'react-icons/bs';
+import * as MaterialIcons from 'react-icons/md';
+import * as FeatherIcons from 'react-icons/fi';
+import * as HeroiconsIcons from 'react-icons/hi2';
+import * as AntIcons from 'react-icons/ai';
 
 // Convert RGB string to HEX for color input
 const rgbToHex = (rgb) => {
@@ -13,6 +23,27 @@ const rgbToHex = (rgb) => {
     return `#${r}${g}${b}`;
   }
   return '#3b82f6';
+};
+
+// Helper to get icon component from icon string
+const getIconComponent = (iconString) => {
+  if (!iconString) return null;
+  
+  const [library, name] = iconString.split(':');
+  
+  // Import icon libraries
+  const libraries = {
+    lucide: LucideIcons,
+    fa6: FontAwesome6,
+    bs: BootstrapIcons,
+    md: MaterialIcons,
+    fi: FeatherIcons,
+    hi2: HeroiconsIcons,
+    ai: AntIcons,
+  };
+  
+  const lib = libraries[library];
+  return lib ? lib[name] : null;
 };
 
 const ResizableArea = ({ area, imageDimensions, onMouseDown, onResizeMouseDown }) => {
@@ -54,22 +85,36 @@ const ResizableArea = ({ area, imageDimensions, onMouseDown, onResizeMouseDown }
     <div 
       style={style} 
       onMouseDown={onMouseDown}
-      className="group hover:shadow-lg"
+      className="group hover:shadow-lg flex items-center justify-center"
       title="Cliquez et glissez pour déplacer"
     >
-      {/* Poignée de déplacement */}
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-        <div className="flex flex-col items-center gap-0.5 opacity-60">
-          <div className="w-6 h-1 bg-white rounded-full"></div>
-          <div className="w-6 h-1 bg-white rounded-full"></div>
-          <div className="w-6 h-1 bg-white rounded-full"></div>
+      {/* Afficher l'icône si présente */}
+      {area.icon_name && (
+        <div className="absolute pointer-events-none flex items-center justify-center" style={{ zIndex: 20 }}>
+          {(() => {
+            const IconComponent = getIconComponent(area.icon_name);
+            return IconComponent ? <IconComponent className="text-white" style={{ fontSize: '3rem' }} /> : null;
+          })()}
         </div>
-      </div>
+      )}
+      
+      {/* Poignée de déplacement - uniquement si pas d'icône */}
+      {!area.icon_name && (
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+          <div className="flex flex-col items-center gap-0.5 opacity-60">
+            <div className="w-6 h-1 bg-white rounded-full"></div>
+            <div className="w-6 h-1 bg-white rounded-full"></div>
+            <div className="w-6 h-1 bg-white rounded-full"></div>
+          </div>
+        </div>
+      )}
 
-      {/* Étiquette "⋮⋮" */}
-      <div className="absolute top-1 left-1 text-xs font-bold text-white opacity-75 pointer-events-none">
-        ⋮⋮
-      </div>
+      {/* Étiquette "⋮⋮" - uniquement si pas d'icône */}
+      {!area.icon_name && (
+        <div className="absolute top-1 left-1 text-xs font-bold text-white opacity-75 pointer-events-none">
+          ⋮⋮
+        </div>
+      )}
 
       {/* Poignées de redimensionnement - toujours visibles */}
       {handles.map(handleName => (
@@ -311,6 +356,13 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
     onAreaChange(updated);
   };
 
+  const handleIconSelect = (icon) => {
+    const iconString = icon ? `${icon.library}:${icon.name}` : null;
+    const updated = { ...localArea, icon_name: iconString };
+    setLocalArea(updated);
+    onAreaChange(updated);
+  };
+
   return (
     <div className="space-y-4">
       {/* Vérifier que localArea est initialisé */}
@@ -403,6 +455,44 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
         </div>
       )}
 
+      {/* Section Icône */}
+      {localArea && (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-md space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-amber-900">🎨 Icône de la zone (optionnel)</h3>
+            {localArea.icon_name && (
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => handleIconSelect(null)}
+                className="h-6 text-amber-600 hover:text-amber-700"
+              >
+                <X className="h-4 w-4" /> Supprimer
+              </Button>
+            )}
+          </div>
+          
+          <p className="text-xs text-amber-700 italic">
+            Sélectionnez une icône pour remplacer la zone transparente. L'icône s'affichera au centre de la zone.
+          </p>
+
+          {localArea.icon_name && (
+            <div className="p-2 bg-white border border-amber-300 rounded flex items-center gap-2">
+              <span className="text-xs font-medium text-amber-900">Icône sélectionnée:</span>
+              <span className="text-sm font-mono text-amber-700">{localArea.icon_name}</span>
+            </div>
+          )}
+
+          <IconSelector
+            onSelect={handleIconSelect}
+            onRemove={() => handleIconSelect(null)}
+            libraries={['lucide', 'fa6', 'bs', 'md', 'fi', 'hi2', 'ai']}
+            showSearch={true}
+            showLibraryTabs={true}
+          />
+        </div>
+      )}
+
       {/* Zone dimensions info */}
       {localArea && (
         <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
@@ -455,7 +545,8 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
           <li><strong>Déplacer la zone:</strong> Cliquez et glissez la boîte bleue (comme sur votre téléphone)</li>
           <li><strong>Redimensionner:</strong> Utilisez les 4 points blancs aux coins</li>
           <li><strong>Personnaliser:</strong> Changez couleur, transparence et forme au-dessus</li>
-          <li><strong>Texte blanc:</strong> Les trois lignes ⋮⋮ indiquent le point de saisie</li>
+          <li><strong>Ajouter une icône:</strong> Sélectionnez une icône pour l'afficher dans la zone (remplace les lignes ⋮⋮)</li>
+          <li><strong>Texte blanc:</strong> Les trois lignes ⋮⋮ indiquent le point de saisie (disparaît avec une icône)</li>
         </ul>
       </div>
     </div>

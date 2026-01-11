@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,6 @@ import { useAdmin } from '@/contexts/AdminContext';
 import { Loader2, Save, Trash2, XCircle, HelpCircle } from 'lucide-react';
 import StepAreaEditor from '@/components/admin/StepAreaEditor';
 import ButtonConfigSelector from '@/components/admin/ButtonConfigSelector';
-import * as LucideIcons from 'lucide-react';
 import * as FontAwesome6 from 'react-icons/fa6';
 import * as BootstrapIcons from 'react-icons/bs';
 import * as MaterialIcons from 'react-icons/md';
@@ -22,7 +20,6 @@ import IconSelector from '@/components/IconSelector';
 import { getImageSubcategories, DEFAULT_SUBCATEGORIES } from '@/data/images';
 
 const IconLibraryMap = {
-  lucide: { module: LucideIcons, prefix: '', color: '#181818', label: 'Lucide' },
   fa6: { module: FontAwesome6, prefix: 'fa', color: '#0184BC', label: 'Font Awesome 6' },
   bs: { module: BootstrapIcons, prefix: 'bs', color: '#7952B3', label: 'Bootstrap Icons' },
   md: { module: MaterialIcons, prefix: 'md', color: '#00BCD4', label: 'Material Design' },
@@ -48,14 +45,6 @@ const parseIconString = (iconString) => {
   return { library, name };
 };
 
-const toPascalCase = (str) => {
-  if (!str) return null;
-  return str
-    .split(/[\s-]+/)
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join('');
-};
-
 const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
   // Single unified zone editor - tap, double_tap, long_press, swipe_*, drag_and_drop, text_input, number_input
   const { register, handleSubmit, control, watch, setValue, formState: { errors, isDirty } } = useForm({
@@ -73,9 +62,6 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
 
   const selectedImageId = watch('app_image_id');
   const selectedImage = imageArray.find(img => img.id === selectedImageId);
-
-  const selectedPictogramId = watch('pictogram_app_image_id');
-  const selectedPictogram = imageArray.find(img => img.id === selectedPictogramId);
 
   const watchedIconName = watch('icon_name');
   const IconComponent = getIconComponent(watchedIconName);
@@ -358,44 +344,21 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <Label htmlFor="icon_name">Icône</Label>
-          <IconSelector
-            selectedIcon={selectedIcon ? {
-              library: selectedIcon.library,
-              name: selectedIcon.name,
-              component: IconComponent,
-              displayName: selectedIcon.name
-            } : null}
-            onSelect={handleIconSelect}
-            onRemove={handleIconRemove}
-            libraries={['lucide', 'fa6', 'bs', 'md', 'fi', 'hi2', 'ai']}
-            showSearch={true}
-            showLibraryTabs={true}
-          />
-        </div>
-        <div>
-          <Label htmlFor="pictogram_app_image_id">Pictogramme de l'étape (Image)</Label>
-          <Controller
-            name="pictogram_app_image_id"
-            control={control}
-            render={({ field }) => (
-              <div className="flex items-center space-x-2">
-                {selectedPictogram && <img src={selectedPictogram.publicUrl} alt={selectedPictogram.name} className="h-6 w-6 object-contain border rounded"/>}
-                <Select onValueChange={(value) => field.onChange(value === '_none_' ? null : value)} value={field.value || '_none_'}>
-                  <SelectTrigger id="pictogram_app_image_id" className="mt-1 flex-grow"><SelectValue placeholder="Sélectionner un pictogramme" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="_none_">Aucun</SelectItem>
-                    {imageArray.filter(img => ['Pictogramme', 'Icône'].includes(img.category)).map(img => (
-                      <SelectItem key={img.id} value={img.id}>{img.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          />
-        </div>
+      <div>
+        <Label htmlFor="icon_name">Icône</Label>
+        <IconSelector
+          selectedIcon={selectedIcon ? {
+            library: selectedIcon.library,
+            name: selectedIcon.name,
+            component: IconComponent,
+            displayName: selectedIcon.name
+          } : null}
+          onSelect={handleIconSelect}
+          onRemove={handleIconRemove}
+          libraries={['fa6', 'bs', 'md', 'fi', 'hi2', 'ai']}
+          showSearch={true}
+          showLibraryTabs={true}
+        />
       </div>
 
       {watch('action_type')?.includes('input') && (

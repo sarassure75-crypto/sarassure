@@ -37,22 +37,13 @@ import { validateQuestionnaire, sanitizeHTML } from '@/lib/validation';
 import { EMOTION_ICONS, COMMUNICATION_ICONS, MEDICAL_ICONS, TRANSPORT_ICONS, COMMERCE_ICONS, EDUCATION_ICONS } from '@/lib/iconConfigs';
 
 /**
- * QUESTIONNAIRE CREATION - Types de questions supportés:
+ * QUESTIONNAIRE CREATION - Mixed Mode Only
  * 
- * 1. image_choice: 
- *    - Question: TEXTE UNIQUEMENT
- *    - Réponses: IMAGE UNIQUEMENT (au minimum 1 image, 1 marquée correcte)
- *    - Cas d'usage: Trier/identifier des images
- * 
- * 2. image_text (ou text):
- *    - Question: TEXTE UNIQUEMENT
- *    - Réponses: TEXTE UNIQUEMENT (au minimum 1 texte, 1 marqué correct)
- *    - Cas d'usage: Questions texte standard
- * 
- * 3. mixed:
- *    - Question: IMAGE OPTIONNELLE
- *    - Réponses: IMAGE OU TEXTE (au moins l'un des deux par réponse)
- *    - Cas d'usage: Questions avec contexte visuel optionnel et réponses flexibles
+ * All QCM questions now use unified MIXED mode:
+ * - Question: TEXTE + IMAGE OPTIONNELLE
+ * - Réponses: Chaque réponse peut avoir IMAGE OU TEXTE OU LES DEUX
+ * - Utilisateur peut sélectionner plusieurs réponses (checkbox mode)
+ * - Validation: au moins une réponse avec image OU texte
  */
 
 // Icônes Lucide disponibles comme options pour les QCM - Groupées par catégorie
@@ -287,15 +278,15 @@ const QuestionnaireCreation = () => {
       id: uuidv4(),
       text: '',
       helpText: '',
-      questionType: 'image_choice', // image_choice, image_text, mixed
-      imageId: null, // Pour image_text et mixed
-      imageName: '', // Pour image_text et mixed
+      questionType: 'mixed', // Only mixed mode: images OU icons OU text
+      imageId: null, // Question image (optional)
+      imageName: '', // Question image name
       choices: Array(3).fill(null).map(() => ({ 
         id: uuidv4(), 
         imageId: null, 
         imageName: '', 
         text: '', 
-        icon: null, // Structure: { library, name, displayName }
+        icon: null,
         isCorrect: false 
       }))
     };
@@ -381,35 +372,11 @@ const QuestionnaireCreation = () => {
     });
   };
 
-  // Gérer le type de question
-  const handleChangeQuestionType = (questionId, questionType) => {
-    setQuestions(prevQuestions => prevQuestions.map(q => {
-      if (q.id !== questionId) return q;
-      // When changing to image_choice, ensure all text fields are empty strings
-      if (questionType === 'image_choice') {
-        return { 
-          ...q, 
-          questionType,
-          choices: q.choices.map(c => ({ ...c, text: '' }))
-        };
-      }
-      return { ...q, questionType };
-    }));
-  };
-
-  // Sélectionner l'image pour image_text ou mixed
+  // Sélectionner l'image pour la question (mixed mode)
   const handleSelectImageForQuestion = (questionId, imageId, imageName) => {
     setQuestions(prevQuestions => prevQuestions.map(q =>
       q.id === questionId ? { ...q, imageId, imageName } : q
     ));
-  };
-
-  // Toggle image picker visibility for a choice
-  const toggleImagePicker = (choiceId) => {
-    setExpandedImageChoices(prev => ({
-      ...prev,
-      [choiceId]: !prev[choiceId]
-    }));
   };
 
   // Toggle image picker visibility for a question
@@ -427,44 +394,14 @@ const QuestionnaireCreation = () => {
     questionsToValidate.forEach((q, idx) => {
       if (!q.text.trim()) errors.push(`Question ${idx + 1}: le texte de la question est requis`);
       
-      if (q.questionType === 'image_choice') {
-        // image_choice: Choix avec IMAGES UNIQUEMENT (pas de texte, juste des images)
-        // Au moins 1 choix avec image, au moins 1 marqué correct
-        const choicesWithImages = q.choices.filter(c => c.imageId);
-        if (choicesWithImages.length === 0) {
-          errors.push(`Question ${idx + 1} (Image Choice): au moins une image est requise`);
-        } else {
-          const correctAnswers = choicesWithImages.filter(c => c.isCorrect);
-          if (correctAnswers.length === 0) {
-            errors.push(`Question ${idx + 1} (Image Choice): au moins une réponse doit être marquée correcte`);
-          }
-        }
-      } 
-      else if (q.questionType === 'image_text') {
-        // image_text: Texte UNIQUEMENT (pas d'image pour la question, juste du texte pour les réponses)
-        // Au moins 1 choix avec texte, au moins 1 marqué correct
-        const choicesWithText = q.choices.filter(c => c.text.trim());
-        if (choicesWithText.length === 0) {
-          errors.push(`Question ${idx + 1} (Texte): au moins une réponse texte est requise`);
-        } else {
-          const correctAnswers = choicesWithText.filter(c => c.isCorrect);
-          if (correctAnswers.length === 0) {
-            errors.push(`Question ${idx + 1} (Texte): au moins une réponse doit être marquée correcte`);
-          }
-        }
-      } 
-      else if (q.questionType === 'mixed') {
-        // mixed: Image OPTIONNELLE pour la question + Réponses avec IMAGE OU TEXTE
-        // La question peut avoir une image ou pas, chaque choix DOIT avoir une image OU du texte
-        
-        const choicesWithAtLeastOne = q.choices.filter(c => c.imageId || c.text.trim());
-        if (choicesWithAtLeastOne.length === 0) {
-          errors.push(`Question ${idx + 1} (Mixte): chaque réponse doit avoir au moins une image OU un label texte`);
-        } else {
-          const correctAnswers = choicesWithAtLeastOne.filter(c => c.isCorrect);
-          if (correctAnswers.length === 0) {
-            errors.push(`Question ${idx + 1} (Mixte): au moins une réponse doit être marquée correcte`);
-          }
+      // Mixed mode only: each response must have image OR text
+      const choicesWithAtLeastOne = q.choices.filter(c => c.imageId || c.text.trim());
+      if (choicesWithAtLeastOne.length === 0) {
+        errors.push(`Question ${idx + 1}: chaque réponse doit avoir au moins une image OU un label texte`);
+      } else {
+        const correctAnswers = choicesWithAtLeastOne.filter(c => c.isCorrect);
+        if (correctAnswers.length === 0) {
+          errors.push(`Question ${idx + 1}: au moins une réponse doit être marquée correcte`);
         }
       }
     });
@@ -558,29 +495,14 @@ const QuestionnaireCreation = () => {
 
       // Insérer les questions dans la table questionnaire_questions
       const questionsDataForDB = questions.map((q, idx) => {
-        let questionType = 'text'; // Par défaut
-        let questionInstruction = q.text;
-        let questionImageId = null;
-        let questionImageName = '';
-
-        // Pour les types mixed, on stocke l'image de la question
-        if (q.questionType === 'mixed') {
-          questionType = 'mixed';
-          questionImageId = q.imageId;
-          questionImageName = q.imageName;
-        } else if (q.questionType === 'image_choice') {
-          questionType = 'image_choice';
-        } else if (q.questionType === 'image_text') {
-          questionType = 'image_text';
-        }
-
+        // All questions are now mixed mode
         return {
           task_id: task.id,
-          instruction: questionInstruction,
+          instruction: q.text,
           question_order: idx + 1,
-          question_type: questionType,
-          image_id: questionImageId,
-          image_name: questionImageName
+          question_type: 'mixed',
+          image_id: q.imageId || null,
+          image_name: q.imageName || ''
         };
       });
 
@@ -603,24 +525,13 @@ const QuestionnaireCreation = () => {
         const q = questions[i];
         const insertedQuestion = insertedQuestions[i];
 
-        // Filtrer les réponses remplies selon le type
-        let filledChoices = [];
-        
-        if (q.questionType === 'image_choice') {
-          // image_choice: Garder UNIQUEMENT les choix avec une image
-          filledChoices = q.choices.filter(c => c.imageId);
-        } else if (q.questionType === 'image_text') {
-          // image_text: Garder UNIQUEMENT les choix avec du texte
-          filledChoices = q.choices.filter(c => c.text.trim());
-        } else if (q.questionType === 'mixed') {
-          // mixed: Garder les choix avec IMAGE OU TEXTE (au moins l'un des deux)
-          filledChoices = q.choices.filter(c => c.imageId || c.text.trim());
-        }
+        // All questions now use mixed mode: keep choices with IMAGE OR TEXT
+        const filledChoices = q.choices.filter(c => c.imageId || c.text.trim());
 
         // Créer les enregistrements de choix
         const choicesForQuestion = filledChoices.map((choice, choiceIdx) => ({
           question_id: insertedQuestion.id,
-          text: (choice.text && choice.text.trim()) || '',  // Always ensure empty string, never null
+          text: (choice.text && choice.text.trim()) || '',
           choice_order: choiceIdx + 1,
           is_correct: choice.isCorrect,
           image_id: choice.imageId || null,
@@ -790,41 +701,7 @@ const QuestionnaireCreation = () => {
                     />
                   </div>
 
-                  {/* Type de question */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Type de question
-                    </label>
-                    <div className="flex flex-wrap gap-4">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          checked={question.questionType === 'image_choice'}
-                          onChange={() => handleChangeQuestionType(question.id, 'image_choice')}
-                          className="w-4 h-4"
-                        />
-                        <span>Réponses : Images uniquement</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          checked={question.questionType === 'image_text'}
-                          onChange={() => handleChangeQuestionType(question.id, 'image_text')}
-                          className="w-4 h-4"
-                        />
-                        <span>Réponses : Texte uniquement</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          checked={question.questionType === 'mixed'}
-                          onChange={() => handleChangeQuestionType(question.id, 'mixed')}
-                          className="w-4 h-4"
-                        />
-                        <span>Réponses : Image + Texte</span>
-                      </label>
-                    </div>
-                  </div>
+
 
                   {/* RÉPONSES UNIFIÉES: Support 6 slots pour tous les types */}
                   <div className="space-y-4">
@@ -832,274 +709,9 @@ const QuestionnaireCreation = () => {
                       Réponses possibles (2-6 propositions) *
                     </label>
 
-                    {/* Pour image_choice: Sélectionnez images */}
-                    {question.questionType === 'image_choice' && (
-                      <div className="space-y-3">
-                        {question.choices.map((choice, cIdx) => {
-                          const isFilled = choice.imageId || choice.text.trim();
-                          return (
-                            <div key={choice.id} className="border rounded-lg p-4">
-                              <div className="flex items-center justify-between mb-3">
-                                <span className="text-sm font-medium text-gray-700">
-                                  Réponse {cIdx + 1}
-                                </span>
-                                <div className="flex gap-2">
-                                  <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                      type="checkbox"
-                                      checked={choice.isCorrect}
-                                      onChange={() => handleToggleCorrect(question.id, choice.id)}
-                                      className="w-4 h-4 rounded"
-                                    />
-                                    <span className="text-xs text-gray-600">Correcte</span>
-                                  </label>
-                                  {question.choices.length > 2 && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleDeleteChoice(question.id, choice.id)}
-                                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </Button>
-                                  )}
-                                </div>
-                              </div>
 
-                              {choice.imageName ? (
-                                <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200 flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    {choice.imageId?.startsWith('lucide-') || choice.imageId?.startsWith('fa-') ? (
-                                      // Afficher l'icône Lucide ou Font Awesome
-                                      (() => {
-                                        const icon = ALL_ICONS.find(i => i.id === choice.imageId);
-                                        if (icon) {
-                                          let IconComponent = icon.component;
-                                          
-                                          if (!IconComponent && choice.imageId.startsWith('fa-')) {
-                                            const iconName = choice.imageId.split('-')[1];
-                                            IconComponent = FA[iconName];
-                                          }
-                                          
-                                          if (IconComponent) {
-                                            return <IconComponent className="w-5 h-5 text-blue-600" />;
-                                          }
-                                        }
-                                        return <ImageIcon className="w-4 h-4 text-blue-600" />;
-                                      })()
-                                    ) : (
-                                      // Afficher l'image
-                                      <ImageIcon className="w-4 h-4 text-blue-600" />
-                                    )}
-                                    <span className="text-sm font-medium text-blue-900">{choice.imageName}</span>
-                                  </div>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => toggleImagePicker(choice.id)}
-                                    className="text-blue-600 hover:text-blue-700"
-                                  >
-                                    Changer
-                                  </Button>
-                                </div>
-                              ) : null}
-                              
-                              {!choice.imageName || expandedImageChoices[choice.id] ? (
-                                <div className="mb-3 border rounded-lg bg-gray-50">
-                                  {/* Onglets pour images et icônes */}
-                                  <div className="flex border-b">
-                                    <button
-                                      onClick={() => setImagePickerTab(prev => ({ ...prev, [choice.id]: 'images' }))}
-                                      className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
-                                        (imagePickerTab[choice.id] || 'images') === 'images'
-                                          ? 'border-b-2 border-blue-500 text-blue-600 bg-white'
-                                          : 'border-b-2 border-gray-200 text-gray-600 hover:text-gray-900 bg-gray-50'
-                                      }`}
-                                    >
-                                      📸 Images
-                                    </button>
-                                    <button
-                                      onClick={() => setImagePickerTab(prev => ({ ...prev, [choice.id]: 'icons' }))}
-                                      className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
-                                        (imagePickerTab[choice.id] || 'images') === 'icons'
-                                          ? 'border-b-2 border-blue-500 text-blue-600 bg-white'
-                                          : 'border-b-2 border-gray-200 text-gray-600 hover:text-gray-900 bg-gray-50'
-                                      }`}
-                                    >
-                                      ⭐ Icônes
-                                    </button>
-                                  </div>
-                                  
-                                  {/* Contenu des onglets */}
-                                  <div className="max-h-60 overflow-y-auto">
-                                    {/* Onglet Images */}
-                                    {(imagePickerTab[choice.id] || 'images') === 'images' && (
-                                      <div className="grid grid-cols-3 gap-2 p-2">
-                                        {images.map(img => (
-                                          <button
-                                            key={img.id}
-                                            onClick={() => {
-                                              if (!img.id) {
-                                                console.error('❌ Image ID is undefined or null!', img);
-                                                return;
-                                              }
-                                              handleUpdateChoiceText(question.id, choice.id, 'imageId', img.id);
-                                              handleUpdateChoiceText(question.id, choice.id, 'imageName', img.name);
-                                              toggleImagePicker(choice.id);
-                                            }}
-                                            className="p-2 text-center rounded hover:bg-blue-100 border border-gray-200 hover:border-blue-400 transition-colors bg-white"
-                                          >
-                                            <img 
-                                              src={img.publicUrl} 
-                                              alt={img.name}
-                                              className="w-full h-20 object-contain bg-gray-100 rounded mb-1"
-                                              onError={(e) => {
-                                                e.target.style.display = 'none';
-                                              }}
-                                            />
-                                            <p className="text-xs text-gray-700 line-clamp-2">{img.name}</p>
-                                          </button>
-                                        ))}
-                                      </div>
-                                    )}
-                                    
-                                    {/* Onglet Icônes */}
-                                    {(imagePickerTab[choice.id] || 'images') === 'icons' && (
-                                      <div className="p-2">
-                                        {(() => {
-                                          // Grouper les icônes par catégorie
-                                          const groupedIcons = {};
-                                          ALL_ICONS.forEach(icon => {
-                                            const cat = icon.category || 'Autre';
-                                            if (!groupedIcons[cat]) groupedIcons[cat] = [];
-                                            groupedIcons[cat].push(icon);
-                                          });
-                                          
-                                          return Object.entries(groupedIcons).map(([category, icons]) => (
-                                            <div key={category} className="mb-4">
-                                              <h4 className="text-xs font-bold text-gray-600 uppercase mb-2 px-2">{category}</h4>
-                                              <div className="grid grid-cols-4 gap-2">
-                                                {icons.map(icon => {
-                                                  let IconComponent = icon.component;
-                                                  
-                                                  if (!IconComponent && icon.id.startsWith('fa-')) {
-                                                    const iconName = icon.id.split('-')[1];
-                                                    IconComponent = FA[iconName];
-                                                  }
-                                                  
-                                                  if (!IconComponent) {
-                                                    return null; // Sauter si aucun composant n'est disponible
-                                                  }
-                                                  
-                                                  return (
-                                                    <button
-                                                      key={icon.id}
-                                                      onClick={() => {
-                                                        handleUpdateChoiceText(question.id, choice.id, 'imageId', icon.id);
-                                                        handleUpdateChoiceText(question.id, choice.id, 'imageName', icon.name);
-                                                        toggleImagePicker(choice.id);
-                                                      }}
-                                                      className="p-2 text-center rounded hover:bg-blue-100 border border-gray-200 hover:border-blue-400 transition-colors bg-white flex flex-col items-center gap-1"
-                                                      title={icon.name}
-                                                    >
-                                                      <IconComponent className="w-6 h-6 text-blue-600" />
-                                                      <p className="text-xs text-gray-700 line-clamp-1">{icon.name}</p>
-                                                    </button>
-                                                  );
-                                                })}
-                                              </div>
-                                            </div>
-                                          ));
-                                        })()}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              ) : null}
-                            </div>
-                          );
-                        })}
-                        {question.choices.length < 6 && (
-                          <Button
-                            onClick={() => handleAddChoice(question.id)}
-                            variant="outline"
-                            className="w-full gap-2"
-                          >
-                            <Plus className="w-4 h-4" />
-                            Ajouter une réponse
-                          </Button>
-                        )}
-                      </div>
-                    )}
 
-                    {/* Pour image_text: Texte seul sans image */}
-                    {question.questionType === 'image_text' && (
-                      <div className="space-y-4">
-                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                          <p className="text-sm text-blue-900">
-                            💡 <strong>Mode Texte Uniquement:</strong> Les réponses sont du texte pur. Aucune image requise pour la question.
-                          </p>
-                        </div>
 
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-3">
-                            Réponses texte possibles *
-                          </label>
-                          <div className="space-y-3">
-                            {question.choices.map((choice, cIdx) => {
-                              const isFilled = choice.text.trim();
-                              return (
-                                <div key={choice.id} className="border rounded-lg p-4">
-                                  <div className="flex items-center justify-between mb-3">
-                                    <span className="text-sm font-medium text-gray-700">
-                                      Proposition {cIdx + 1}
-                                    </span>
-                                    <div className="flex gap-2">
-                                      <label className="flex items-center gap-2 cursor-pointer">
-                                        <input
-                                          type="checkbox"
-                                          checked={choice.isCorrect}
-                                          onChange={() => handleToggleCorrect(question.id, choice.id)}
-                                          className="w-4 h-4 rounded"
-                                        />
-                                        <span className="text-xs text-gray-600">Correcte</span>
-                                      </label>
-                                      {question.choices.length > 2 && (
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => handleDeleteChoice(question.id, choice.id)}
-                                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                        >
-                                          <Trash2 className="w-4 h-4" />
-                                        </Button>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <input
-                                    type="text"
-                                    value={choice.text}
-                                    onChange={(e) => handleUpdateChoiceText(question.id, choice.id, 'text', e.target.value)}
-                                    placeholder={`Entrez la proposition ${cIdx + 1}...`}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  />
-                                </div>
-                              );
-                            })}
-                            {question.choices.length < 6 && (
-                              <Button
-                                onClick={() => handleAddChoice(question.id)}
-                                variant="outline"
-                                className="w-full gap-2"
-                              >
-                                <Plus className="w-4 h-4" />
-                                Ajouter une réponse
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    )}
 
                     {/* Pour mixed: Image + Text labels */}
                     {question.questionType === 'mixed' && (
@@ -1202,12 +814,12 @@ const QuestionnaireCreation = () => {
                                 
                                 <div className="mb-3">
                                   <label className="block text-xs font-medium text-gray-600 mb-2">
-                                    Sélectionnez une image ou icône:
+                                    Réponse (sélectionnez texte OU image OU icône):
                                   </label>
                                   {choice.imageName ? (
                                     <div className="mb-2 p-2 bg-blue-50 rounded border border-blue-200 flex items-center justify-between">
                                       <div className="flex items-center gap-2">
-                                        {choice.imageId?.startsWith('lucide-') || choice.imageId?.startsWith('fa-') ? (
+                                        {choice.imageId?.startsWith('fa-') || choice.imageId?.startsWith('bs-') || choice.imageId?.startsWith('md-') || choice.imageId?.startsWith('fi-') || choice.imageId?.startsWith('hi2-') || choice.imageId?.startsWith('ai-') ? (
                                           (() => {
                                             const icon = ALL_ICONS.find(i => i.id === choice.imageId);
                                             if (icon) {
@@ -1225,7 +837,14 @@ const QuestionnaireCreation = () => {
                                             return <ImageIcon className="w-4 h-4 text-blue-600" />;
                                           })()
                                         ) : (
-                                          <ImageIcon className="w-4 h-4 text-blue-600" />
+                                          <img 
+                                            src={images.find(img => img.id === choice.imageId)?.publicUrl} 
+                                            alt={choice.imageName}
+                                            className="w-6 h-6 object-contain rounded"
+                                            onError={(e) => {
+                                              e.target.style.display = 'none';
+                                            }}
+                                          />
                                         )}
                                         <span className="text-xs text-blue-900">{choice.imageName}</span>
                                       </div>
@@ -1241,120 +860,66 @@ const QuestionnaireCreation = () => {
                                         <X className="w-3 h-3" />
                                       </Button>
                                     </div>
-                                  ) : (
-                                    <div className="border rounded bg-gray-50">
-                                      {/* Onglets pour images et icônes */}
-                                      <div className="flex border-b">
+                                  ) : null}
+                                  
+                                  {/* Sélecteur d'images du système */}
+                                  <div className="mb-3 p-2 border rounded-lg bg-gray-50">
+                                    <label className="block text-xs font-medium text-gray-600 mb-2">
+                                      📸 Images système:
+                                    </label>
+                                    <div className="grid grid-cols-4 gap-2 max-h-32 overflow-y-auto">
+                                      {images.map(img => (
                                         <button
-                                          onClick={() => setImagePickerTab(prev => ({ ...prev, [choice.id]: 'images' }))}
-                                          className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
-                                            (imagePickerTab[choice.id] || 'images') === 'images'
-                                              ? 'border-b-2 border-blue-500 text-blue-600 bg-white'
-                                              : 'border-b-2 border-gray-200 text-gray-600 hover:text-gray-900 bg-gray-50'
-                                          }`}
+                                          key={img.id}
+                                          onClick={() => {
+                                            handleUpdateChoiceText(question.id, choice.id, 'imageId', img.id);
+                                            handleUpdateChoiceText(question.id, choice.id, 'imageName', img.name);
+                                          }}
+                                          className="p-1 rounded border border-gray-300 hover:border-blue-400 hover:bg-blue-100 transition-colors bg-white flex flex-col items-center gap-1"
+                                          title={img.name}
                                         >
-                                          📸 Images
+                                          <img 
+                                            src={img.publicUrl} 
+                                            alt={img.name}
+                                            className="w-8 h-8 object-contain rounded"
+                                            onError={(e) => {
+                                              e.target.style.display = 'none';
+                                            }}
+                                          />
+                                          <p className="text-xs text-gray-600 line-clamp-1">{img.name}</p>
                                         </button>
-                                        <button
-                                          onClick={() => setImagePickerTab(prev => ({ ...prev, [choice.id]: 'icons' }))}
-                                          className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
-                                            (imagePickerTab[choice.id] || 'images') === 'icons'
-                                              ? 'border-b-2 border-blue-500 text-blue-600 bg-white'
-                                              : 'border-b-2 border-gray-200 text-gray-600 hover:text-gray-900 bg-gray-50'
-                                          }`}
-                                        >
-                                          ⭐ Icônes
-                                        </button>
-                                      </div>
-                                      
-                                      {/* Contenu des onglets */}
-                                      <div className="max-h-56 overflow-y-auto">
-                                        {/* Onglet Images */}
-                                        {(imagePickerTab[choice.id] || 'images') === 'images' && (
-                                          <div className="grid grid-cols-3 gap-2 p-2">
-                                            {images.map(img => (
-                                              <button
-                                                key={img.id}
-                                                onClick={() => {
-                                                  if (!img.id) {
-                                                    console.error('❌ Image ID is undefined or null!', img);
-                                                    return;
-                                                  }
-                                                  handleUpdateChoiceText(question.id, choice.id, 'imageId', img.id);
-                                                  handleUpdateChoiceText(question.id, choice.id, 'imageName', img.name);
-                                                }}
-                                                className="p-1 text-center rounded hover:bg-blue-100 border border-gray-200 hover:border-blue-400 transition-colors bg-white"
-                                              >
-                                                <img 
-                                                  src={img.publicUrl} 
-                                                  alt={img.name}
-                                                  className="w-full h-16 object-contain bg-gray-100 rounded mb-1"
-                                                  onError={(e) => {
-                                                    e.target.style.display = 'none';
-                                                  }}
-                                                />
-                                                <p className="text-xs text-gray-600 line-clamp-1">{img.name}</p>
-                                              </button>
-                                            ))}
-                                          </div>
-                                        )}
-                                        
-                                        {/* Onglet Icônes */}
-                                        {(imagePickerTab[choice.id] || 'images') === 'icons' && (
-                                          <div className="p-2">
-                                            {(() => {
-                                              // Grouper les icônes par catégorie
-                                              const groupedIcons = {};
-                                              ALL_ICONS.forEach(icon => {
-                                                const cat = icon.category || 'Autre';
-                                                if (!groupedIcons[cat]) groupedIcons[cat] = [];
-                                                groupedIcons[cat].push(icon);
-                                              });
-                                              
-                                              return Object.entries(groupedIcons).map(([category, icons]) => (
-                                                <div key={category} className="mb-4">
-                                                  <h4 className="text-xs font-bold text-gray-600 uppercase mb-2 px-2">{category}</h4>
-                                                  <div className="grid grid-cols-4 gap-2">
-                                                    {icons.map(icon => {
-                                                      let IconComponent = icon.component;
-                                                      
-                                                      if (!IconComponent && icon.id.startsWith('fa-')) {
-                                                        const iconName = icon.id.split('-')[1];
-                                                        IconComponent = FA[iconName];
-                                                      }
-                                                      
-                                                      if (!IconComponent) {
-                                                        return null; // Sauter si aucun composant n'est disponible
-                                                      }
-                                                      
-                                                      return (
-                                                        <button
-                                                          key={icon.id}
-                                                          onClick={() => {
-                                                            handleUpdateChoiceText(question.id, choice.id, 'imageId', icon.id);
-                                                            handleUpdateChoiceText(question.id, choice.id, 'imageName', icon.name);
-                                                          }}
-                                                          className="p-2 text-center rounded hover:bg-blue-100 border border-gray-200 hover:border-blue-400 transition-colors bg-white flex flex-col items-center gap-1"
-                                                          title={icon.name}
-                                                        >
-                                                          <IconComponent className="w-6 h-6 text-blue-600" />
-                                                          <p className="text-xs text-gray-700 line-clamp-1">{icon.name}</p>
-                                                        </button>
-                                                      );
-                                                    })}
-                                                  </div>
-                                                </div>
-                                              ));
-                                            })()}
-                                          </div>
-                                        )}
-                                      </div>
+                                      ))}
                                     </div>
-                                  )}
+                                  </div>
+
+                                  {/* Sélecteur d'icônes */}
+                                  <div className="mb-3">
+                                    <label className="block text-xs font-medium text-gray-600 mb-2">
+                                      ⭐ Icônes:
+                                    </label>
+                                    <IconSelector
+                                      selectedIcon={choice.imageId?.startsWith('fa-') || choice.imageId?.startsWith('bs-') || choice.imageId?.startsWith('md-') || choice.imageId?.startsWith('fi-') || choice.imageId?.startsWith('hi2-') || choice.imageId?.startsWith('ai-') ? {
+                                        id: choice.imageId,
+                                        name: choice.imageName,
+                                        displayName: choice.imageName
+                                      } : null}
+                                      onSelect={(icon) => {
+                                        handleUpdateChoiceText(question.id, choice.id, 'imageId', icon.id);
+                                        handleUpdateChoiceText(question.id, choice.id, 'imageName', icon.displayName || icon.name);
+                                      }}
+                                      onRemove={() => {
+                                        handleUpdateChoiceText(question.id, choice.id, 'imageId', null);
+                                        handleUpdateChoiceText(question.id, choice.id, 'imageName', '');
+                                      }}
+                                      libraries={['fa6', 'bs', 'md', 'fi', 'hi2', 'ai']}
+                                      showSearch={true}
+                                      showLibraryTabs={true}
+                                    />
+                                  </div>
                                 </div>
 
                                 <label className="block text-xs font-medium text-gray-600 mb-2">
-                                  Label texte pour cette réponse:
+                                  📝 Texte (optionnel):
                                 </label>
                                 <input
                                   type="text"

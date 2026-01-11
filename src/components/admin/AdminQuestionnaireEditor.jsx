@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import IconSelector from '@/components/IconSelector';
 import { Save, Trash2, XCircle, Plus, HelpCircle, Image as ImageIcon, X,
   // Lucide icons for QCM responses
   CheckCircle, AlertCircle, Info, Home, Settings, User, Users, Lock, Unlock, Eye, EyeOff,
@@ -297,7 +298,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
           id: step.id,
           order: step.step_order,
           instruction: step.instruction,
-          questionType: expectedInput.questionType || 'image_choice',
+          questionType: 'mixed', // All questions now use mixed mode
           imageId: expectedInput.imageId,
           imageName: expectedInput.imageName,
           choices: (expectedInput.choices || []).map(c => ({
@@ -394,7 +395,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
       id: `temp-${Date.now()}`,
       order: questions.length + 1,
       instruction: '',
-      questionType: 'image_choice',
+      questionType: 'mixed', // All questions now use mixed mode
       imageId: null,
       imageName: null,
       choices: [],
@@ -761,7 +762,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                           {choice.imageName && (
                             <div className="p-2 bg-blue-50 rounded border border-blue-200 flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                {choice.imageId?.startsWith('lucide-') || choice.imageId?.startsWith('fa-') ? (
+                                {choice.imageId?.startsWith('fa-') || choice.imageId?.startsWith('bs-') || choice.imageId?.startsWith('md-') || choice.imageId?.startsWith('fi-') || choice.imageId?.startsWith('hi2-') || choice.imageId?.startsWith('ai-') ? (
                                   (() => {
                                     const icon = ALL_ICONS.find(i => i.id === choice.imageId);
                                     if (icon) {
@@ -779,7 +780,14 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                                     return <ImageIcon className="w-4 h-4 text-blue-600" />;
                                   })()
                                 ) : (
-                                  <ImageIcon className="w-4 h-4 text-blue-600" />
+                                  <img 
+                                    src={images.find(img => img.id === choice.imageId)?.publicUrl} 
+                                    alt={choice.imageName}
+                                    className="w-6 h-6 object-contain rounded"
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                    }}
+                                  />
                                 )}
                                 <span className="text-sm text-blue-900">{choice.imageName}</span>
                               </div>
@@ -797,108 +805,59 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                             </div>
                           )}
 
-                          {/* Sélecteur avec onglets - Afficher en permanence pour le mode mixed */}
-                          <div className="border rounded bg-gray-50">
-                            <div className="flex border-b">
-                              <button
-                                onClick={() => setImagePickerTab(prev => ({ ...prev, [choice.id]: 'images' }))}
-                                className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
-                                  (imagePickerTab[choice.id] || 'images') === 'images'
-                                    ? 'border-b-2 border-blue-500 text-blue-600 bg-white'
-                                    : 'border-b-2 border-gray-200 text-gray-600 hover:text-gray-900 bg-gray-50'
-                                }`}
-                              >
-                                📸 Images
-                              </button>
-                              <button
-                                onClick={() => setImagePickerTab(prev => ({ ...prev, [choice.id]: 'icons' }))}
-                                className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
-                                  (imagePickerTab[choice.id] || 'images') === 'icons'
-                                    ? 'border-b-2 border-blue-500 text-blue-600 bg-white'
-                                    : 'border-b-2 border-gray-200 text-gray-600 hover:text-gray-900 bg-gray-50'
-                                }`}
-                              >
-                                ⭐ Icônes
-                              </button>
+                          {/* Sélecteur d'images du système */}
+                          <div className="p-2 border rounded-lg bg-gray-50 mb-3">
+                            <label className="block text-xs font-medium text-gray-600 mb-2">
+                              📸 Images système:
+                            </label>
+                            <div className="grid grid-cols-4 gap-2 max-h-32 overflow-y-auto">
+                              {images.map(img => (
+                                <button
+                                  key={img.id}
+                                  onClick={() => {
+                                    updateChoice(question.id, choice.id, 'imageId', img.id);
+                                    updateChoice(question.id, choice.id, 'imageName', img.name);
+                                  }}
+                                  className="p-1 rounded border border-gray-300 hover:border-blue-400 hover:bg-blue-100 transition-colors bg-white flex flex-col items-center gap-1"
+                                  title={img.name}
+                                >
+                                  <img 
+                                    src={img.publicUrl} 
+                                    alt={img.name}
+                                    className="w-8 h-8 object-contain rounded"
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                    }}
+                                  />
+                                  <p className="text-xs text-gray-600 line-clamp-1">{img.name}</p>
+                                </button>
+                              ))}
                             </div>
-                            
-                            <div className="max-h-48 overflow-y-auto">
-                              {/* Onglet Images */}
-                              {(imagePickerTab[choice.id] || 'images') === 'images' && (
-                                <div className="grid grid-cols-3 gap-2 p-2">
-                                  {images.map(img => (
-                                    <button
-                                      key={img.id}
-                                      onClick={() => {
-                                        updateChoice(question.id, choice.id, 'imageId', img.id);
-                                        updateChoice(question.id, choice.id, 'imageName', img.name);
-                                      }}
-                                      className="p-1 text-center rounded hover:bg-blue-100 border border-gray-200 hover:border-blue-400 transition-colors bg-white"
-                                    >
-                                      <img 
-                                        src={img.publicUrl} 
-                                        alt={img.name}
-                                        className="w-full h-14 object-contain bg-gray-100 rounded mb-1"
-                                        onError={(e) => {
-                                          e.target.style.display = 'none';
-                                        }}
-                                      />
-                                      <p className="text-xs text-gray-600 line-clamp-1">{img.name}</p>
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
-                              
-                              {/* Onglet Icônes */}
-                              {(imagePickerTab[choice.id] || 'images') === 'icons' && (
-                                <div className="p-2">
-                                  {(() => {
-                                    const groupedIcons = {};
-                                    ALL_ICONS.forEach(icon => {
-                                      const cat = icon.category || 'Autre';
-                                      if (!groupedIcons[cat]) groupedIcons[cat] = [];
-                                      groupedIcons[cat].push(icon);
-                                    });
-                                    
-                                    return Object.entries(groupedIcons).map(([category, icons]) => (
-                                      <div key={category} className="mb-3">
-                                        <h4 className="text-xs font-bold text-gray-600 uppercase mb-2 px-2">{category}</h4>
-                                        <div className="grid grid-cols-4 gap-2">
-                                          {icons.map(icon => {
-                                            // Charger dynamiquement le composant s'il n'existe pas
-                                            let IconComponent = icon.component;
-                                            
-                                            if (!IconComponent && icon.id.startsWith('fa-')) {
-                                              const iconName = icon.id.split('-')[1];
-                                              IconComponent = FA[iconName];
-                                            }
-                                            
-                                            if (!IconComponent) {
-                                              return null; // Sauter si aucun composant n'est disponible
-                                            }
-                                            
-                                            return (
-                                              <button
-                                                key={icon.id}
-                                                onClick={() => {
-                                                  updateChoice(question.id, choice.id, 'imageId', icon.id);
-                                                  updateChoice(question.id, choice.id, 'imageName', icon.name);
-                                                }}
-                                                className="p-2 text-center rounded hover:bg-blue-100 border border-gray-200 hover:border-blue-400 transition-colors bg-white flex flex-col items-center gap-1"
-                                                title={icon.name}
-                                              >
-                                                <IconComponent className="w-5 h-5 text-blue-600" />
-                                                <p className="text-xs text-gray-700 line-clamp-1">{icon.name}</p>
-                                              </button>
-                                            );
-                                          })}
-                                        </div>
-                                      </div>
-                                    ));
-                                  })()}
-                                </div>
-                              )}
-                            </div>
+                          </div>
+
+                          {/* Sélecteur d'icônes */}
+                          <div className="mb-3">
+                            <label className="block text-xs font-medium text-gray-600 mb-2">
+                              ⭐ Icônes:
+                            </label>
+                            <IconSelector
+                              selectedIcon={choice.imageId?.startsWith('fa-') || choice.imageId?.startsWith('bs-') || choice.imageId?.startsWith('md-') || choice.imageId?.startsWith('fi-') || choice.imageId?.startsWith('hi2-') || choice.imageId?.startsWith('ai-') ? {
+                                id: choice.imageId,
+                                name: choice.imageName,
+                                displayName: choice.imageName
+                              } : null}
+                              onSelect={(icon) => {
+                                updateChoice(question.id, choice.id, 'imageId', icon.id);
+                                updateChoice(question.id, choice.id, 'imageName', icon.displayName || icon.name);
+                              }}
+                              onRemove={() => {
+                                updateChoice(question.id, choice.id, 'imageId', null);
+                                updateChoice(question.id, choice.id, 'imageName', '');
+                              }}
+                              libraries={['fa6', 'bs', 'md', 'fi', 'hi2', 'ai']}
+                              showSearch={true}
+                              showLibraryTabs={true}
+                            />
                           </div>
                         </CardContent>
                       </Card>

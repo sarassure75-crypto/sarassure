@@ -104,26 +104,18 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
   const handleSelectChoice = (choiceId) => {
     if (!currentQuestion) return;
 
-    if (currentQuestion.questionType === 'image_choice' || currentQuestion.questionType === 'image_text') {
-      // Radio button: une seule réponse
+    // Mixed mode: multiple answers allowed (checkboxes)
+    const current = answers[currentQuestion.id] || [];
+    if (current.includes(choiceId)) {
       setAnswers({
         ...answers,
-        [currentQuestion.id]: [choiceId]
+        [currentQuestion.id]: current.filter(id => id !== choiceId)
       });
-    } else if (currentQuestion.questionType === 'mixed') {
-      // Checkbox: plusieurs réponses
-      const current = answers[currentQuestion.id] || [];
-      if (current.includes(choiceId)) {
-        setAnswers({
-          ...answers,
-          [currentQuestion.id]: current.filter(id => id !== choiceId)
-        });
-      } else {
-        setAnswers({
-          ...answers,
-          [currentQuestion.id]: [...current, choiceId]
-        });
-      }
+    } else {
+      setAnswers({
+        ...answers,
+        [currentQuestion.id]: [...current, choiceId]
+      });
     }
   };
 
@@ -356,8 +348,8 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
               <HighlightGlossaryTerms text={currentQuestion.instruction} />
             </h3>
 
-          {/* Image de la question (si image_choice ou mixed) */}
-          {currentQuestion.imageId && ['image_choice', 'mixed'].includes(currentQuestion.questionType) && (
+          {/* Image de la question (if present) */}
+          {currentQuestion.imageId && (
             <div className="mb-4">
               <ImageFromSupabase
                 imageId={currentQuestion.imageId}
@@ -376,28 +368,17 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
 
             return (
               <div key={choiceId} className={`flex items-start gap-3 p-3 rounded-lg border-2 transition-all ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
-                {currentQuestion.questionType === 'image_choice' || currentQuestion.questionType === 'image_text' ? (
-                  // Radio button
-                  <input
-                    type="radio"
-                    name={`question-${currentQuestion.id}`}
-                    checked={isSelected}
-                    onChange={() => handleSelectChoice(choiceId)}
-                    className="w-5 h-5 mt-1 cursor-pointer accent-blue-600"
-                  />
-                ) : (
-                  // Checkbox (mixed)
-                  <input
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={() => handleSelectChoice(choiceId)}
-                    className="w-5 h-5 mt-1 cursor-pointer accent-blue-600"
-                  />
-                )}
+                {/* Mixed mode: checkboxes for multiple answers */}
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => handleSelectChoice(choiceId)}
+                  className="w-5 h-5 mt-1 cursor-pointer accent-blue-600"
+                />
 
                 <label className="flex-1 cursor-pointer">
-                  {/* Image de la réponse (si available) */}
-                  {choice.imageId && ['image_choice', 'mixed'].includes(currentQuestion.questionType) && (
+                  {/* Image de la réponse (if present) */}
+                  {choice.imageId && (
                     <div className="mb-2">
                       <ImageFromSupabase
                         imageId={choice.imageId}
