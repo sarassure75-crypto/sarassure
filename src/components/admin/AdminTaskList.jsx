@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PlusCircle, Edit, Trash2, HelpCircle, HelpCircle as QuestionIcon, Copy } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, ListChecks as QuestionIcon, Copy } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { creationStatuses } from '@/data/tasks';
 import * as LucideIcons from 'lucide-react';

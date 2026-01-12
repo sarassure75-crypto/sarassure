@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
-import { Menu, X, User, LogOut, UserCog, LayoutDashboard, BookOpen, HelpCircle, BarChart3, Download, MessageSquare as MessageSquareWarning, FileText, Image, Folder } from 'lucide-react';
+import { Menu, X, User, LogOut, UserCog, LayoutDashboard, BookOpen, ListChecks, BarChart3, Download, MessageSquare as MessageSquareWarning, FileText, Image, Folder } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { USER_ROLES } from '@/data/users';
 import ThemeSwitcher from '@/components/ui/ThemeSwitcher';
@@ -37,7 +37,7 @@ const Header = ({ pwaMode = false }) => {
     ],
     [USER_ROLES.TRAINER]: [
       { to: '/formateur', label: 'Dashboard Formateur', icon: LayoutDashboard },
-      { to: '/formateur/faq', label: 'FAQ', icon: HelpCircle },
+      { to: '/formateur/faq', label: 'FAQ', icon: ListChecks },
       { to: '/compte-formateur', label: 'Mon Compte', icon: UserCog },
     ],
     [USER_ROLES.LEARNER]: [

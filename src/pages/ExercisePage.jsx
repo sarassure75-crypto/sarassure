@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useLocation, useOutletContext } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Home, HelpCircle, AlertTriangle, CheckCircle, XCircle, Zap, Volume2, Loader2, PartyPopper, FileText, BookOpen, FolderOpen } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Home, ListChecks, AlertTriangle, CheckCircle, XCircle, Zap, Volume2, Loader2, PartyPopper, FileText, BookOpen, FolderOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/components/ui/use-toast';
 import ZoomableImage from '@/components/ZoomableImage';
@@ -224,7 +224,7 @@ const StepDisplay = ({ currentStep, currentStepIndex, totalSteps, showInstructio
           ) : currentStep.pictogram_app_image_id ? (
             <ImageFromSupabase imageId={currentStep.pictogram_app_image_id} alt="Pictogramme de l'étape" className={cn("object-contain", isMobileLayout ? "h-full w-full" : "h-full w-full")}/>
           ) : (
-            <HelpCircle className={cn("object-contain text-muted-foreground", isMobileLayout ? "h-5 w-5" : "h-8 w-8")} />
+            <ListChecks className={cn("object-contain text-muted-foreground", isMobileLayout ? "h-5 w-5" : "h-8 w-8")} />
           )}
         </div>
         <div className={cn("text-foreground leading-snug flex-grow", isMobileLayout ? "text-xs" : "text-sm sm:text-md")}> 

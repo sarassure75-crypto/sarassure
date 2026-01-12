@@ -25,7 +25,7 @@ const renderIcon = (iconString) => {
   
   console.log('🎨 renderIcon called with:', iconString);
   
-  // Support pour les icônes Iconify colorées
+  // Support pour les icônes Iconify colorées (format: "logos:react", "skill-icons:javascript")
   if (iconString.includes(':') && (
     iconString.startsWith('logos:') || 
     iconString.startsWith('skill-icons:') || 
@@ -34,10 +34,24 @@ const renderIcon = (iconString) => {
     return <IconifyIcon icon={iconString} width="64" height="64" />;
   }
   
-  // Séparer la bibliothèque et le nom
-  const parts = iconString.split('-');
-  const library = parts[0];
-  const name = parts.slice(1).join('-'); // Rejoindre le reste au cas où il y a plusieurs tirets
+  // Déterminer la bibliothèque et le nom de l'icône
+  let library, name;
+  
+  // Format avec tiret: "fa6-FaPhone", "bs-BsArchive", etc.
+  if (iconString.includes('-')) {
+    const parts = iconString.split('-');
+    library = parts[0];
+    name = parts.slice(1).join('-'); // Rejoindre en cas de plusieurs tirets
+  } 
+  // Format Iconify avec : pour autres bibliothèques
+  else if (iconString.includes(':')) {
+    const [lib, iconName] = iconString.split(':');
+    library = lib;
+    name = iconName;
+  } else {
+    console.error('❌ Format d\'icône invalide:', iconString);
+    return null;
+  }
   
   console.log('📚 Library:', library, 'Name:', name);
   

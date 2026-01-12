@@ -33,6 +33,11 @@ import { Save, Trash2, XCircle, Plus, HelpCircle, Image as ImageIcon, X,
   Package, Gift, Lightbulb, Target, Trophy, Award, ZapOff
 } from 'lucide-react';
 import * as FA from 'react-icons/fa6';
+import * as BS from 'react-icons/bs';
+import * as MD from 'react-icons/md';
+import * as FI from 'react-icons/fi';
+import * as HI from 'react-icons/hi2';
+import * as AI from 'react-icons/ai';
 import { useAdmin } from '@/contexts/AdminContext';
 import { creationStatuses } from '@/data/tasks';
 import { useToast } from '@/components/ui/use-toast';
@@ -191,32 +196,46 @@ const renderIcon = (iconId, className = 'w-8 h-8') => {
   // Bootstrap Icons
   if (iconId.startsWith('bs-')) {
     const iconName = iconId.replace('bs-', '');
-    // Bootstrap icons sont exportés depuis react-icons/bs
-    return <span className="text-blue-600">BS Icon: {iconName}</span>;
+    const IconComponent = BS[iconName];
+    if (IconComponent) {
+      return <IconComponent className={className} />;
+    }
   }
   
   // Material Design Icons
   if (iconId.startsWith('md-')) {
     const iconName = iconId.replace('md-', '');
-    return <span className="text-blue-600">MD Icon: {iconName}</span>;
+    const IconComponent = MD[iconName];
+    if (IconComponent) {
+      return <IconComponent className={className} />;
+    }
   }
   
   // Feather Icons
   if (iconId.startsWith('fi-')) {
     const iconName = iconId.replace('fi-', '');
-    return <span className="text-blue-600">FI Icon: {iconName}</span>;
+    const IconComponent = FI[iconName];
+    if (IconComponent) {
+      return <IconComponent className={className} />;
+    }
   }
   
   // Heroicons
   if (iconId.startsWith('hi2-')) {
     const iconName = iconId.replace('hi2-', '');
-    return <span className="text-blue-600">HI2 Icon: {iconName}</span>;
+    const IconComponent = HI[iconName];
+    if (IconComponent) {
+      return <IconComponent className={className} />;
+    }
   }
   
   // Ant Design Icons
   if (iconId.startsWith('ai-')) {
     const iconName = iconId.replace('ai-', '');
-    return <span className="text-blue-600">AI Icon: {iconName}</span>;
+    const IconComponent = AI[iconName];
+    if (IconComponent) {
+      return <IconComponent className={className} />;
+    }
   }
   
   // Lucide icons

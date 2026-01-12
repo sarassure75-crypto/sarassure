@@ -23,13 +23,13 @@ const PhoneFrame = ({
   const buttons = config.buttons;
 
   return (
-    <div className="relative w-full px-8" style={{ overflow: 'visible', margin: 0, padding: '0 32px' }}>
+    <div className="relative w-full" style={{ overflow: 'visible', margin: 0, padding: 0 }}>
       {/* Nom de la configuration - positionné en haut absolu */}
       <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-8 text-xs text-gray-500 font-semibold z-50 whitespace-nowrap" style={{ pointerEvents: 'none' }}>
         📱 {config.name}
       </div>
 
-      {/* Contenu enfant (capture d'écran) - prend toute la largeur */}
+      {/* Contenu enfant (capture d'écran) - prend toute la largeur sans padding */}
       <div style={{ 
         position: 'relative', 
         width: '100%',
@@ -40,7 +40,7 @@ const PhoneFrame = ({
         {children}
       </div>
 
-      {/* Rendu des boutons au niveau du parent PhoneFrame */}
+      {/* Rendu des boutons au niveau du parent PhoneFrame - positionnés à l'extérieur */}
       {!hideButtons && Object.entries(buttons).map(([key, button]) => {
         const isRight = button.position.side === 'right';
         
@@ -49,7 +49,7 @@ const PhoneFrame = ({
             key={button.id}
             style={{
               position: 'absolute',
-              [isRight ? 'right' : 'left']: '0px',
+              [isRight ? 'right' : 'left']: '-40px', // Positionner à l'extérieur (au lieu de 0px)
               top: button.position.top,
               transform: 'translateY(-50%)',
               minWidth: '32px',
