@@ -23,6 +23,8 @@ import { v4 as uuidv4 } from 'uuid';
 const renderIcon = (iconString) => {
   if (!iconString) return null;
   
+  console.log('🎨 renderIcon called with:', iconString);
+  
   // Support pour les icônes Iconify colorées
   if (iconString.includes(':') && (
     iconString.startsWith('logos:') || 
@@ -32,7 +34,12 @@ const renderIcon = (iconString) => {
     return <IconifyIcon icon={iconString} width="64" height="64" />;
   }
   
-  const [library, name] = iconString.split(/[-:]/);
+  // Séparer la bibliothèque et le nom
+  const parts = iconString.split('-');
+  const library = parts[0];
+  const name = parts.slice(1).join('-'); // Rejoindre le reste au cas où il y a plusieurs tirets
+  
+  console.log('📚 Library:', library, 'Name:', name);
   
   const libraries = {
     lucide: LucideIcons,
@@ -46,9 +53,20 @@ const renderIcon = (iconString) => {
   };
   
   const lib = libraries[library];
-  const IconComponent = lib ? lib[name] : null;
+  if (!lib) {
+    console.error('❌ Library not found:', library);
+    return null;
+  }
   
-  return IconComponent ? <IconComponent size={64} className="text-primary" /> : null;
+  const IconComponent = lib[name];
+  if (!IconComponent) {
+    console.error('❌ Icon not found:', name, 'in library:', library);
+    console.log('Available icons sample:', Object.keys(lib).slice(0, 5));
+    return null;
+  }
+  
+  console.log('✅ Icon found!');
+  return <IconComponent size={64} className="text-primary" />;
 };
 
 /**
@@ -423,8 +441,14 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
                 />
 
                 <label className="flex-1 cursor-pointer">
-                  {/* Image ou Icône de la réponse */}
-                  {choice.imageId && (
+                  {/* Vérifier si c'est une icône (prefixe de bibliothèque) ou une vraie image (UUID) */}
+                  {choice.imageId && (choice.imageId.includes('-') || choice.imageId.includes(':')) && (choice.imageId.startsWith('fa6-') || choice.imageId.startsWith('bs-') || choice.imageId.startsWith('md-') || choice.imageId.startsWith('fi-') || choice.imageId.startsWith('hi2-') || choice.imageId.startsWith('ai-') || choice.imageId.startsWith('lucide-') || choice.imageId.includes(':')) ? (
+                    <div className="mb-2 flex justify-center">
+                      <div className="w-32 h-32 flex items-center justify-center bg-primary/10 rounded-lg">
+                        {renderIcon(choice.imageId)}
+                      </div>
+                    </div>
+                  ) : choice.imageId ? (
                     <div className="mb-2 flex justify-center">
                       <ImageFromSupabase
                         imageId={choice.imageId}
@@ -432,16 +456,7 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
                         className="w-32 h-32 rounded object-contain cursor-pointer"
                       />
                     </div>
-                  )}
-                  
-                  {/* Icône si pas d'image mais imageName avec préfixe */}
-                  {!choice.imageId && choice.imageName && (choice.imageName.includes('-') || choice.imageName.includes(':')) && (
-                    <div className="mb-2 flex justify-center">
-                      <div className="w-32 h-32 flex items-center justify-center bg-primary/10 rounded-lg">
-                        <span className="text-6xl">{renderIcon(choice.imageName)}</span>
-                      </div>
-                    </div>
-                  )}
+                  ) : null}
 
                   {/* Texte de la réponse */}
                   {choice.text && <p className="text-base" style={{ fontSize: `${100 * textZoom}%` }}><HighlightGlossaryTerms text={choice.text} /></p>}

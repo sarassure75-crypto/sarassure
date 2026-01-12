@@ -528,28 +528,31 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Image principale sans zoom */}
-      <div className="relative w-full h-full">
-        <ImageFromSupabase 
-          ref={imageRef}
-          imageId={imageId} 
-          alt={alt} 
-          className="w-full h-auto"
-          style={{ objectFit: 'contain', objectPosition: 'left top', display: 'block' }}
-          onLoad={() => {
-            try {
-              const el = imageRef.current;
-              if (el) {
-                const rect = el.getBoundingClientRect();
-                setMainImageRect({ width: rect.width, height: rect.height });
-                setMainImageSrc(el.src || null);
+      {/* Image principale sans zoom - wrapper pour positionner les zones correctement */}
+      <div className="relative w-full h-full flex items-start justify-start">
+        <div className="relative" style={{ width: 'fit-content', height: 'fit-content' }}>
+          <ImageFromSupabase 
+            ref={imageRef}
+            imageId={imageId} 
+            alt={alt} 
+            className="w-full h-auto"
+            style={{ objectFit: 'contain', display: 'block' }}
+            onLoad={() => {
+              try {
+                const el = imageRef.current;
+                if (el) {
+                  const rect = el.getBoundingClientRect();
+                  setMainImageRect({ width: rect.width, height: rect.height });
+                  setMainImageSrc(el.src || null);
+                }
+              } catch (e) {
+                // ignore
               }
-            } catch (e) {
-              // ignore
-            }
-          }}
-        />
-      </div>
+            }}
+          />
+        
+      {/* Zones d'action positionnées par rapport à l'image */}
+      {/* Zones d'action positionnées par rapport à l'image */}
       
       {actionArea && (
         <motion.div
@@ -620,6 +623,8 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
           );
         })()
       )}
+        </div>
+      </div>
 
       <AnimatePresence>
         {showHint && (

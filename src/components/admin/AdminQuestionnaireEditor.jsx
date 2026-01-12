@@ -538,10 +538,12 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
           return;
         }
 
-        // Vérifier que chaque réponse a un texte
-        const choicesWithText = q.choices.filter(c => c.text?.trim());
-        if (choicesWithText.length !== q.choices.length) {
-          toast({ title: 'Erreur', description: `Question "${q.instruction}": Toutes les réponses doivent avoir un texte`, variant: 'destructive' });
+        // Vérifier que chaque réponse a un texte OU une icône OU une image
+        const choicesWithContent = q.choices.filter(c => 
+          c.text?.trim() || c.icon || c.imageUrl
+        );
+        if (choicesWithContent.length !== q.choices.length) {
+          toast({ title: 'Erreur', description: `Question "${q.instruction}": Toutes les réponses doivent avoir un texte, une icône ou une image`, variant: 'destructive' });
           return;
         }
 
