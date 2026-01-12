@@ -44,10 +44,15 @@ export const fetchImages = async (forceRefresh = false) => {
 
   console.log('🔄 [images.js] Fetching fresh images from Supabase... (forceRefresh:', forceRefresh, ')');
   imagesPromise = (async () => {
-    const { data, error } = await supabase
+    let query = supabase
       .from('app_images')
-      .select('*')
-      .order('name');
+      .select('*');
+      
+    if (forceRefresh) {
+      query = query.neq('id', '00000000-0000-0000-0000-000000000000');
+    }
+
+    const { data, error } = await query.order('name');
     
     if (error) {
       console.error('Error fetching images:', error);

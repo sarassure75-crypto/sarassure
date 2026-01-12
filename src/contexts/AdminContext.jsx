@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/components/ui/use-toast';
+import { invalidateAllCaches } from '@/lib/retryUtils';
 import { 
   fetchTasks, 
   fetchTaskCategories, 
@@ -109,6 +110,8 @@ export const AdminProvider = ({ children }) => {
   
   const deleteTask = async (taskId) => {
     await apiDeleteTask(taskId);
+    // Invalider TOUS les caches (localStorage + Service Worker)
+    await invalidateAllCaches();
     await fetchAllData(true);
   };
   

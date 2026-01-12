@@ -156,6 +156,44 @@ export function getCachedData(key) {
 }
 
 /**
+ * Invalidate ALL caches (localStorage + Service Worker cache)
+ * Use this when admin makes changes that should be immediately visible to learners
+ */
+export async function invalidateAllCaches() {
+  if (typeof window === 'undefined') return;
+  
+  console.log('🗑️ Invalidating ALL caches...');
+  
+  // Clear localStorage caches
+  try {
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith('cache:') || key.startsWith('cached_'))) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    console.log(`✅ Cleared ${keysToRemove.length} localStorage cache entries`);
+  } catch (error) {
+    console.warn('Failed to clear localStorage cache:', error);
+  }
+  
+  // Clear Service Worker caches
+  if ('caches' in window) {
+    try {
+      const cacheNames = await caches.keys();
+      await Promise.all(
+        cacheNames.map(cacheName => caches.delete(cacheName))
+      );
+      console.log(`✅ Cleared ${cacheNames.length} Service Worker caches`);
+    } catch (error) {
+      console.warn('Failed to clear Service Worker caches:', error);
+    }
+  }
+}
+
+/**
  * Clear specific cache entry or all cache
  * @param {string|null} key - Cache key to clear, or null to clear all
  */

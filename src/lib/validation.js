@@ -26,10 +26,16 @@ export const validateQuestion = (question) => {
     errors.push('Au moins une réponse correcte est requise');
   }
 
-  // All questions now use mixed mode: each response must have IMAGE OR TEXT
-  const allHaveAtLeastOne = question.choices?.every(c => (c.image_id || c.imageId) || c.text?.trim());
+  // All questions now use mixed mode: each response must have IMAGE OR ICON OR TEXT
+  // Icons are stored in imageId/image_id with prefixes like fa-, md-, bs-, etc.
+  const allHaveAtLeastOne = question.choices?.every(c => {
+    const hasImage = c.image_id || c.imageId;
+    const hasText = c.text?.trim();
+    return hasImage || hasText;
+  });
+  
   if (!allHaveAtLeastOne) {
-    errors.push('Chaque réponse doit avoir au moins une image OU du texte');
+    errors.push('Chaque réponse doit avoir au moins une image, une icône OU du texte');
   }
 
   if (errors.length > 0) {

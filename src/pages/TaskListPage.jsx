@@ -52,16 +52,16 @@ const TaskListPage = () => {
           (async () => {
             try {
               const [tasksData, categoriesData, imagesData] = await Promise.all([
-                fetchTasks(),
-                fetchTaskCategories(),
-                fetchImages()
+                fetchTasks(true),
+                fetchTaskCategories(true),
+                fetchImages(true)
               ]);
               
               setTasks(tasksData || []);
               setCategories(categoriesData || []);
               setImages(imagesData || new Map());
               
-              // Cache the fresh data
+              // Cache the fresh data (updated timestamp)
               cacheData('tasks', tasksData, 3600000);
               cacheData('task-categories', categoriesData, 3600000);
               cacheData('images', Array.from(imagesData.entries()), 3600000);
@@ -70,11 +70,12 @@ const TaskListPage = () => {
             }
           })();
         } else {
-          // No cache available, fetch fresh data
+          // No cache available, fetch fresh data with forceRefresh=true 
+          // to ensure we don't get stale SW results on first load if cache was deleted
           const [tasksData, categoriesData, imagesData] = await Promise.all([
-            fetchTasks(),
-            fetchTaskCategories(),
-            fetchImages()
+            fetchTasks(true),
+            fetchTaskCategories(true),
+            fetchImages(true)
           ]);
           
           setTasks(tasksData || []);
@@ -132,9 +133,20 @@ const TaskListPage = () => {
   };
 
   const renderTaskCard = (task) => {
+    if (!task) return null;
+    
     const isQuestionnaire = task.task_type === 'questionnaire';
-    const IconComponent = isQuestionnaire ? HelpCircle : (LucideIcons[toPascalCase(task.icon_name)] || List);
-    const pictogram = task.pictogram_app_image_id ? images.get(task.pictogram_app_image_id) : null;
+    let IconComponent = HelpCircle;
+    
+    try {
+      const pascalIcon = toPascalCase(task.icon_name);
+      IconComponent = isQuestionnaire ? HelpCircle : (LucideIcons[pascalIcon] || List);
+    } catch (e) {
+      console.warn("Error resolving icon for task:", task.title, e);
+      IconComponent = List;
+    }
+
+    const pictogram = task.pictogram_app_image_id && images instanceof Map ? images.get(task.pictogram_app_image_id) : null;
 
     return (
       <motion.div

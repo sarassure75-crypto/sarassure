@@ -206,11 +206,18 @@ const ExerciseStepsPreviewPage = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {version.steps && version.steps.sort((a, b) => a.step_order - b.step_order).map((step, index) => {
-                      const StepIcon = LucideIcons[toPascalCase(step.icon_name)] || HelpCircle;
+                    {version.steps && [...version.steps].sort((a, b) => (a.step_order || 0) - (b.step_order || 0)).map((step, index) => {
+                      let StepIcon = HelpCircle;
+                      try {
+                        const iconName = step.icon_name || 'HelpCircle';
+                        StepIcon = LucideIcons[toPascalCase(iconName)] || HelpCircle;
+                      } catch (e) {
+                        console.warn("Icon resolution error:", e);
+                      }
+                      
                       return (
                         <Link
-                          key={step.id}
+                          key={step.id || index}
                           to={`/tache/${taskId}/version/${version.id}?step=${index + 1}`}
                           className="flex items-center p-3 bg-background rounded-lg border hover:bg-accent hover:border-primary/50 transition-all duration-200 group"
                         >

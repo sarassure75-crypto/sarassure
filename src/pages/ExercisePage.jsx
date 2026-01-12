@@ -462,23 +462,36 @@ const ExercisePage = () => {
     const originalLeft = document.body.style.left;
     const originalRight = document.body.style.right;
     const originalBottom = document.body.style.bottom;
+    const originalWidth = document.body.style.width;
+    const originalHeight = document.body.style.height;
+    const originalTouchAction = document.body.style.touchAction;
 
     const applyFixed = () => {
+      const scrollY = window.scrollY;
       document.body.style.overflow = 'hidden';
       document.body.style.position = 'fixed';
-      document.body.style.top = '0';
+      document.body.style.top = `-${scrollY}px`;
       document.body.style.left = '0';
       document.body.style.right = '0';
-      document.body.style.bottom = '0';
+      document.body.style.width = '100%';
+      document.body.style.height = '100vh';
+      document.body.style.touchAction = 'none';
     };
 
     const restore = () => {
+      const scrollY = document.body.style.top;
       document.body.style.overflow = originalOverflow;
       document.body.style.position = originalPosition;
       document.body.style.top = originalTop;
       document.body.style.left = originalLeft;
       document.body.style.right = originalRight;
       document.body.style.bottom = originalBottom;
+      document.body.style.width = originalWidth;
+      document.body.style.height = originalHeight;
+      document.body.style.touchAction = originalTouchAction;
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      }
     };
 
     const onFocusIn = (e) => {

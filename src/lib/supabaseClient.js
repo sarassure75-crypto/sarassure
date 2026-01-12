@@ -4,7 +4,15 @@ import { createClient } from '@supabase/supabase-js';
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://vkvreculoijplklylpsz.supabase.co";
     const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrdnJlY3Vsb2lqcGxrbHlscHN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2NTk2NzMsImV4cCI6MjA2NTIzNTY3M30.YZcVOv9Rt_6nm8wvn3xvfRANyhXFCR0x-ivd-Y1i7Ys";
 
-    export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storage: window.localStorage,
+        storageKey: 'sarassure-auth-token',
+      },
+    });
 
     // Expose global client for debug in development (only on localhost)
     try {
@@ -26,10 +34,9 @@ import { createClient } from '@supabase/supabase-js';
         return null;
       }
       try {
-        // Normalize filePath: remove leading "public/" if present (bucket path already includes 'public'),
-        // and encode path segments to avoid invalid characters (spaces, apostrophes, etc.).
+        // Normalize filePath: encode path segments to avoid invalid characters (spaces, apostrophes, etc.)
+        // Keep "public/" prefix as-is since files are stored in the public/ folder
         let normalized = String(filePath || '');
-        if (normalized.startsWith('public/')) normalized = normalized.slice('public/'.length);
         // encode each segment separately to preserve slashes
         normalized = normalized.split('/').map(seg => encodeURIComponent(seg)).join('/');
         const { data } = supabase.storage.from('images').getPublicUrl(normalized);

@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabaseClient';
+import { invalidateAllCaches } from '@/lib/retryUtils';
 
     export const actionTypes = [
       { id: 'tap', label: 'Tap' },
@@ -43,7 +44,7 @@ import { supabase } from '@/lib/supabaseClient';
 
     export const fetchTasks = async (forceRefresh = false) => {
       try {
-        const { data: tasks, error: tasksError } = await supabase
+        let query = supabase
           .from('tasks')
           .select(`
             id, title, description, icon_name, pictogram_app_image_id, creation_status, category_id, category, video_url, created_at, task_type,
@@ -52,8 +53,14 @@ import { supabase } from '@/lib/supabaseClient';
               steps ( * )
             )
           `)
-          .filter('is_deleted', 'is', false)
-          .order('created_at', { ascending: false });
+          .filter('is_deleted', 'is', false);
+
+        // Trick to bypass Service Worker cache when refreshing
+        if (forceRefresh) {
+          query = query.neq('id', '00000000-0000-0000-0000-000000000000');
+        }
+
+        const { data: tasks, error: tasksError } = await query.order('created_at', { ascending: false });
 
         if (tasksError) {
           console.error('Supabase error in fetchTasks:', tasksError);
@@ -180,6 +187,10 @@ import { supabase } from '@/lib/supabaseClient';
           console.error('Error calling cascade_validate_task:', rpcError);
         }
       }
+      
+      // Invalider TOUS les caches pour forcer le refresh côté apprenant
+      await invalidateAllCaches();
+      
       return data[0];
     };
 

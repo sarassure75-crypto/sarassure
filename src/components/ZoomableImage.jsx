@@ -372,6 +372,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
     top: `${area.y_percent ?? area.y ?? 0}%`,
     width: `${area.width_percent ?? area.width ?? 0}%`,
     height: `${area.height_percent ?? area.height ?? 0}%`,
+    transform: 'translate(-50%, -50%)',
     borderRadius: area.shape === 'ellipse' ? '50%' : '8px',
   });
 

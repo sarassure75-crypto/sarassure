@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Copy, Check, Plus, Loader } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import * as FA from 'react-icons/fa6';
 import * as BI from 'react-icons/bi';
 import * as MD from 'react-icons/md';
@@ -91,6 +92,14 @@ const IconManager = ({ onSelectIcon }) => {
     }
 
     switch (selectedLibrary) {
+      case 'lucide':
+        // Lucide Icons
+        Object.entries(LucideIcons).forEach(([name, component]) => {
+          if (typeof component === 'function' && name !== 'createLucideIcon') {
+            icons.push({ name, component, library: 'lucide' });
+          }
+        });
+        break;
       case 'fa':
         // Font Awesome - parcourir les icônes disponibles
         Object.entries(FA).forEach(([name, component]) => {
