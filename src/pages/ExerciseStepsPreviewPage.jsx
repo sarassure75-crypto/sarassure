@@ -8,6 +8,12 @@ import { ChevronLeft, ChevronRight, HelpCircle, List, PlayCircle, AlertTriangle,
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/components/ui/use-toast';
 import * as LucideIcons from 'lucide-react';
+import * as FontAwesome6 from 'react-icons/fa6';
+import * as BootstrapIcons from 'react-icons/bs';
+import * as MaterialIcons from 'react-icons/md';
+import * as FeatherIcons from 'react-icons/fi';
+import * as HeroiconsIcons from 'react-icons/hi2';
+import * as AntIcons from 'react-icons/ai';
 import VideoPlayerModal from '@/components/VideoPlayerModal';
 import { cn } from '@/lib/utils';
 import ImageFromSupabase from '@/components/ImageFromSupabase';
@@ -20,7 +26,28 @@ const toPascalCase = (str) => {
     .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join('');
 };
-
+const getIconComponent = (iconString) => {
+  if (!iconString) return List;
+  
+  if (iconString.includes(':')) {
+    const [library, name] = iconString.split(':');
+    const libraries = {
+      lucide: LucideIcons,
+      fa6: FontAwesome6,
+      fa: FontAwesome6,
+      bs: BootstrapIcons,
+      md: MaterialIcons,
+      fi: FeatherIcons,
+      hi2: HeroiconsIcons,
+      ai: AntIcons,
+    };
+    const lib = libraries[library];
+    return lib && lib[name] ? lib[name] : List;
+  }
+  
+  // Fallback: Lucide avec PascalCase
+  return LucideIcons[toPascalCase(iconString)] || List;
+};
 const ExerciseStepsPreviewPage = () => {
   const { taskId } = useParams();
   const navigate = useNavigate();
@@ -102,7 +129,7 @@ const ExerciseStepsPreviewPage = () => {
     return <div className="text-center py-10">Tâche non trouvée.</div>;
   }
 
-  const TaskIcon = LucideIcons[toPascalCase(task.icon_name)] || List;
+  const TaskIcon = getIconComponent(task.icon_name);
 
   return (
     <div className="max-w-2xl mx-auto p-2 sm:p-4 md:p-6">
@@ -209,10 +236,10 @@ const ExerciseStepsPreviewPage = () => {
                     {version.steps && [...version.steps].sort((a, b) => (a.step_order || 0) - (b.step_order || 0)).map((step, index) => {
                       let StepIcon = HelpCircle;
                       try {
-                        const iconName = step.icon_name || 'HelpCircle';
-                        StepIcon = LucideIcons[toPascalCase(iconName)] || HelpCircle;
+                        StepIcon = step.icon_name ? getIconComponent(step.icon_name) : HelpCircle;
                       } catch (e) {
                         console.warn("Icon resolution error:", e);
+                        StepIcon = HelpCircle;
                       }
                       
                       return (

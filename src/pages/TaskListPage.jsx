@@ -4,6 +4,13 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Loader2, AlertTriangle, Video, List, HelpCircle } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
+import * as FontAwesome6 from 'react-icons/fa6';
+import * as BootstrapIcons from 'react-icons/bs';
+import * as MaterialIcons from 'react-icons/md';
+import * as FeatherIcons from 'react-icons/fi';
+import * as HeroiconsIcons from 'react-icons/hi2';
+import * as AntIcons from 'react-icons/ai';
+import { Icon as IconifyIcon } from '@iconify/react';
 import { fetchTasks, fetchTaskCategories } from '@/data/tasks';
 import { fetchImages } from '@/data/images';
 import { useAuth } from '@/contexts/AuthContext';
@@ -139,8 +146,36 @@ const TaskListPage = () => {
     let IconComponent = HelpCircle;
     
     try {
-      const pascalIcon = toPascalCase(task.icon_name);
-      IconComponent = isQuestionnaire ? HelpCircle : (LucideIcons[pascalIcon] || List);
+      if (isQuestionnaire) {
+        IconComponent = HelpCircle;
+      } else if (task.icon_name && task.icon_name.includes(':')) {
+        // Format: library:name (ex: fa6:FaPhone)
+        const [library, name] = task.icon_name.split(':');
+        const libraries = {
+          lucide: LucideIcons,
+          fa6: FontAwesome6,
+          fa: FontAwesome6,
+          bs: BootstrapIcons,
+          md: MaterialIcons,
+          fi: FeatherIcons,
+          hi2: HeroiconsIcons,
+          ai: AntIcons,
+        };
+        
+        const lib = libraries[library];
+        if (lib && lib[name]) {
+          IconComponent = lib[name];
+        } else {
+          console.warn("Icon not found:", task.icon_name, "library:", library, "name:", name);
+          IconComponent = List;
+        }
+      } else if (task.icon_name) {
+        // Fallback: essayer Lucide avec PascalCase
+        const pascalIcon = toPascalCase(task.icon_name);
+        IconComponent = LucideIcons[pascalIcon] || List;
+      } else {
+        IconComponent = List;
+      }
     } catch (e) {
       console.warn("Error resolving icon for task:", task.title, e);
       IconComponent = List;

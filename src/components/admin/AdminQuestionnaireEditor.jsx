@@ -177,9 +177,11 @@ const ALL_ICONS = [
 const renderIcon = (iconId, className = 'w-8 h-8') => {
   if (!iconId) return null;
   
+  console.log('🎨 AdminQuestionnaireEditor renderIcon:', iconId);
+  
   // Font Awesome 6 icons
-  if (iconId.startsWith('fa6-')) {
-    const iconName = iconId.replace('fa6-', '');
+  if (iconId.startsWith('fa6-') || iconId.startsWith('fa-')) {
+    const iconName = iconId.replace('fa6-', '').replace('fa-', '');
     const IconComponent = FA[iconName];
     if (IconComponent) {
       return <IconComponent className={className} />;
@@ -195,6 +197,12 @@ const renderIcon = (iconId, className = 'w-8 h-8') => {
     }
   }
   
+  // Iconify icons (logos, skill-icons, devicon)
+  if (iconId.includes(':')) {
+    return <span className="inline-flex items-center justify-center" style={{ fontSize: className.includes('32') ? '8rem' : '2rem' }}>🔷</span>;
+  }
+  
+  console.warn('❌ Icon not found:', iconId);
   return null;
 };
 
@@ -791,25 +799,10 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                           {choice.imageName && (
                             <div className="p-2 bg-blue-50 rounded border border-blue-200 flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                {choice.imageId?.startsWith('fa-') || choice.imageId?.startsWith('bs-') || choice.imageId?.startsWith('md-') || choice.imageId?.startsWith('fi-') || choice.imageId?.startsWith('hi2-') || choice.imageId?.startsWith('ai-') ? (
+                                {(choice.imageId && (choice.imageId.startsWith('fa6-') || choice.imageId.startsWith('fa-') || choice.imageId.startsWith('bs-') || choice.imageId.startsWith('md-') || choice.imageId.startsWith('fi-') || choice.imageId.startsWith('hi2-') || choice.imageId.startsWith('ai-') || choice.imageId.startsWith('lucide-') || choice.imageId.includes(':'))) ? (
                                   (() => {
-                                    const icon = ALL_ICONS.find(i => i.id === choice.imageId);
-                                    if (icon) {
-                                      let IconComponent = icon.component;
-                                      
-                                      if (!IconComponent && choice.imageId.startsWith('fa-')) {
-                                        const iconName = choice.imageId.split('-')[1];
-                                        IconComponent = FA[iconName];
-                                      }
-                                      
-                                      if (IconComponent) {
-                                        return <IconComponent className="w-32 h-32 text-blue-600" />;
-                                      }
-                                    }
-                                    // Rendu via renderIcon helper
                                     const iconRender = renderIcon(choice.imageId, 'w-32 h-32 text-blue-600');
                                     if (iconRender) return iconRender;
-                                    
                                     return <ImageIcon className="w-32 h-32 text-blue-600" />;
                                   })()
                                 ) : (
@@ -874,7 +867,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                               ⭐ Icônes:
                             </label>
                             <IconSelector
-                              selectedIcon={choice.imageId?.startsWith('fa-') || choice.imageId?.startsWith('bs-') || choice.imageId?.startsWith('md-') || choice.imageId?.startsWith('fi-') || choice.imageId?.startsWith('hi2-') || choice.imageId?.startsWith('ai-') ? {
+                              selectedIcon={(choice.imageId && (choice.imageId.startsWith('fa6-') || choice.imageId.startsWith('fa-') || choice.imageId.startsWith('bs-') || choice.imageId.startsWith('md-') || choice.imageId.startsWith('fi-') || choice.imageId.startsWith('hi2-') || choice.imageId.startsWith('ai-') || choice.imageId.startsWith('lucide-') || choice.imageId.includes(':'))) ? {
                                 id: choice.imageId,
                                 name: choice.imageName,
                                 displayName: choice.imageName
