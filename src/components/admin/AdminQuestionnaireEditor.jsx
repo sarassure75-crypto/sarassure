@@ -8,7 +8,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import IconSelector from '@/components/IconSelector';
-import { Save, Trash2, XCircle, Plus, HelpCircle, Image as ImageIcon, X,
+import { Save, Trash2, XCircle, Plus, ListChecks, Image as ImageIcon, X,
   // Lucide icons for QCM responses
   CheckCircle, AlertCircle, Info, Home, Settings, User, Users, Lock, Unlock, Eye, EyeOff,
   Download, Upload, Trash, Edit, Copy, Share2, Heart, Star, Flag, MessageSquare,
@@ -131,7 +131,7 @@ const LUCIDE_ICONS = [
   { id: 'lucide-target', name: '🎯 Cible', component: Target, category: 'Divers' },
   { id: 'lucide-package', name: '📦 Paquet', component: Package, category: 'Divers' },
   { id: 'lucide-gift', name: '🎁 Cadeau', component: Gift, category: 'Divers' },
-  { id: 'lucide-help-circle', name: '❓ Aide', component: HelpCircle, category: 'Divers' },
+  { id: 'lucide-help-circle', name: '❓ Aide', component: ListChecks, category: 'Divers' },
 ];
 
 // Intégration des icônes Font Awesome 6
@@ -653,7 +653,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <HelpCircle className="h-6 w-6 text-blue-600" />
+            <ListChecks className="h-6 w-6 text-blue-600" />
             Éditer le Questionnaire (QCM)
           </CardTitle>
           <CardDescription>

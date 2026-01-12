@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PlusCircle, Edit, Trash2, ListChecks as QuestionIcon, Copy } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, ListChecks, ListChecks as QuestionIcon, Copy } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { creationStatuses } from '@/data/tasks';
 import * as LucideIcons from 'lucide-react';
@@ -68,7 +68,7 @@ const TaskItem = ({ task, onSelectTask, onDeleteTask, onDuplicateTask, imagesMap
           ) : PictogramInfo ? (
             <img src={PictogramInfo.publicUrl} alt={PictogramInfo.name} className="h-8 w-8 object-contain" />
           ) : (
-            <HelpCircle className="h-6 w-6 text-muted-foreground" />
+            <ListChecks className="h-6 w-6 text-muted-foreground" />
           )}
         </div>
         <div className="flex-1">
