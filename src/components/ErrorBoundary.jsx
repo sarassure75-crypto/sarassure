@@ -32,6 +32,18 @@ class ErrorBoundary extends React.Component {
       errorInfo,
     });
 
+    // Limiter les rapports d'erreur pour éviter les boucles (max 1 toutes les 5 secondes)
+    const now = Date.now();
+    const lastReportTime = window._lastErrorReportTime || 0;
+    const timeSinceLastReport = now - lastReportTime;
+    
+    if (timeSinceLastReport < 5000) {
+      console.warn('⚠️ Rate limiting error reports, skipping this one');
+      return;
+    }
+    
+    window._lastErrorReportTime = now;
+
     // Envoyer le rapport d'erreur à Supabase
     try {
       createErrorReport({

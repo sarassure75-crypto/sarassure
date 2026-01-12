@@ -6,10 +6,50 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, XCircle, ChevronLeft, ChevronRight, AlertCircle, Home, Volume2, Type } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
+import * as FontAwesome6 from 'react-icons/fa6';
+import * as BootstrapIcons from 'react-icons/bs';
+import * as MaterialIcons from 'react-icons/md';
+import * as FeatherIcons from 'react-icons/fi';
+import * as HeroiconsIcons from 'react-icons/hi2';
+import * as AntIcons from 'react-icons/ai';
+import { Icon as IconifyIcon } from '@iconify/react';
 import { cn } from '@/lib/utils';
 import ImageFromSupabase from '@/components/ImageFromSupabase';
 import { HighlightGlossaryTerms } from '@/components/GlossaryComponents';
 import { v4 as uuidv4 } from 'uuid';
+
+// Helper pour afficher les icônes
+const renderIcon = (iconString) => {
+  if (!iconString) return null;
+  
+  // Support pour les icônes Iconify colorées
+  if (iconString.includes(':') && (
+    iconString.startsWith('logos:') || 
+    iconString.startsWith('skill-icons:') || 
+    iconString.startsWith('devicon:')
+  )) {
+    return <IconifyIcon icon={iconString} width="64" height="64" />;
+  }
+  
+  const [library, name] = iconString.split(/[-:]/);
+  
+  const libraries = {
+    lucide: LucideIcons,
+    fa6: FontAwesome6,
+    fa: FontAwesome6,
+    bs: BootstrapIcons,
+    md: MaterialIcons,
+    fi: FeatherIcons,
+    hi2: HeroiconsIcons,
+    ai: AntIcons,
+  };
+  
+  const lib = libraries[library];
+  const IconComponent = lib ? lib[name] : null;
+  
+  return IconComponent ? <IconComponent size={64} className="text-primary" /> : null;
+};
 
 /**
  * QuestionnairePlayer
@@ -100,6 +140,12 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
   };
 
   const currentQuestion = questions[currentQuestionIndex];
+  
+  // Protection contre les questions invalides
+  if (!currentQuestion || !currentQuestion.choices || !Array.isArray(currentQuestion.choices)) {
+    console.error('❌ Question invalide:', currentQuestionIndex, currentQuestion);
+    return <div className="text-center py-8 text-red-600">Erreur: Question invalide</div>;
+  }
 
   const handleSelectChoice = (choiceId) => {
     if (!currentQuestion) return;
@@ -350,11 +396,11 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
 
           {/* Image de la question (if present) */}
           {currentQuestion.imageId && (
-            <div className="mb-4">
+            <div className="mb-4 flex justify-center">
               <ImageFromSupabase
                 imageId={currentQuestion.imageId}
                 alt="Question"
-                className="max-w-full h-auto rounded-lg max-h-80 mx-auto"
+                className="w-full max-w-md h-auto rounded-lg object-contain"
               />
             </div>
           )}
@@ -377,14 +423,23 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
                 />
 
                 <label className="flex-1 cursor-pointer">
-                  {/* Image de la réponse (if present) */}
+                  {/* Image ou Icône de la réponse */}
                   {choice.imageId && (
-                    <div className="mb-2">
+                    <div className="mb-2 flex justify-center">
                       <ImageFromSupabase
                         imageId={choice.imageId}
                         alt={choice.text || 'Réponse'}
-                        className="w-20 h-20 rounded object-cover cursor-pointer"
+                        className="w-32 h-32 rounded object-contain cursor-pointer"
                       />
+                    </div>
+                  )}
+                  
+                  {/* Icône si pas d'image mais imageName avec préfixe */}
+                  {!choice.imageId && choice.imageName && (choice.imageName.includes('-') || choice.imageName.includes(':')) && (
+                    <div className="mb-2 flex justify-center">
+                      <div className="w-32 h-32 flex items-center justify-center bg-primary/10 rounded-lg">
+                        <span className="text-6xl">{renderIcon(choice.imageName)}</span>
+                      </div>
                     </div>
                   )}
 

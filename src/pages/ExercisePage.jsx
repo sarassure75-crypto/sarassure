@@ -465,21 +465,34 @@ const ExercisePage = () => {
     const originalWidth = document.body.style.width;
     const originalHeight = document.body.style.height;
     const originalTouchAction = document.body.style.touchAction;
+    const originalDocOverflow = document.documentElement.style.overflow;
+    let scrollPosition = 0;
+
+    const preventScroll = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    };
 
     const applyFixed = () => {
-      const scrollY = window.scrollY;
+      scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
       document.body.style.overflow = 'hidden';
       document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
+      document.body.style.top = `-${scrollPosition}px`;
       document.body.style.left = '0';
       document.body.style.right = '0';
       document.body.style.width = '100%';
       document.body.style.height = '100vh';
       document.body.style.touchAction = 'none';
+      document.documentElement.style.overflow = 'hidden';
+      
+      // Empêcher tous les types de scroll
+      window.addEventListener('scroll', preventScroll, { passive: false });
+      window.addEventListener('touchmove', preventScroll, { passive: false });
+      window.addEventListener('wheel', preventScroll, { passive: false });
     };
 
     const restore = () => {
-      const scrollY = document.body.style.top;
       document.body.style.overflow = originalOverflow;
       document.body.style.position = originalPosition;
       document.body.style.top = originalTop;
@@ -489,23 +502,28 @@ const ExercisePage = () => {
       document.body.style.width = originalWidth;
       document.body.style.height = originalHeight;
       document.body.style.touchAction = originalTouchAction;
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0') * -1);
-      }
+      document.documentElement.style.overflow = originalDocOverflow;
+      
+      // Restaurer la position de scroll
+      window.scrollTo(0, scrollPosition);
+      
+      // Retirer les listeners
+      window.removeEventListener('scroll', preventScroll, { passive: false });
+      window.removeEventListener('touchmove', preventScroll, { passive: false });
+      window.removeEventListener('wheel', preventScroll, { passive: false });
     };
 
     const onFocusIn = (e) => {
       const tag = e.target?.tagName?.toLowerCase();
       if (tag === 'input' || tag === 'textarea' || e.target?.isContentEditable) {
-        applyFixed();
+        setTimeout(() => applyFixed(), 100);
       }
     };
 
     const onFocusOut = (e) => {
       const tag = e.target?.tagName?.toLowerCase();
       if (tag === 'input' || tag === 'textarea' || e.target?.isContentEditable) {
-        // small timeout to allow other focus events
-        setTimeout(() => restore(), 50);
+        setTimeout(() => restore(), 300);
       }
     };
 
@@ -709,6 +727,10 @@ const ExercisePage = () => {
 
     if (isCorrectAction) {
       const currentStep = currentVersion.steps[currentStepIndex];
+      if (!currentStep) {
+        console.error('❌ currentStep est undefined, index:', currentStepIndex);
+        return;
+      }
       
       // Si c'est une action "bravo", afficher l'overlay au lieu du toast
       if (currentStep?.action_type === 'bravo') {
@@ -825,11 +847,22 @@ const ExercisePage = () => {
     );
   }
 
-  if (!task || !currentVersion) {
+  if (!task || !currentVersion || !currentVersion.steps || !Array.isArray(currentVersion.steps)) {
+    console.error('❌ Données invalides:', { task: !!task, currentVersion: !!currentVersion, steps: currentVersion?.steps });
+    return null;
+  }
+  
+  if (currentStepIndex >= currentVersion.steps.length) {
+    console.error('❌ Index de step invalide:', currentStepIndex, 'max:', currentVersion.steps.length);
     return null;
   }
   
   const currentStep = currentVersion.steps[currentStepIndex];
+  if (!currentStep) {
+    console.error('❌ currentStep est undefined');
+    return null;
+  }
+  
   const totalSteps = currentVersion.steps.length;
 
   // Détecter si des actions de boutons physiques sont utilisées dans cette version
@@ -951,13 +984,6 @@ const ExercisePage = () => {
             keyboardAutoShow={currentStep?.keyboard_auto_show || false}
             expectedInput={currentStep?.expected_input || ''}
           />
-          {/* Animation pour les swipes et drag - Mobile */}
-        <ActionAnimator
-          actionType={currentStep?.action_type}
-          startArea={currentStep?.start_area}
-          hideActionZone={hideActionZone}
-          isMobileLayout={true}
-        />
         {/* Overlay Bravo */}
         <BravoOverlay
           isOpen={showBravoOverlay}
@@ -1096,13 +1122,6 @@ const ExercisePage = () => {
               hideActionZone={hideActionZone}
               keyboardAutoShow={currentStep?.keyboard_auto_show || false}
               expectedInput={currentStep?.expected_input || ''}
-            />
-            {/* Animation pour les swipes et drag */}
-            <ActionAnimator
-              actionType={currentStep?.action_type}
-              startArea={currentStep?.start_area}
-              hideActionZone={hideActionZone}
-              isMobileLayout={false}
             />
             {/* Overlay Bravo */}
             <BravoOverlay

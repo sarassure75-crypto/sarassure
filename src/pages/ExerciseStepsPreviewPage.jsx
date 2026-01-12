@@ -225,11 +225,11 @@ const ExerciseStepsPreviewPage = () => {
                             {index + 1}
                           </div>
                           <div className="flex-grow text-sm font-medium">{step.instruction}</div>
-                          <div className="flex-shrink-0 h-8 w-8 rounded-md bg-muted flex items-center justify-center text-muted-foreground ml-4">
+                          <div className="flex-shrink-0 h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center text-primary ml-4">
                             {step.pictogram_app_image_id ? (
-                              <ImageFromSupabase imageId={step.pictogram_app_image_id} alt="Pictogramme" className="h-6 w-6 object-contain" />
+                              <ImageFromSupabase imageId={step.pictogram_app_image_id} alt="Pictogramme" className="h-7 w-7 object-contain" />
                             ) : (
-                              <StepIcon className="h-5 w-5" />
+                              <StepIcon className="h-6 w-6" />
                             )}
                           </div>
                           <ChevronRight className="h-5 w-5 text-muted-foreground ml-2 group-hover:translate-x-1 transition-transform" />

@@ -172,6 +172,33 @@ const ALL_ICONS = [
 ];
 
 /**
+ * Fonction helper pour rendre les icônes depuis différentes bibliothèques
+ */
+const renderIcon = (iconId, className = 'w-8 h-8') => {
+  if (!iconId) return null;
+  
+  // Font Awesome 6 icons
+  if (iconId.startsWith('fa6-')) {
+    const iconName = iconId.replace('fa6-', '');
+    const IconComponent = FA[iconName];
+    if (IconComponent) {
+      return <IconComponent className={className} />;
+    }
+  }
+  
+  // Lucide icons
+  if (iconId.startsWith('lucide-')) {
+    const lucideIcon = LUCIDE_ICONS.find(icon => icon.id === iconId);
+    if (lucideIcon?.component) {
+      const IconComponent = lucideIcon.component;
+      return <IconComponent className={className} />;
+    }
+  }
+  
+  return null;
+};
+
+/**
  * AdminQuestionnaireEditor
  * Éditeur spécifique pour les questionnaires (QCM) dans l'interface admin
  * Permet de modifier le titre, description, catégorie et les questions du QCM
@@ -774,16 +801,20 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                                       }
                                       
                                       if (IconComponent) {
-                                        return <IconComponent className="w-4 h-4 text-blue-600" />;
+                                        return <IconComponent className="w-32 h-32 text-blue-600" />;
                                       }
                                     }
-                                    return <ImageIcon className="w-4 h-4 text-blue-600" />;
+                                    // Rendu via renderIcon helper
+                                    const iconRender = renderIcon(choice.imageId, 'w-32 h-32 text-blue-600');
+                                    if (iconRender) return iconRender;
+                                    
+                                    return <ImageIcon className="w-32 h-32 text-blue-600" />;
                                   })()
                                 ) : (
                                   <img 
                                     src={images.find(img => img.id === choice.imageId)?.publicUrl} 
                                     alt={choice.imageName}
-                                    className="w-6 h-6 object-contain rounded"
+                                    className="w-32 h-32 object-contain rounded"
                                     onError={(e) => {
                                       e.target.style.display = 'none';
                                     }}
@@ -824,7 +855,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                                   <img 
                                     src={img.publicUrl} 
                                     alt={img.name}
-                                    className="w-8 h-8 object-contain rounded"
+                                    className="w-16 h-16 object-contain rounded"
                                     onError={(e) => {
                                       e.target.style.display = 'none';
                                     }}
