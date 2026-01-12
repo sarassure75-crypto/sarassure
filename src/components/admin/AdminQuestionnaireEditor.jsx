@@ -187,18 +187,28 @@ const renderIcon = (iconId, className = 'w-8 h-8') => {
   // Font Awesome 6 icons
   if (iconId.startsWith('fa6-') || iconId.startsWith('fa-')) {
     const iconName = iconId.replace('fa6-', '').replace('fa-', '');
+    console.log('🔍 Searching FA icon:', iconName);
     const IconComponent = FA[iconName];
+    console.log('✅ FA Icon found:', IconComponent ? 'YES' : 'NO');
     if (IconComponent) {
       return <IconComponent className={className} />;
+    } else {
+      console.error('❌ FA Icon NOT FOUND in FA object. Available keys sample:', Object.keys(FA).slice(0, 10));
+      return <span className="text-red-500 text-xs">{iconName}</span>;
     }
   }
   
   // Bootstrap Icons
   if (iconId.startsWith('bs-')) {
     const iconName = iconId.replace('bs-', '');
+    console.log('🔍 Searching BS icon:', iconName);
     const IconComponent = BS[iconName];
+    console.log('✅ BS Icon found:', IconComponent ? 'YES' : 'NO');
     if (IconComponent) {
       return <IconComponent className={className} />;
+    } else {
+      console.error('❌ BS Icon NOT FOUND. Available keys sample:', Object.keys(BS).slice(0, 10));
+      return <span className="text-red-500 text-xs">{iconName}</span>;
     }
   }
   
@@ -926,6 +936,8 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                                 console.log('📌 Icon selected:', icon);
                                 console.log('📌 Icon ID:', icon.id);
                                 console.log('📌 Icon name:', icon.displayName || icon.name);
+                                console.log('📌 Icon component name:', icon.name);
+                                // Sauvegarder l'ID complet (ex: "fa6-FaHome") qui contient déjà le nom exact du composant
                                 updateChoice(question.id, choice.id, 'imageId', icon.id);
                                 updateChoice(question.id, choice.id, 'imageName', icon.displayName || icon.name);
                               }}
