@@ -81,10 +81,6 @@ const ExerciseHeader = ({ taskTitle, currentStep, onPlayAudio, showInstructions,
     console.warn("Icon resolution error in ExerciseHeader:", e);
     IconComponent = HelpCircle;
   }
-    }
-  } catch (e) {
-    console.warn("Icon resolution error in ExerciseHeader:", e);
-  }
   
   return (
     <div className={cn("flex justify-between items-center shrink-0 relative bg-white p-4 rounded-lg shadow", isMobileLayout ? "mb-1 p-2" : "mb-4")}>
