@@ -10,6 +10,12 @@ import VideoPlayerModal from '@/components/VideoPlayerModal';
 import { cn } from '@/lib/utils';
 import { useAdmin } from '@/contexts/AdminContext';
 import * as LucideIcons from 'lucide-react';
+import * as FontAwesome6 from 'react-icons/fa6';
+import * as BootstrapIcons from 'react-icons/bs';
+import * as MaterialIcons from 'react-icons/md';
+import * as FeatherIcons from 'react-icons/fi';
+import * as HeroiconsIcons from 'react-icons/hi2';
+import * as AntIcons from 'react-icons/ai';
 import ExerciseToolbar from '@/components/exercise/ExerciseToolbar';
 import VersionHeader from '@/components/exercise/VersionHeader';
 import ExerciseControls from '@/components/exercise/ExerciseControls';
@@ -41,12 +47,40 @@ const toPascalCase = (str) => {
     .join('');
 };
 
+const getIconComponent = (iconString) => {
+  if (!iconString) return HelpCircle;
+  
+  if (iconString.includes(':')) {
+    const [library, name] = iconString.split(':');
+    const libraries = {
+      lucide: LucideIcons,
+      fa6: FontAwesome6,
+      fa: FontAwesome6,
+      bs: BootstrapIcons,
+      md: MaterialIcons,
+      fi: FeatherIcons,
+      hi2: HeroiconsIcons,
+      ai: AntIcons,
+    };
+    const lib = libraries[library];
+    return lib && lib[name] ? lib[name] : HelpCircle;
+  }
+  
+  // Fallback: Lucide avec PascalCase
+  const pascalIcon = toPascalCase(iconString);
+  return LucideIcons[pascalIcon] || HelpCircle;
+};
+
 const ExerciseHeader = ({ taskTitle, currentStep, onPlayAudio, showInstructions, textZoom, isMobileLayout, currentLanguage = 'fr' }) => {
-  let IconComponent = null;
+  let IconComponent = HelpCircle;
   try {
     if (currentStep?.icon_name) {
-      const pascalIcon = toPascalCase(currentStep.icon_name);
-      IconComponent = LucideIcons[pascalIcon] || HelpCircle;
+      IconComponent = getIconComponent(currentStep.icon_name);
+    }
+  } catch (e) {
+    console.warn("Icon resolution error in ExerciseHeader:", e);
+    IconComponent = HelpCircle;
+  }
     }
   } catch (e) {
     console.warn("Icon resolution error in ExerciseHeader:", e);

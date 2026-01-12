@@ -188,6 +188,37 @@ const renderIcon = (iconId, className = 'w-8 h-8') => {
     }
   }
   
+  // Bootstrap Icons
+  if (iconId.startsWith('bs-')) {
+    const iconName = iconId.replace('bs-', '');
+    // Bootstrap icons sont exportés depuis react-icons/bs
+    return <span className="text-blue-600">BS Icon: {iconName}</span>;
+  }
+  
+  // Material Design Icons
+  if (iconId.startsWith('md-')) {
+    const iconName = iconId.replace('md-', '');
+    return <span className="text-blue-600">MD Icon: {iconName}</span>;
+  }
+  
+  // Feather Icons
+  if (iconId.startsWith('fi-')) {
+    const iconName = iconId.replace('fi-', '');
+    return <span className="text-blue-600">FI Icon: {iconName}</span>;
+  }
+  
+  // Heroicons
+  if (iconId.startsWith('hi2-')) {
+    const iconName = iconId.replace('hi2-', '');
+    return <span className="text-blue-600">HI2 Icon: {iconName}</span>;
+  }
+  
+  // Ant Design Icons
+  if (iconId.startsWith('ai-')) {
+    const iconName = iconId.replace('ai-', '');
+    return <span className="text-blue-600">AI Icon: {iconName}</span>;
+  }
+  
   // Lucide icons
   if (iconId.startsWith('lucide-')) {
     const lucideIcon = LUCIDE_ICONS.find(icon => icon.id === iconId);
