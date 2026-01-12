@@ -455,8 +455,14 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
                 />
 
                 <label className="flex-1 cursor-pointer">
-                  {/* Vérifier si c'est une icône (prefixe de bibliothèque) ou une vraie image (UUID) */}
-                  {choice.imageId && (
+                  {/* Affichage priorité: SVG stocké → Icône → Image Supabase */}
+                  {choice.iconSvg ? (
+                    <div className="mb-2 flex justify-center">
+                      <div className="w-32 h-32 flex items-center justify-center bg-primary/10 rounded-lg">
+                        <div dangerouslySetInnerHTML={{ __html: choice.iconSvg }} />
+                      </div>
+                    </div>
+                  ) : (choice.imageId && (
                     choice.imageId.startsWith('fa6-') || 
                     choice.imageId.startsWith('fa-') || 
                     choice.imageId.startsWith('bs-') || 
@@ -466,7 +472,7 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
                     choice.imageId.startsWith('ai-') || 
                     choice.imageId.startsWith('lucide-') || 
                     choice.imageId.includes(':')
-                  ) ? (
+                  )) ? (
                     <div className="mb-2 flex justify-center">
                       <div className="w-32 h-32 flex items-center justify-center bg-primary/10 rounded-lg">
                         {renderIcon(choice.imageId)}
