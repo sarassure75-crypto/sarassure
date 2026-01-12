@@ -518,7 +518,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
   return (
     <div 
       ref={containerRef} 
-      className={cn("relative overflow-hidden w-auto h-auto max-w-full max-h-full", imageContainerClassName)} 
+      className={cn("relative overflow-hidden w-full h-full flex justify-end items-start", imageContainerClassName)} 
       onContextMenu={handleContextMenu}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
@@ -528,14 +528,14 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Wrapper pour l'image et les zones - position relative pour ancrer les zones */}
-      <div className="relative inline-block" style={{ lineHeight: 0 }}>
+      {/* Wrapper pour l'image et les zones - position relative pour ancrer les zones, aligné en haut à droite */}
+      <div className="relative" style={{ lineHeight: 0 }}>
         <ImageFromSupabase 
           ref={imageRef}
           imageId={imageId} 
           alt={alt} 
-          className="w-full h-auto"
-          style={{ display: 'block', maxWidth: '100%', height: 'auto' }}
+          className="w-auto h-auto max-w-full max-h-full object-contain"
+          style={{ display: 'block' }}
           onLoad={() => {
             try {
               const el = imageRef.current;

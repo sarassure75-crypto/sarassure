@@ -923,6 +923,9 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                                 displayName: choice.imageName
                               } : null}
                               onSelect={(icon) => {
+                                console.log('📌 Icon selected:', icon);
+                                console.log('📌 Icon ID:', icon.id);
+                                console.log('📌 Icon name:', icon.displayName || icon.name);
                                 updateChoice(question.id, choice.id, 'imageId', icon.id);
                                 updateChoice(question.id, choice.id, 'imageName', icon.displayName || icon.name);
                               }}
