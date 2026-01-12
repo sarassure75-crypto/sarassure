@@ -10,7 +10,7 @@ import {
   X, 
   Eye,
   Trash2,
-  HelpCircle
+  ListChecks
 } from 'lucide-react';
 
 export default function AdminQuestionnaireValidation() {
@@ -241,7 +241,7 @@ export default function AdminQuestionnaireValidation() {
     return (
       <Card>
         <CardContent className="py-12 text-center">
-          <HelpCircle className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+          <ListChecks className="w-12 h-12 mx-auto text-gray-400 mb-4" />
           <p className="text-gray-500">Aucun QCM en attente de validation</p>
         </CardContent>
       </Card>
