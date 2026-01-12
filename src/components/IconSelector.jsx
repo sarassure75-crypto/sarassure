@@ -270,18 +270,21 @@ export default function IconSelector({
         <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 flex items-center justify-center bg-white rounded">
-              {selectedIcon.component && (
+              {selectedIcon.svg ? (
+                // Afficher le SVG stocké directement
+                <div dangerouslySetInnerHTML={{ __html: selectedIcon.svg }} />
+              ) : selectedIcon.component ? (
                 selectedIcon.isIconify ? (
                   <selectedIcon.component style={{ width: '32px', height: '32px', fontSize: '32px' }} />
                 ) : (
                   <selectedIcon.component className="w-8 h-8" />
                 )
-              )}
+              ) : null}
             </div>
             <div>
               <p className="font-semibold text-sm">{selectedIcon.displayName}</p>
               <p className="text-xs text-gray-600">
-                {IconLibraryMap[selectedIcon.library]?.label}
+                {IconLibraryMap[selectedIcon.library]?.label || 'Icône personnalisée'}
                 {selectedIcon.isIconify && ' (Couleur)'}
               </p>
             </div>

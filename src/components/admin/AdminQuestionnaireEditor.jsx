@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -178,9 +179,18 @@ const ALL_ICONS = [
 
 /**
  * Fonction helper pour rendre les icônes depuis différentes bibliothèques
+ * @param {string} iconId - ID de l'icône (ex: "fa6-FaHome")
+ * @param {string} className - Classes CSS pour l'icône
+ * @param {string} svg - SVG string optionnel pour affichage direct
  */
-const renderIcon = (iconId, className = 'w-8 h-8') => {
+const renderIcon = (iconId, className = 'w-8 h-8', svg = null) => {
   if (!iconId) return null;
+  
+  // Si on a un SVG stocké, l'utiliser directement
+  if (svg) {
+    console.log('✅ Using stored SVG for:', iconId);
+    return <div dangerouslySetInnerHTML={{ __html: svg }} className={className} />;
+  }
   
   console.log('🎨 AdminQuestionnaireEditor renderIcon:', iconId);
   
@@ -861,7 +871,8 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                               <div className="flex items-center gap-2">
                                 {(choice.imageId && (choice.imageId.startsWith('fa6-') || choice.imageId.startsWith('fa-') || choice.imageId.startsWith('bs-') || choice.imageId.startsWith('md-') || choice.imageId.startsWith('fi-') || choice.imageId.startsWith('hi2-') || choice.imageId.startsWith('ai-') || choice.imageId.startsWith('lucide-') || choice.imageId.includes(':'))) ? (
                                   (() => {
-                                    const iconRender = renderIcon(choice.imageId, 'w-32 h-32 text-blue-600');
+                                    // Passer le SVG stocké si disponible
+                                    const iconRender = renderIcon(choice.imageId, 'w-32 h-32 text-blue-600', choice.iconSvg);
                                     if (iconRender) return iconRender;
                                     return <ImageIcon className="w-32 h-32 text-blue-600" />;
                                   })()
@@ -927,19 +938,31 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                               ⭐ Icônes:
                             </label>
                             <IconSelector
-                              selectedIcon={(choice.imageId && (choice.imageId.startsWith('fa6-') || choice.imageId.startsWith('fa-') || choice.imageId.startsWith('bs-') || choice.imageId.startsWith('md-') || choice.imageId.startsWith('fi-') || choice.imageId.startsWith('hi2-') || choice.imageId.startsWith('ai-') || choice.imageId.startsWith('lucide-') || choice.imageId.includes(':'))) ? {
-                                id: choice.imageId,
-                                name: choice.imageName,
-                                displayName: choice.imageName
+                              selectedIcon={choice.iconSvg ? {
+                                id: choice.imageId || 'custom-svg',
+                                name: choice.imageName || 'Icon',
+                                displayName: choice.imageName || 'Icon',
+                                svg: choice.iconSvg
                               } : null}
                               onSelect={(icon) => {
                                 console.log('📌 Icon selected:', icon);
                                 console.log('📌 Icon ID:', icon.id);
-                                console.log('📌 Icon name:', icon.displayName || icon.name);
-                                console.log('📌 Icon component name:', icon.name);
-                                // Sauvegarder l'ID complet (ex: "fa6-FaHome") qui contient déjà le nom exact du composant
+                                console.log('📌 Icon component:', icon.component);
+                                
+                                // Convertir le composant React en SVG string
+                                let svgString = '';
+                                try {
+                                  const IconComponent = icon.component;
+                                  svgString = renderToStaticMarkup(<IconComponent className="w-8 h-8" />);
+                                  console.log('✅ SVG généré:', svgString);
+                                } catch (error) {
+                                  console.error('❌ Erreur génération SVG:', error);
+                                }
+                                
+                                // Sauvegarder l'ID, le nom ET le SVG
                                 updateChoice(question.id, choice.id, 'imageId', icon.id);
                                 updateChoice(question.id, choice.id, 'imageName', icon.displayName || icon.name);
+                                updateChoice(question.id, choice.id, 'iconSvg', svgString);
                               }}
                               onRemove={() => {
                                 updateChoice(question.id, choice.id, 'imageId', null);
