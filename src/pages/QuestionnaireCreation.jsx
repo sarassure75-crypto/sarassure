@@ -529,14 +529,30 @@ const QuestionnaireCreation = () => {
         const filledChoices = q.choices.filter(c => c.imageId || c.text.trim());
 
         // Créer les enregistrements de choix
-        const choicesForQuestion = filledChoices.map((choice, choiceIdx) => ({
-          question_id: insertedQuestion.id,
-          text: (choice.text && choice.text.trim()) || '',
-          choice_order: choiceIdx + 1,
-          is_correct: choice.isCorrect,
-          image_id: choice.imageId || null,
-          image_name: choice.imageName || ''
-        }));
+        const choicesForQuestion = filledChoices.map((choice, choiceIdx) => {
+          // Vérifier si c'est une icône (commence par fa-, md-, bs-, etc.) ou une vraie image UUID
+          const isIcon = typeof choice.imageId === 'string' && (
+            choice.imageId.startsWith('fa6-') || // Correction pour Font Awesome 6
+            choice.imageId.startsWith('fa-') || 
+            choice.imageId.startsWith('lucide-') ||
+            choice.imageId.startsWith('bs-') || 
+            choice.imageId.startsWith('md-') || 
+            choice.imageId.startsWith('fi-') || 
+            choice.imageId.startsWith('hi2-') || 
+            choice.imageId.startsWith('ai-')
+          );
+          
+          return {
+            question_id: insertedQuestion.id,
+            text: (choice.text && choice.text.trim()) || '',
+            choice_order: choiceIdx + 1,
+            is_correct: choice.isCorrect,
+            // Si c'est une icône, image_id est null et image_name contient l'ID de l'icône.
+            // Sinon, c'est une image de la BDD, on utilise son UUID.
+            image_id: isIcon ? null : (choice.imageId || null),
+            image_name: isIcon ? choice.imageId : (choice.imageName || '')
+          };
+        });
 
         allChoices.push(...choicesForQuestion);
       }

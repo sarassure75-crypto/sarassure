@@ -42,7 +42,15 @@ const toPascalCase = (str) => {
 };
 
 const ExerciseHeader = ({ taskTitle, currentStep, onPlayAudio, showInstructions, textZoom, isMobileLayout, currentLanguage = 'fr' }) => {
-  const IconComponent = currentStep?.icon_name ? LucideIcons[toPascalCase(currentStep.icon_name)] : null;
+  let IconComponent = null;
+  try {
+    if (currentStep?.icon_name) {
+      const pascalIcon = toPascalCase(currentStep.icon_name);
+      IconComponent = LucideIcons[pascalIcon] || HelpCircle;
+    }
+  } catch (e) {
+    console.warn("Icon resolution error in ExerciseHeader:", e);
+  }
   
   return (
     <div className={cn("flex justify-between items-center shrink-0 relative bg-white p-4 rounded-lg shadow", isMobileLayout ? "mb-1 p-2" : "mb-4")}>
@@ -1061,7 +1069,7 @@ const ExercisePage = () => {
               }
             }}
           >
-            <div className="relative w-full h-full flex items-start justify-start">
+            <div className="relative w-full h-full">
               <ZoomableImage
               imageId={currentStep?.app_image_id}
               alt={`Capture d'écran pour l'étape`}
