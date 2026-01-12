@@ -48,7 +48,7 @@ const toPascalCase = (str) => {
 };
 
 const getIconComponent = (iconString) => {
-  if (!iconString) return HelpCircle;
+  if (!iconString) return ListChecks;
   
   if (iconString.includes(':')) {
     const [library, name] = iconString.split(':');
@@ -63,23 +63,23 @@ const getIconComponent = (iconString) => {
       ai: AntIcons,
     };
     const lib = libraries[library];
-    return lib && lib[name] ? lib[name] : HelpCircle;
+    return lib && lib[name] ? lib[name] : ListChecks;
   }
   
   // Fallback: Lucide avec PascalCase
   const pascalIcon = toPascalCase(iconString);
-  return LucideIcons[pascalIcon] || HelpCircle;
+  return LucideIcons[pascalIcon] || ListChecks;
 };
 
 const ExerciseHeader = ({ taskTitle, currentStep, onPlayAudio, showInstructions, textZoom, isMobileLayout, currentLanguage = 'fr' }) => {
-  let IconComponent = HelpCircle;
+  let IconComponent = ListChecks;
   try {
     if (currentStep?.icon_name) {
       IconComponent = getIconComponent(currentStep.icon_name);
     }
   } catch (e) {
     console.warn("Icon resolution error in ExerciseHeader:", e);
-    IconComponent = HelpCircle;
+    IconComponent = ListChecks;
   }
   
   return (
