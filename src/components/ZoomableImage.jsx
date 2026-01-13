@@ -593,7 +593,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
   return (
     <div 
       ref={containerRef} 
-      className={cn("relative overflow-hidden w-full h-full flex justify-center items-start", imageContainerClassName)} 
+      className={cn("relative overflow-hidden w-full h-full flex justify-start items-start", imageContainerClassName)} 
       onContextMenu={handleContextMenu}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
@@ -609,7 +609,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
           ref={imageRef}
           imageId={imageId} 
           alt={alt} 
-          className="w-auto h-auto max-w-full max-h-full object-contain"
+          className="w-full h-full object-contain"
           style={{ display: 'block' }}
           onLoad={() => {
             try {
