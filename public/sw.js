@@ -1,6 +1,6 @@
 
 /* eslint-env serviceworker */
-const CACHE_NAME = 'sarassure-pwa-cache-v18';
+const CACHE_NAME = 'sarassure-pwa-cache-v19';
 const urlsToCache = [
   '/',
   '/index.html',
