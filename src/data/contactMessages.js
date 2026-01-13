@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 /**
  * Envoie un message de contact via une fonction RPC
@@ -12,7 +13,7 @@ import { supabase } from '@/lib/supabaseClient';
  */
 export const sendContactMessage = async ({ name, email, subject, message }) => {
   try {
-    console.log('📤 Envoi du message de contact:', { name, email });
+    logger.log('📤 Envoi du message de contact:', { name, email });
 
     // Utiliser la fonction RPC pour insérer le message
     const { data, error } = await supabase.rpc('insert_contact_message', {
@@ -23,7 +24,7 @@ export const sendContactMessage = async ({ name, email, subject, message }) => {
     });
 
     if (error) {
-      console.error('❌ Erreur RPC Supabase:', {
+      logger.error('❌ Erreur RPC Supabase:', {
         message: error.message,
         code: error.code,
         details: error.details,
@@ -38,10 +39,10 @@ export const sendContactMessage = async ({ name, email, subject, message }) => {
       throw new Error(error.message || 'Erreur lors de l\'envoi du message');
     }
 
-    console.log('✅ Message envoyé avec succès:', data);
+    logger.log('✅ Message envoyé avec succès:', data);
     return data?.[0] || data;
   } catch (err) {
-    console.error('❌ Erreur lors de l\'envoi du message:', err);
+    logger.error('❌ Erreur lors de l\'envoi du message:', err);
     throw err;
   }
 };
@@ -64,7 +65,7 @@ export const getContactMessages = async (unreadOnly = false) => {
   const { data, error } = await query;
 
   if (error) {
-    console.error('Erreur lors de la récupération des messages:', error);
+    logger.error('Erreur lors de la récupération des messages:', error);
     throw error;
   }
 
@@ -83,7 +84,7 @@ export const markMessageAsRead = async (messageId) => {
     .eq('id', messageId);
 
   if (error) {
-    console.error('Erreur lors du marquage du message:', error);
+    logger.error('Erreur lors du marquage du message:', error);
     throw error;
   }
 };
@@ -100,7 +101,7 @@ export const markMessageAsReplied = async (messageId) => {
     .eq('id', messageId);
 
   if (error) {
-    console.error('Erreur lors du marquage de la réponse:', error);
+    logger.error('Erreur lors du marquage de la réponse:', error);
     throw error;
   }
 };
@@ -117,7 +118,7 @@ export const deleteContactMessage = async (messageId) => {
     .eq('id', messageId);
 
   if (error) {
-    console.error('Erreur lors de la suppression du message:', error);
+    logger.error('Erreur lors de la suppression du message:', error);
     throw error;
   }
 };

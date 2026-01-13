@@ -1,3 +1,6 @@
+/* global supabase */
+/* eslint-disable no-console, no-unused-vars */
+
 // ================================================================
 // DIAGNOSTIC FRONTEND - Vérifier l'authentification
 // ================================================================

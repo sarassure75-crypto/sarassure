@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   searchImages,
-  getImageById,
   getMyImages,
   getPendingImages,
   uploadImageWithMetadata,
@@ -28,7 +27,7 @@ export function useImageLibrary(filters = {}, autoFetch = true) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchImages = async () => {
+  const fetchImages = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -42,13 +41,13 @@ export function useImageLibrary(filters = {}, autoFetch = true) {
     }
 
     setLoading(false);
-  };
+  }, [filters]);
 
   useEffect(() => {
     if (autoFetch) {
       fetchImages();
     }
-  }, [JSON.stringify(filters), autoFetch]);
+  }, [autoFetch, fetchImages]);
 
   return {
     images,
@@ -72,7 +71,7 @@ export function useMyImages(userId, filters = {}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchMyImages = async () => {
+  const fetchMyImages = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -85,13 +84,13 @@ export function useMyImages(userId, filters = {}) {
     }
 
     setLoading(false);
-  };
+  }, [filters, userId]);
 
   useEffect(() => {
     if (userId) {
       fetchMyImages();
     }
-  }, [userId, JSON.stringify(filters)]);
+  }, [userId, fetchMyImages]);
 
   return {
     images,
@@ -113,7 +112,7 @@ export function usePendingImages(limit = 50) {
   const [error, setError] = useState(null);
   const [count, setCount] = useState(0);
 
-  const fetchPendingImages = async () => {
+  const fetchPendingImages = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -127,11 +126,11 @@ export function usePendingImages(limit = 50) {
     }
 
     setLoading(false);
-  };
+  }, [limit]);
 
   useEffect(() => {
     fetchPendingImages();
-  }, [limit]);
+  }, [fetchPendingImages]);
 
   return {
     images,

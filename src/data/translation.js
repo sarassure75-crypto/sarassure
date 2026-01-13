@@ -322,7 +322,7 @@ const autoTranslateText = async (text, targetLanguage) => {
 /**
  * Vérifier si la traduction automatique est activée pour cette langue
  */
-const shouldUseAutoTranslation = async (targetLanguage) => {
+export const shouldUseAutoTranslation = async (targetLanguage) => {
   try {
     const { data, error } = await supabase
       .from('translation_settings')
@@ -340,7 +340,7 @@ const shouldUseAutoTranslation = async (targetLanguage) => {
 /**
  * Fusionner les traductions du glossaire avec la traduction automatique
  */
-const mergeTranslations = (original, autoTranslated, glossaryTranslations) => {
+export const mergeTranslations = (original, autoTranslated, glossaryTranslations) => {
   // Priorité au glossaire personnalisé
   let result = autoTranslated;
   
@@ -681,7 +681,7 @@ export const deleteQuestionnaireChoiceTranslation = async (translationId) => {
 /**
  * Obtenir une question traduite avec toutes ses réponses traduites
  */
-export const getTranslatedQuestion = async (questionId, languageCode, glossaryTerms = null) => {
+export const getTranslatedQuestion = async (questionId, languageCode, _glossaryTerms = null) => {
   try {
     // Si c'est français (langue par défaut), récupérer directement la question
     if (languageCode === 'fr') {

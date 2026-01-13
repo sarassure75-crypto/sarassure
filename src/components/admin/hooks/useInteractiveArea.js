@@ -35,7 +35,7 @@ import { useState, useEffect, useCallback } from 'react';
             setResizeHandle(handleName);
             const pos = getMousePositionOnImage(e, imageRef);
             setDragStart({ x: pos.x, y: pos.y });
-        }, [getMousePositionOnImage]);
+        }, [getMousePositionOnImage, setIsResizing, setResizeHandle]);
 
         const handleMouseMove = useCallback((e, imageRef) => {
             if (!isDragging && !isResizing) return;
@@ -73,7 +73,7 @@ import { useState, useEffect, useCallback } from 'react';
                 setArea(prev => ({ ...prev, x, y, width, height }));
                 setDragStart({ x: pos.x, y: pos.y });
             }
-        }, [isDragging, isResizing, dragStart, area, imageDimensions, getMousePositionOnImage]);
+        }, [isDragging, isResizing, dragStart, area, imageDimensions, getMousePositionOnImage, resizeHandle]);
         
         const handleMouseUp = useCallback(() => {
             setIsDragging(false);

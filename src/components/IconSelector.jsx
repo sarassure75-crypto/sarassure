@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { logger } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { X, Search } from 'lucide-react';
@@ -255,7 +256,7 @@ export default function IconSelector({
       const filtered = availableIcons.filter(icon => categoryIcons.includes(icon.name));
       // Si aucune icône trouvée dans la catégorie, retourner toutes les icônes
       if (filtered.length === 0) {
-        console.warn(`Aucune icône trouvée pour la catégorie "${selectedCategory}". Affichage de toutes les icônes.`);
+        logger.warn(`Aucune icône trouvée pour la catégorie "${selectedCategory}". Affichage de toutes les icônes.`);
         return availableIcons;
       }
       return filtered;
@@ -389,11 +390,11 @@ export default function IconSelector({
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      console.log('🎯 IconSelector: Icon clicked!', icon.id);
-                      console.log('🎯 IconSelector: Full icon object:', icon);
-                      console.log('🎯 IconSelector: Calling onSelect...');
+                      logger.debug('IconSelector: icon clicked', { iconId: icon.id });
+                      logger.debug('IconSelector: full icon object', icon);
+                      logger.debug('IconSelector: calling onSelect');
                       onSelect(icon);
-                      console.log('🎯 IconSelector: Closing selector...');
+                      logger.debug('IconSelector: closing selector');
                       setIsOpen(false);
                     }}
                     className={`p-2 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center border border-transparent hover:border-blue-300 ${

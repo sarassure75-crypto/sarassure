@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '@/lib/logger';
 
     // Read Supabase config from environment (Vite) with fallbacks for local dev
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://vkvreculoijplklylpsz.supabase.co";
@@ -42,13 +43,13 @@ import { createClient } from '@supabase/supabase-js';
         const { data } = supabase.storage.from('images').getPublicUrl(normalized);
         // The publicUrl property is on data, not data.publicUrl
         if (data && data.publicUrl) {
-          console.log('✅ getImageUrl generated URL:', { filePath, normalized, url: data.publicUrl });
+          logger.log('✅ getImageUrl generated URL:', { filePath, normalized, url: data.publicUrl });
           return data.publicUrl;
         }
-        console.warn("⚠️ URL publique non générée pour le chemin:", filePath, "data:", data);
+        logger.warn('⚠️ URL publique non générée pour le chemin:', filePath, 'data:', data);
         return null;
       } catch (error) {
-        console.error("❌ Error getting public URL:", error.message, "for path:", filePath);
+        logger.error('❌ Error getting public URL:', error.message, 'for path:', filePath);
         return null;
       }
     };

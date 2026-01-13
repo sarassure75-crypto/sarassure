@@ -1,20 +1,11 @@
+/* eslint-env jest */
+
 /**
  * Tests basiques pour translation.js
  * À exécuter avec: npm test
  */
 
-// Mock Supabase
-const mockSupabase = {
-  from: (table) => ({
-    select: (cols) => ({
-      eq: () => ({
-        single: () => Promise.resolve({ data: null, error: null }),
-        order: () => Promise.resolve({ data: [], error: null }),
-      }),
-      order: () => Promise.resolve({ data: [], error: null }),
-    }),
-  }),
-};
+// (Mocks réservés pour des tests plus avancés)
 
 describe('translation.js', () => {
   describe('autoTranslateText', () => {

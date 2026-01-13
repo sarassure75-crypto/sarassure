@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 /**
  * Hook to get admin statistics and revenue
@@ -22,18 +23,12 @@ export function useAdminRevenue(adminId) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (adminId) {
-      loadAdminData();
-    }
-  }, [adminId]);
-
-  const loadAdminData = async () => {
+  const loadAdminData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      console.log('Loading admin data for adminId:', adminId);
+      logger.log('Loading admin data for adminId:', adminId);
 
       // DEBUG: Check what admin user looks like
       const { data: adminProfile } = await supabase
@@ -41,7 +36,7 @@ export function useAdminRevenue(adminId) {
         .select('id, email, role')
         .eq('id', adminId)
         .single();
-      console.log('Admin profile:', adminProfile);
+      logger.log('Admin profile:', adminProfile);
 
       // ========================================
       // 1. ADMIN STATS
@@ -54,11 +49,11 @@ export function useAdminRevenue(adminId) {
         .eq('owner_id', adminId);
 
       if (tasksError) {
-        console.error('Tasks error:', tasksError);
+        logger.error('Tasks error:', tasksError);
         throw tasksError;
       }
 
-      console.log('Admin tasks loaded:', adminTasks?.length || 0);
+      logger.log('Admin tasks loaded:', adminTasks?.length || 0);
 
       const adminTaskIds = adminTasks?.map(t => t.id) || [];
 
@@ -71,10 +66,10 @@ export function useAdminRevenue(adminId) {
           .in('task_id', adminTaskIds);
 
         if (versionsError) {
-          console.error('Versions error:', versionsError);
+          logger.error('Versions error:', versionsError);
         } else {
           adminVersionsCount = count || 0;
-          console.log('Admin versions count (all, no status filter):', adminVersionsCount);
+          logger.log('Admin versions count (all, no status filter):', adminVersionsCount);
         }
       }
 
@@ -86,10 +81,10 @@ export function useAdminRevenue(adminId) {
         .is('user_id', null);
 
       if (adminImagesError) {
-        console.error('Admin images (app_images) error:', adminImagesError);
+        logger.error('Admin images (app_images) error:', adminImagesError);
       }
       
-      console.log('Admin images count (from app_images with user_id=null):', adminImagesCount || 0);
+      logger.log('Admin images count (from app_images with user_id=null):', adminImagesCount || 0);
       
       // Debug: get sample admin images from app_images
       const { data: sampleAdminImages } = await supabase
@@ -98,7 +93,7 @@ export function useAdminRevenue(adminId) {
         .is('user_id', null)
         .limit(3);
       
-      console.log('Sample admin images (app_images):', sampleAdminImages);
+      logger.log('Sample admin images (app_images):', sampleAdminImages);
 
       // ========================================
       // 2. CONTRIBUTORS STATS
@@ -111,13 +106,13 @@ export function useAdminRevenue(adminId) {
         .eq('role', 'contributor');
 
       if (contributorsError) {
-        console.error('Contributors error:', contributorsError);
+        logger.error('Contributors error:', contributorsError);
       }
       
-      console.log('Contributors count:', contributorsCount || 0);
+      logger.log('Contributors count:', contributorsCount || 0);
 
       // DEBUGGING: Let's check specifically the version that should count as contributor
-      console.log('🔍 DEBUGGING: Checking the problematic version 8f637b93-22a5-474d-8805-fb06f46356b3');
+      logger.log('🔍 DEBUGGING: Checking the problematic version 8f637b93-22a5-474d-8805-fb06f46356b3');
       
       // Check this specific version with manual join
       const { data: problemVersion } = await supabase
@@ -130,7 +125,7 @@ export function useAdminRevenue(adminId) {
         `)
         .eq('id', '8f637b93-22a5-474d-8805-fb06f46356b3')
         .single();
-      console.log('Problem version:', problemVersion);
+      logger.log('Problem version:', problemVersion);
       
       // Check the task directly
       if (problemVersion?.task_id) {
@@ -139,23 +134,23 @@ export function useAdminRevenue(adminId) {
           .select('id, owner_id, title')
           .eq('id', problemVersion.task_id)
           .single();
-        console.log('Problem task:', problemTask);
+        logger.log('Problem task:', problemTask);
       }
 
       // Get all users that are not admin
-      const { data: nonAdminUsers, error: usersError } = await supabase
+      const { data: nonAdminUsers } = await supabase
         .from('profiles')
         .select('id, username, email')
         .neq('id', adminId)
         .limit(5);
-      console.log('Non-admin users:', nonAdminUsers);
+      logger.log('Non-admin users:', nonAdminUsers);
       
       // Get all tasks with their owners
-      const { data: allTasks, error: allTasksError } = await supabase
+      const { data: allTasks } = await supabase
         .from('tasks')
         .select('id, title, owner_id')
         .limit(10);
-      console.log('All tasks (first 10):', allTasks?.map(t => ({
+      logger.log('All tasks (first 10):', allTasks?.map(t => ({
         id: t.id,
         title: t.title,
         owner_id: t.owner_id,
@@ -173,24 +168,24 @@ export function useAdminRevenue(adminId) {
         `);
 
       if (versionsError) {
-        console.error('All versions error:', versionsError);
+        logger.error('All versions error:', versionsError);
       }
       
-      console.log('🔍 RAW versions data (first 5):', allVersionsData?.slice(0, 5).map(v => ({
+      logger.log('🔍 RAW versions data (first 5):', allVersionsData?.slice(0, 5).map(v => ({
         id: v.id,
         creation_status: v.creation_status,
         user_id: v.user_id,
         is_admin: v.user_id === adminId
       })));
       
-      console.log('All versions data:', allVersionsData?.length || 0);
-      console.log('AdminId for filtering:', adminId);
+      logger.log('All versions data:', allVersionsData?.length || 0);
+      logger.log('AdminId for filtering:', adminId);
       
       // Debug: show ALL validated versions first
       const allValidatedVersions = allVersionsData?.filter(v => v.creation_status === 'validated') || [];
-      console.log('🔍 ALL VALIDATED VERSIONS:', allValidatedVersions.length);
+      logger.log('🔍 ALL VALIDATED VERSIONS:', allValidatedVersions.length);
       allValidatedVersions.forEach(v => {
-        console.log(`Version ${v.id}:`, {
+        logger.log(`Version ${v.id}:`, {
           creation_status: v.creation_status,
           user_id: v.user_id,
           is_admin_owned: v.user_id === adminId,
@@ -205,7 +200,7 @@ export function useAdminRevenue(adminId) {
         
         // Debug each validated version
         if (isValidated) {
-          console.log(`✅ Validated version ${v.id}:`, {
+          logger.log(`✅ Validated version ${v.id}:`, {
             creation_status: v.creation_status,
             user_id: v.user_id,
             is_admin: v.user_id === adminId,
@@ -215,8 +210,8 @@ export function useAdminRevenue(adminId) {
         
         return isValidated && isNotAdmin;
       }) || [];      const contributorValidatedVersionsCount = contributorValidatedVersions.length;
-      console.log('🎯 FINAL Contributor validated versions count:', contributorValidatedVersionsCount);
-      console.log('🎯 Contributor versions details:', contributorValidatedVersions.map(v => ({
+      logger.log('🎯 FINAL Contributor validated versions count:', contributorValidatedVersionsCount);
+      logger.log('🎯 Contributor versions details:', contributorValidatedVersions.map(v => ({
         id: v.id,
         task_owner: v.tasks?.owner_id
       })));
@@ -227,7 +222,7 @@ export function useAdminRevenue(adminId) {
         .select('id, uploaded_by, moderation_status');
       
       if (allImagesError) {
-        console.error('All images error:', allImagesError);
+        logger.error('All images error:', allImagesError);
       }
       
       // Filter: validated images where uploader is NOT admin
@@ -237,7 +232,7 @@ export function useAdminRevenue(adminId) {
       ) || [];
       
       const contributorValidatedImagesCount = contributorValidatedImages.length;
-      console.log('Contributor validated images count:', contributorValidatedImagesCount);
+      logger.log('Contributor validated images count:', contributorValidatedImagesCount);
 
       // ========================================
       // 3. PLATFORM REVENUE
@@ -249,10 +244,10 @@ export function useAdminRevenue(adminId) {
         .select('*');
 
       if (revenueError) {
-        console.error('Revenue error:', revenueError);
+        logger.error('Revenue error:', revenueError);
       }
 
-      console.log('All revenue data:', allRevenueData);
+      logger.log('All revenue data:', allRevenueData);
 
       // Calculate total platform revenue (sum of all contributors)
       let totalRevenue = 0;
@@ -320,22 +315,28 @@ export function useAdminRevenue(adminId) {
         milestone_count: milestoneCount
       };
 
-      console.log('Final stats:', statsResult);
-      console.log('Final revenue:', revenueResult);
+      logger.log('Final stats:', statsResult);
+      logger.log('Final revenue:', revenueResult);
 
       setStats(statsResult);
       setRevenue(revenueResult);
     } catch (err) {
-      console.error('Error loading admin data:', err);
+      logger.error('Error loading admin data:', err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [adminId]);
 
-  const refresh = () => {
+  useEffect(() => {
+    if (adminId) {
+      loadAdminData();
+    }
+  }, [adminId, loadAdminData]);
+
+  const refresh = useCallback(() => {
     loadAdminData();
-  };
+  }, [loadAdminData]);
 
   return {
     stats,
