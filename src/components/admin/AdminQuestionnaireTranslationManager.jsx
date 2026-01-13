@@ -732,5 +732,3 @@ export function AdminQuestionnaireTranslationManager() {
     </div>
   );
 }
-
-export default AdminQuestionnaireTranslationManager;
