@@ -4,6 +4,69 @@ import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, Check, X, Loader } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabaseClient';
+import { v4 as uuidv4 } from 'uuid';
+
+const isIconReference = (value) => {
+  if (!value || typeof value !== 'string') return false;
+  return (
+    value.startsWith('fa6-') ||
+    value.startsWith('fa-') ||
+    value.startsWith('bs-') ||
+    value.startsWith('md-') ||
+    value.startsWith('fi-') ||
+    value.startsWith('hi2-') ||
+    value.startsWith('ai-') ||
+    value.startsWith('lucide-') ||
+    value.includes(':')
+  );
+};
+
+const normalizeExpectedInput = (rawExpected) => {
+  let expected = rawExpected;
+
+  if (typeof rawExpected === 'string') {
+    try {
+      expected = JSON.parse(rawExpected);
+    } catch (error) {
+      console.error('Erreur de parsing expected_input:', error);
+      expected = {};
+    }
+  }
+
+  expected = expected || {};
+
+  const questionType = expected.questionType || expected.type || 'mixed';
+  const rawChoices = Array.isArray(expected.choices)
+    ? expected.choices
+    : Array.isArray(expected.answers)
+      ? expected.answers
+      : [];
+
+  const choices = rawChoices.map(choice => {
+    const iconId = choice.iconId || choice.icon?.id || (typeof choice.icon === 'string' ? choice.icon : null);
+
+    return {
+      id: choice.id || uuidv4(),
+      text: choice.text || '',
+      imageId: choice.imageId || null,
+      imageName: choice.imageName || '',
+      iconId,
+      icon: choice.icon || null,
+      isCorrect: !!choice.isCorrect
+    };
+  });
+
+  const correctAnswers = Array.isArray(expected.correctAnswers) && expected.correctAnswers.length > 0
+    ? expected.correctAnswers
+    : choices.filter(c => c.isCorrect).map(c => c.id);
+
+  return {
+    ...expected,
+    questionType,
+    choices,
+    correctAnswers
+  };
+};
 
 /**
  * QuestionnaireValidationEditor
@@ -29,7 +92,7 @@ export default function QuestionnaireValidationEditor({ steps = [], onUpdate = n
       if (step) {
         setLocalChoices(prev => ({
           ...prev,
-          [stepId]: { ...(step.expected_input || {}) }
+          [stepId]: normalizeExpectedInput(step.expected_input)
         }));
       }
     }
@@ -41,18 +104,20 @@ export default function QuestionnaireValidationEditor({ steps = [], onUpdate = n
 
   const toggleCorrectAnswer = (stepId, choiceId) => {
     setLocalChoices(prev => {
-      const updated = { ...prev[stepId] };
-      const correctAnswers = updated.correctAnswers || [];
-      
-      if (correctAnswers.includes(choiceId)) {
-        updated.correctAnswers = correctAnswers.filter(id => id !== choiceId);
-      } else {
-        updated.correctAnswers = [...correctAnswers, choiceId];
-      }
-      
+      const step = steps.find(s => s.id === stepId);
+      const base = prev[stepId] || normalizeExpectedInput(step?.expected_input);
+      const correctAnswers = base?.correctAnswers || [];
+
+      const updatedAnswers = correctAnswers.includes(choiceId)
+        ? correctAnswers.filter(id => id !== choiceId)
+        : [...correctAnswers, choiceId];
+
       return {
         ...prev,
-        [stepId]: updated
+        [stepId]: {
+          ...base,
+          correctAnswers: updatedAnswers
+        }
       };
     });
   };
@@ -60,11 +125,14 @@ export default function QuestionnaireValidationEditor({ steps = [], onUpdate = n
   const saveChanges = async (stepId) => {
     setSaving(true);
     try {
+      const step = steps.find(s => s.id === stepId);
+      const payload = localChoices[stepId] || normalizeExpectedInput(step?.expected_input);
+
       // Mettre à jour la base de données
       if (versionId) {
         const { error } = await supabase
           .from('steps')
-          .update({ expected_input: localChoices[stepId] })
+          .update({ expected_input: JSON.stringify(payload) })
           .eq('id', stepId);
 
         if (error) throw error;
@@ -72,7 +140,7 @@ export default function QuestionnaireValidationEditor({ steps = [], onUpdate = n
 
       // Appeler le callback si fourni
       if (onUpdate) {
-        onUpdate(stepId, localChoices[stepId]);
+        onUpdate(stepId, payload);
       }
 
       setEditMode(prev => ({
@@ -98,11 +166,10 @@ export default function QuestionnaireValidationEditor({ steps = [], onUpdate = n
   return (
     <div className="space-y-3">
       {steps.map((step, idx) => {
-        const expected = step.expected_input || {};
+        const normalized = normalizeExpectedInput(step.expected_input);
         const isExpanded = expandedQuestions[step.id];
         const isEditing = editMode[step.id];
-        const currentChoices = isEditing ? localChoices[step.id] : expected;
-        const questionType = currentChoices.questionType || 'unknown';
+        const currentChoices = isEditing ? (localChoices[step.id] || normalized) : normalized;
         const choices = currentChoices.choices || [];
         const correctAnswers = currentChoices.correctAnswers || [];
 
@@ -120,15 +187,8 @@ export default function QuestionnaireValidationEditor({ steps = [], onUpdate = n
                       <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm">
                         {idx + 1}
                       </span>
-                      <span className={cn(
-                        "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium",
-                        questionType === 'image_choice' && "bg-purple-100 text-purple-700",
-                        questionType === 'image_text' && "bg-blue-100 text-blue-700",
-                        questionType === 'mixed' && "bg-indigo-100 text-indigo-700"
-                      )}>
-                        {questionType === 'image_choice' && "📷 Images"}
-                        {questionType === 'image_text' && "📝 Texte"}
-                        {questionType === 'mixed' && "📷+📝 Mixte"}
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
+                        📋 Réponses texte / image / icône
                       </span>
                       {isEditing && (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
@@ -176,6 +236,9 @@ export default function QuestionnaireValidationEditor({ steps = [], onUpdate = n
                     {choices.map((choice, choiceIdx) => {
                       const choiceId = choice.id || choiceIdx;
                       const isCorrect = correctAnswers.includes(choiceId);
+                      const iconId = choice.iconId || choice.icon?.id || (typeof choice.icon === 'string' ? choice.icon : null) || (isIconReference(choice.imageId) ? choice.imageId : null);
+                      const hasImage = choice.imageId && !isIconReference(choice.imageId);
+                      const hasText = !!choice.text;
 
                       return (
                         <div
@@ -209,7 +272,7 @@ export default function QuestionnaireValidationEditor({ steps = [], onUpdate = n
                             </div>
 
                             {/* Image de la réponse */}
-                            {choice.imageId && ['image_choice', 'mixed'].includes(questionType) && (
+                            {hasImage && (
                               <div className="flex-shrink-0">
                                 <img
                                   src={`https://qcimwwhiymhhidkxtpzt.supabase.co/storage/v1/object/public/app-images/${choice.imageName}`}
@@ -224,12 +287,18 @@ export default function QuestionnaireValidationEditor({ steps = [], onUpdate = n
 
                             {/* Contenu de la réponse */}
                             <div className="flex-1 min-w-0">
-                              {choice.text && (
+                              {hasText && (
                                 <p className="text-sm text-gray-700 break-words">
                                   {choice.text}
                                 </p>
                               )}
-                              {!choice.text && !choice.imageId && (
+                              {iconId && (
+                                <p className="text-xs text-indigo-700 font-medium flex items-center gap-2 mt-1">
+                                  <span className="px-2 py-0.5 rounded bg-indigo-50 border border-indigo-200">Icône</span>
+                                  <span className="truncate">{iconId}</span>
+                                </p>
+                              )}
+                              {!hasText && !hasImage && !iconId && (
                                 <p className="text-xs text-gray-400 italic">
                                   (Réponse vide)
                                 </p>

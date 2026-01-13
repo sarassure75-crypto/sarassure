@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X } from 'lucide-react';
 import ImageFromSupabase from './ImageFromSupabase';
@@ -56,7 +56,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
   const [mainImageSrc, setMainImageSrc] = useState(null);
   
   // Offset de l'image dans le conteneur
-  const [imageOffset, setImageOffset] = useState({ x: 0, y: 0 });
+  const [imageOffset, setImageOffset] = useState({ x: 0, y: 0, width: 0, height: 0 });
   
   // Select appropriate zone based on action type
   const actionArea = ['tap', 'double_tap', 'long_press', 'swipe_left', 'swipe_right', 'swipe_up', 'swipe_down', 'scroll', 'drag_and_drop', 'bravo'].includes(actionType) ? startArea : targetArea;
@@ -125,25 +125,30 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
     }
   }, [showTextInput]);
 
+  const recalcImageOffset = useCallback(() => {
+    if (!containerRef.current || !imageRef.current) return;
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const imgRect = imageRef.current.getBoundingClientRect();
+    setImageOffset({
+      x: imgRect.left - containerRect.left,
+      y: imgRect.top - containerRect.top,
+      width: imgRect.width,
+      height: imgRect.height,
+    });
+  }, []);
+
   useEffect(() => {
-    if (imageRef.current) {
-      const handleResize = () => {
-        if (imageRef.current) {
-          setImageOffset({
-            x: imageRef.current.offsetLeft,
-            y: imageRef.current.offsetTop,
-          });
-        }
-      };
+    if (!imageRef.current) return;
 
-      // Initial calculation
-      handleResize();
+    const handleResize = () => recalcImageOffset();
 
-      // Recalculate on window resize
-      window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
-    }
-  }, [imageId, isZoomed]);
+    // Initial calculation
+    handleResize();
+
+    // Recalculate on window resize
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [imageId, isZoomed, recalcImageOffset]);
 
   if (!imageId) {
     return (
@@ -389,8 +394,8 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
   };
 
   const getAreaStyle = (area) => {
-    const imgW = imageRef.current?.offsetWidth || 0;
-    const imgH = imageRef.current?.offsetHeight || 0;
+    const imgW = imageOffset.width || imageRef.current?.offsetWidth || 0;
+    const imgH = imageOffset.height || imageRef.current?.offsetHeight || 0;
     const xPercent = area.x_percent ?? area.x ?? 0;
     const yPercent = area.y_percent ?? area.y ?? 0;
     const wPercent = area.width_percent ?? area.width ?? 0;
@@ -580,6 +585,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
                 const rect = el.getBoundingClientRect();
                 setMainImageRect({ width: rect.width, height: rect.height });
                 setMainImageSrc(el.src || null);
+                recalcImageOffset();
               }
             } catch (e) {
               // ignore
