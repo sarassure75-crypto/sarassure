@@ -247,11 +247,11 @@ const QuestionnaireCreation = () => {
 			if (versionError) throw versionError;
 
 			const questionsData = questions.map((q, idx) => {
-				const filledChoices = q.choices
-					.filter(c => c.imageId || c.icon || c.text.trim())
-					.map(c => ({ ...c, text: c.text.trim() }));
+				// Inclure toutes les propositions pour conserver l'ordre et éviter les pertes côté lecture.
+				// La validation amont impose déjà ≥2 propositions remplies et ≥1 correcte.
+				const allChoices = q.choices.map(c => ({ ...c, text: c.text.trim() }));
 
-				const correctAnswers = filledChoices
+				const correctAnswers = allChoices
 					.filter(c => c.isCorrect)
 					.map(c => c.id);
 
@@ -264,7 +264,7 @@ const QuestionnaireCreation = () => {
 					icon: q.icon
 						? { id: q.icon.id, library: q.icon.library, name: q.icon.displayName || q.icon.name }
 						: null,
-					choices: filledChoices.map(c => ({
+					choices: allChoices.map(c => ({
 						id: c.id,
 						imageId: c.imageId,
 						imageName: c.imageName,
