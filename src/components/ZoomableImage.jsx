@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X } from 'lucide-react';
@@ -55,6 +54,9 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
   const [showMagnifier, setShowMagnifier] = useState(false);
   const [mainImageRect, setMainImageRect] = useState(null);
   const [mainImageSrc, setMainImageSrc] = useState(null);
+  
+  // Offset de l'image dans le conteneur
+  const [imageOffset, setImageOffset] = useState({ x: 0, y: 0 });
   
   // Select appropriate zone based on action type
   const actionArea = ['tap', 'double_tap', 'long_press', 'swipe_left', 'swipe_right', 'swipe_up', 'swipe_down', 'scroll', 'drag_and_drop', 'bravo'].includes(actionType) ? startArea : targetArea;
@@ -122,6 +124,26 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
       textInputRef.current.focus();
     }
   }, [showTextInput]);
+
+  useEffect(() => {
+    if (imageRef.current) {
+      const handleResize = () => {
+        if (imageRef.current) {
+          setImageOffset({
+            x: imageRef.current.offsetLeft,
+            y: imageRef.current.offsetTop,
+          });
+        }
+      };
+
+      // Initial calculation
+      handleResize();
+
+      // Recalculate on window resize
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, [imageId, isZoomed]);
 
   if (!imageId) {
     return (
@@ -368,8 +390,8 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
 
   const getAreaStyle = (area) => ({
     position: 'absolute',
-    left: `${area.x_percent ?? area.x ?? 0}%`,
-    top: `${area.y_percent ?? area.y ?? 0}%`,
+    left: `${imageOffset.x + (area.x_percent ?? area.x ?? 0) * (imageRef.current?.offsetWidth || 0) / 100}px`,
+    top: `${imageOffset.y + (area.y_percent ?? area.y ?? 0) * (imageRef.current?.offsetHeight || 0) / 100}px`,
     width: `${area.width_percent ?? area.width ?? 0}%`,
     height: `${area.height_percent ?? area.height ?? 0}%`,
     // PAS de transform translate car x_percent/y_percent sont déjà le coin supérieur gauche

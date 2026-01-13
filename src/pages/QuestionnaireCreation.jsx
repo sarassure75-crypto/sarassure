@@ -914,7 +914,7 @@ const QuestionnaireCreation = () => {
                                       ⭐ Icônes:
                                     </label>
                                     <IconSelector
-                                      selectedIcon={choice.imageId?.startsWith('fa-') || choice.imageId?.startsWith('bs-') || choice.imageId?.startsWith('md-') || choice.imageId?.startsWith('fi-') || choice.imageId?.startsWith('hi2-') || choice.imageId?.startsWith('ai-') ? {
+                                      selectedIcon={choice.imageId ? {
                                         id: choice.imageId,
                                         name: choice.imageName,
                                         displayName: choice.imageName
