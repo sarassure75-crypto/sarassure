@@ -5,13 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Users, Mail, Calendar, Plus, Link2, Trash2, CheckCircle2, AlertCircle, UserPlus } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
-import { createLearner } from '@/data/users';
+import { supabase } from '@/lib/supabaseClient';
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+import { createLearner } from '@/data/users';
 
 export default function TrainerLearnersPage() {
   const { currentUser } = useAuth();

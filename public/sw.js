@@ -1,6 +1,6 @@
 
 /* eslint-env serviceworker */
-const CACHE_NAME = 'sarassure-pwa-cache-v6';
+const CACHE_NAME = 'sarassure-pwa-cache-v18';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -31,9 +31,32 @@ this.addEventListener('install', (event) => {
   this.skipWaiting();
 });
 
+// Clean up old caches on activation
+this.addEventListener('activate', (event) => {
+  const cacheWhitelist = [CACHE_NAME];
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
+            console.log('Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+  return this.clients.claim();
+});
+
 // Cache and return requests
 this.addEventListener('fetch', (event) => {
   const { request } = event;
+
+  // Ignore non-http/https requests, like chrome-extension://
+  if (!request.url.startsWith('http')) {
+    return;
+  }
 
   // Always fetch non-GET requests from the network
   if (request.method !== 'GET') {

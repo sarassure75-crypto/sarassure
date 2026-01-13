@@ -66,15 +66,13 @@ export const LanguagePreferenceSelector = () => {
 
     setIsSaving(true);
     try {
-      // Ne sauvegarder que si ce n'est pas le français (FR est la langue par défaut)
-      if (languageCode !== 'fr') {
-        const { error } = await supabase
-          .from('profiles')
-          .update({ preferred_translation_language: languageCode })
-          .eq('id', user.id);
+      // Toujours sauvegarder la langue préférée, y compris français
+      const { error } = await supabase
+        .from('profiles')
+        .update({ preferred_translation_language: languageCode })
+        .eq('id', user.id);
 
-        if (error) throw error;
-      }
+      if (error) throw error;
 
       setPreferredLanguage(languageCode);
       

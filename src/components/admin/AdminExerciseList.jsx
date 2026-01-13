@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Edit, Trash2, Loader2, Eye, EyeOff } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Loader2, Eye, EyeOff, Copy } from 'lucide-react';
 import { creationStatuses } from '@/data/tasks';
 import {
   AlertDialog,
@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const AdminExerciseList = ({ exercises, onAdd, onEdit, onDelete, onSelect, selectedExerciseId, isLoading }) => {
+const AdminExerciseList = ({ exercises, onAdd, onEdit, onDelete, onDuplicate, onSelect, selectedExerciseId, isLoading }) => {
   const [deleteAlert, setDeleteAlert] = useState({ isOpen: false, exerciseId: null });
 
   const getStatusInfo = (statusId) => {
@@ -74,6 +74,14 @@ const AdminExerciseList = ({ exercises, onAdd, onEdit, onDelete, onSelect, selec
                         aria-label="Éditer l'exercice"
                       >
                         <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={(e) => { e.stopPropagation(); onDuplicate(exercise.id); }}
+                        aria-label="Dupliquer l'exercice"
+                      >
+                        <Copy className="h-4 w-4" />
                       </Button>
                       <Button 
                         variant="ghost" 

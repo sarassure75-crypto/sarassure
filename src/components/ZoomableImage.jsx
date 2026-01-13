@@ -1,10 +1,47 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X } from 'lucide-react';
 import ImageFromSupabase from './ImageFromSupabase';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
+import * as LucideIcons from 'lucide-react';
+import * as FontAwesome6 from 'react-icons/fa6';
+import * as BootstrapIcons from 'react-icons/bs';
+import * as MaterialIcons from 'react-icons/md';
+import * as FeatherIcons from 'react-icons/fi';
+import * as HeroiconsIcons from 'react-icons/hi2';
+import * as AntIcons from 'react-icons/ai';
+import { Icon as IconifyIcon } from '@iconify/react';
+
+// Helper to get icon component from icon string
+const getIconComponent = (iconString) => {
+  if (!iconString) return null;
+  
+  // Support pour les icônes Iconify colorées (logos, skill-icons, devicon)
+  if (iconString.includes(':') && (
+    iconString.startsWith('logos:') || 
+    iconString.startsWith('skill-icons:') || 
+    iconString.startsWith('devicon:')
+  )) {
+    return (props) => <IconifyIcon icon={iconString} {...props} />;
+  }
+  
+  const [library, name] = iconString.split(':');
+  
+  // Import icon libraries
+  const libraries = {
+    lucide: LucideIcons,
+    fa6: FontAwesome6,
+    bs: BootstrapIcons,
+    md: MaterialIcons,
+    fi: FeatherIcons,
+    hi2: HeroiconsIcons,
+    ai: AntIcons,
+  };
+  
+  const lib = libraries[library];
+  return lib ? lib[name] : null;
+};
 
 const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInteraction, imageContainerClassName, isMobileLayout, isZoomActive: initialZoom = false, hideActionZone = false, keyboardAutoShow = false, expectedInput = '' }) => {
   const [isZoomed, setIsZoomed] = useState(initialZoom);
@@ -17,6 +54,9 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
   const [showMagnifier, setShowMagnifier] = useState(false);
   const [mainImageRect, setMainImageRect] = useState(null);
   const [mainImageSrc, setMainImageSrc] = useState(null);
+  
+  // Offset de l'image dans le conteneur
+  const [imageOffset, setImageOffset] = useState({ x: 0, y: 0 });
   
   // Select appropriate zone based on action type
   const actionArea = ['tap', 'double_tap', 'long_press', 'swipe_left', 'swipe_right', 'swipe_up', 'swipe_down', 'scroll', 'drag_and_drop', 'bravo'].includes(actionType) ? startArea : targetArea;
@@ -84,6 +124,26 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
       textInputRef.current.focus();
     }
   }, [showTextInput]);
+
+  useEffect(() => {
+    if (imageRef.current) {
+      const handleResize = () => {
+        if (imageRef.current) {
+          setImageOffset({
+            x: imageRef.current.offsetLeft,
+            y: imageRef.current.offsetTop,
+          });
+        }
+      };
+
+      // Initial calculation
+      handleResize();
+
+      // Recalculate on window resize
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, [imageId, isZoomed]);
 
   if (!imageId) {
     return (
@@ -330,10 +390,11 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
 
   const getAreaStyle = (area) => ({
     position: 'absolute',
-    left: `${area.x_percent ?? area.x ?? 0}%`,
-    top: `${area.y_percent ?? area.y ?? 0}%`,
+    left: `${imageOffset.x + (area.x_percent ?? area.x ?? 0) * (imageRef.current?.offsetWidth || 0) / 100}px`,
+    top: `${imageOffset.y + (area.y_percent ?? area.y ?? 0) * (imageRef.current?.offsetHeight || 0) / 100}px`,
     width: `${area.width_percent ?? area.width ?? 0}%`,
     height: `${area.height_percent ?? area.height ?? 0}%`,
+    // PAS de transform translate car x_percent/y_percent sont déjà le coin supérieur gauche
     borderRadius: area.shape === 'ellipse' ? '50%' : '8px',
   });
 
@@ -479,7 +540,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
   return (
     <div 
       ref={containerRef} 
-      className={cn("relative overflow-hidden w-auto h-auto max-w-full max-h-full", imageContainerClassName)} 
+      className={cn("relative overflow-hidden w-full h-full flex justify-end items-start", imageContainerClassName)} 
       onContextMenu={handleContextMenu}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
@@ -489,14 +550,14 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Image principale sans zoom */}
-      <div className="relative w-full h-full">
+      {/* Wrapper pour l'image et les zones - position relative pour ancrer les zones, aligné en haut à droite */}
+      <div className="relative" style={{ lineHeight: 0 }}>
         <ImageFromSupabase 
           ref={imageRef}
           imageId={imageId} 
           alt={alt} 
-          className="w-full h-auto"
-          style={{ objectFit: 'contain', objectPosition: 'left top', display: 'block' }}
+          className="w-auto h-auto max-w-full max-h-full object-contain"
+          style={{ display: 'block' }}
           onLoad={() => {
             try {
               const el = imageRef.current;
@@ -510,7 +571,8 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
             }
           }}
         />
-      </div>
+      
+      {/* Zones d'action positionnées par rapport à l'image */}
       
       {actionArea && (
         <motion.div
@@ -525,7 +587,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
             pointerEvents: 'auto'
           }}
           className={cn(
-            "z-10",
+            "z-10 flex items-center justify-center",
             actionType === 'drag_and_drop' && "cursor-grab",
             actionType !== 'drag_and_drop' && "cursor-pointer"
           )}
@@ -537,7 +599,20 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
           drag={actionType === 'drag_and_drop'}
           dragConstraints={containerRef}
           dragElastic={0.1}
-        />
+        >
+          {/* Afficher l'icône si présente */}
+          {actionArea.icon_name && (
+            (() => {
+              const IconComponent = getIconComponent(actionArea.icon_name);
+              return IconComponent ? (
+                <IconComponent 
+                  className="text-white drop-shadow-lg" 
+                  style={{ fontSize: '3rem', pointerEvents: 'none' }} 
+                />
+              ) : null;
+            })()
+          )}
+        </motion.div>
       )}
 
       {showTextInput && targetArea && (
@@ -568,6 +643,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
           );
         })()
       )}
+      </div>
 
       <AnimatePresence>
         {showHint && (

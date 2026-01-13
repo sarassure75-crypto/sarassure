@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useLocation, useOutletContext } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Home, HelpCircle, AlertTriangle, CheckCircle, XCircle, Zap, Volume2, Loader2, PartyPopper, FileText, BookOpen, FolderOpen } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Home, ListChecks, AlertTriangle, CheckCircle, XCircle, Zap, Volume2, Loader2, PartyPopper, FileText, BookOpen, FolderOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/components/ui/use-toast';
 import ZoomableImage from '@/components/ZoomableImage';
@@ -10,6 +10,12 @@ import VideoPlayerModal from '@/components/VideoPlayerModal';
 import { cn } from '@/lib/utils';
 import { useAdmin } from '@/contexts/AdminContext';
 import * as LucideIcons from 'lucide-react';
+import * as FontAwesome6 from 'react-icons/fa6';
+import * as BootstrapIcons from 'react-icons/bs';
+import * as MaterialIcons from 'react-icons/md';
+import * as FeatherIcons from 'react-icons/fi';
+import * as HeroiconsIcons from 'react-icons/hi2';
+import * as AntIcons from 'react-icons/ai';
 import ExerciseToolbar from '@/components/exercise/ExerciseToolbar';
 import VersionHeader from '@/components/exercise/VersionHeader';
 import ExerciseControls from '@/components/exercise/ExerciseControls';
@@ -41,8 +47,40 @@ const toPascalCase = (str) => {
     .join('');
 };
 
+const getIconComponent = (iconString) => {
+  if (!iconString) return ListChecks;
+  
+  if (iconString.includes(':')) {
+    const [library, name] = iconString.split(':');
+    const libraries = {
+      lucide: LucideIcons,
+      fa6: FontAwesome6,
+      fa: FontAwesome6,
+      bs: BootstrapIcons,
+      md: MaterialIcons,
+      fi: FeatherIcons,
+      hi2: HeroiconsIcons,
+      ai: AntIcons,
+    };
+    const lib = libraries[library];
+    return lib && lib[name] ? lib[name] : ListChecks;
+  }
+  
+  // Fallback: Lucide avec PascalCase
+  const pascalIcon = toPascalCase(iconString);
+  return LucideIcons[pascalIcon] || ListChecks;
+};
+
 const ExerciseHeader = ({ taskTitle, currentStep, onPlayAudio, showInstructions, textZoom, isMobileLayout, currentLanguage = 'fr' }) => {
-  const IconComponent = currentStep?.icon_name ? LucideIcons[toPascalCase(currentStep.icon_name)] : null;
+  let IconComponent = ListChecks;
+  try {
+    if (currentStep?.icon_name) {
+      IconComponent = getIconComponent(currentStep.icon_name);
+    }
+  } catch (e) {
+    console.warn("Icon resolution error in ExerciseHeader:", e);
+    IconComponent = ListChecks;
+  }
   
   return (
     <div className={cn("flex justify-between items-center shrink-0 relative bg-white p-4 rounded-lg shadow", isMobileLayout ? "mb-1 p-2" : "mb-4")}>
@@ -186,7 +224,7 @@ const StepDisplay = ({ currentStep, currentStepIndex, totalSteps, showInstructio
           ) : currentStep.pictogram_app_image_id ? (
             <ImageFromSupabase imageId={currentStep.pictogram_app_image_id} alt="Pictogramme de l'étape" className={cn("object-contain", isMobileLayout ? "h-full w-full" : "h-full w-full")}/>
           ) : (
-            <HelpCircle className={cn("object-contain text-muted-foreground", isMobileLayout ? "h-5 w-5" : "h-8 w-8")} />
+            <ListChecks className={cn("object-contain text-muted-foreground", isMobileLayout ? "h-5 w-5" : "h-8 w-8")} />
           )}
         </div>
         <div className={cn("text-foreground leading-snug flex-grow", isMobileLayout ? "text-xs" : "text-sm sm:text-md")}> 
@@ -454,14 +492,34 @@ const ExercisePage = () => {
     const originalLeft = document.body.style.left;
     const originalRight = document.body.style.right;
     const originalBottom = document.body.style.bottom;
+    const originalWidth = document.body.style.width;
+    const originalHeight = document.body.style.height;
+    const originalTouchAction = document.body.style.touchAction;
+    const originalDocOverflow = document.documentElement.style.overflow;
+    let scrollPosition = 0;
+
+    const preventScroll = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    };
 
     const applyFixed = () => {
+      scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
       document.body.style.overflow = 'hidden';
       document.body.style.position = 'fixed';
-      document.body.style.top = '0';
+      document.body.style.top = `-${scrollPosition}px`;
       document.body.style.left = '0';
       document.body.style.right = '0';
-      document.body.style.bottom = '0';
+      document.body.style.width = '100%';
+      document.body.style.height = '100vh';
+      document.body.style.touchAction = 'none';
+      document.documentElement.style.overflow = 'hidden';
+      
+      // Empêcher tous les types de scroll
+      window.addEventListener('scroll', preventScroll, { passive: false });
+      window.addEventListener('touchmove', preventScroll, { passive: false });
+      window.addEventListener('wheel', preventScroll, { passive: false });
     };
 
     const restore = () => {
@@ -471,20 +529,31 @@ const ExercisePage = () => {
       document.body.style.left = originalLeft;
       document.body.style.right = originalRight;
       document.body.style.bottom = originalBottom;
+      document.body.style.width = originalWidth;
+      document.body.style.height = originalHeight;
+      document.body.style.touchAction = originalTouchAction;
+      document.documentElement.style.overflow = originalDocOverflow;
+      
+      // Restaurer la position de scroll
+      window.scrollTo(0, scrollPosition);
+      
+      // Retirer les listeners
+      window.removeEventListener('scroll', preventScroll, { passive: false });
+      window.removeEventListener('touchmove', preventScroll, { passive: false });
+      window.removeEventListener('wheel', preventScroll, { passive: false });
     };
 
     const onFocusIn = (e) => {
       const tag = e.target?.tagName?.toLowerCase();
       if (tag === 'input' || tag === 'textarea' || e.target?.isContentEditable) {
-        applyFixed();
+        setTimeout(() => applyFixed(), 100);
       }
     };
 
     const onFocusOut = (e) => {
       const tag = e.target?.tagName?.toLowerCase();
       if (tag === 'input' || tag === 'textarea' || e.target?.isContentEditable) {
-        // small timeout to allow other focus events
-        setTimeout(() => restore(), 50);
+        setTimeout(() => restore(), 300);
       }
     };
 
@@ -688,6 +757,10 @@ const ExercisePage = () => {
 
     if (isCorrectAction) {
       const currentStep = currentVersion.steps[currentStepIndex];
+      if (!currentStep) {
+        console.error('❌ currentStep est undefined, index:', currentStepIndex);
+        return;
+      }
       
       // Si c'est une action "bravo", afficher l'overlay au lieu du toast
       if (currentStep?.action_type === 'bravo') {
@@ -804,11 +877,22 @@ const ExercisePage = () => {
     );
   }
 
-  if (!task || !currentVersion) {
+  if (!task || !currentVersion || !currentVersion.steps || !Array.isArray(currentVersion.steps)) {
+    console.error('❌ Données invalides:', { task: !!task, currentVersion: !!currentVersion, steps: currentVersion?.steps });
+    return null;
+  }
+  
+  if (currentStepIndex >= currentVersion.steps.length) {
+    console.error('❌ Index de step invalide:', currentStepIndex, 'max:', currentVersion.steps.length);
     return null;
   }
   
   const currentStep = currentVersion.steps[currentStepIndex];
+  if (!currentStep) {
+    console.error('❌ currentStep est undefined');
+    return null;
+  }
+  
   const totalSteps = currentVersion.steps.length;
 
   // Détecter si des actions de boutons physiques sont utilisées dans cette version
@@ -930,13 +1014,6 @@ const ExercisePage = () => {
             keyboardAutoShow={currentStep?.keyboard_auto_show || false}
             expectedInput={currentStep?.expected_input || ''}
           />
-          {/* Animation pour les swipes et drag - Mobile */}
-        <ActionAnimator
-          actionType={currentStep?.action_type}
-          startArea={currentStep?.start_area}
-          hideActionZone={hideActionZone}
-          isMobileLayout={true}
-        />
         {/* Overlay Bravo */}
         <BravoOverlay
           isOpen={showBravoOverlay}
@@ -1061,7 +1138,7 @@ const ExercisePage = () => {
               }
             }}
           >
-            <div className="relative w-full h-full flex items-start justify-start">
+            <div className="relative w-full h-full">
               <ZoomableImage
               imageId={currentStep?.app_image_id}
               alt={`Capture d'écran pour l'étape`}
@@ -1075,13 +1152,6 @@ const ExercisePage = () => {
               hideActionZone={hideActionZone}
               keyboardAutoShow={currentStep?.keyboard_auto_show || false}
               expectedInput={currentStep?.expected_input || ''}
-            />
-            {/* Animation pour les swipes et drag */}
-            <ActionAnimator
-              actionType={currentStep?.action_type}
-              startArea={currentStep?.start_area}
-              hideActionZone={hideActionZone}
-              isMobileLayout={false}
             />
             {/* Overlay Bravo */}
             <BravoOverlay

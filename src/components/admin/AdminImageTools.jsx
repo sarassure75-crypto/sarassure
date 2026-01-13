@@ -12,6 +12,19 @@ import { supabase } from '@/lib/supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
 import { DEFAULT_SUBCATEGORIES, getImageSubcategories } from '@/data/images';
 
+// Sanitize a segment for storage keys: remove diacritics and replace unsafe chars
+function sanitizeSegment(seg) {
+  if (!seg) return 'default';
+  try {
+    // Normalize to decompose accents then strip combining marks
+    const normalized = seg.normalize('NFKD').replace(/\p{Diacritic}/gu, '');
+    // Replace any remaining non-alphanumeric (and allowed . _ -) with '-'
+    return normalized.replace(/[^a-zA-Z0-9._-]/g, '-').replace(/-+/g, '-').replace(/(^-|-$)/g, '').toLowerCase();
+  } catch (e) {
+    return seg.replace(/[^a-zA-Z0-9._-]/g, '-').toLowerCase();
+  }
+}
+
 const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
   const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState(null);
@@ -26,6 +39,7 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
   const [imageName, setImageName] = useState('');
   const [imageDescription, setImageDescription] = useState('');
   const [androidVersion, setAndroidVersion] = useState('');
+  const [uploadOriginalSize, setUploadOriginalSize] = useState(false);
   const fileInputRef = useRef(null);
 
   // Load subcategories when category changes
@@ -74,47 +88,31 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
     img.onload = async () => {
       const canvas = document.createElement('canvas');
       
-      // Ratio cible 9:16 pour smartphone
-      const targetRatio = 9 / 16;
-      const sourceRatio = img.width / img.height;
+      // Utiliser les dimensions originales si demandé
+      let width = img.width;
+      let height = img.height;
       
-      let sourceWidth = img.width;
-      let sourceHeight = img.height;
-      let sourceX = 0;
-      let sourceY = 0;
-      
-      // Crop pour obtenir le ratio 9:16
-      if (sourceRatio > targetRatio) {
-        // Image trop large, on crop les côtés
-        sourceWidth = img.height * targetRatio;
-        sourceX = (img.width - sourceWidth) / 2;
-      } else if (sourceRatio < targetRatio) {
-        // Image trop haute, on crop le haut et le bas
-        sourceHeight = img.width / targetRatio;
-        sourceY = (img.height - sourceHeight) / 2;
-      }
-      
-      // Redimensionner si nécessaire
-      let width = sourceWidth;
-      let height = sourceHeight;
-      
-      if (width > targetWidth) {
-        height = (targetWidth / width) * height;
-        width = targetWidth;
+      if (!uploadOriginalSize) {
+        // Redimensionner seulement si la largeur dépasse la cible
+        if (width > targetWidth) {
+          height = (targetWidth / width) * height;
+          width = targetWidth;
+        }
       }
       
       canvas.width = width;
       canvas.height = height;
       const ctx = canvas.getContext('2d');
       
-      // Dessiner l'image croppée et redimensionnée
-      ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, width, height);
+      // Dessiner l'image redimensionnée (si nécessaire)
+      ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, width, height);
 
       canvas.toBlob(async (blob) => {
         if (blob) {
           const fileExtension = 'jpg'; // Always save as JPG for consistency
           const fileName = `${uuidv4()}.${fileExtension}`;
-          const filePath = `${category}/${fileName}`;
+          const safeCategory = sanitizeSegment(category || 'default');
+          const filePath = `${safeCategory}/${fileName}`;
           
           const processedFile = new File([blob], fileName, {
             type: `image/${fileExtension === 'png' ? 'png' : 'jpeg'}`,
@@ -173,6 +171,7 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
     setImageDescription('');
     setAndroidVersion('');
     setSelectedSubcategory('général');
+    setUploadOriginalSize(false);
     setIsDialogOpen(false);
     setIsProcessing(false);
     if (fileInputRef.current) {
@@ -183,7 +182,7 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
   return (
     <>
       <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isProcessing}>
-        <UploadIcon className="mr-2 h-4 w-4" /> {isProcessing ? "Traitement..." : "Redimensionner Image"}
+        <UploadIcon className="mr-2 h-4 w-4" /> {isProcessing ? "Traitement..." : "Téléverser Image"}
       </Button>
       <input
         type="file"
@@ -197,9 +196,9 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
       <Dialog open={isDialogOpen} onOpenChange={(isOpen) => { if(!isOpen) resetState(); else setIsDialogOpen(true);}}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto flex flex-col">
           <DialogHeader>
-            <DialogTitle>Redimensionner & Compresser</DialogTitle>
+            <DialogTitle>Traiter & Téléverser</DialogTitle>
             <DialogDescription>
-              Ajustez la taille et la compression de votre image avant de l'ajouter à la galerie.
+              Ajustez les options de traitement de votre image avant de l'ajouter à la galerie.
             </DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto">
@@ -209,6 +208,19 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
               </div>
             )}
             <div className="space-y-4 px-1">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="uploadOriginalSize"
+                checked={uploadOriginalSize}
+                onChange={(e) => setUploadOriginalSize(e.target.checked)}
+                disabled={isProcessing}
+                className="rounded"
+              />
+              <Label htmlFor="uploadOriginalSize" className="text-sm">
+                Téléverser en taille originale (sans redimensionnement)
+              </Label>
+            </div>
             <div>
               <Label htmlFor="targetWidth" className="flex items-center">
                 <Crop className="mr-2 h-4 w-4" /> Largeur maximale (px)
@@ -221,7 +233,7 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
                 min="100"
                 max="4000"
                 step="50"
-                disabled={isProcessing}
+                disabled={isProcessing || uploadOriginalSize}
               />
             </div>
             <div>

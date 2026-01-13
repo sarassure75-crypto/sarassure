@@ -6,10 +6,82 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, XCircle, ChevronLeft, ChevronRight, AlertCircle, Home, Volume2, Type } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
+import * as FontAwesome6 from 'react-icons/fa6';
+import * as BootstrapIcons from 'react-icons/bs';
+import * as MaterialIcons from 'react-icons/md';
+import * as FeatherIcons from 'react-icons/fi';
+import * as HeroiconsIcons from 'react-icons/hi2';
+import * as AntIcons from 'react-icons/ai';
+import { Icon as IconifyIcon } from '@iconify/react';
 import { cn } from '@/lib/utils';
 import ImageFromSupabase from '@/components/ImageFromSupabase';
 import { HighlightGlossaryTerms } from '@/components/GlossaryComponents';
 import { v4 as uuidv4 } from 'uuid';
+
+// Helper pour afficher les icônes
+const renderIcon = (iconString) => {
+  if (!iconString) return null;
+  
+  console.log('🎨 renderIcon called with:', iconString);
+  
+  // Support pour les icônes Iconify colorées (format: "logos:react", "skill-icons:javascript")
+  if (iconString.includes(':') && (
+    iconString.startsWith('logos:') || 
+    iconString.startsWith('skill-icons:') || 
+    iconString.startsWith('devicon:')
+  )) {
+    return <IconifyIcon icon={iconString} width="64" height="64" />;
+  }
+  
+  // Déterminer la bibliothèque et le nom de l'icône
+  let library, name;
+  
+  // Format avec tiret: "fa6-FaPhone", "bs-BsArchive", etc.
+  if (iconString.includes('-')) {
+    const parts = iconString.split('-');
+    library = parts[0];
+    name = parts.slice(1).join('-'); // Rejoindre en cas de plusieurs tirets
+  } 
+  // Format Iconify avec : pour autres bibliothèques
+  else if (iconString.includes(':')) {
+    const [lib, iconName] = iconString.split(':');
+    library = lib;
+    name = iconName;
+  } else {
+    console.error('❌ Format d\'icône invalide:', iconString);
+    return null;
+  }
+  
+  console.log('📚 Library:', library, 'Name:', name);
+  
+  const libraries = {
+    lucide: LucideIcons,
+    fa6: FontAwesome6,
+    fa: FontAwesome6,
+    bs: BootstrapIcons,
+    md: MaterialIcons,
+    fi: FeatherIcons,
+    hi2: HeroiconsIcons,
+    ai: AntIcons,
+  };
+  
+  const lib = libraries[library];
+  if (!lib) {
+    console.error('❌ Library not found:', library);
+    return null;
+  }
+  
+  const IconComponent = lib[name];
+  if (!IconComponent) {
+    console.error('❌ Icon not found:', name, 'in library:', library);
+    console.log('Available icons sample:', Object.keys(lib).slice(0, 5));
+    return null;
+  }
+  
+  console.log('✅ Icon found!');
+  return <IconComponent size={64} className="text-primary" />;
+};
 
 /**
  * QuestionnairePlayer
@@ -100,30 +172,28 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
   };
 
   const currentQuestion = questions[currentQuestionIndex];
+  
+  // Protection contre les questions invalides
+  if (!currentQuestion || !currentQuestion.choices || !Array.isArray(currentQuestion.choices)) {
+    console.error('❌ Question invalide:', currentQuestionIndex, currentQuestion);
+    return <div className="text-center py-8 text-red-600">Erreur: Question invalide</div>;
+  }
 
   const handleSelectChoice = (choiceId) => {
     if (!currentQuestion) return;
 
-    if (currentQuestion.questionType === 'image_choice' || currentQuestion.questionType === 'image_text') {
-      // Radio button: une seule réponse
+    // Mixed mode: multiple answers allowed (checkboxes)
+    const current = answers[currentQuestion.id] || [];
+    if (current.includes(choiceId)) {
       setAnswers({
         ...answers,
-        [currentQuestion.id]: [choiceId]
+        [currentQuestion.id]: current.filter(id => id !== choiceId)
       });
-    } else if (currentQuestion.questionType === 'mixed') {
-      // Checkbox: plusieurs réponses
-      const current = answers[currentQuestion.id] || [];
-      if (current.includes(choiceId)) {
-        setAnswers({
-          ...answers,
-          [currentQuestion.id]: current.filter(id => id !== choiceId)
-        });
-      } else {
-        setAnswers({
-          ...answers,
-          [currentQuestion.id]: [...current, choiceId]
-        });
-      }
+    } else {
+      setAnswers({
+        ...answers,
+        [currentQuestion.id]: [...current, choiceId]
+      });
     }
   };
 
@@ -356,13 +426,13 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
               <HighlightGlossaryTerms text={currentQuestion.instruction} />
             </h3>
 
-          {/* Image de la question (si image_choice ou mixed) */}
-          {currentQuestion.imageId && ['image_choice', 'mixed'].includes(currentQuestion.questionType) && (
-            <div className="mb-4">
+          {/* Image de la question (if present) */}
+          {currentQuestion.imageId && (
+            <div className="mb-4 flex justify-center">
               <ImageFromSupabase
                 imageId={currentQuestion.imageId}
                 alt="Question"
-                className="max-w-full h-auto rounded-lg max-h-80 mx-auto"
+                className="w-full max-w-md h-auto rounded-lg object-contain"
               />
             </div>
           )}
@@ -376,36 +446,47 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
 
             return (
               <div key={choiceId} className={`flex items-start gap-3 p-3 rounded-lg border-2 transition-all ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
-                {currentQuestion.questionType === 'image_choice' || currentQuestion.questionType === 'image_text' ? (
-                  // Radio button
-                  <input
-                    type="radio"
-                    name={`question-${currentQuestion.id}`}
-                    checked={isSelected}
-                    onChange={() => handleSelectChoice(choiceId)}
-                    className="w-5 h-5 mt-1 cursor-pointer accent-blue-600"
-                  />
-                ) : (
-                  // Checkbox (mixed)
-                  <input
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={() => handleSelectChoice(choiceId)}
-                    className="w-5 h-5 mt-1 cursor-pointer accent-blue-600"
-                  />
-                )}
+                {/* Mixed mode: checkboxes for multiple answers */}
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => handleSelectChoice(choiceId)}
+                  className="w-5 h-5 mt-1 cursor-pointer accent-blue-600"
+                />
 
                 <label className="flex-1 cursor-pointer">
-                  {/* Image de la réponse (si available) */}
-                  {choice.imageId && ['image_choice', 'mixed'].includes(currentQuestion.questionType) && (
-                    <div className="mb-2">
+                  {/* Affichage priorité: SVG stocké → Icône → Image Supabase */}
+                  {choice.iconSvg ? (
+                    <div className="mb-2 flex justify-center">
+                      <div className="w-32 h-32 flex items-center justify-center bg-primary/10 rounded-lg">
+                        <div dangerouslySetInnerHTML={{ __html: choice.iconSvg }} />
+                      </div>
+                    </div>
+                  ) : (choice.imageId && (
+                    choice.imageId.startsWith('fa6-') || 
+                    choice.imageId.startsWith('fa-') || 
+                    choice.imageId.startsWith('bs-') || 
+                    choice.imageId.startsWith('md-') || 
+                    choice.imageId.startsWith('fi-') || 
+                    choice.imageId.startsWith('hi2-') || 
+                    choice.imageId.startsWith('ai-') || 
+                    choice.imageId.startsWith('lucide-') || 
+                    choice.imageId.includes(':')
+                  )) ? (
+                    <div className="mb-2 flex justify-center">
+                      <div className="w-32 h-32 flex items-center justify-center bg-primary/10 rounded-lg">
+                        {renderIcon(choice.imageId)}
+                      </div>
+                    </div>
+                  ) : choice.imageId ? (
+                    <div className="mb-2 flex justify-center">
                       <ImageFromSupabase
                         imageId={choice.imageId}
                         alt={choice.text || 'Réponse'}
-                        className="w-20 h-20 rounded object-cover cursor-pointer"
+                        className="w-32 h-32 rounded object-contain cursor-pointer"
                       />
                     </div>
-                  )}
+                  ) : null}
 
                   {/* Texte de la réponse */}
                   {choice.text && <p className="text-base" style={{ fontSize: `${100 * textZoom}%` }}><HighlightGlossaryTerms text={choice.text} /></p>}

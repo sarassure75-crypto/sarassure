@@ -20,34 +20,22 @@ export const validateQuestion = (question) => {
   }
 
   // Au moins une réponse correcte
-  const hasCorrectAnswer = question.choices?.some(c => c.is_correct);
+  // Support both camelCase (isCorrect) and snake_case (is_correct)
+  const hasCorrectAnswer = question.choices?.some(c => c.is_correct || c.isCorrect);
   if (!hasCorrectAnswer) {
     errors.push('Au moins une réponse correcte est requise');
   }
 
-  // Validation selon le type
-  if (question.question_type === 'image_choice') {
-    // Toutes les réponses doivent avoir une image
-    const allHaveImages = question.choices?.every(c => c.image_id);
-    if (!allHaveImages) {
-      errors.push('Toutes les réponses doivent avoir une image (type image_choice)');
-    }
-  }
-
-  if (question.question_type === 'image_text') {
-    // Toutes les réponses doivent avoir du texte
-    const allHaveText = question.choices?.every(c => c.text?.trim());
-    if (!allHaveText) {
-      errors.push('Toutes les réponses doivent avoir du texte (type image_text)');
-    }
-  }
-
-  if (question.question_type === 'mixed') {
-    // Toutes les réponses doivent avoir image ET texte
-    const allHaveBoth = question.choices?.every(c => c.image_id && c.text?.trim());
-    if (!allHaveBoth) {
-      errors.push('Toutes les réponses doivent avoir une image ET du texte (type mixed)');
-    }
+  // All questions now use mixed mode: each response must have IMAGE OR ICON OR TEXT
+  // Icons are stored in imageId/image_id with prefixes like fa-, md-, bs-, etc.
+  const allHaveAtLeastOne = question.choices?.every(c => {
+    const hasImage = c.image_id || c.imageId;
+    const hasText = c.text?.trim();
+    return hasImage || hasText;
+  });
+  
+  if (!allHaveAtLeastOne) {
+    errors.push('Chaque réponse doit avoir au moins une image, une icône OU du texte');
   }
 
   if (errors.length > 0) {

@@ -29,6 +29,24 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
   });
 }
 
+// Version de l'application pour forcer le nettoyage du cache si nécessaire
+const APP_VERSION = '1.2.6';
+try {
+  const storedVersion = localStorage.getItem('app_version');
+  if (storedVersion !== APP_VERSION) {
+    console.log(`🚀 Nouvelle version détectée (${storedVersion} -> ${APP_VERSION}). Nettoyage du cache...`);
+    // On nettoie le cache localStorage immédiatement des clés de données
+    Object.keys(localStorage).forEach(key => {
+      if (key && (key.startsWith('cache:') || key.startsWith('cached_'))) {
+        localStorage.removeItem(key);
+      }
+    });
+    localStorage.setItem('app_version', APP_VERSION);
+  }
+} catch (e) {
+  console.warn('Erreur lors du check de version:', e);
+}
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 root.render(

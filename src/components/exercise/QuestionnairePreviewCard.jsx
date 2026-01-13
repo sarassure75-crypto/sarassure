@@ -51,20 +51,9 @@ export default function QuestionnairePreviewCard({ steps = [] }) {
                         {idx + 1}
                       </span>
                       <span className={cn(
-                        "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium",
-                        questionType === 'image_choice' && "bg-purple-100 text-purple-700",
-                        questionType === 'image_text' && "bg-blue-100 text-blue-700",
-                        questionType === 'mixed' && "bg-indigo-100 text-indigo-700"
+                        "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700"
                       )}>
-                        {questionType === 'image_choice' && (
-                          <><ImageIcon className="w-3 h-3" /> Images</>
-                        )}
-                        {questionType === 'image_text' && (
-                          <><FileText className="w-3 h-3" /> Texte</>
-                        )}
-                        {questionType === 'mixed' && (
-                          <><FileText className="w-3 h-3" /> Mixte</>
-                        )}
+                        <><FileText className="w-3 h-3" /> Mixte</>
                       </span>
                     </div>
                     <p className="font-semibold text-base text-gray-900">
@@ -86,7 +75,7 @@ export default function QuestionnairePreviewCard({ steps = [] }) {
             {isExpanded && (
               <CardContent className="bg-slate-50 border-t pt-4 space-y-4">
                 {/* Image de la question si présente */}
-                {expected.imageId && ['image_choice', 'mixed'].includes(questionType) && (
+                {expected.imageId && (
                   <div className="mb-4">
                     <p className="text-xs font-medium text-gray-600 mb-2">Image de la question:</p>
                     <div className="bg-white border rounded-lg p-2">
@@ -124,7 +113,7 @@ export default function QuestionnairePreviewCard({ steps = [] }) {
                         >
                           <div className="flex items-start gap-3">
                             {/* Image de la réponse */}
-                            {choice.imageId && ['image_choice', 'mixed'].includes(questionType) && (
+                            {choice.imageId && (
                               <div className="flex-shrink-0">
                                 <img
                                   src={`https://qcimwwhiymhhidkxtpzt.supabase.co/storage/v1/object/public/app-images/${choice.imageName}`}

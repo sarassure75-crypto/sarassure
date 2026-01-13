@@ -4,10 +4,54 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Save, Trash2, XCircle, Video, PlayCircle, ListChecks } from 'lucide-react';
+import { Save, Trash2, XCircle, Video, PlayCircle, ListChecks, Copy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import * as LucideIcons from 'lucide-react';
+import * as FontAwesome6 from 'react-icons/fa6';
+import * as BootstrapIcons from 'react-icons/bs';
+import * as MaterialIcons from 'react-icons/md';
+import * as FeatherIcons from 'react-icons/fi';
+import * as HeroiconsIcons from 'react-icons/hi2';
+import * as AntIcons from 'react-icons/ai';
+import { Icon as IconifyIcon } from '@iconify/react';
+import IconSelector from '@/components/IconSelector';
 import { useAdmin } from '@/contexts/AdminContext';
+
+const IconLibraryMap = {
+  lucide: { module: LucideIcons, prefix: '', color: '#181818', label: 'Lucide' },
+  fa6: { module: FontAwesome6, prefix: 'fa', color: '#0184BC', label: 'Font Awesome 6' },
+  bs: { module: BootstrapIcons, prefix: 'bs', color: '#7952B3', label: 'Bootstrap Icons' },
+  md: { module: MaterialIcons, prefix: 'md', color: '#00BCD4', label: 'Material Design' },
+  fi: { module: FeatherIcons, prefix: 'fi', color: '#000000', label: 'Feather' },
+  hi2: { module: HeroiconsIcons, prefix: 'hi', color: '#6366F1', label: 'Heroicons' },
+  ai: { module: AntIcons, prefix: 'ai', color: '#1890FF', label: 'Ant Design' },
+};
+
+const getIconComponent = (iconString) => {
+  if (!iconString) return LucideIcons.ListChecks;
+  
+  // Support pour les icônes Iconify colorées (logos, skill-icons, devicon)
+  if (iconString.includes(':') && (
+    iconString.startsWith('logos:') || 
+    iconString.startsWith('skill-icons:') || 
+    iconString.startsWith('devicon:')
+  )) {
+    return (props) => <IconifyIcon icon={iconString} {...props} />;
+  }
+  
+  const [library, name] = iconString.split(':');
+  const libraryData = IconLibraryMap[library];
+  if (!libraryData) return LucideIcons.ListChecks;
+  
+  const module = libraryData.module;
+  return module[name] || LucideIcons.ListChecks;
+};
+
+const parseIconString = (iconString) => {
+  if (!iconString) return null;
+  const [library, name] = iconString.split(':');
+  return { library, name };
+};
 
 const AdminExerciseForm = ({ exercise: initialExercise, onSave, onCancel, onDelete }) => {
   const [exercise, setExercise] = useState(initialExercise);
@@ -34,9 +78,30 @@ const AdminExerciseForm = ({ exercise: initialExercise, onSave, onCancel, onDele
     e.preventDefault();
     onSave(exercise);
   };
+
+  const handleDuplicate = () => {
+    const duplicatedExercise = {
+      ...exercise,
+      id: null, // Nouveau ID sera généré
+      name: `${exercise.name} (Copie)`,
+      isNew: true
+    };
+    onSave(duplicatedExercise);
+  };
   
   const pictogramInfo = imagesData.find(img => img.id === exercise.pictogram_app_image_id);
-  const IconComponent = LucideIcons[exercise.icon_name] || LucideIcons.ListChecks;
+  const IconComponent = getIconComponent(exercise.icon_name);
+
+  const handleIconSelect = (icon) => {
+    const iconString = icon ? `${icon.library}:${icon.name}` : '';
+    setExercise(prev => ({ ...prev, icon_name: iconString }));
+  };
+
+  const handleIconRemove = () => {
+    setExercise(prev => ({ ...prev, icon_name: '' }));
+  };
+
+  const selectedIcon = parseIconString(exercise.icon_name);
   const currentTaskId = adminView.selectedTask?.id;
 
   return (
@@ -58,11 +123,20 @@ const AdminExerciseForm = ({ exercise: initialExercise, onSave, onCancel, onDele
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="exIconName">Icône (Nom Lucide Icon)</Label>
-              <div className="flex items-center space-x-2">
-                  <IconComponent className="h-5 w-5 text-muted-foreground" />
-                  <Input id="exIconName" name="icon_name" value={exercise.icon_name || ''} onChange={handleChange} placeholder="Ex: ListChecks" />
-              </div>
+              <Label htmlFor="exIconName">Icône</Label>
+              <IconSelector
+                selectedIcon={selectedIcon ? {
+                  library: selectedIcon.library,
+                  name: selectedIcon.name,
+                  component: IconComponent,
+                  displayName: selectedIcon.name
+                } : null}
+                onSelect={handleIconSelect}
+                onRemove={handleIconRemove}
+                libraries={['fa6', 'bs', 'md', 'fi', 'hi2', 'ai']}
+                showSearch={true}
+                showLibraryTabs={true}
+              />
             </div>
             <div>
               <Label htmlFor="exPictogram">Pictogramme (facultatif)</Label>
@@ -116,6 +190,11 @@ const AdminExerciseForm = ({ exercise: initialExercise, onSave, onCancel, onDele
             <Button type="button" variant="outline" size="sm" onClick={onCancel} className="ml-2"><XCircle className="mr-2 h-4 w-4" /> Annuler</Button>
           </div>
           <div className="flex items-center gap-2">
+            {!exercise.isNew && (
+              <Button type="button" variant="secondary" size="sm" onClick={handleDuplicate}>
+                <Copy className="mr-2 h-4 w-4" /> Dupliquer
+              </Button>
+            )}
             {currentTaskId && (
                 <Button type="button" variant="secondary" size="sm" asChild>
                     <Link to={`/admin/preview/tache/${currentTaskId}/version/${exercise.id}`} target="_blank" rel="noopener noreferrer">

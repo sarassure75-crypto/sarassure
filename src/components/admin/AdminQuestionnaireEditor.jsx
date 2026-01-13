@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,11 +8,273 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Save, Trash2, XCircle, Plus, HelpCircle, Image as ImageIcon } from 'lucide-react';
+import IconSelector from '@/components/IconSelector';
+import { Save, Trash2, XCircle, Plus, ListChecks, Image as ImageIcon, X,
+  // Lucide icons for QCM responses
+  CheckCircle, AlertCircle, Info, Home, Settings, User, Users, Lock, Unlock, Eye, EyeOff,
+  Download, Upload, Trash, Edit, Copy, Share2, Heart, Star, Flag, MessageSquare,
+  Clock, Calendar, MapPin, Phone, Mail, Link, Globe, Zap,
+  // Contact icons
+  PhoneCall, PhoneOff, PhoneMissed, Smartphone, MessageCircle,
+  // Actions with variants
+  Check, PlusIcon, Minus, ChevronUp, ChevronDown, ChevronLeft, ChevronRight,
+  // More utilities
+  Search, Filter, Sliders, Settings2, MoreVertical, MoreHorizontal,
+  // Status indicators
+  Circle, CheckCircle2, AlertTriangle, ActivitySquare,
+  // Navigation
+  Navigation, Compass, Map, Waypoints,
+  // Communication
+  Send, Reply, Forward, Share,
+  // File & Document
+  FileText, File, Folder, FolderOpen, Archive,
+  // Media
+  Image, ImageOff, Music, Volume2, Volume, Mic, Mic2,
+  // Misc
+  Package, Gift, Lightbulb, Target, Trophy, Award, ZapOff
+} from 'lucide-react';
+import * as FA from 'react-icons/fa6';
+import * as BS from 'react-icons/bs';
+import * as MD from 'react-icons/md';
+import * as FI from 'react-icons/fi';
+import * as HI from 'react-icons/hi2';
+import * as AI from 'react-icons/ai';
 import { useAdmin } from '@/contexts/AdminContext';
 import { creationStatuses } from '@/data/tasks';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase, getImageUrl } from '@/lib/supabaseClient';
+import { EMOTION_ICONS, COMMUNICATION_ICONS, MEDICAL_ICONS, TRANSPORT_ICONS, COMMERCE_ICONS, EDUCATION_ICONS } from '@/lib/iconConfigs';
+
+// Icônes Lucide disponibles comme options pour les QCM - Groupées par catégorie
+const LUCIDE_ICONS = [
+  // === STATUT & VALIDATION ===
+  { id: 'lucide-check-circle', name: '✓ Correct', component: CheckCircle, category: 'Statut' },
+  { id: 'lucide-check', name: '✓ Check', component: Check, category: 'Statut' },
+  { id: 'lucide-x-circle', name: '✗ Incorrect', component: XCircle, category: 'Statut' },
+  { id: 'lucide-alert-circle', name: '⚠ Alerte', component: AlertCircle, category: 'Statut' },
+  { id: 'lucide-alert-triangle', name: '⚠ Attention', component: AlertTriangle, category: 'Statut' },
+  { id: 'lucide-info', name: 'ⓘ Info', component: Info, category: 'Statut' },
+  { id: 'lucide-circle', name: '● Point', component: Circle, category: 'Statut' },
+  
+  // === CONTACT & COMMUNICATION ===
+  { id: 'lucide-phone', name: '☎ Téléphone', component: Phone, category: 'Contact' },
+  { id: 'lucide-phone-call', name: '📞 Appel', component: PhoneCall, category: 'Contact' },
+  { id: 'lucide-phone-off', name: '🚫 Appel Off', component: PhoneOff, category: 'Contact' },
+  { id: 'lucide-phone-missed', name: '❌ Appel Manqué', component: PhoneMissed, category: 'Contact' },
+  { id: 'lucide-smartphone', name: '📱 Smartphone', component: Smartphone, category: 'Contact' },
+  { id: 'lucide-mail', name: '✉ Email', component: Mail, category: 'Contact' },
+  { id: 'lucide-message', name: '💬 Message', component: MessageSquare, category: 'Contact' },
+  { id: 'lucide-message-circle', name: '💭 Chat', component: MessageCircle, category: 'Contact' },
+  { id: 'lucide-send', name: '📤 Envoyer', component: Send, category: 'Contact' },
+  { id: 'lucide-reply', name: '↩ Répondre', component: Reply, category: 'Contact' },
+  { id: 'lucide-forward', name: '⤳ Transférer', component: Forward, category: 'Contact' },
+  
+  // === ACTIONS AVEC VARIANTES ===
+  { id: 'lucide-plus', name: '➕ Ajouter', component: PlusIcon, category: 'Actions' },
+  { id: 'lucide-minus', name: '➖ Retirer', component: Minus, category: 'Actions' },
+  { id: 'lucide-edit', name: '✏ Éditer', component: Edit, category: 'Actions' },
+  { id: 'lucide-copy', name: '📋 Copier', component: Copy, category: 'Actions' },
+  { id: 'lucide-trash', name: '🗑 Supprimer', component: Trash, category: 'Actions' },
+  { id: 'lucide-download', name: '⬇ Télécharger', component: Download, category: 'Actions' },
+  { id: 'lucide-upload', name: '⬆ Uploader', component: Upload, category: 'Actions' },
+  { id: 'lucide-search', name: '🔍 Chercher', component: Search, category: 'Actions' },
+  { id: 'lucide-filter', name: '⧉ Filtrer', component: Filter, category: 'Actions' },
+  { id: 'lucide-share', name: '↗ Partager', component: Share, category: 'Actions' },
+  
+  // === NAVIGATION ===
+  { id: 'lucide-chevron-up', name: '⬆ Haut', component: ChevronUp, category: 'Navigation' },
+  { id: 'lucide-chevron-down', name: '⬇ Bas', component: ChevronDown, category: 'Navigation' },
+  { id: 'lucide-chevron-left', name: '◀ Gauche', component: ChevronLeft, category: 'Navigation' },
+  { id: 'lucide-chevron-right', name: '▶ Droite', component: ChevronRight, category: 'Navigation' },
+  { id: 'lucide-home', name: '🏠 Accueil', component: Home, category: 'Navigation' },
+  { id: 'lucide-map', name: '🗺 Carte', component: Map, category: 'Navigation' },
+  { id: 'lucide-compass', name: '🧭 Boussole', component: Compass, category: 'Navigation' },
+  { id: 'lucide-navigation', name: '🧭 Navigation', component: Navigation, category: 'Navigation' },
+  
+  // === UTILISATEURS ===
+  { id: 'lucide-user', name: '👤 Utilisateur', component: User, category: 'Utilisateurs' },
+  { id: 'lucide-users', name: '👥 Groupe', component: Users, category: 'Utilisateurs' },
+  { id: 'lucide-lock', name: '🔒 Verrouillé', component: Lock, category: 'Utilisateurs' },
+  { id: 'lucide-unlock', name: '🔓 Déverrouillé', component: Unlock, category: 'Utilisateurs' },
+  { id: 'lucide-eye', name: '👁 Visible', component: Eye, category: 'Utilisateurs' },
+  { id: 'lucide-eye-off', name: '👁‍🗨 Masqué', component: EyeOff, category: 'Utilisateurs' },
+  
+  // === FICHIERS & DOSSIERS ===
+  { id: 'lucide-file', name: '📄 Fichier', component: File, category: 'Fichiers' },
+  { id: 'lucide-file-text', name: '📃 Texte', component: FileText, category: 'Fichiers' },
+  { id: 'lucide-folder', name: '📁 Dossier', component: Folder, category: 'Fichiers' },
+  { id: 'lucide-folder-open', name: '📂 Ouvert', component: FolderOpen, category: 'Fichiers' },
+  { id: 'lucide-archive', name: '📦 Archive', component: Archive, category: 'Fichiers' },
+  
+  // === MÉDIA ===
+  { id: 'lucide-image', name: '🖼 Image', component: Image, category: 'Média' },
+  { id: 'lucide-music', name: '🎵 Musique', component: Music, category: 'Média' },
+  { id: 'lucide-volume', name: '🔊 Son', component: Volume2, category: 'Média' },
+  { id: 'lucide-mic', name: '🎤 Micro', component: Mic, category: 'Média' },
+  
+  // === PARAMÈTRES & OUTILS ===
+  { id: 'lucide-settings', name: '⚙ Paramètres', component: Settings, category: 'Outils' },
+  { id: 'lucide-settings2', name: '⚙ Réglages', component: Settings2, category: 'Outils' },
+  { id: 'lucide-sliders', name: '≡ Curseurs', component: Sliders, category: 'Outils' },
+  { id: 'lucide-more-vertical', name: '⋮ Plus (V)', component: MoreVertical, category: 'Outils' },
+  { id: 'lucide-more-horizontal', name: '⋯ Plus (H)', component: MoreHorizontal, category: 'Outils' },
+  
+  // === FAVORIS & ÉVALUATIONS ===
+  { id: 'lucide-heart', name: '❤ J\'aime', component: Heart, category: 'Évaluation' },
+  { id: 'lucide-star', name: '⭐ Favori', component: Star, category: 'Évaluation' },
+  { id: 'lucide-flag', name: '🚩 Signaler', component: Flag, category: 'Évaluation' },
+  { id: 'lucide-trophy', name: '🏆 Trophée', component: Trophy, category: 'Évaluation' },
+  { id: 'lucide-award', name: '🎖 Récompense', component: Award, category: 'Évaluation' },
+  
+  // === DIVERS ===
+  { id: 'lucide-zap', name: '⚡ Électrique', component: Zap, category: 'Divers' },
+  { id: 'lucide-lightbulb', name: '💡 Idée', component: Lightbulb, category: 'Divers' },
+  { id: 'lucide-target', name: '🎯 Cible', component: Target, category: 'Divers' },
+  { id: 'lucide-package', name: '📦 Paquet', component: Package, category: 'Divers' },
+  { id: 'lucide-gift', name: '🎁 Cadeau', component: Gift, category: 'Divers' },
+  { id: 'lucide-help-circle', name: '❓ Aide', component: ListChecks, category: 'Divers' },
+];
+
+// Intégration des icônes Font Awesome 6
+const emotionIconsWithComponent = EMOTION_ICONS.map(icon => ({
+  ...icon,
+  component: FA[icon.id.split('-')[1]]
+})).filter(icon => icon.component);
+
+const communicationIconsWithComponent = COMMUNICATION_ICONS.map(icon => ({
+  ...icon,
+  component: FA[icon.id.split('-')[1]]
+})).filter(icon => icon.component);
+
+const medicalIconsWithComponent = MEDICAL_ICONS.map(icon => ({
+  ...icon,
+  component: FA[icon.id.split('-')[1]]
+})).filter(icon => icon.component);
+
+const transportIconsWithComponent = TRANSPORT_ICONS.map(icon => ({
+  ...icon,
+  component: FA[icon.id.split('-')[1]]
+})).filter(icon => icon.component);
+
+const commerceIconsWithComponent = COMMERCE_ICONS.map(icon => ({
+  ...icon,
+  component: FA[icon.id.split('-')[1]]
+})).filter(icon => icon.component);
+
+const educationIconsWithComponent = EDUCATION_ICONS.map(icon => ({
+  ...icon,
+  component: FA[icon.id.split('-')[1]]
+})).filter(icon => icon.component);
+
+// Array combiné de toutes les icônes disponibles
+const ALL_ICONS = [
+  ...LUCIDE_ICONS,
+  ...emotionIconsWithComponent,
+  ...communicationIconsWithComponent,
+  ...medicalIconsWithComponent,
+  ...transportIconsWithComponent,
+  ...commerceIconsWithComponent,
+  ...educationIconsWithComponent
+];
+
+/**
+ * Fonction helper pour rendre les icônes depuis différentes bibliothèques
+ * @param {string} iconId - ID de l'icône (ex: "fa6-FaHome")
+ * @param {string} className - Classes CSS pour l'icône
+ * @param {string} svg - SVG string optionnel pour affichage direct
+ */
+const renderIcon = (iconId, className = 'w-8 h-8', svg = null) => {
+  if (!iconId) return null;
+  
+  // Si on a un SVG stocké, l'utiliser directement
+  if (svg) {
+    console.log('✅ Using stored SVG for:', iconId);
+    return <div dangerouslySetInnerHTML={{ __html: svg }} className={className} />;
+  }
+  
+  console.log('🎨 AdminQuestionnaireEditor renderIcon:', iconId);
+  
+  // Font Awesome 6 icons
+  if (iconId.startsWith('fa6-') || iconId.startsWith('fa-')) {
+    const iconName = iconId.replace('fa6-', '').replace('fa-', '');
+    console.log('🔍 Searching FA icon:', iconName);
+    const IconComponent = FA[iconName];
+    console.log('✅ FA Icon found:', IconComponent ? 'YES' : 'NO');
+    if (IconComponent) {
+      return <IconComponent className={className} />;
+    } else {
+      console.error('❌ FA Icon NOT FOUND in FA object. Available keys sample:', Object.keys(FA).slice(0, 10));
+      return <span className="text-red-500 text-xs">{iconName}</span>;
+    }
+  }
+  
+  // Bootstrap Icons
+  if (iconId.startsWith('bs-')) {
+    const iconName = iconId.replace('bs-', '');
+    console.log('🔍 Searching BS icon:', iconName);
+    const IconComponent = BS[iconName];
+    console.log('✅ BS Icon found:', IconComponent ? 'YES' : 'NO');
+    if (IconComponent) {
+      return <IconComponent className={className} />;
+    } else {
+      console.error('❌ BS Icon NOT FOUND. Available keys sample:', Object.keys(BS).slice(0, 10));
+      return <span className="text-red-500 text-xs">{iconName}</span>;
+    }
+  }
+  
+  // Material Design Icons
+  if (iconId.startsWith('md-')) {
+    const iconName = iconId.replace('md-', '');
+    const IconComponent = MD[iconName];
+    if (IconComponent) {
+      return <IconComponent className={className} />;
+    }
+  }
+  
+  // Feather Icons
+  if (iconId.startsWith('fi-')) {
+    const iconName = iconId.replace('fi-', '');
+    const IconComponent = FI[iconName];
+    if (IconComponent) {
+      return <IconComponent className={className} />;
+    }
+  }
+  
+  // Heroicons
+  if (iconId.startsWith('hi2-')) {
+    const iconName = iconId.replace('hi2-', '');
+    const IconComponent = HI[iconName];
+    if (IconComponent) {
+      return <IconComponent className={className} />;
+    }
+  }
+  
+  // Ant Design Icons
+  if (iconId.startsWith('ai-')) {
+    const iconName = iconId.replace('ai-', '');
+    const IconComponent = AI[iconName];
+    if (IconComponent) {
+      return <IconComponent className={className} />;
+    }
+  }
+  
+  // Lucide icons
+  if (iconId.startsWith('lucide-')) {
+    const lucideIcon = LUCIDE_ICONS.find(icon => icon.id === iconId);
+    if (lucideIcon?.component) {
+      const IconComponent = lucideIcon.component;
+      return <IconComponent className={className} />;
+    }
+  }
+  
+  // Iconify icons (logos, skill-icons, devicon)
+  if (iconId.includes(':')) {
+    return <span className="inline-flex items-center justify-center" style={{ fontSize: className.includes('32') ? '8rem' : '2rem' }}>🔷</span>;
+  }
+  
+  console.warn('❌ Icon not found:', iconId);
+  return null;
+};
 
 /**
  * AdminQuestionnaireEditor
@@ -26,6 +289,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
   const [images, setImages] = useState([]);
   const [expandedImageChoices, setExpandedImageChoices] = useState({});
   const [expandedQuestionImage, setExpandedQuestionImage] = useState(null);
+  const [imagePickerTab, setImagePickerTab] = useState({}); // Pour les onglets Images/Icônes
   const { categories, isLoading } = useAdmin();
   const { toast } = useToast();
 
@@ -139,7 +403,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
           id: step.id,
           order: step.step_order,
           instruction: step.instruction,
-          questionType: expectedInput.questionType || 'image_choice',
+          questionType: 'mixed', // All questions now use mixed mode
           imageId: expectedInput.imageId,
           imageName: expectedInput.imageName,
           choices: (expectedInput.choices || []).map(c => ({
@@ -236,7 +500,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
       id: `temp-${Date.now()}`,
       order: questions.length + 1,
       instruction: '',
-      questionType: 'image_choice',
+      questionType: 'mixed', // All questions now use mixed mode
       imageId: null,
       imageName: null,
       choices: [],
@@ -352,10 +616,12 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
           return;
         }
 
-        // Vérifier que chaque réponse a un texte
-        const choicesWithText = q.choices.filter(c => c.text?.trim());
-        if (choicesWithText.length !== q.choices.length) {
-          toast({ title: 'Erreur', description: `Question "${q.instruction}": Toutes les réponses doivent avoir un texte`, variant: 'destructive' });
+        // Vérifier que chaque réponse a un texte OU une icône OU une image
+        const choicesWithContent = q.choices.filter(c => 
+          c.text?.trim() || c.icon || c.imageUrl
+        );
+        if (choicesWithContent.length !== q.choices.length) {
+          toast({ title: 'Erreur', description: `Question "${q.instruction}": Toutes les réponses doivent avoir un texte, une icône ou une image`, variant: 'destructive' });
           return;
         }
 
@@ -389,6 +655,16 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
     }
   };
 
+  const handleDuplicate = () => {
+    const duplicatedTask = {
+      ...task,
+      id: null, // Nouveau ID sera généré
+      title: `${task.title} (Copie)`,
+      isNew: true
+    };
+    onSave(duplicatedTask);
+  };
+
   // Use the global getImageUrl from supabaseClient for consistent image loading
   // This uses the 'images' bucket and handles the publicUrl correctly
 
@@ -397,7 +673,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <HelpCircle className="h-6 w-6 text-blue-600" />
+            <ListChecks className="h-6 w-6 text-blue-600" />
             Éditer le Questionnaire (QCM)
           </CardTitle>
           <CardDescription>
@@ -560,51 +836,145 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                     </div>
 
                     {question.choices.map((choice, cIndex) => (
-                      <div key={choice.id} className="flex items-start gap-2 p-3 border rounded bg-background">
-                        <input
-                          type="checkbox"
-                          checked={question.correctAnswers.includes(choice.id)}
-                          onChange={() => toggleCorrectAnswer(question.id, choice.id)}
-                          className="mt-2 h-4 w-4 accent-green-600"
-                          title="Cocher si c'est une bonne réponse"
-                        />
-                        <div className="flex-1 space-y-2">
-                          <Input
-                            value={choice.text}
-                            onChange={(e) => updateChoice(question.id, choice.id, 'text', e.target.value)}
-                            placeholder={`Réponse ${cIndex + 1}`}
-                          />
-                          <Select
-                            value={choice.imageId || 'none'}
-                            onValueChange={(value) => {
-                              updateChoice(question.id, choice.id, 'imageId', value === 'none' ? null : value);
-                              // imageName is now just for display
-                              const img = images.find(i => i.id === value);
-                              updateChoice(question.id, choice.id, 'imageName', value === 'none' ? null : img?.name || null);
-                            }}
-                          >
-                            <SelectTrigger className="h-8 text-xs">
-                              <SelectValue placeholder="Image (opt.)" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">Aucune</SelectItem>
+                      <Card key={choice.id} className="border">
+                        <CardContent className="pt-4 space-y-3">
+                          {/* Ligne 1: Checkbox + texte + supprimer */}
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="checkbox"
+                              checked={question.correctAnswers.includes(choice.id)}
+                              onChange={() => toggleCorrectAnswer(question.id, choice.id)}
+                              className="h-4 w-4 accent-green-600"
+                              title="Cocher si c'est une bonne réponse"
+                            />
+                            <div className="flex-1">
+                              <Input
+                                value={choice.text}
+                                onChange={(e) => updateChoice(question.id, choice.id, 'text', e.target.value)}
+                                placeholder={`Proposition texte ${cIndex + 1} (optionnelle)`}
+                                className="text-sm"
+                              />
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeChoice(question.id, choice.id)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+
+                          {/* Image/Icône sélectionnée */}
+                          {choice.imageName && (
+                            <div className="p-2 bg-blue-50 rounded border border-blue-200 flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                {(choice.imageId && (choice.imageId.startsWith('fa6-') || choice.imageId.startsWith('fa-') || choice.imageId.startsWith('bs-') || choice.imageId.startsWith('md-') || choice.imageId.startsWith('fi-') || choice.imageId.startsWith('hi2-') || choice.imageId.startsWith('ai-') || choice.imageId.startsWith('lucide-') || choice.imageId.includes(':'))) ? (
+                                  (() => {
+                                    // Passer le SVG stocké si disponible
+                                    const iconRender = renderIcon(choice.imageId, 'w-32 h-32 text-blue-600', choice.iconSvg);
+                                    if (iconRender) return iconRender;
+                                    return <ImageIcon className="w-32 h-32 text-blue-600" />;
+                                  })()
+                                ) : (
+                                  <img 
+                                    src={images.find(img => img.id === choice.imageId)?.publicUrl} 
+                                    alt={choice.imageName}
+                                    className="w-32 h-32 object-contain rounded"
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                    }}
+                                  />
+                                )}
+                                <span className="text-sm text-blue-900">{choice.imageName}</span>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  updateChoice(question.id, choice.id, 'imageId', null);
+                                  updateChoice(question.id, choice.id, 'imageName', '');
+                                }}
+                                className="text-blue-600 hover:text-blue-700 p-0 h-6"
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          )}
+
+                          {/* Sélecteur d'images du système */}
+                          <div className="p-2 border rounded-lg bg-gray-50 mb-3">
+                            <label className="block text-xs font-medium text-gray-600 mb-2">
+                              📸 Images système:
+                            </label>
+                            <div className="grid grid-cols-4 gap-2 max-h-32 overflow-y-auto">
                               {images.map(img => (
-                                <SelectItem key={img.id} value={img.id}>
-                                  {img.name}
-                                </SelectItem>
+                                <button
+                                  key={img.id}
+                                  onClick={() => {
+                                    updateChoice(question.id, choice.id, 'imageId', img.id);
+                                    updateChoice(question.id, choice.id, 'imageName', img.name);
+                                  }}
+                                  className="p-1 rounded border border-gray-300 hover:border-blue-400 hover:bg-blue-100 transition-colors bg-white flex flex-col items-center gap-1"
+                                  title={img.name}
+                                >
+                                  <img 
+                                    src={img.publicUrl} 
+                                    alt={img.name}
+                                    className="w-16 h-16 object-contain rounded"
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                    }}
+                                  />
+                                  <p className="text-xs text-gray-600 line-clamp-1">{img.name}</p>
+                                </button>
                               ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeChoice(question.id, choice.id)}
-                          className="text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                            </div>
+                          </div>
+
+                          {/* Sélecteur d'icônes */}
+                          <div className="mb-3">
+                            <label className="block text-xs font-medium text-gray-600 mb-2">
+                              ⭐ Icônes:
+                            </label>
+                            <IconSelector
+                              selectedIcon={choice.iconSvg ? {
+                                id: choice.imageId || 'custom-svg',
+                                name: choice.imageName || 'Icon',
+                                displayName: choice.imageName || 'Icon',
+                                svg: choice.iconSvg
+                              } : null}
+                              onSelect={(icon) => {
+                                console.log('📌 Icon selected:', icon);
+                                console.log('📌 Icon ID:', icon.id);
+                                console.log('📌 Icon component:', icon.component);
+                                
+                                // Convertir le composant React en SVG string
+                                let svgString = '';
+                                try {
+                                  const IconComponent = icon.component;
+                                  svgString = renderToStaticMarkup(<IconComponent className="w-8 h-8" />);
+                                  console.log('✅ SVG généré:', svgString);
+                                } catch (error) {
+                                  console.error('❌ Erreur génération SVG:', error);
+                                }
+                                
+                                // Sauvegarder l'ID, le nom ET le SVG
+                                updateChoice(question.id, choice.id, 'imageId', icon.id);
+                                updateChoice(question.id, choice.id, 'imageName', icon.displayName || icon.name);
+                                updateChoice(question.id, choice.id, 'iconSvg', svgString);
+                              }}
+                              onRemove={() => {
+                                updateChoice(question.id, choice.id, 'imageId', null);
+                                updateChoice(question.id, choice.id, 'imageName', '');
+                              }}
+                              libraries={['fa6', 'bs', 'md', 'fi', 'hi2', 'ai']}
+                              showSearch={true}
+                              showLibraryTabs={true}
+                            />
+                          </div>
+                        </CardContent>
+                      </Card>
                     ))}
 
                     {question.choices.length === 0 && (
@@ -633,6 +1003,12 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
               <XCircle className="mr-2 h-4 w-4" />
               Annuler
             </Button>
+            {!task.isNew && (
+              <Button variant="secondary" onClick={handleDuplicate}>
+                <Copy className="mr-2 h-4 w-4" />
+                Dupliquer
+              </Button>
+            )}
             {!task.isNew && (
               <Button
                 variant="destructive"

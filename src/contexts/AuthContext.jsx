@@ -39,6 +39,7 @@ export const AuthProvider = ({ children }) => {
     let timeoutId;
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔐 Auth state change:', event, session?.user?.email);
       if (isMounted) {
         await fetchProfile(session?.user);
         setLoading(false);
@@ -47,13 +48,15 @@ export const AuthProvider = ({ children }) => {
 
     const checkSession = async () => {
       try {
+        console.log('🔍 Checking existing session...');
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('📊 Session found:', session?.user?.email || 'No session');
         if (isMounted) {
           await fetchProfile(session?.user);
           setLoading(false);
         }
       } catch (error) {
-        console.error("Error checking session:", error);
+        console.error("❌ Error checking session:", error);
         if (isMounted) {
           setLoading(false);
         }
@@ -65,6 +68,7 @@ export const AuthProvider = ({ children }) => {
     // Fallback timeout: force loading to false after 8 seconds max
     timeoutId = setTimeout(() => {
       if (isMounted) {
+        console.warn('⏱️ Session check timeout, forcing loading to false');
         setLoading(false);
       }
     }, 8000);

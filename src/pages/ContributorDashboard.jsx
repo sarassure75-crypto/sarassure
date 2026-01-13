@@ -18,7 +18,7 @@ import {
   Trophy,
   ClipboardList,
   Zap,
-  HelpCircle
+  ListChecks as QuestionnaireIcon
 } from 'lucide-react';
 
 export default function ContributorDashboard() {
@@ -85,7 +85,7 @@ export default function ContributorDashboard() {
           onClick={() => navigate('/contributeur/questionnaire')}
           className="bg-cyan-600 hover:bg-cyan-700 text-white p-6 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl flex items-center justify-center space-x-3"
         >
-          <HelpCircle className="w-6 h-6" />
+          <QuestionnaireIcon className="w-6 h-6" />
           <span className="text-lg font-semibold">Créer un QCM</span>
         </button>
 

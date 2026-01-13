@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, LayoutGrid, Image, CheckCircle, Users, MessageSquare, AlertTriangle, Mail, ListTodo, DollarSign, ClipboardList, Zap, HelpCircle, Star, Book, Languages, Globe } from 'lucide-react';
+import { Home, LayoutGrid, Image, CheckCircle, Users, MessageSquare, AlertTriangle, Mail, ListTodo, DollarSign, ClipboardList, Zap, ListChecks, Star, Book, Languages, Globe } from 'lucide-react';
 
 export default function AdminTabNavigation({ counters = {} }) {
   const navigate = useNavigate();
@@ -34,7 +34,7 @@ export default function AdminTabNavigation({ counters = {} }) {
     { id: 'requests', label: 'Demandes', icon: ClipboardList, path: '/admin/requests', count: 0 },
     { id: 'validation-images', label: 'Valider images', icon: CheckCircle, path: '/admin/validation/images', count: counters.pendingImages || 0 },
     { id: 'validation-exercices', label: 'Valider exercices', icon: CheckCircle, path: '/admin/validation/exercices', count: counters.pendingContributions || 0 },
-    { id: 'validation-questionnaires', label: 'Valider QCM', icon: HelpCircle, path: '/admin/validation/questionnaires', count: counters.pendingQuestionnaires || 0 },
+    { id: 'validation-questionnaires', label: 'Valider QCM', icon: ListChecks, path: '/admin/validation/questionnaires', count: counters.pendingQuestionnaires || 0 },
     { id: 'revenus', label: 'Revenus', icon: DollarSign, path: '/admin/revenus', count: 0 },
     { id: 'points', label: 'Points', icon: Zap, path: '/admin/points', count: 0 },
     { id: 'reviews', label: 'Avis', icon: Star, path: '/admin/reviews', count: 0 },

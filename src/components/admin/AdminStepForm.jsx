@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -11,15 +10,49 @@ import { useAdmin } from '@/contexts/AdminContext';
 import { Loader2, Save, Trash2, XCircle, HelpCircle } from 'lucide-react';
 import StepAreaEditor from '@/components/admin/StepAreaEditor';
 import ButtonConfigSelector from '@/components/admin/ButtonConfigSelector';
-import * as LucideIcons from 'lucide-react';
+import * as FontAwesome6 from 'react-icons/fa6';
+import * as BootstrapIcons from 'react-icons/bs';
+import * as MaterialIcons from 'react-icons/md';
+import * as FeatherIcons from 'react-icons/fi';
+import * as HeroiconsIcons from 'react-icons/hi2';
+import * as AntIcons from 'react-icons/ai';
+import { Icon as IconifyIcon } from '@iconify/react';
+import IconSelector from '@/components/IconSelector';
 import { getImageSubcategories, DEFAULT_SUBCATEGORIES } from '@/data/images';
 
-const toPascalCase = (str) => {
-  if (!str) return null;
-  return str
-    .split(/[\s-]+/)
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join('');
+const IconLibraryMap = {
+  fa6: { module: FontAwesome6, prefix: 'fa', color: '#0184BC', label: 'Font Awesome 6' },
+  bs: { module: BootstrapIcons, prefix: 'bs', color: '#7952B3', label: 'Bootstrap Icons' },
+  md: { module: MaterialIcons, prefix: 'md', color: '#00BCD4', label: 'Material Design' },
+  fi: { module: FeatherIcons, prefix: 'fi', color: '#000000', label: 'Feather' },
+  hi2: { module: HeroiconsIcons, prefix: 'hi', color: '#6366F1', label: 'Heroicons' },
+  ai: { module: AntIcons, prefix: 'ai', color: '#1890FF', label: 'Ant Design' },
+};
+
+const getIconComponent = (iconString) => {
+  if (!iconString) return null;
+  
+  // Support pour les icônes Iconify colorées (logos, skill-icons, devicon)
+  if (iconString.includes(':') && (
+    iconString.startsWith('logos:') || 
+    iconString.startsWith('skill-icons:') || 
+    iconString.startsWith('devicon:')
+  )) {
+    return (props) => <IconifyIcon icon={iconString} {...props} />;
+  }
+  
+  const [library, name] = iconString.split(':');
+  const libraryData = IconLibraryMap[library];
+  if (!libraryData) return null;
+  
+  const module = libraryData.module;
+  return module[name] || null;
+};
+
+const parseIconString = (iconString) => {
+  if (!iconString) return null;
+  const [library, name] = iconString.split(':');
+  return { library, name };
 };
 
 const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
@@ -40,11 +73,19 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
   const selectedImageId = watch('app_image_id');
   const selectedImage = imageArray.find(img => img.id === selectedImageId);
 
-  const selectedPictogramId = watch('pictogram_app_image_id');
-  const selectedPictogram = imageArray.find(img => img.id === selectedPictogramId);
-
   const watchedIconName = watch('icon_name');
-  const IconComponent = LucideIcons[toPascalCase(watchedIconName)] || null;
+  const IconComponent = getIconComponent(watchedIconName);
+
+  const handleIconSelect = (icon) => {
+    const iconString = icon ? `${icon.library}:${icon.name}` : '';
+    setValue('icon_name', iconString, { shouldDirty: true });
+  };
+
+  const handleIconRemove = () => {
+    setValue('icon_name', '', { shouldDirty: true });
+  };
+
+  const selectedIcon = parseIconString(watchedIconName);
 
   // Load subcategories for "Capture d'écran" category
   useEffect(() => {
@@ -313,35 +354,21 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <Label htmlFor="icon_name">Icône (Nom Lucide)</Label>
-          <div className="flex items-center space-x-2 mt-1">
-            {IconComponent ? <IconComponent className="h-5 w-5 text-muted-foreground" /> : <HelpCircle className="h-5 w-5 text-muted-foreground" />}
-            <Input id="icon_name" {...register('icon_name')} placeholder="Ex: Phone, Search..." />
-          </div>
-        </div>
-        <div>
-          <Label htmlFor="pictogram_app_image_id">Pictogramme de l'étape (Image)</Label>
-          <Controller
-            name="pictogram_app_image_id"
-            control={control}
-            render={({ field }) => (
-              <div className="flex items-center space-x-2">
-                {selectedPictogram && <img src={selectedPictogram.publicUrl} alt={selectedPictogram.name} className="h-6 w-6 object-contain border rounded"/>}
-                <Select onValueChange={(value) => field.onChange(value === '_none_' ? null : value)} value={field.value || '_none_'}>
-                  <SelectTrigger id="pictogram_app_image_id" className="mt-1 flex-grow"><SelectValue placeholder="Sélectionner un pictogramme" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="_none_">Aucun</SelectItem>
-                    {imageArray.filter(img => ['Pictogramme', 'Icône'].includes(img.category)).map(img => (
-                      <SelectItem key={img.id} value={img.id}>{img.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          />
-        </div>
+      <div>
+        <Label htmlFor="icon_name">Icône</Label>
+        <IconSelector
+          selectedIcon={selectedIcon ? {
+            library: selectedIcon.library,
+            name: selectedIcon.name,
+            component: IconComponent,
+            displayName: selectedIcon.name
+          } : null}
+          onSelect={handleIconSelect}
+          onRemove={handleIconRemove}
+          libraries={['fa6', 'bs', 'md', 'fi', 'hi2', 'ai']}
+          showSearch={true}
+          showLibraryTabs={true}
+        />
       </div>
 
       {watch('action_type')?.includes('input') && (

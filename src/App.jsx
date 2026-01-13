@@ -63,6 +63,7 @@ const AdminRevenueDashboard = lazy(() => import('@/pages/AdminRevenueDashboard')
 const WallpapersLibraryPage = lazy(() => import('@/pages/WallpapersLibraryPage'));
 const ExerciseRequestsList = lazy(() => import('@/pages/ExerciseRequestsList'));
 const AdminGlossaryManager = lazy(() => import('@/components/admin/AdminGlossaryManager'));
+const IconManagerPage = lazy(() => import('@/pages/IconManagerPage'));
 
 function AppContent() {
   const location = useLocation();
@@ -121,6 +122,9 @@ function AppContent() {
         {/* Route Admin - Gestion du Lexique */}
         <Route path="admin/lexique" element={<ProtectedRoute roles={[USER_ROLES.ADMIN]}><AdminGlossaryManager /></ProtectedRoute>} />
 
+        {/* Route Admin - Gestion des Icônes */}
+        <Route path="admin/icons" element={<ProtectedRoute roles={[USER_ROLES.ADMIN]}><IconManagerPage /></ProtectedRoute>} />
+
         <Route path="admin/*" element={
           <ProtectedRoute roles={[USER_ROLES.ADMIN]}>
             <AdminProvider>
@@ -149,6 +153,7 @@ function AppContent() {
         <Route path="admin/validation/images" element={<ProtectedRoute roles={[USER_ROLES.ADMIN]}><AdminImageValidation /></ProtectedRoute>} />
         <Route path="admin/validation/exercices" element={<ProtectedRoute roles={[USER_ROLES.ADMIN]}><AdminExerciseValidation /></ProtectedRoute>} />
         <Route path="admin/revenus" element={<ProtectedRoute roles={[USER_ROLES.ADMIN]}><AdminRevenueDashboard /></ProtectedRoute>} />
+        <Route path="admin/icons" element={<ProtectedRoute roles={[USER_ROLES.ADMIN]}><IconManagerPage /></ProtectedRoute>} />
         
         <Route path="formateur" element={<ProtectedRoute roles={[USER_ROLES.TRAINER, USER_ROLES.ADMIN]}><TrainerDashboardPage /></ProtectedRoute>} />
         <Route path="formateur/apprenants" element={<ProtectedRoute roles={[USER_ROLES.TRAINER]}><TrainerLearnersPage /></ProtectedRoute>} />
