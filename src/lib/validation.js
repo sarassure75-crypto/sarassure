@@ -113,10 +113,6 @@ export const validateExerciseStep = (step) => {
     }
   }
 
-  // Actions de boutons physiques (pas de zone requise - les boutons sont fixes)
-  const buttonActions = ['button_power', 'button_volume_up', 'button_volume_down'];
-  // Les boutons ne nécessitent pas de zone d'action car ils sont fixes
-
   if (errors.length > 0) {
     throw new Error(errors.join('\n'));
   }

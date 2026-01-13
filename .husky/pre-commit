@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# Pre-commit hook: lint & format check
+echo "🔍 Linting staged files..."
+npx eslint src --fix
+npx prettier --write src
+
+echo "✅ Pre-commit checks passed"

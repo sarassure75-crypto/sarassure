@@ -309,7 +309,52 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
     try {
       console.log('=== DEBUG: Chargement questions depuis la base de données ===');
       
-      // D'abord, essayer de récupérer les questions de la nouvelle table questionnaire_questions
+      // D'abord, essayer de récupérer les versions/steps (système actuel avec expected_input JSON)
+      const { data: versionsData, error: versionsError } = await supabase
+        .from('versions')
+        .select('id, steps(*)')
+        .eq('task_id', taskId)
+        .order('created_at');
+
+      if (versionsError) {
+        console.error('Erreur chargement versions:', versionsError);
+      }
+
+      console.log('Versions chargées (système actuel):', versionsData);
+
+      if (versionsData && versionsData.length > 0) {
+        const firstVersion = versionsData[0];
+        if (firstVersion.steps && firstVersion.steps.length > 0) {
+          const loadedQuestions = firstVersion.steps.map(step => {
+            const expectedInput = step.expected_input || {};
+            return {
+              id: step.id,
+              order: step.step_order,
+              instruction: step.instruction,
+              questionType: 'mixed',
+              imageId: expectedInput.imageId,
+              imageName: expectedInput.imageName,
+              choices: (expectedInput.choices || []).map(c => ({
+                id: c.id,
+                text: c.text || '',
+                imageId: c.imageId,
+                imageName: c.imageName,
+                iconId: c.iconId,
+                iconSvg: c.iconSvg
+              })),
+              correctAnswers: expectedInput.correctAnswers || []
+            };
+          });
+
+          console.log('=== DEBUG: Questions finales chargées (versions/steps) ===', loadedQuestions);
+          setQuestions(loadedQuestions);
+          return;
+        }
+      }
+
+      // FALLBACK: Si aucune version/step, essayer l'ancienne table questionnaire_questions
+      console.log('Aucune version/step trouvée, essai de la table questionnaire_questions...');
+      
       const { data: questionsData, error: questionsError } = await supabase
         .from('questionnaire_questions')
         .select('*')
@@ -317,15 +362,12 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
         .order('question_order');
 
       if (questionsError) {
-        console.error('Erreur chargement questions (nouvelle table):', questionsError);
-        // Continuer avec le fallback sur les versions/steps
+        console.error('Erreur chargement questions (questionnaire_questions):', questionsError);
       }
 
-      console.log('Questions chargées (nouvelle table):', questionsData);
+      console.log('Questions chargées (questionnaire_questions):', questionsData);
 
-      // Si on a trouvé des questions dans la nouvelle table
       if (questionsData && questionsData.length > 0) {
-        // Récupérer les réponses pour chaque question
         const questionIds = questionsData.map(q => q.id);
         const { data: choicesData, error: choicesError } = await supabase
           .from('questionnaire_choices')
@@ -337,9 +379,6 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
           console.error('Erreur chargement réponses:', choicesError);
         }
 
-        console.log('Réponses chargées:', choicesData);
-
-        // Combiner les données
         const loadedQuestions = questionsData.map(q => {
           const questionChoices = (choicesData || []).filter(c => c.question_id === q.id);
           return {
@@ -361,65 +400,13 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
           };
         });
 
-        console.log('=== DEBUG: Questions finales chargées (nouvelle table) ===', loadedQuestions);
+        console.log('=== DEBUG: Questions finales chargées (questionnaire_questions) ===', loadedQuestions);
         setQuestions(loadedQuestions);
         return;
       }
 
-      // FALLBACK: Si aucune question dans la nouvelle table, essayer les versions/steps (ancien système)
-      console.log('Aucune question dans la nouvelle table, essai du système versions/steps...');
-      
-      // Récupérer les versions du task
-      const { data: versionsData, error: versionsError } = await supabase
-        .from('versions')
-        .select('id, steps(*)')
-        .eq('task_id', taskId)
-        .order('created_at');
-
-      if (versionsError) {
-        console.error('Erreur chargement versions:', versionsError);
-        setQuestions([]);
-        return;
-      }
-
-      console.log('Versions chargées (fallback):', versionsData);
-
-      if (!versionsData || versionsData.length === 0) {
-        console.log('Aucune version trouvée non plus');
-        setQuestions([]);
-        return;
-      }
-
-      // Utiliser la première version
-      const firstVersion = versionsData[0];
-      if (!firstVersion.steps || firstVersion.steps.length === 0) {
-        console.log('La première version n\'a pas de steps');
-        setQuestions([]);
-        return;
-      }
-
-      // Convertir les steps en questions
-      const loadedQuestions = firstVersion.steps.map(step => {
-        const expectedInput = step.expected_input || {};
-        return {
-          id: step.id,
-          order: step.step_order,
-          instruction: step.instruction,
-          questionType: 'mixed', // All questions now use mixed mode
-          imageId: expectedInput.imageId,
-          imageName: expectedInput.imageName,
-          choices: (expectedInput.choices || []).map(c => ({
-            id: c.id || `choice-${Date.now()}-${Math.random()}`,
-            text: c.text,
-            imageId: c.imageId,
-            imageName: c.imageName
-          })),
-          correctAnswers: expectedInput.correctAnswers || []
-        };
-      });
-
-      console.log('=== DEBUG: Questions finales chargées (fallback versions/steps) ===', loadedQuestions);
-      setQuestions(loadedQuestions);
+      console.log('Aucune question trouvée dans les deux systèmes');
+      setQuestions([]);
     } catch (error) {
       console.error('Erreur lors du chargement des questions:', error);
       setQuestions([]);
@@ -620,7 +607,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
 
         // Vérifier que chaque réponse a un texte OU une icône OU une image
         const choicesWithContent = q.choices.filter(c => 
-          c.text?.trim() || c.icon || c.imageUrl
+          (c.text && c.text.trim()) || c.icon || c.iconId || c.iconSvg || c.imageUrl || c.imageId
         );
         if (choicesWithContent.length !== q.choices.length) {
           toast({ title: 'Erreur', description: `Question "${q.instruction}": Toutes les réponses doivent avoir un texte, une icône ou une image`, variant: 'destructive' });

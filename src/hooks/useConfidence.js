@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -27,7 +28,7 @@ export function useConfidence() {
 
       return data;
     } catch (err) {
-      console.error('Error fetching confidence:', err);
+      logger.error('Error fetching confidence:', err);
       setError(err.message);
       return null;
     } finally {
@@ -59,10 +60,10 @@ export function useConfidence() {
 
       if (upsertError) throw upsertError;
 
-      console.log('✅ Confidence before recorded:', data);
+      logger.log('✅ Confidence before recorded:', data);
       return data;
     } catch (err) {
-      console.error('Error recording confidence before:', err);
+      logger.error('Error recording confidence before:', err);
       setError(err.message);
       return null;
     } finally {
@@ -94,10 +95,10 @@ export function useConfidence() {
 
       if (upsertError) throw upsertError;
 
-      console.log('✅ Confidence after recorded:', data);
+      logger.log('✅ Confidence after recorded:', data);
       return data;
     } catch (err) {
-      console.error('Error recording confidence after:', err);
+      logger.error('Error recording confidence after:', err);
       setError(err.message);
       return null;
     } finally {
@@ -148,7 +149,7 @@ export function useConfidence() {
 
       return history;
     } catch (err) {
-      console.error('Error fetching confidence history:', err);
+      logger.error('Error fetching confidence history:', err);
       setError(err.message);
       return [];
     } finally {

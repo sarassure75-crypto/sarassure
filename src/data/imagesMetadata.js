@@ -1,4 +1,5 @@
 import { supabase, getImageUrl } from '../lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 /**
  * ============================================================================
@@ -36,7 +37,7 @@ export async function uploadImageWithMetadata(
     const fileExt = file.name.split('.').pop();
     const fileName = `${userId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from(bucketName)
       .upload(fileName, file);
 
@@ -74,7 +75,7 @@ export async function uploadImageWithMetadata(
 
     return { success: true, data: metaData };
   } catch (error) {
-    console.error('Error uploading image with metadata:', error);
+    logger.error('Error uploading image with metadata:', error);
     return { success: false, error: error.message };
   }
 }
@@ -94,7 +95,7 @@ export async function updateImageMetadata(imageId, updates) {
     if (error) throw error;
     return { success: true, data };
   } catch (error) {
-    console.error('Error updating image metadata:', error);
+    logger.error('Error updating image metadata:', error);
     return { success: false, error: error.message };
   }
 }
@@ -236,7 +237,7 @@ export async function searchImages(filters = {}) {
 
     return { success: true, data: allImages };
   } catch (error) {
-    console.error('Error searching images:', error);
+    logger.error('Error searching images:', error);
     return { success: false, error: error.message };
   }
 }
@@ -263,7 +264,7 @@ export async function getImageById(imageId) {
     if (error) throw error;
     return { success: true, data };
   } catch (error) {
-    console.error('Error fetching image:', error);
+    logger.error('Error fetching image:', error);
     return { success: false, error: error.message };
   }
 }
@@ -290,7 +291,7 @@ export async function getMyImages(userId, filters = {}) {
     if (error) throw error;
     return { success: true, data };
   } catch (error) {
-    console.error('Error fetching my images:', error);
+    logger.error('Error fetching my images:', error);
     return { success: false, error: error.message };
   }
 }
@@ -322,7 +323,7 @@ export async function getPendingImages(limit = 50) {
     if (error) throw error;
     return { success: true, data };
   } catch (error) {
-    console.error('Error fetching pending images:', error);
+    logger.error('Error fetching pending images:', error);
     return { success: false, error: error.message };
   }
 }
@@ -346,7 +347,7 @@ export async function approveImage(imageId, moderatorId) {
     if (error) throw error;
     return { success: true, data };
   } catch (error) {
-    console.error('Error approving image:', error);
+    logger.error('Error approving image:', error);
     return { success: false, error: error.message };
   }
 }
@@ -371,7 +372,7 @@ export async function rejectImage(imageId, moderatorId, reason = '') {
     if (error) throw error;
     return { success: true, data };
   } catch (error) {
-    console.error('Error rejecting image:', error);
+    logger.error('Error rejecting image:', error);
     return { success: false, error: error.message };
   }
 }
@@ -394,7 +395,7 @@ export async function bulkApproveImages(imageIds, moderatorId) {
     if (error) throw error;
     return { success: true, data };
   } catch (error) {
-    console.error('Error bulk approving images:', error);
+    logger.error('Error bulk approving images:', error);
     return { success: false, error: error.message };
   }
 }
@@ -418,7 +419,7 @@ export async function bulkRejectImages(imageIds, moderatorId, reason = '') {
     if (error) throw error;
     return { success: true, data };
   } catch (error) {
-    console.error('Error bulk rejecting images:', error);
+    logger.error('Error bulk rejecting images:', error);
     return { success: false, error: error.message };
   }
 }
@@ -441,7 +442,7 @@ export async function incrementImageUsage(imageId, taskId) {
     if (error) throw error;
     return { success: true, data };
   } catch (error) {
-    console.error('Error incrementing image usage:', error);
+    logger.error('Error incrementing image usage:', error);
     return { success: false, error: error.message };
   }
 }
@@ -473,7 +474,7 @@ export async function getImageUsage(imageId) {
 
     return { success: true, data: tasks };
   } catch (error) {
-    console.error('Error fetching image usage:', error);
+    logger.error('Error fetching image usage:', error);
     return { success: false, error: error.message };
   }
 }
@@ -485,7 +486,7 @@ export async function getImageUsage(imageId) {
 /**
  * Supprimer une image (avec vérification qu'elle n'est pas utilisée)
  */
-export async function deleteImage(imageId, userId) {
+export async function deleteImage(imageId, _userId) {
   try {
     // 1. Vérifier que l'image n'est pas utilisée
     const { data: image, error: fetchError } = await supabase
@@ -519,7 +520,7 @@ export async function deleteImage(imageId, userId) {
 
     return { success: true };
   } catch (error) {
-    console.error('Error deleting image:', error);
+    logger.error('Error deleting image:', error);
     return { success: false, error: error.message };
   }
 }

@@ -322,7 +322,7 @@ const autoTranslateText = async (text, targetLanguage) => {
 /**
  * Vérifier si la traduction automatique est activée pour cette langue
  */
-const shouldUseAutoTranslation = async (targetLanguage) => {
+export const shouldUseAutoTranslation = async (targetLanguage) => {
   try {
     const { data, error } = await supabase
       .from('translation_settings')
@@ -340,7 +340,7 @@ const shouldUseAutoTranslation = async (targetLanguage) => {
 /**
  * Fusionner les traductions du glossaire avec la traduction automatique
  */
-const mergeTranslations = (original, autoTranslated, glossaryTranslations) => {
+export const mergeTranslations = (original, autoTranslated, glossaryTranslations) => {
   // Priorité au glossaire personnalisé
   let result = autoTranslated;
   
@@ -443,6 +443,614 @@ export const getTranslationStats = async () => {
     return stats;
   } catch (error) {
     logger.error('Error fetching translation stats:', error);
+    throw error;
+  }
+};
+
+/**
+ * ========================================
+ * TRADUCTIONS DES QCM (Questions à Choix Multiples)
+ * ========================================
+ */
+
+/**
+ * Récupérer les traductions des questions d'un QCM pour une langue spécifique
+ */
+export const getQuestionnaireQuestionTranslations = async (languageCode) => {
+  try {
+    const { data, error } = await supabase
+      .from('questionnaire_question_translations')
+      .select(`
+        id,
+        question_id,
+        language_code,
+        translated_instruction,
+        created_at,
+        updated_at
+      `)
+      .eq('language_code', languageCode);
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logger.error('Error fetching questionnaire question translations:', error);
+    throw error;
+  }
+};
+
+/**
+ * Récupérer les traductions des réponses d'un QCM pour une langue spécifique
+ */
+export const getQuestionnaireChoiceTranslations = async (languageCode) => {
+  try {
+    const { data, error } = await supabase
+      .from('questionnaire_choice_translations')
+      .select(`
+        id,
+        choice_id,
+        language_code,
+        translated_choice_text,
+        translated_feedback,
+        created_at,
+        updated_at
+      `)
+      .eq('language_code', languageCode);
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logger.error('Error fetching questionnaire choice translations:', error);
+    throw error;
+  }
+};
+
+/**
+ * Créer une traduction pour une question de QCM
+ */
+export const createQuestionnaireQuestionTranslation = async (questionId, languageCode, translatedInstruction) => {
+  try {
+    // D'abord, vérifier s'il existe déjà une traduction
+    const { data: existing } = await supabase
+      .from('questionnaire_question_translations')
+      .select('id')
+      .eq('question_id', questionId)
+      .eq('language_code', languageCode);
+
+    if (existing && existing.length > 0) {
+      // Mettre à jour la traduction existante
+      const { data, error } = await supabase
+        .from('questionnaire_question_translations')
+        .update({
+          translated_instruction: translatedInstruction.trim()
+        })
+        .eq('id', existing[0].id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      logger.log('Questionnaire question translation updated:', data);
+      return data;
+    } else {
+      // Créer une nouvelle traduction
+      const { data, error } = await supabase
+        .from('questionnaire_question_translations')
+        .insert([{
+          question_id: questionId,
+          language_code: languageCode,
+          translated_instruction: translatedInstruction.trim()
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      logger.log('Questionnaire question translation created:', data);
+      return data;
+    }
+  } catch (error) {
+    logger.error('Error creating/updating questionnaire question translation:', error);
+    throw error;
+  }
+};
+
+/**
+ * Créer une traduction pour une réponse de QCM
+ */
+export const createQuestionnaireChoiceTranslation = async (choiceId, languageCode, translatedChoiceText, translatedFeedback = null) => {
+  try {
+    // D'abord, vérifier s'il existe déjà une traduction
+    const { data: existing } = await supabase
+      .from('questionnaire_choice_translations')
+      .select('id')
+      .eq('choice_id', choiceId)
+      .eq('language_code', languageCode);
+
+    if (existing && existing.length > 0) {
+      // Mettre à jour la traduction existante
+      const { data, error } = await supabase
+        .from('questionnaire_choice_translations')
+        .update({
+          translated_choice_text: translatedChoiceText.trim(),
+          translated_feedback: translatedFeedback ? translatedFeedback.trim() : null
+        })
+        .eq('id', existing[0].id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      logger.log('Questionnaire choice translation updated:', data);
+      return data;
+    } else {
+      // Créer une nouvelle traduction
+      const { data, error } = await supabase
+        .from('questionnaire_choice_translations')
+        .insert([{
+          choice_id: choiceId,
+          language_code: languageCode,
+          translated_choice_text: translatedChoiceText.trim(),
+          translated_feedback: translatedFeedback ? translatedFeedback.trim() : null
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      logger.log('Questionnaire choice translation created:', data);
+      return data;
+    }
+  } catch (error) {
+    logger.error('Error creating/updating questionnaire choice translation:', error);
+    throw error;
+  }
+};
+
+/**
+ * Mettre à jour une traduction de question de QCM
+ */
+export const updateQuestionnaireQuestionTranslation = async (translationId, updates) => {
+  try {
+    const { data, error } = await supabase
+      .from('questionnaire_question_translations')
+      .update(updates)
+      .eq('id', translationId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    logger.error('Error updating questionnaire question translation:', error);
+    throw error;
+  }
+};
+
+/**
+ * Mettre à jour une traduction de réponse de QCM
+ */
+export const updateQuestionnaireChoiceTranslation = async (translationId, updates) => {
+  try {
+    const { data, error } = await supabase
+      .from('questionnaire_choice_translations')
+      .update(updates)
+      .eq('id', translationId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    logger.error('Error updating questionnaire choice translation:', error);
+    throw error;
+  }
+};
+
+/**
+ * Supprimer une traduction de question de QCM
+ */
+export const deleteQuestionnaireQuestionTranslation = async (translationId) => {
+  try {
+    const { error } = await supabase
+      .from('questionnaire_question_translations')
+      .delete()
+      .eq('id', translationId);
+
+    if (error) throw error;
+    logger.log('Questionnaire question translation deleted');
+  } catch (error) {
+    logger.error('Error deleting questionnaire question translation:', error);
+    throw error;
+  }
+};
+
+/**
+ * Supprimer une traduction de réponse de QCM
+ */
+export const deleteQuestionnaireChoiceTranslation = async (translationId) => {
+  try {
+    const { error } = await supabase
+      .from('questionnaire_choice_translations')
+      .delete()
+      .eq('id', translationId);
+
+    if (error) throw error;
+    logger.log('Questionnaire choice translation deleted');
+  } catch (error) {
+    logger.error('Error deleting questionnaire choice translation:', error);
+    throw error;
+  }
+};
+
+/**
+ * Obtenir une question traduite avec toutes ses réponses traduites
+ */
+export const getTranslatedQuestion = async (questionId, languageCode, _glossaryTerms = null) => {
+  try {
+    // Si c'est français (langue par défaut), récupérer directement la question
+    if (languageCode === 'fr') {
+      const { data, error } = await supabase
+        .from('questionnaire_questions')
+        .select(`
+          id,
+          instruction,
+          question_type,
+          image_id,
+          questionnaire_choices (
+            id,
+            text,
+            choice_order,
+            is_correct,
+            feedback,
+            image_id
+          )
+        `)
+        .eq('id', questionId)
+        .single();
+
+      if (error) throw error;
+      return {
+        id: data.id,
+        instruction: data.instruction,
+        type: data.question_type,
+        imageId: data.image_id,
+        choices: data.questionnaire_choices
+      };
+    }
+
+    // Récupérer la question avec ses traductions
+    const { data: question, error: qError } = await supabase
+      .from('questionnaire_questions')
+      .select(`
+        id,
+        instruction,
+        question_type,
+        image_id
+      `)
+      .eq('id', questionId)
+      .single();
+
+    if (qError) throw qError;
+
+    // Récupérer la traduction de la question
+    const { data: translations } = await supabase
+      .from('questionnaire_question_translations')
+      .select('translated_instruction')
+      .eq('question_id', questionId)
+      .eq('language_code', languageCode)
+      .single();
+
+    // Récupérer les choix
+    const { data: choices, error: cError } = await supabase
+      .from('questionnaire_choices')
+      .select(`
+        id,
+        text,
+        choice_order,
+        is_correct,
+        feedback,
+        image_id
+      `)
+      .eq('question_id', questionId)
+      .order('choice_order');
+
+    if (cError) throw cError;
+
+    // Récupérer les traductions des choix
+    const choiceIds = choices.map(c => c.id);
+    const { data: choiceTranslations } = await supabase
+      .from('questionnaire_choice_translations')
+      .select('choice_id, translated_choice_text, translated_feedback')
+      .in('choice_id', choiceIds)
+      .eq('language_code', languageCode);
+
+    // Mapper les traductions de choix
+    const translationMap = {};
+    (choiceTranslations || []).forEach(t => {
+      translationMap[t.choice_id] = t;
+    });
+
+    return {
+      id: question.id,
+      instruction: translations?.translated_instruction || question.instruction,
+      type: question.question_type,
+      imageId: question.image_id,
+      choices: choices.map(choice => ({
+        id: choice.id,
+        text: translationMap[choice.id]?.translated_choice_text || choice.text,
+        order: choice.choice_order,
+        isCorrect: choice.is_correct,
+        feedback: translationMap[choice.id]?.translated_feedback || choice.feedback,
+        imageId: choice.image_id
+      }))
+    };
+  } catch (error) {
+    logger.error('Error getting translated question:', error);
+    throw error;
+  }
+};
+
+/**
+ * Obtenir les statistiques de traduction des QCM
+ */
+export const getQuestionnaireTranslationStats = async () => {
+  try {
+    const { data: languages } = await supabase
+      .from('translation_settings')
+      .select('language_code, language_name');
+
+    const { data: questionTranslations } = await supabase
+      .from('questionnaire_question_translations')
+      .select('language_code');
+
+    const { data: choiceTranslations } = await supabase
+      .from('questionnaire_choice_translations')
+      .select('language_code');
+
+    const stats = {};
+    (languages || []).forEach(lang => {
+      const questionCount = (questionTranslations || []).filter(t => t.language_code === lang.language_code).length;
+      const choiceCount = (choiceTranslations || []).filter(t => t.language_code === lang.language_code).length;
+      stats[lang.language_code] = {
+        name: lang.language_name,
+        questions: questionCount,
+        choices: choiceCount
+      };
+    });
+
+    return stats;
+  } catch (error) {
+    logger.error('Error fetching questionnaire translation stats:', error);
+    throw error;
+  }
+};
+
+/**
+ * ========================================
+ * AUTO-TRADUCTION DES QCM
+ * ========================================
+ */
+
+/**
+ * Traduire automatiquement une question de QCM
+ */
+export const autoTranslateQuestionnaireQuestion = async (questionId, instruction, targetLanguage) => {
+  try {
+    if (!instruction || instruction.trim().length === 0) {
+      logger.warn(`Question ${questionId} has empty instruction`);
+      return '';
+    }
+
+    // Si c'est du français (langue par défaut), ne pas traduire
+    if (targetLanguage === 'fr') {
+      return instruction;
+    }
+
+    logger.log(`🌍 Traduction question ${questionId}: "${instruction}" vers ${targetLanguage}`);
+
+    // Récupérer les traductions du glossaire
+    const glossaryTranslations = await getGlossaryTranslations(targetLanguage);
+
+    // Faire une traduction automatique complète
+    let translatedText = instruction;
+    try {
+      translatedText = await autoTranslateText(instruction, targetLanguage);
+      logger.log(`✅ Auto-traduction question: "${instruction}" → "${translatedText}"`);
+    } catch (error) {
+      logger.warn(`⚠️ Auto-translation failed for question ${questionId}:`, error);
+      return instruction;
+    }
+
+    // Remplacer les termes du glossaire par leurs traductions personnalisées
+    if (glossaryTranslations && glossaryTranslations.length > 0) {
+      glossaryTranslations.forEach(trans => {
+        const regex = new RegExp(`\\b${trans.glossary.term}\\b`, 'gi');
+        translatedText = translatedText.replace(regex, trans.translated_term);
+      });
+      logger.log(`🔤 Après glossaire: "${translatedText}"`);
+    }
+
+    return translatedText;
+  } catch (error) {
+    logger.error(`Error auto-translating question ${questionId}:`, error);
+    return instruction;
+  }
+};
+
+/**
+ * Traduire automatiquement une réponse de QCM
+ */
+export const autoTranslateQuestionnaireChoice = async (choiceId, choiceText, targetLanguage) => {
+  try {
+    if (!choiceText || choiceText.trim().length === 0) {
+      logger.warn(`Choice ${choiceId} has empty text`);
+      return '';
+    }
+
+    // Si c'est du français (langue par défaut), ne pas traduire
+    if (targetLanguage === 'fr') {
+      return choiceText;
+    }
+
+    logger.log(`🌍 Traduction choix ${choiceId}: "${choiceText}" vers ${targetLanguage}`);
+
+    // Récupérer les traductions du glossaire
+    const glossaryTranslations = await getGlossaryTranslations(targetLanguage);
+
+    // Faire une traduction automatique complète
+    let translatedText = choiceText;
+    try {
+      translatedText = await autoTranslateText(choiceText, targetLanguage);
+      logger.log(`✅ Auto-traduction réponse: "${choiceText}" → "${translatedText}"`);
+    } catch (error) {
+      logger.warn(`⚠️ Auto-translation failed for choice ${choiceId}:`, error);
+      return choiceText;
+    }
+
+    // Remplacer les termes du glossaire par leurs traductions personnalisées
+    if (glossaryTranslations && glossaryTranslations.length > 0) {
+      glossaryTranslations.forEach(trans => {
+        const regex = new RegExp(`\\b${trans.glossary.term}\\b`, 'gi');
+        translatedText = translatedText.replace(regex, trans.translated_term);
+      });
+      logger.log(`🔤 Après glossaire: "${translatedText}"`);
+    }
+
+    return translatedText;
+  } catch (error) {
+    logger.error(`Error auto-translating choice ${choiceId}:`, error);
+    return choiceText;
+  }
+};
+
+/**
+ * Traduire automatiquement un questionnaire complet
+ * Crée automatiquement toutes les traductions pour toutes les questions et réponses
+ */
+export const autoTranslateQuestionnaire = async (taskId, languageCode, onProgress = null) => {
+  try {
+    if (languageCode === 'fr') {
+      logger.log('Skipping auto-translation for French (default language)');
+      return { success: true, message: 'Traduction non nécessaire pour le français' };
+    }
+
+    logger.log(`🚀 Début auto-traduction questionnaire ${taskId} en ${languageCode}`);
+
+    // Récupérer toutes les questions du questionnaire
+    const { data: questionsData, error: questionsError } = await supabase
+      .from('questionnaire_questions')
+      .select(`
+        id,
+        instruction,
+        questionnaire_choices (
+          id,
+          text
+        )
+      `)
+      .eq('task_id', taskId);
+
+    if (questionsError) throw questionsError;
+    if (!questionsData || questionsData.length === 0) {
+      throw new Error('Aucune question trouvée');
+    }
+
+    logger.log(`📊 Questionnaire ${taskId}: ${questionsData.length} questions trouvées`, questionsData);
+
+    let translatedCount = 0;
+    const totalQuestions = questionsData.length;
+    let currentItemIndex = 0;
+
+    // Compter le nombre total d'éléments (questions + réponses)
+    let totalItems = 0;
+    const allItems = [];
+    questionsData.forEach(question => {
+      totalItems++; // La question elle-même
+      allItems.push({ type: 'question', data: question });
+      
+      if (question.questionnaire_choices && question.questionnaire_choices.length > 0) {
+        question.questionnaire_choices.forEach(choice => {
+          totalItems++;
+          allItems.push({ type: 'choice', data: choice, questionId: question.id });
+        });
+      }
+    });
+
+    logger.log(`📊 Total d'éléments à traduire: ${totalItems} (${totalQuestions} questions)`);
+
+    // Traiter chaque élément
+    for (const item of allItems) {
+      currentItemIndex++;
+
+      try {
+        if (item.type === 'question') {
+          const question = item.data;
+          logger.log(`🌍 Traduction question ${question.id}: "${question.instruction}"`);
+          
+          const translatedInstruction = await autoTranslateQuestionnaireQuestion(
+            question.id,
+            question.instruction,
+            languageCode
+          );
+
+          logger.log(`✨ Traduction obtenue: "${translatedInstruction}"`);
+
+          // Créer la traduction
+          const result = await createQuestionnaireQuestionTranslation(
+            question.id,
+            languageCode,
+            translatedInstruction
+          );
+          
+          logger.log(`💾 Traduction créée en BDD:`, result);
+
+          translatedCount++;
+          logger.log(`✅ Question traduite (${currentItemIndex}/${totalItems})`);
+        } else if (item.type === 'choice') {
+          const choice = item.data;
+          logger.log(`🌍 Traduction choix ${choice.id}: "${choice.text}"`);
+          
+          const translatedChoiceText = await autoTranslateQuestionnaireChoice(
+            choice.id,
+            choice.text,
+            languageCode
+          );
+
+          logger.log(`✨ Traduction obtenue: "${translatedChoiceText}"`);
+
+          // Créer la traduction
+          const result = await createQuestionnaireChoiceTranslation(
+            choice.id,
+            languageCode,
+            translatedChoiceText
+          );
+          
+          logger.log(`💾 Traduction créée en BDD:`, result);
+
+          translatedCount++;
+          logger.log(`✅ Réponse traduite (${currentItemIndex}/${totalItems})`);
+        }
+
+        if (onProgress) {
+          onProgress({
+            current: currentItemIndex,
+            total: totalItems,
+            message: `${currentItemIndex}/${totalItems} éléments traduits`
+          });
+        }
+      } catch (error) {
+        logger.warn(`⚠️ Erreur traduction élément ${currentItemIndex}:`, error);
+      }
+
+      // Ajouter un délai pour éviter les limites de taux de l'API
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+
+    logger.log(`✅ Auto-traduction complétée: ${translatedCount}/${totalItems} éléments traduits`);
+
+    return {
+      success: true,
+      message: `${translatedCount}/${totalItems} éléments traduits avec succès`,
+      translated: translatedCount,
+      total: totalItems
+    };
+  } catch (error) {
+    logger.error('Error auto-translating questionnaire:', error);
     throw error;
   }
 };

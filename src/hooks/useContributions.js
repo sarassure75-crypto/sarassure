@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   getMyContributions,
   getPendingContributions,
@@ -23,7 +23,7 @@ export function useContributions(userId, filters = {}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchContributions = async () => {
+  const fetchContributions = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -36,13 +36,13 @@ export function useContributions(userId, filters = {}) {
     }
 
     setLoading(false);
-  };
+  }, [userId, filters]);
 
   useEffect(() => {
     if (userId) {
       fetchContributions();
     }
-  }, [userId, JSON.stringify(filters)]);
+  }, [userId, fetchContributions]);
 
   return {
     contributions,
@@ -63,7 +63,7 @@ export function useContributorStats(userId) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -76,13 +76,13 @@ export function useContributorStats(userId) {
     }
 
     setLoading(false);
-  };
+  }, [userId]);
 
   useEffect(() => {
     if (userId) {
       fetchStats();
     }
-  }, [userId]);
+  }, [userId, fetchStats]);
 
   return {
     stats,
@@ -104,7 +104,7 @@ export function usePendingContributions(filters = {}) {
   const [error, setError] = useState(null);
   const [count, setCount] = useState(0);
 
-  const fetchPendingContributions = async () => {
+  const fetchPendingContributions = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -118,11 +118,11 @@ export function usePendingContributions(filters = {}) {
     }
 
     setLoading(false);
-  };
+  }, [filters]);
 
   useEffect(() => {
     fetchPendingContributions();
-  }, [JSON.stringify(filters)]);
+  }, [fetchPendingContributions]);
 
   return {
     contributions,

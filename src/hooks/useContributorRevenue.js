@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getContributorRevenue } from '@/data/contributorRevenue';
 
 /**
@@ -11,7 +11,7 @@ export function useContributorRevenue(contributorId) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchRevenue = async () => {
+  const fetchRevenue = useCallback(async () => {
     if (!contributorId) {
       setLoading(false);
       return;
@@ -29,13 +29,11 @@ export function useContributorRevenue(contributorId) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [contributorId]);
 
   useEffect(() => {
-    if (contributorId) {
-      fetchRevenue();
-    }
-  }, [contributorId]);
+    fetchRevenue();
+  }, [fetchRevenue]);
 
   return {
     revenue,

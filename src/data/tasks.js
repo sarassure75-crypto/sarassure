@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabaseClient';
 import { invalidateAllCaches } from '@/lib/retryUtils';
+import { logger } from '@/lib/logger';
 
     export const actionTypes = [
       { id: 'tap', label: 'Tap' },
@@ -31,13 +32,13 @@ import { invalidateAllCaches } from '@/lib/retryUtils';
       { id: 'rejected', label: 'Rejeté', color: 'bg-red-500' },
     ];
 
-    export const fetchTaskCategories = async (forceRefresh = false) => {
+    export const fetchTaskCategories = async () => {
       try {
         const { data, error } = await supabase.from('task_categories').select('id, name').order('name');
         if (error) throw error;
         return data;
       } catch (error) {
-        console.error("Error fetching task categories:", error);
+        logger.error("Error fetching task categories:", error);
         return [];
       }
     };
@@ -63,18 +64,18 @@ import { invalidateAllCaches } from '@/lib/retryUtils';
         const { data: tasks, error: tasksError } = await query.order('created_at', { ascending: false });
 
         if (tasksError) {
-          console.error('Supabase error in fetchTasks:', tasksError);
+          logger.error('Supabase error in fetchTasks:', tasksError);
           throw tasksError;
         }
 
-        console.log('=== DEBUG fetchTasks: Tâches brutes reçues ===', tasks);
+        logger.log('=== DEBUG fetchTasks: Tâches brutes reçues ===', tasks);
         
         // Log spécial pour les questionnaires
         const questionnairesTasks = tasks.filter(t => t.task_type === 'questionnaire');
         if (questionnairesTasks.length > 0) {
-          console.log('=== DEBUG fetchTasks: Questionnaires trouvés ===', questionnairesTasks.length);
+          logger.log('=== DEBUG fetchTasks: Questionnaires trouvés ===', questionnairesTasks.length);
           questionnairesTasks.forEach(q => {
-            console.log(`QCM "${q.title}": versions=${q.versions?.length || 0}`, q.versions);
+            logger.log(`QCM "${q.title}": versions=${q.versions?.length || 0}`, q.versions);
           });
         }
 
@@ -86,11 +87,11 @@ import { invalidateAllCaches } from '@/lib/retryUtils';
           })).sort((a,b) => new Date(a.created_at) - new Date(b.created_at))
         }));
         
-        console.log('=== DEBUG fetchTasks: Tâches traitées finales ===', processedTasks);
+        logger.log('=== DEBUG fetchTasks: Tâches traitées finales ===', processedTasks);
         
         return processedTasks;
       } catch (error) {
-        console.error('Error processing tasks in fetchTasks:', error);
+        logger.error('Error processing tasks in fetchTasks:', error);
         return [];
       }
     };
@@ -260,7 +261,7 @@ import { invalidateAllCaches } from '@/lib/retryUtils';
 
     export const upsertManySteps = async (stepsData) => {
         try {
-            const cleanStepsData = stepsData.map(({ isNew, ...rest }) => rest);
+            const cleanStepsData = stepsData.map(({ isNew: _isNew, ...rest }) => rest);
             
             // Séparer les nouvelles étapes des mises à jour
             const newSteps = cleanStepsData.filter(s => !s.id);
@@ -306,14 +307,30 @@ import { invalidateAllCaches } from '@/lib/retryUtils';
             
             // Mettre à jour les étapes existantes
             if (updateSteps.length > 0) {
-              // Pour les updates: ne pas toucher à created_at, juste mettre à jour updated_at
-              const stepsWithTimestamps = updateSteps.map(step => {
-                const { created_at, ...stepWithoutCreatedAt } = step;
-                return {
-                  ...stepWithoutCreatedAt,
-                  updated_at: new Date().toISOString()
-                };
+              // Pour les updates: faire d'abord un fetch pour récupérer created_at existant
+              const stepIds = updateSteps.map(s => s.id);
+              const { data: existingSteps, error: fetchError } = await supabase
+                .from('steps')
+                .select('id, created_at')
+                .in('id', stepIds);
+              
+              if (fetchError) {
+                console.error("Error fetching existing steps:", fetchError);
+                throw fetchError;
+              }
+              
+              // Créer une map des created_at existants
+              const createdAtMap = {};
+              existingSteps?.forEach(s => {
+                createdAtMap[s.id] = s.created_at;
               });
+              
+              // Ajouter created_at et updated_at à chaque étape
+              const stepsWithTimestamps = updateSteps.map(step => ({
+                ...step,
+                created_at: createdAtMap[step.id] || step.created_at || new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              }));
               
               const { data, error } = await supabase
                 .from('steps')

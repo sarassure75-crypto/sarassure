@@ -1,0 +1,25 @@
+@echo off
+REM Installation script for development dependencies (Windows)
+REM Usage: install-dev.bat
+
+echo.
+echo 📦 Installing development dependencies...
+echo.
+
+npm install -D eslint eslint-plugin-react eslint-plugin-react-hooks prettier vitest @vitest/ui husky
+
+echo.
+echo 🪝 Setting up git hooks...
+call npx husky install
+
+echo.
+echo ✅ Development dependencies installed!
+echo.
+echo 📝 Next steps:
+echo 1. Run 'npm run quality' to check code
+echo 2. Run 'npm test' to run tests
+echo 3. Configure Sentry (optional):
+echo    - npm install @sentry/react
+echo    - Add VITE_SENTRY_DSN to .env.production
+echo.
+pause

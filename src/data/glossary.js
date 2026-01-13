@@ -8,6 +8,7 @@ import { logger } from '@/lib/logger';
 
 /**
  * Récupérer tous les termes du lexique actifs
+import { logger } from '@/lib/logger';
  */
 export const getAllGlossaryTerms = async () => {
   try {
@@ -21,7 +22,7 @@ export const getAllGlossaryTerms = async () => {
     
     // Debug: vérifier les variantes chargées
     if (data && data.length > 0) {
-      console.log('Termes chargés avec variantes:', data.map(t => ({ term: t.term, variants: t.variants })));
+      logger.log('Termes chargés avec variantes:', data.map(t => ({ term: t.term, variants: t.variants })));
     }
     
     return data || [];

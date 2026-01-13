@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase, getImageUrl } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,10 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { AlertTriangle, ChevronLeft, CheckCircle, XCircle, Home, Volume2, Type } from 'lucide-react';
+import { AlertTriangle, ChevronLeft, CheckCircle, XCircle, Home, Volume2, Type, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
+import {
+  getAvailableLanguages,
+  getQuestionnaireQuestionTranslations,
+  getQuestionnaireChoiceTranslations
+} from '@/data/translation';
 
 /**
  * QuestionnairePlayerPage
@@ -32,10 +37,140 @@ const QuestionnairePlayerPage = () => {
   const [score, setScore] = useState(0);
   const [textZoom, setTextZoom] = useState(1);
   const [showTextZoomMenu, setShowTextZoomMenu] = useState(false);
+  const [currentLanguage, setCurrentLanguageState] = useState('fr'); // Sera mis à jour après la récupération de user
+  const [preferredLanguageFromProfile, setPreferredLanguageFromProfile] = useState('fr'); // La vraie langue préférée du profil
+  const [availableLanguages, setAvailableLanguages] = useState([]);
+  const [questionTranslations, setQuestionTranslations] = useState({});
+  const [choiceTranslations, setChoiceTranslations] = useState({});
+
+  // ============ LANGUAGE MANAGEMENT (APRÈS currentUser) ============
+  // Wrapper pour sauvegarder la langue (dans le profil ET localStorage)
+  const setCurrentLanguage = useCallback(async (lang) => {
+    setCurrentLanguageState(lang);
+    try {
+      localStorage.setItem('preferredLanguage', lang);
+      // Sauvegarder dans le profil utilisateur SEULEMENT si ce n'est pas le français (FR est la langue par défaut)
+      if (currentUser?.id && lang !== 'fr') {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ preferred_translation_language: lang })
+          .eq('id', currentUser.id);
+        
+        if (error) {
+          console.error('Error saving language to profile:', error);
+        }
+      }
+    } catch (error) {
+      console.error('Error saving language preference:', error);
+    }
+  }, [currentUser?.id]);
+
+  // Charger la langue préférée du profil au démarrage
+  useEffect(() => {
+    const loadUserLanguage = async () => {
+      if (currentUser?.id) {
+        try {
+          const { data } = await supabase
+            .from('profiles')
+            .select('preferred_translation_language')
+            .eq('id', currentUser.id)
+            .single();
+          
+          if (data?.preferred_translation_language) {
+            // Sauvegarder la vraie langue préférée du profil
+            const prefLang = data.preferred_translation_language;
+            setPreferredLanguageFromProfile(prefLang);
+            localStorage.setItem('preferredLanguage', prefLang);
+            
+            // Si la langue préférée n'est pas FR, la charger comme langue actuelle
+            if (prefLang !== 'fr') {
+              setCurrentLanguageState(prefLang);
+            }
+          }
+        } catch (error) {
+          console.error('Error loading user language preference:', error);
+        }
+      }
+    };
+
+    loadUserLanguage();
+  }, [currentUser?.id]);
 
   useEffect(() => {
     fetchQuestionnaireData();
+    fetchLanguages();
   }, [taskId]);
+
+  // Charger les langues disponibles
+  const fetchLanguages = async () => {
+    try {
+      const langs = await getAvailableLanguages();
+      setAvailableLanguages(langs);
+    } catch (error) {
+      logger.error('Error fetching languages:', error);
+    }
+  };
+
+  // Fermer les menus avec Échap et clic extérieur
+  useEffect(() => {
+    const handleEscapeKey = (e) => {
+      if (e.key === 'Escape') {
+        setShowTextZoomMenu(false);
+      }
+    };
+
+    const handleClickOutside = () => {
+      setShowTextZoomMenu(false);
+    };
+
+    document.addEventListener('keydown', handleEscapeKey);
+    document.addEventListener('click', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey);
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
+
+  // Charger les traductions quand la langue change
+  useEffect(() => {
+    if (currentLanguage !== 'fr') {
+      loadTranslations(currentLanguage);
+    } else {
+      setQuestionTranslations({});
+      setChoiceTranslations({});
+    }
+  }, [currentLanguage]);
+
+  const loadTranslations = async (languageCode) => {
+    try {
+      logger.log(`🌍 Chargement des traductions pour ${languageCode}...`);
+      const [qTrans, cTrans] = await Promise.all([
+        getQuestionnaireQuestionTranslations(languageCode),
+        getQuestionnaireChoiceTranslations(languageCode)
+      ]);
+
+      logger.log(`📚 Questions translations trouvées: ${qTrans.length}`, qTrans);
+      logger.log(`📚 Choices translations trouvées: ${cTrans.length}`, cTrans);
+
+      // Créer des maps pour accès rapide
+      const qTransMap = {};
+      qTrans.forEach(t => {
+        qTransMap[t.question_id] = t.translated_instruction;
+      });
+      setQuestionTranslations(qTransMap);
+      logger.log('📍 Question translations map:', qTransMap);
+
+      const cTransMap = {};
+      cTrans.forEach(t => {
+        cTransMap[t.choice_id] = t.translated_choice_text;
+      });
+      setChoiceTranslations(cTransMap);
+      logger.log('📍 Choice translations map:', cTransMap);
+    } catch (error) {
+      logger.error('Error loading translations:', error);
+    }
+  };
 
   const fetchQuestionnaireData = async () => {
     try {
@@ -87,26 +222,32 @@ const QuestionnairePlayerPage = () => {
       }
 
       // Formater les questions avec les réponses
-      const formattedQuestions = questionsData.map(q => ({
-        id: q.id,
-        instruction: q.instruction,
-        type: q.question_type,
-        image: q.app_images ? {
-          id: q.app_images.id,
-          name: q.app_images.name,
-          filePath: q.app_images.file_path
-        } : null,
-        choices: (q.questionnaire_choices || []).sort((a, b) => a.choice_order - b.choice_order).map(c => ({
+      const formattedQuestions = questionsData.map(q => {
+        const formattedChoices = (q.questionnaire_choices || []).sort((a, b) => a.choice_order - b.choice_order).map(c => ({
           id: c.id,
-          text: c.text,
+          text: c.text, // Le champ s'appelle 'text', pas 'choice_text'
           image: c.app_images ? {
             id: c.app_images.id,
             name: c.app_images.name,
             filePath: c.app_images.file_path
           } : null,
           isCorrect: c.is_correct
-        }))
-      }));
+        }));
+        
+        logger.log(`📝 Question "${q.instruction}" - Choices:`, formattedChoices.map(c => ({ id: c.id, text: c.text })));
+        
+        return {
+          id: q.id,
+          instruction: q.instruction,
+          type: q.question_type,
+          image: q.app_images ? {
+            id: q.app_images.id,
+            name: q.app_images.name,
+            filePath: q.app_images.file_path
+          } : null,
+          choices: formattedChoices
+        };
+      });
       
       logger.log('✅ Formatted questions:', formattedQuestions);
 
@@ -146,17 +287,18 @@ const QuestionnairePlayerPage = () => {
   const playAudio = (textToSpeak) => {
     if ('speechSynthesis' in window && textToSpeak) {
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      utterance.lang = 'fr-FR';
+      utterance.lang = currentLanguage === 'fr' ? 'fr-FR' : 'en-US';
       utterance.rate = 1;
       utterance.pitch = 1.2;
       utterance.volume = 1;
       
-      // Chercher une voix féminine française
+      // Chercher une voix féminine de la langue appropriée
       const voices = window.speechSynthesis.getVoices();
+      const langPrefix = currentLanguage === 'fr' ? 'fr' : 'en';
       const femaleVoice = voices.find(voice => 
-        voice.lang.startsWith('fr') && voice.name.toLowerCase().includes('female')
+        voice.lang.startsWith(langPrefix) && voice.name.toLowerCase().includes('female')
       ) || voices.find(voice => 
-        voice.lang.startsWith('fr')
+        voice.lang.startsWith(langPrefix)
       );
       
       if (femaleVoice) {
@@ -172,6 +314,23 @@ const QuestionnairePlayerPage = () => {
         variant: "destructive"
       });
     }
+  };
+
+  // Obtenir le texte traduit ou original
+  const getQuestionText = (question) => {
+    if (currentLanguage !== 'fr' && questionTranslations[question.id]) {
+      return questionTranslations[question.id];
+    }
+    return question.instruction;
+  };
+
+  const getChoiceText = (choice) => {
+    const translated = choiceTranslations[choice.id];
+    const result = currentLanguage !== 'fr' && translated ? translated : choice.text;
+    if (!result) {
+      logger.warn(`⚠️ Choice ${choice.id} has no text! translated=${translated}, choice.text=${choice.text}, currentLanguage=${currentLanguage}`);
+    }
+    return result;
   };
 
   const calculateScore = () => {
@@ -329,12 +488,26 @@ const QuestionnairePlayerPage = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => playAudio(currentQuestion.instruction)}
+              onClick={() => playAudio(getQuestionText(currentQuestion))}
               title="Lire l'instruction audio"
               className="flex items-center gap-2 hover:bg-gray-100"
             >
               <Volume2 className="h-4 w-4" />
               <span className="hidden sm:inline">Écouter</span>
+            </Button>
+          )}
+
+          {/* Sélecteur de langue - Switch simple FR/Langue préférée */}
+          {preferredLanguageFromProfile !== 'fr' && (
+            <Button
+              variant={currentLanguage === 'fr' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setCurrentLanguage(currentLanguage === 'fr' ? preferredLanguageFromProfile : 'fr')}
+              title={`Basculer entre Français et ${preferredLanguageFromProfile.toUpperCase()}`}
+              className="flex items-center gap-2"
+            >
+              <Globe className="h-4 w-4" />
+              <span className="text-sm font-medium">{currentLanguage.toUpperCase()}</span>
             </Button>
           )}
 
@@ -355,6 +528,7 @@ const QuestionnairePlayerPage = () => {
             {showTextZoomMenu && (
               <div 
                 className="absolute bg-white border-2 border-gray-300 rounded-lg shadow-xl z-50 min-w-[160px] top-full mt-2 right-0"
+                onMouseLeave={() => setShowTextZoomMenu(false)}
               >
                 <div className="p-2">
                   <p className="text-xs font-semibold text-gray-600 mb-2 px-2">Taille du texte:</p>
@@ -409,7 +583,9 @@ const QuestionnairePlayerPage = () => {
               {/* Question Card */}
               <Card className="border-2 border-blue-500 shadow-lg mb-6">
                 <CardHeader className="bg-blue-50 border-b-2 border-blue-500">
-                  <CardTitle className="text-blue-700" style={{ fontSize: `${100 * textZoom}%` }}>{currentQuestion.instruction}</CardTitle>
+                  <CardTitle className="text-blue-700" style={{ fontSize: `${100 * textZoom}%` }}>
+                    {getQuestionText(currentQuestion)}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6 space-y-6">
                   {/* Question Image - Conteneur dédié */}
@@ -438,54 +614,63 @@ const QuestionnairePlayerPage = () => {
                   <div>
                     <p className="text-xs font-semibold text-gray-600 mb-3 uppercase tracking-wide">Sélectionnez votre réponse</p>
                     <div className="space-y-3">
-                    {currentQuestion.choices.map(choice => (
-                      <motion.button
-                        key={choice.id}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => handleSelectAnswer(currentQuestion.id, choice.id)}
-                        className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
-                          selectedAnswerId === choice.id
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/50'
-                        }`}
-                      >
-                      <div className="space-y-3">
-                        <div className="flex items-start gap-3">
-                          <div
-                            className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center mt-1 ${
-                              selectedAnswerId === choice.id
-                                ? 'border-blue-500 bg-blue-500'
-                                : 'border-gray-300'
-                            }`}
-                          >
-                            {selectedAnswerId === choice.id && (
-                              <div className="w-2 h-2 bg-white rounded-full"></div>
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <span className="font-medium text-gray-800" style={{ fontSize: `${100 * textZoom}%` }}>{choice.text}</span>
-                          </div>
-                        </div>
-                        {choice.image?.filePath && (() => {
-                          const imageUrl = getImageUrl(choice.image.filePath);
-                          return imageUrl && (
-                            <div className="ml-8 bg-white border border-gray-200 rounded-lg p-2 overflow-hidden">
-                              <img
-                                src={imageUrl}
-                                alt={choice.image.name}
-                                className="max-w-full h-auto max-h-32 object-contain mx-auto"
-                                onError={(e) => {
-                                  console.warn(`Failed to load choice image: ${choice.image.filePath}`);
-                                  e.target.style.display = 'none';
-                                }}
-                              />
+                      {currentQuestion.choices && currentQuestion.choices.length > 0 ? (
+                        currentQuestion.choices.map(choice => {
+                          const choiceText = getChoiceText(choice);
+                          logger.log(`🎯 Rendering choice ${choice.id}: text="${choiceText}"`);
+                          return (
+                        <motion.button
+                          key={choice.id}
+                          type="button"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleSelectAnswer(currentQuestion.id, choice.id)}
+                          className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                            selectedAnswerId === choice.id
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/50'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div
+                              className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center mt-1 ${
+                                selectedAnswerId === choice.id
+                                  ? 'border-blue-500 bg-blue-500'
+                                  : 'border-gray-300'
+                              }`}
+                            >
+                              {selectedAnswerId === choice.id && (
+                                <div className="w-2 h-2 bg-white rounded-full"></div>
+                              )}
                             </div>
+                            <div className="flex-1">
+                              <span className="font-medium text-gray-800" style={{ fontSize: `${100 * textZoom}%` }}>
+                                {choiceText}
+                              </span>
+                            </div>
+                          </div>
+                          {choice.image?.filePath && (() => {
+                            const imageUrl = getImageUrl(choice.image.filePath);
+                            return imageUrl && (
+                              <div className="mt-2 ml-8 bg-white border border-gray-200 rounded-lg p-2 overflow-hidden">
+                                <img
+                                  src={imageUrl}
+                                  alt={choice.image.name}
+                                  className="max-w-full h-auto max-h-32 object-contain mx-auto"
+                                  onError={(e) => {
+                                    console.warn(`Failed to load choice image: ${choice.image.filePath}`);
+                                    e.target.style.display = 'none';
+                                  }}
+                                />
+                              </div>
+                            );
+                          })()}
+                        </motion.button>
                           );
-                        })()}
-                      </div>
-                      </motion.button>
-                    ))}
+                        })
+                      ) : (
+                        <p className="text-gray-500">Aucune réponse disponible</p>
+                      )}
                     </div>
                   </div>
                 </CardContent>

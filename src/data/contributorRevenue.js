@@ -21,8 +21,10 @@ export const getContributorRevenue = async (contributorId) => {
       .single();
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        // No data found, return empty structure
+      // Handle both missing data (PGRST116) and view not found (406)
+      if (error.code === 'PGRST116' || error.code === 'PGRST301' || error.status === 406) {
+        // No data found or view doesn't exist, return empty structure
+        console.warn('Contributor revenue summary not available, returning empty structure:', error.message);
         return {
           exercise_sales_count: 0,
           exercise_revenue_cents: 0,
@@ -47,7 +49,16 @@ export const getContributorRevenue = async (contributorId) => {
     };
   } catch (err) {
     console.error('Error fetching contributor revenue:', err);
-    throw err;
+    // Return empty structure on error to prevent page crash
+    return {
+      exercise_sales_count: 0,
+      exercise_revenue_cents: 0,
+      image_sales_count: 0,
+      image_revenue_cents: 0,
+      total_revenue_cents: 0,
+      total_sales_count: 0,
+      milestone_count: 0
+    };
   }
 };
 

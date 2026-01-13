@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 
 /**
  * Créer une table pour les icônes personnalisées (si nécessaire)
@@ -19,14 +20,14 @@ export const initializeCustomIconsTable = async () => {
 
     if (error?.code === 'PGRST116') {
       // La table n'existe pas, créer la structure (via migration)
-      console.log('Table custom_icon_collections n\'existe pas. Migration requise.');
+      logger.log("Table custom_icon_collections n'existe pas. Migration requise.");
       return false;
     }
 
-    console.log('Table custom_icon_collections prête.');
+    logger.log('Table custom_icon_collections prête.');
     return true;
   } catch (error) {
-    console.error('Erreur vérification table:', error);
+    logger.error('Erreur vérification table:', error);
     return false;
   }
 };
@@ -52,13 +53,13 @@ export const addIconToCollection = async (collectionId, iconData) => {
       .select();
 
     if (error) {
-      console.error('Erreur ajout icône:', error);
+      logger.error('Erreur ajout icône:', error);
       return null;
     }
 
     return data[0];
   } catch (error) {
-    console.error('Erreur:', error);
+    logger.error('Erreur:', error);
     return null;
   }
 };
@@ -75,13 +76,13 @@ export const getCollection = async (collectionId) => {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Erreur récupération collection:', error);
+      logger.error('Erreur récupération collection:', error);
       return [];
     }
 
     return data || [];
   } catch (error) {
-    console.error('Erreur:', error);
+    logger.error('Erreur:', error);
     return [];
   }
 };
@@ -97,13 +98,13 @@ export const removeIconFromCollection = async (iconId) => {
       .eq('id', iconId);
 
     if (error) {
-      console.error('Erreur suppression icône:', error);
+      logger.error('Erreur suppression icône:', error);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Erreur:', error);
+    logger.error('Erreur:', error);
     return false;
   }
 };
@@ -126,13 +127,13 @@ export const createCollection = async (userId, collectionName, description) => {
       .select();
 
     if (error) {
-      console.error('Erreur création collection:', error);
+      logger.error('Erreur création collection:', error);
       return null;
     }
 
     return data[0];
   } catch (error) {
-    console.error('Erreur:', error);
+    logger.error('Erreur:', error);
     return null;
   }
 };
@@ -149,13 +150,13 @@ export const getUserCollections = async (userId) => {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Erreur récupération collections:', error);
+      logger.error('Erreur récupération collections:', error);
       return [];
     }
 
     return data || [];
   } catch (error) {
-    console.error('Erreur:', error);
+    logger.error('Erreur:', error);
     return [];
   }
 };
@@ -202,13 +203,13 @@ export const importCollection = async (file, collectionId) => {
       .select();
 
     if (error) {
-      console.error('Erreur import:', error);
+      logger.error('Erreur import:', error);
       return null;
     }
 
     return data;
   } catch (error) {
-    console.error('Erreur:', error);
+    logger.error('Erreur:', error);
     return null;
   }
 };

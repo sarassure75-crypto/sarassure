@@ -3,6 +3,7 @@
  * Les logs de debug ne s'affichent qu'en développement
  * Les erreurs s'affichent toujours
  */
+/* eslint-disable no-console */
 export const logger = {
   /**
    * Log de debug (seulement en DEV)

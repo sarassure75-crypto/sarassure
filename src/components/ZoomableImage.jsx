@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X } from 'lucide-react';
 import ImageFromSupabase from './ImageFromSupabase';
@@ -56,7 +56,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
   const [mainImageSrc, setMainImageSrc] = useState(null);
   
   // Offset de l'image dans le conteneur
-  const [imageOffset, setImageOffset] = useState({ x: 0, y: 0 });
+  const [imageOffset, setImageOffset] = useState({ x: 0, y: 0, width: 0, height: 0 });
   
   // Select appropriate zone based on action type
   const actionArea = ['tap', 'double_tap', 'long_press', 'swipe_left', 'swipe_right', 'swipe_up', 'swipe_down', 'scroll', 'drag_and_drop', 'bravo'].includes(actionType) ? startArea : targetArea;
@@ -125,25 +125,44 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
     }
   }, [showTextInput]);
 
+  const recalcImageOffset = useCallback(() => {
+    if (!containerRef.current || !imageRef.current) return;
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const imgRect = imageRef.current.getBoundingClientRect();
+    // Account for scroll position and calculate relative to container viewport
+    const relativeX = imgRect.left - containerRect.left;
+    const relativeY = imgRect.top - containerRect.top;
+    setImageOffset({
+      x: relativeX,
+      y: relativeY,
+      width: imgRect.width,
+      height: imgRect.height,
+      // Store viewport position for pointer validation
+      containerLeft: containerRect.left,
+      containerTop: containerRect.top,
+      containerWidth: containerRect.width,
+      containerHeight: containerRect.height,
+    });
+  }, []);
+
   useEffect(() => {
-    if (imageRef.current) {
-      const handleResize = () => {
-        if (imageRef.current) {
-          setImageOffset({
-            x: imageRef.current.offsetLeft,
-            y: imageRef.current.offsetTop,
-          });
-        }
-      };
+    if (!imageRef.current) return;
 
-      // Initial calculation
-      handleResize();
+    const handleResize = () => recalcImageOffset();
 
-      // Recalculate on window resize
-      window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
-    }
-  }, [imageId, isZoomed]);
+    // Initial calculation
+    handleResize();
+
+    // Recalculate on window resize
+    window.addEventListener('resize', handleResize);
+    // Also recalculate on scroll in case container scrolls
+    window.addEventListener('scroll', handleResize, true);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleResize, true);
+    };
+  }, [imageId, isZoomed, recalcImageOffset]);
 
   if (!imageId) {
     return (
@@ -212,11 +231,30 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
     // Pour bravo, pas de vérification de zone - n'importe quel tap sur l'image valide
     if (actionType === 'bravo') return true;
     
-    if (!actionArea) return false;
-    const rect = containerRef.current?.querySelector('[data-action-zone]')?.getBoundingClientRect();
-    if (!rect) return true;
-    return event.clientX >= rect.left && event.clientX <= rect.right &&
-           event.clientY >= rect.top && event.clientY <= rect.bottom;
+    if (!actionArea || !imageOffset.width) return false;
+    
+    // Use pre-calculated imageOffset for consistency with rendered position
+    const imgW = imageOffset.width;
+    const imgH = imageOffset.height;
+    const xPercent = actionArea.x_percent ?? actionArea.x ?? 0;
+    const yPercent = actionArea.y_percent ?? actionArea.y ?? 0;
+    const wPercent = actionArea.width_percent ?? actionArea.width ?? 0;
+    const hPercent = actionArea.height_percent ?? actionArea.height ?? 0;
+    
+    const zoneLft = imageOffset.x + (xPercent * imgW) / 100;
+    const zoneTop = imageOffset.y + (yPercent * imgH) / 100;
+    const zoneRgt = zoneLft + (wPercent * imgW) / 100;
+    const zoneBot = zoneTop + (hPercent * imgH) / 100;
+    
+    // Calculate pointer position relative to container, not viewport
+    const containerRect = containerRef.current?.getBoundingClientRect();
+    if (!containerRect) return false;
+    
+    const pointerX = event.clientX - containerRect.left;
+    const pointerY = event.clientY - containerRect.top;
+    
+    return pointerX >= zoneLft && pointerX <= zoneRgt &&
+           pointerY >= zoneTop && pointerY <= zoneBot;
   };
 
   const handlePointerUp = (event) => {
@@ -388,15 +426,30 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
     return labels[actionType] || 'l\'action attendue';
   };
 
-  const getAreaStyle = (area) => ({
-    position: 'absolute',
-    left: `${imageOffset.x + (area.x_percent ?? area.x ?? 0) * (imageRef.current?.offsetWidth || 0) / 100}px`,
-    top: `${imageOffset.y + (area.y_percent ?? area.y ?? 0) * (imageRef.current?.offsetHeight || 0) / 100}px`,
-    width: `${area.width_percent ?? area.width ?? 0}%`,
-    height: `${area.height_percent ?? area.height ?? 0}%`,
-    // PAS de transform translate car x_percent/y_percent sont déjà le coin supérieur gauche
-    borderRadius: area.shape === 'ellipse' ? '50%' : '8px',
-  });
+  const getAreaStyle = (area) => {
+    const imgW = imageOffset.width || imageRef.current?.offsetWidth || 0;
+    const imgH = imageOffset.height || imageRef.current?.offsetHeight || 0;
+    const xPercent = area.x_percent ?? area.x ?? 0;
+    const yPercent = area.y_percent ?? area.y ?? 0;
+    const wPercent = area.width_percent ?? area.width ?? 0;
+    const hPercent = area.height_percent ?? area.height ?? 0;
+
+    // Compute all dimensions relative to the displayed image, not the outer container,
+    // so the action zone aligns even when the image is letterboxed (object-contain).
+    const leftPx = imageOffset.x + (xPercent * imgW) / 100;
+    const topPx = imageOffset.y + (yPercent * imgH) / 100;
+    const widthPx = (wPercent * imgW) / 100;
+    const heightPx = (hPercent * imgH) / 100;
+
+    return {
+      position: 'absolute',
+      left: `${leftPx}px`,
+      top: `${topPx}px`,
+      width: `${widthPx}px`,
+      height: `${heightPx}px`,
+      borderRadius: area.shape === 'ellipse' ? '50%' : '8px',
+    };
+  };
 
   const getAreaBorderStyle = (area) => {
     // Récupérer les paramètres de bordure depuis les données
@@ -540,7 +593,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
   return (
     <div 
       ref={containerRef} 
-      className={cn("relative overflow-hidden w-full h-full flex justify-end items-start", imageContainerClassName)} 
+      className={cn("relative overflow-hidden w-full h-full flex justify-start items-start", imageContainerClassName)} 
       onContextMenu={handleContextMenu}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
@@ -556,7 +609,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
           ref={imageRef}
           imageId={imageId} 
           alt={alt} 
-          className="w-auto h-auto max-w-full max-h-full object-contain"
+          className="w-full h-full object-contain"
           style={{ display: 'block' }}
           onLoad={() => {
             try {
@@ -565,6 +618,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
                 const rect = el.getBoundingClientRect();
                 setMainImageRect({ width: rect.width, height: rect.height });
                 setMainImageSrc(el.src || null);
+                recalcImageOffset();
               }
             } catch (e) {
               // ignore

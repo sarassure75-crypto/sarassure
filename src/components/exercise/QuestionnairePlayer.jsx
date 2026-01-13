@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { supabase, getImageUrl } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -22,8 +22,6 @@ import { v4 as uuidv4 } from 'uuid';
 // Helper pour afficher les icônes
 const renderIcon = (iconString) => {
   if (!iconString) return null;
-  
-  console.log('🎨 renderIcon called with:', iconString);
   
   // Support pour les icônes Iconify colorées (format: "logos:react", "skill-icons:javascript")
   if (iconString.includes(':') && (
@@ -53,8 +51,6 @@ const renderIcon = (iconString) => {
     return null;
   }
   
-  console.log('📚 Library:', library, 'Name:', name);
-  
   const libraries = {
     lucide: LucideIcons,
     fa6: FontAwesome6,
@@ -79,8 +75,22 @@ const renderIcon = (iconString) => {
     return null;
   }
   
-  console.log('✅ Icon found!');
   return <IconComponent size={64} className="text-primary" />;
+};
+
+const isIconReference = (value) => {
+  if (!value || typeof value !== 'string') return false;
+  return (
+    value.startsWith('fa6-') ||
+    value.startsWith('fa-') ||
+    value.startsWith('bs-') ||
+    value.startsWith('md-') ||
+    value.startsWith('fi-') ||
+    value.startsWith('hi2-') ||
+    value.startsWith('ai-') ||
+    value.startsWith('lucide-') ||
+    value.includes(':')
+  );
 };
 
 /**
@@ -121,18 +131,57 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
 
       if (error) throw error;
 
-      // Traiter les questions
       const processedQuestions = (data || []).map(step => {
-        const expected = step.expected_input || {};
+        const rawExpected = step.expected_input;
+        let expected = rawExpected;
+
+        if (typeof rawExpected === 'string') {
+          try {
+            expected = JSON.parse(rawExpected);
+          } catch (error) {
+            console.error('Erreur de parsing expected_input pour la question', step.id, error);
+            expected = {};
+          }
+        }
+
+        expected = expected || {};
+
+        const questionType = expected.questionType || expected.type || 'mixed';
+
+        const rawChoices = Array.isArray(expected.choices)
+          ? expected.choices
+          : Array.isArray(expected.answers)
+            ? expected.answers
+            : [];
+
+        const normalizedChoices = rawChoices.map(choice => {
+          const iconId = choice.iconId || choice.icon?.id || (typeof choice.icon === 'string' ? choice.icon : null);
+
+          return {
+            id: choice.id || uuidv4(),
+            text: choice.text || '',
+            imageId: choice.imageId || null,
+            imageName: choice.imageName || '',
+            iconId,
+            icon: choice.icon || null,
+            iconSvg: choice.iconSvg || null,
+            isCorrect: !!choice.isCorrect
+          };
+        });
+
+        const correctAnswers = Array.isArray(expected.correctAnswers) && expected.correctAnswers.length > 0
+          ? expected.correctAnswers
+          : normalizedChoices.filter(c => c.isCorrect).map(c => c.id);
+
         return {
           id: step.id,
           order: step.step_order,
           instruction: step.instruction,
-          questionType: expected.questionType || 'image_choice',
-          imageId: expected.imageId,
-          imageName: expected.imageName,
-          choices: expected.choices || [],
-          correctAnswers: expected.correctAnswers || []
+          questionType,
+          imageId: expected.imageId || null,
+          imageName: expected.imageName || null,
+          choices: normalizedChoices,
+          correctAnswers
         };
       });
 
@@ -443,6 +492,8 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
           {currentQuestion.choices.map((choice, idx) => {
             const choiceId = choice.id || idx;
             const isSelected = selectedAnswers.includes(choiceId);
+            const iconId = choice.iconId || choice.icon?.id || (typeof choice.icon === 'string' ? choice.icon : null) || (isIconReference(choice.imageId) ? choice.imageId : null);
+            const imageId = iconId ? null : choice.imageId;
 
             return (
               <div key={choiceId} className={`flex items-start gap-3 p-3 rounded-lg border-2 transition-all ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
@@ -462,26 +513,16 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
                         <div dangerouslySetInnerHTML={{ __html: choice.iconSvg }} />
                       </div>
                     </div>
-                  ) : (choice.imageId && (
-                    choice.imageId.startsWith('fa6-') || 
-                    choice.imageId.startsWith('fa-') || 
-                    choice.imageId.startsWith('bs-') || 
-                    choice.imageId.startsWith('md-') || 
-                    choice.imageId.startsWith('fi-') || 
-                    choice.imageId.startsWith('hi2-') || 
-                    choice.imageId.startsWith('ai-') || 
-                    choice.imageId.startsWith('lucide-') || 
-                    choice.imageId.includes(':')
-                  )) ? (
+                  ) : iconId ? (
                     <div className="mb-2 flex justify-center">
                       <div className="w-32 h-32 flex items-center justify-center bg-primary/10 rounded-lg">
-                        {renderIcon(choice.imageId)}
+                        {renderIcon(iconId)}
                       </div>
                     </div>
-                  ) : choice.imageId ? (
+                  ) : imageId ? (
                     <div className="mb-2 flex justify-center">
                       <ImageFromSupabase
-                        imageId={choice.imageId}
+                        imageId={imageId}
                         alt={choice.text || 'Réponse'}
                         className="w-32 h-32 rounded object-contain cursor-pointer"
                       />

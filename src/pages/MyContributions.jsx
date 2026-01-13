@@ -4,7 +4,7 @@ import { useContributionActions, useContributorStats } from "../hooks/useContrib
 import { useAuth } from "../contexts/AuthContext";
 import { useContributorRevenue } from "../hooks/useContributorRevenue";
 import { supabase } from '@/lib/supabaseClient';
-import { Edit, Trash2, Eye, Filter, Search, Calendar, TrendingUp, Image as ImageIcon } from 'lucide-react';
+import { Edit, Trash2, Eye, Filter, Search, Calendar, TrendingUp, Image as ImageIcon, FileText, CheckCircle, Clock, XCircle } from 'lucide-react';
 
 export default function MyContributions() {
   const navigate = useNavigate();
