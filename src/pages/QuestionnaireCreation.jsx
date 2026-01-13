@@ -386,16 +386,16 @@ const QuestionnaireCreation = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">Cr├®er un Questionnaire</h1>
+          <h1 className="text-4xl font-bold text-gray-900">Créer un Questionnaire</h1>
           <p className="text-gray-600 mt-2">
-            Cr├®ez un exercice d'apprentissage bas├® sur la s├®lection d'images
+            Créez un exercice d'apprentissage basé sur la sélection d'images
           </p>
         </div>
 
-        {/* Informations g├®n├®rales */}
+        {/* Informations générales */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Informations g├®n├®rales</CardTitle>
+            <CardTitle>Informations générales</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -406,7 +406,7 @@ const QuestionnaireCreation = () => {
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Ex: Identifier les param├¿tres Wi-Fi"
+                placeholder="Ex: Identifier les paramètres Wi-Fi"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -418,7 +418,7 @@ const QuestionnaireCreation = () => {
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="D├®crivez l'objectif de ce questionnaire (optionnel)..."
+                placeholder="Décrivez l'objectif de ce questionnaire (optionnel)..."
                 rows={3}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
@@ -427,14 +427,14 @@ const QuestionnaireCreation = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Cat├®gorie *
+                  Catégorie *
                 </label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">S├®lectionner...</option>
+                  <option value="">Sélectionner...</option>
                   {categories.map((cat) => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
@@ -458,7 +458,7 @@ const QuestionnaireCreation = () => {
             <Card className="border-dashed">
               <CardContent className="flex flex-col items-center justify-center py-12 text-gray-500">
                 <HelpCircle className="w-12 h-12 mb-4 text-gray-300" />
-                <p>Aucune question ajout├®e</p>
+                <p>Aucune question ajoutée</p>
                 <p className="text-sm">Cliquez sur "Ajouter une question" pour commencer</p>
               </CardContent>
             </Card>
@@ -490,7 +490,7 @@ const QuestionnaireCreation = () => {
                       type="text"
                       value={question.text}
                       onChange={(e) => handleUpdateQuestionText(question.id, 'text', e.target.value)}
-                      placeholder="Ex: Quelle capture montre le menu des param├¿tres Wi-Fi?"
+                      placeholder="Ex: Quelle capture montre le menu des paramètres Wi-Fi?"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
@@ -522,7 +522,7 @@ const QuestionnaireCreation = () => {
                           onChange={() => handleChangeQuestionType(question.id, 'image_choice')}
                           className="w-4 h-4"
                         />
-                        <span>R├®ponses : Images uniquement</span>
+                        <span>Réponses : Images uniquement</span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -531,7 +531,7 @@ const QuestionnaireCreation = () => {
                           onChange={() => handleChangeQuestionType(question.id, 'image_text')}
                           className="w-4 h-4"
                         />
-                        <span>R├®ponses : Texte uniquement</span>
+                        <span>Réponses : Texte uniquement</span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -540,18 +540,18 @@ const QuestionnaireCreation = () => {
                           onChange={() => handleChangeQuestionType(question.id, 'mixed')}
                           className="w-4 h-4"
                         />
-                        <span>R├®ponses : Image + Texte</span>
+                        <span>Réponses : Image + Texte</span>
                       </label>
                     </div>
                   </div>
 
-                  {/* R├ëPONSES UNIFI├ëES: Support 6 slots pour tous les types */}
+                  {/* RÉPONSES UNIFIÉES: Support 6 slots pour tous les types */}
                   <div className="space-y-4">
                     <label className="block text-sm font-medium text-gray-700">
-                      R├®ponses possibles (2-6 propositions) *
+                      Réponses possibles (2-6 propositions) *
                     </label>
 
-                    {/* Pour image_choice: S├®lectionnez images */}
+                    {/* Pour image_choice: Sélectionnez des images */}
                     {question.questionType === 'image_choice' && (
                       <div className="space-y-3">
                         {question.choices.map((choice, cIdx) => {
@@ -560,7 +560,7 @@ const QuestionnaireCreation = () => {
                             <div key={choice.id} className="border rounded-lg p-4">
                               <div className="flex items-center justify-between mb-3">
                                 <span className="text-sm font-medium text-gray-700">
-                                  R├®ponse {cIdx + 1}
+                                  Réponse {cIdx + 1}
                                 </span>
                                 <div className="flex gap-2">
                                   <label className="flex items-center gap-2 cursor-pointer">
@@ -647,13 +647,13 @@ const QuestionnaireCreation = () => {
                       <div className="space-y-4">
                         <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                           <p className="text-sm text-blue-900">
-                            ­ƒÆí <strong>Mode Texte Uniquement:</strong> Les r├®ponses sont du texte pur. Aucune image requise pour la question.
+                            <strong>Mode Texte Uniquement:</strong> Les réponses sont du texte pur. Aucune image requise pour la question.
                           </p>
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-3">
-                            R├®ponses texte possibles *
+                            Réponses texte possibles *
                           </label>
                           <div className="space-y-3">
                             {question.choices.map((choice, cIdx) => {
@@ -766,14 +766,14 @@ const QuestionnaireCreation = () => {
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-3">
-                            R├®ponses (image + label) *
+                            Réponses (image + label) *
                           </label>
                           <div className="space-y-3">
                             {question.choices.map((choice, cIdx) => (
                               <div key={choice.id} className="border rounded-lg p-4">
                                 <div className="flex items-center justify-between mb-3">
                                   <span className="text-sm font-medium text-gray-700">
-                                    R├®ponse {cIdx + 1}
+                                    Réponse {cIdx + 1}
                                   </span>
                                   <div className="flex gap-2">
                                     <label className="flex items-center gap-2 cursor-pointer">
@@ -800,7 +800,7 @@ const QuestionnaireCreation = () => {
                                 
                                 <div className="mb-3">
                                   <label className="block text-xs font-medium text-gray-600 mb-2">
-                                    S├®lectionnez une image:
+                                    Sélectionnez une image:
                                   </label>
                                   {choice.imageName ? (
                                     <div className="mb-2 p-2 bg-blue-50 rounded border border-blue-200 flex items-center justify-between">
@@ -849,7 +849,7 @@ const QuestionnaireCreation = () => {
                                 </div>
 
                                 <label className="block text-xs font-medium text-gray-600 mb-2">
-                                  Label texte pour cette r├®ponse:
+                                  Label texte pour cette réponse:
                                 </label>
                                 <input
                                   type="text"
@@ -888,14 +888,14 @@ const QuestionnaireCreation = () => {
             variant="outline"
             className="flex-1"
           >
-            {draftSaved ? 'Ô£ô Brouillon sauvegard├®' : 'Sauvegarder comme brouillon'}
+            {draftSaved ? 'Brouillon sauvegardé' : 'Sauvegarder comme brouillon'}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={loading}
             className="flex-1 bg-blue-600 hover:bg-blue-700"
           >
-            {loading ? 'Cr├®ation en cours...' : 'Cr├®er et soumettre'}
+            {loading ? 'Création en cours...' : 'Créer et soumettre'}
           </Button>
           <Button
             onClick={() => navigate('/contributeur')}
