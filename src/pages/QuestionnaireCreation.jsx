@@ -7,6 +7,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient';
 import { Plus, Trash2, X, CheckCircle, AlertCircle, Image as ImageIcon, HelpCircle } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import IconSelector from '@/components/IconSelector';
 
 const QuestionnaireCreation = () => {
   const navigate = useNavigate();
@@ -31,11 +32,11 @@ const QuestionnaireCreation = () => {
 
   const loadImages = async () => {
     try {
-      // Charger uniquement les images de cat├®gorie 'qcm'
+      // Charger uniquement les images de catégorie 'QCM'
       const { data, error } = await supabase
         .from('app_images')
         .select('id, name, file_path, description, category')
-        .eq('category', 'qcm')
+        .eq('category', 'QCM')
         .order('name');
 
       if (error) throw error;
@@ -70,12 +71,14 @@ const QuestionnaireCreation = () => {
       text: '',
       helpText: '',
       questionType: 'image_choice', // image_choice, image_text, mixed
+      icon: null, // Icône optionnelle de la question
       imageId: null, // Pour image_text et mixed
       imageName: '', // Pour image_text et mixed
       choices: Array(6).fill(null).map(() => ({ 
         id: uuidv4(), 
         imageId: null, 
         imageName: '', 
+        icon: null, // Icône optionnelle de la réponse
         text: '', 
         isCorrect: false 
       }))
@@ -164,52 +167,52 @@ const QuestionnaireCreation = () => {
   const validateForm = () => {
     const errors = [];
     if (!title.trim()) errors.push('Le titre est requis');
-    if (!category) errors.push('La cat├®gorie est requise');
+    if (!category) errors.push('La catégorie est requise');
     if (questions.length === 0) errors.push('Au moins une question est requise');
     
     questions.forEach((q, idx) => {
       if (!q.text.trim()) errors.push(`Question ${idx + 1}: le texte est requis`);
       
       if (q.questionType === 'image_choice') {
-        // Pour image_choice: v├®rifier qu'au moins une image est s├®lectionn├®e
-        const choicesWithImages = q.choices.filter(c => c.imageId);
-        if (choicesWithImages.length === 0) {
-          errors.push(`Question ${idx + 1}: au moins une image est requise`);
+        // Pour image_choice: vérifier qu'au moins une image OU une icône est sélectionnée
+        const choicesWithVisual = q.choices.filter(c => c.imageId || c.icon);
+        if (choicesWithVisual.length === 0) {
+          errors.push(`Question ${idx + 1}: au moins une image ou une icône est requise`);
         }
         
-        // V├®rifier qu'au moins une r├®ponse avec image est marqu├®e correcte
-        const correctAnswers = choicesWithImages.filter(c => c.isCorrect);
+        // Vérifier qu'au moins une réponse avec image ou icône est marquée correcte
+        const correctAnswers = choicesWithVisual.filter(c => c.isCorrect);
         if (correctAnswers.length === 0) {
-          errors.push(`Question ${idx + 1}: au moins une r├®ponse doit ├¬tre marqu├®e correcte`);
+          errors.push(`Question ${idx + 1}: au moins une réponse doit être marquée correcte`);
         }
       } else if (q.questionType === 'image_text') {
-        // Pour image_text: v├®rifier qu'au moins un texte est saisi
-        const choicesWithText = q.choices.filter(c => c.text.trim());
-        if (choicesWithText.length === 0) {
-          errors.push(`Question ${idx + 1}: au moins une r├®ponse texte est requise`);
+        // Pour image_text: vérifier qu'au moins un texte OU une icône est saisi
+        const choicesWithTextOrIcon = q.choices.filter(c => c.text.trim() || c.icon);
+        if (choicesWithTextOrIcon.length === 0) {
+          errors.push(`Question ${idx + 1}: au moins une réponse texte ou une icône est requise`);
         }
         
-        // V├®rifier qu'au moins une r├®ponse texte est marqu├®e correcte
-        const correctAnswers = choicesWithText.filter(c => c.isCorrect);
+        // Vérifier qu'au moins une réponse (texte ou icône) est marquée correcte
+        const correctAnswers = choicesWithTextOrIcon.filter(c => c.isCorrect);
         if (correctAnswers.length === 0) {
-          errors.push(`Question ${idx + 1}: au moins une r├®ponse doit ├¬tre marqu├®e correcte`);
+          errors.push(`Question ${idx + 1}: au moins une réponse doit être marquée correcte`);
         }
       } else if (q.questionType === 'mixed') {
-        // Pour mixed: v├®rifier qu'au moins une image + texte est saisi
-        const choicesWithImages = q.choices.filter(c => c.imageId || c.text.trim());
-        if (choicesWithImages.length === 0) {
-          errors.push(`Question ${idx + 1}: au moins une r├®ponse (image + texte) est requise`);
+        // Pour mixed: vérifier qu'au moins une image, icône ou texte est saisi
+        const choicesWithContent = q.choices.filter(c => c.imageId || c.text.trim() || c.icon);
+        if (choicesWithContent.length === 0) {
+          errors.push(`Question ${idx + 1}: au moins une réponse (image, icône ou texte) est requise`);
         }
         
-        // V├®rifier qu'au moins une r├®ponse est marqu├®e correcte
-        const correctAnswers = choicesWithImages.filter(c => c.isCorrect);
+        // Vérifier qu'au moins une réponse est marquée correcte
+        const correctAnswers = choicesWithContent.filter(c => c.isCorrect);
         if (correctAnswers.length === 0) {
-          errors.push(`Question ${idx + 1}: au moins une r├®ponse doit ├¬tre marqu├®e correcte`);
+          errors.push(`Question ${idx + 1}: au moins une réponse doit être marquée correcte`);
         }
         
-        // Image question est requise pour mixed
-        if (!q.imageId) {
-          errors.push(`Question ${idx + 1}: une image est requise pour ce type de question`);
+        // Image ou icône de question est requise pour mixed
+        if (!q.imageId && !q.icon) {
+          errors.push(`Question ${idx + 1}: une image ou une icône est requise pour ce type de question`);
         }
       }
     });
@@ -242,8 +245,8 @@ const QuestionnaireCreation = () => {
     setDraftSaved(true);
     
     toast({
-      title: 'Brouillon sauvegard├®',
-      description: 'Votre questionnaire a ├®t├® sauvegard├® localement'
+      title: 'Brouillon sauvegardé',
+      description: 'Votre questionnaire a été sauvegardé localement'
     });
     
     setTimeout(() => setDraftSaved(false), 3000);
@@ -268,13 +271,13 @@ const QuestionnaireCreation = () => {
       if (!user) {
         toast({
           title: 'Erreur',
-          description: 'Utilisateur non authentifi├®',
+          description: 'Utilisateur non authentifié',
           variant: 'destructive'
         });
         return;
       }
 
-      // Cr├®er la t├óche questionnaire
+      // Créer la tâche questionnaire
       const { data: task, error: taskError } = await supabase
         .from('tasks')
         .insert([{
@@ -289,7 +292,7 @@ const QuestionnaireCreation = () => {
 
       if (taskError) throw taskError;
 
-      // Cr├®er la version questionnaire
+      // Créer la version questionnaire
       const { data: version, error: versionError } = await supabase
         .from('versions')
         .insert([{
@@ -303,36 +306,38 @@ const QuestionnaireCreation = () => {
 
       if (versionError) throw versionError;
 
-      // Sauvegarder les questions avec leurs images ou r├®ponses texte
+      // Sauvegarder les questions avec leurs images, icônes ou réponses texte
       const questionsData = questions.map((q, idx) => {
         let questionData = {};
         
         if (q.questionType === 'image_choice') {
-          // Pour image_choice: filtrer UNIQUEMENT par imageId
-          const filledChoices = q.choices.filter(c => c.imageId);
+          // Pour image_choice: filtrer par imageId ou icône
+          const filledChoices = q.choices.filter(c => c.imageId || c.icon);
           questionData = {
             type: 'image_choice',
             choices: filledChoices.map(c => ({
               id: c.id,
               imageId: c.imageId,
               imageName: c.imageName,
+              icon: c.icon ? { id: c.icon.id, library: c.icon.library, name: c.icon.displayName || c.icon.name } : null,
               isCorrect: c.isCorrect
             }))
           };
         } else if (q.questionType === 'image_text') {
-          // Pour image_text: filtrer UNIQUEMENT par texte
-          const filledChoices = q.choices.filter(c => c.text.trim());
+          // Pour image_text: filtrer par texte ou icône
+          const filledChoices = q.choices.filter(c => c.text.trim() || c.icon);
           questionData = {
             type: 'image_text',
             answers: filledChoices.map(c => ({
               id: c.id,
               text: c.text,
+              icon: c.icon ? { id: c.icon.id, library: c.icon.library, name: c.icon.displayName || c.icon.name } : null,
               isCorrect: c.isCorrect
             }))
           };
         } else if (q.questionType === 'mixed') {
-          // Pour mixed: filtrer par imageId OU texte
-          const filledChoices = q.choices.filter(c => c.imageId || c.text.trim());
+          // Pour mixed: filtrer par imageId, icône OU texte
+          const filledChoices = q.choices.filter(c => c.imageId || c.text.trim() || c.icon);
           questionData = {
             type: 'mixed',
             imageId: q.imageId,
@@ -342,6 +347,7 @@ const QuestionnaireCreation = () => {
               imageId: c.imageId,
               imageName: c.imageName,
               text: c.text,
+              icon: c.icon ? { id: c.icon.id, library: c.icon.library, name: c.icon.displayName || c.icon.name } : null,
               isCorrect: c.isCorrect
             }))
           };
@@ -388,7 +394,7 @@ const QuestionnaireCreation = () => {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900">Créer un Questionnaire</h1>
           <p className="text-gray-600 mt-2">
-            Créez un exercice d'apprentissage basé sur la sélection d'images
+            Créez un exercice d'apprentissage basé sur la sélection d'images, d'icônes ou de texte.
           </p>
         </div>
 
@@ -495,6 +501,19 @@ const QuestionnaireCreation = () => {
                     />
                   </div>
 
+                  {/* Icône de la question (optionnelle) */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Icône de la question (optionnel)
+                    </label>
+                    <IconSelector
+                      selectedIcon={question.icon}
+                      onSelect={(icon) => handleUpdateQuestionText(question.id, 'icon', icon)}
+                      onRemove={() => handleUpdateQuestionText(question.id, 'icon', null)}
+                      libraries={['fa6', 'bs', 'md', 'fi', 'hi2', 'ai', 'logos', 'skill', 'devicon']}
+                    />
+                  </div>
+
                   {/* Texte d'aide */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -572,6 +591,20 @@ const QuestionnaireCreation = () => {
                                     />
                                     <span className="text-xs text-gray-600">Correcte</span>
                                   </label>
+
+                                {/* Icône optionnelle pour cette réponse */}
+                                <div className="mt-3">
+                                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                                    Icône (optionnel)
+                                  </label>
+                                  <IconSelector
+                                    selectedIcon={choice.icon}
+                                    onSelect={(icon) => handleUpdateChoiceText(question.id, choice.id, 'icon', icon)}
+                                    onRemove={() => handleUpdateChoiceText(question.id, choice.id, 'icon', null)}
+                                    libraries={['fa6', 'bs', 'md', 'fi', 'hi2', 'ai', 'logos', 'skill', 'devicon']}
+                                    showLibraryTabs={false}
+                                  />
+                                </div>
                                   {question.choices.length > 2 && (
                                     <Button
                                       variant="ghost"
@@ -693,6 +726,20 @@ const QuestionnaireCreation = () => {
                                     placeholder={`Entrez la proposition ${cIdx + 1}...`}
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                   />
+
+                                  {/* Icône optionnelle pour cette réponse */}
+                                  <div className="mt-3">
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                                      Icône (optionnel)
+                                    </label>
+                                    <IconSelector
+                                      selectedIcon={choice.icon}
+                                      onSelect={(icon) => handleUpdateChoiceText(question.id, choice.id, 'icon', icon)}
+                                      onRemove={() => handleUpdateChoiceText(question.id, choice.id, 'icon', null)}
+                                      libraries={['fa6', 'bs', 'md', 'fi', 'hi2', 'ai', 'logos', 'skill', 'devicon']}
+                                      showLibraryTabs={false}
+                                    />
+                                  </div>
                                 </div>
                               );
                             })}
@@ -858,6 +905,20 @@ const QuestionnaireCreation = () => {
                                   placeholder="Ex: Mode poche, Notifications..."
                                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                                 />
+
+                                {/* Icône optionnelle pour cette réponse */}
+                                <div className="mt-3">
+                                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                                    Icône (optionnel)
+                                  </label>
+                                  <IconSelector
+                                    selectedIcon={choice.icon}
+                                    onSelect={(icon) => handleUpdateChoiceText(question.id, choice.id, 'icon', icon)}
+                                    onRemove={() => handleUpdateChoiceText(question.id, choice.id, 'icon', null)}
+                                    libraries={['fa6', 'bs', 'md', 'fi', 'hi2', 'ai', 'logos', 'skill', 'devicon']}
+                                    showLibraryTabs={false}
+                                  />
+                                </div>
                               </div>
                             ))}
                             {question.choices.length < 6 && (
