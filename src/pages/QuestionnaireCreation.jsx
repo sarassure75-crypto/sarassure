@@ -196,3 +196,43 @@ const ALL_ICONS = [
   ...commerceIconsWithComponent,
   ...educationIconsWithComponent
 ];
+
+/**
+ * QuestionnaireCreation Component
+ * Page for creating questionnaires
+ */
+export default function QuestionnaireCreation() {
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  if (!currentUser) {
+    return (
+      <div className="container mx-auto p-4">
+        <Card className="border-red-200 bg-red-50">
+          <CardHeader>
+            <CardTitle className="text-red-700">Accès refusé</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>Veuillez vous connecter pour créer un questionnaire.</p>
+            <Button onClick={() => navigate('/login')} className="mt-4">Se connecter</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Créer un Questionnaire</CardTitle>
+          <CardDescription>Feature en développement</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p>L'outil de création de questionnaire sera bientôt disponible.</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
