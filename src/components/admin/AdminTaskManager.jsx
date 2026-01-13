@@ -71,51 +71,49 @@ const AdminTaskManager = () => {
             console.log('=== DEBUG: Sauvegarde questions pour nouveau QCM ===');
             console.log('Questions reçues:', JSON.stringify(questions, null, 2));
             
-            // Créer les questions
-            const questionsToInsert = questions.map((q, index) => ({
-              task_id: savedTask.id,
-              instruction: q.instruction,
-              question_order: index + 1,
-              question_type: q.questionType,
-              image_id: q.imageId,
-              image_name: q.imageName
-            }));
+            // Créer la version et les steps avec expected_input JSON
+            const { data: version, error: versionError } = await supabase
+              .from('versions')
+              .insert([{
+                task_id: savedTask.id,
+                name: 'Version 1',
+                version: 1,
+                creation_status: 'pending'
+              }])
+              .select()
+              .single();
 
-            const { data: createdQuestions, error: questionsError } = await supabase
-              .from('questionnaire_questions')
-              .insert(questionsToInsert)
-              .select();
+            if (versionError) throw versionError;
 
-            if (questionsError) throw questionsError;
-            console.log('Questions créées:', createdQuestions);
+            const stepsToInsert = questions.map((q, idx) => {
+              const questionData = {
+                questionType: 'mixed',
+                type: 'mixed',
+                imageId: q.imageId,
+                imageName: q.imageName,
+                choices: q.choices.map(c => ({
+                  id: c.id,
+                  imageId: c.imageId,
+                  imageName: c.imageName,
+                  text: c.text,
+                  isCorrect: q.correctAnswers.includes(c.id)
+                })),
+                correctAnswers: q.correctAnswers
+              };
 
-            // Créer les réponses pour chaque question
-            const choicesToInsert = [];
-            createdQuestions.forEach((createdQuestion, qIndex) => {
-              const originalQuestion = questions[qIndex];
-              if (originalQuestion.choices && originalQuestion.choices.length > 0) {
-                originalQuestion.choices.forEach((choice, cIndex) => {
-                  choicesToInsert.push({
-                    question_id: createdQuestion.id,
-                    text: choice.text,
-                    choice_order: cIndex + 1,
-                    is_correct: originalQuestion.correctAnswers.includes(choice.id),
-                    image_id: choice.imageId,
-                    image_name: choice.imageName
-                  });
-                });
-              }
+              return {
+                version_id: version.id,
+                step_order: idx + 1,
+                instruction: q.instruction,
+                expected_input: JSON.stringify(questionData)
+              };
             });
 
-            if (choicesToInsert.length > 0) {
-              const { data: choicesData, error: choicesError } = await supabase
-                .from('questionnaire_choices')
-                .insert(choicesToInsert)
-                .select();
+            const { error: stepsError } = await supabase
+              .from('steps')
+              .insert(stepsToInsert);
 
-              if (choicesError) throw choicesError;
-              console.log('Réponses créées:', choicesData);
-            }
+            if (stepsError) throw stepsError;
 
             toast({ title: "Questions sauvegardées", description: "Les questions ont été créées avec succès." });
           } catch (stepError) {
@@ -127,66 +125,75 @@ const AdminTaskManager = () => {
         // Use updateTask for existing tasks
         savedTask = await updateTask(taskData.id, dataToSave);
         
-        // Si c'est un QCM avec des questions, mettre à jour les questions et réponses
+        // Si c'est un QCM avec des questions, mettre à jour les steps (expected_input JSON)
         if (taskData.task_type === 'questionnaire' && questions && questions.length > 0) {
           try {
-            console.log('=== DEBUG: Mise à jour questions pour QCM existant ===');
-            console.log('Questions reçues:', JSON.stringify(questions, null, 2));
+            console.log('=== DEBUG: Mise à jour steps pour QCM existant ===');
+            
+            // Récupérer ou créer la première version
+            let { data: versions, error: versionError } = await supabase
+              .from('versions')
+              .select('id')
+              .eq('task_id', taskData.id)
+              .order('created_at')
+              .limit(1);
 
-            // Supprimer les anciennes questions (qui supprimera en cascade les réponses)
+            if (versionError) throw versionError;
+
+            let versionId;
+            if (!versions || versions.length === 0) {
+              // Créer une version si elle n'existe pas
+              const { data: newVersion, error: newVersionError } = await supabase
+                .from('versions')
+                .insert([{ task_id: taskData.id, name: 'Version 1', version: 1 }])
+                .select()
+                .single();
+              if (newVersionError) throw newVersionError;
+              versionId = newVersion.id;
+            } else {
+              versionId = versions[0].id;
+            }
+
+            // Supprimer les anciens steps
             const { error: deleteError } = await supabase
-              .from('questionnaire_questions')
+              .from('steps')
               .delete()
-              .eq('task_id', taskData.id);
+              .eq('version_id', versionId);
             
             if (deleteError) throw deleteError;
-            console.log('Anciennes questions supprimées');
+            console.log('Anciens steps supprimés');
 
-            // Créer les nouvelles questions
-            const questionsToInsert = questions.map((q, index) => ({
-              task_id: taskData.id,
-              instruction: q.instruction,
-              question_order: index + 1,
-              question_type: q.questionType,
-              image_id: q.imageId,
-              image_name: q.imageName
-            }));
+            // Créer les nouveaux steps avec expected_input JSON
+            const stepsToInsert = questions.map((q, idx) => {
+              const questionData = {
+                questionType: 'mixed',
+                type: 'mixed',
+                imageId: q.imageId,
+                imageName: q.imageName,
+                choices: q.choices.map(c => ({
+                  id: c.id,
+                  imageId: c.imageId,
+                  imageName: c.imageName,
+                  text: c.text,
+                  isCorrect: q.correctAnswers.includes(c.id)
+                })),
+                correctAnswers: q.correctAnswers
+              };
 
-            const { data: createdQuestions, error: questionsError } = await supabase
-              .from('questionnaire_questions')
-              .insert(questionsToInsert)
-              .select();
-
-            if (questionsError) throw questionsError;
-            console.log('Nouvelles questions créées:', createdQuestions);
-
-            // Créer les réponses pour chaque question
-            const choicesToInsert = [];
-            createdQuestions.forEach((createdQuestion, qIndex) => {
-              const originalQuestion = questions[qIndex];
-              if (originalQuestion.choices && originalQuestion.choices.length > 0) {
-                originalQuestion.choices.forEach((choice, cIndex) => {
-                  choicesToInsert.push({
-                    question_id: createdQuestion.id,
-                    text: choice.text,
-                    choice_order: cIndex + 1,
-                    is_correct: originalQuestion.correctAnswers.includes(choice.id),
-                    image_id: choice.imageId,
-                    image_name: choice.imageName
-                  });
-                });
-              }
+              return {
+                version_id: versionId,
+                step_order: idx + 1,
+                instruction: q.instruction,
+                expected_input: JSON.stringify(questionData)
+              };
             });
 
-            if (choicesToInsert.length > 0) {
-              const { data: choicesData, error: choicesError } = await supabase
-                .from('questionnaire_choices')
-                .insert(choicesToInsert)
-                .select();
+            const { error: stepsError } = await supabase
+              .from('steps')
+              .insert(stepsToInsert);
 
-              if (choicesError) throw choicesError;
-              console.log('Réponses créées:', choicesData);
-            }
+            if (stepsError) throw stepsError;
+            console.log('Nouveaux steps créés avec expected_input JSON');
 
             toast({ title: "Questions mises à jour", description: "Les questions ont été mises à jour avec succès." });
           } catch (stepError) {
