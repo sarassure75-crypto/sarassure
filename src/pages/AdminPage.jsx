@@ -1,4 +1,4 @@
-import React, { useNavigate } from 'react';
+import React from 'react';
 import { Route, Routes, useLocation, Navigate, useNavigate as useNavigateRouter } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,7 @@ import AdminImageValidation from './AdminImageValidation';
 import AdminExerciseValidation from './AdminExerciseValidation';
 import AdminExerciseValidationDebug from './AdminExerciseValidationDebug';
 import AdminGlossaryManager from '@/components/admin/AdminGlossaryManager';
-import AdminQuestionnaireTranslationManager from '@/components/admin/AdminQuestionnaireTranslationManager';
+import { AdminQuestionnaireTranslationManager } from '@/components/admin/AdminQuestionnaireTranslationManager';
 import { AdminTranslationManager } from '@/components/TranslationComponents';
 import AdminTabNavigation from '@/components/admin/AdminTabNavigation';
 import { useAdminCounters } from '@/hooks/useAdminCounters';
