@@ -31,7 +31,7 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
 }
 
 // Version de l'application pour forcer le nettoyage du cache si nécessaire
-const APP_VERSION = '1.2.9';
+const APP_VERSION = '1.2.10';
 try {
   const storedVersion = localStorage.getItem('app_version');
   if (storedVersion !== APP_VERSION) {
