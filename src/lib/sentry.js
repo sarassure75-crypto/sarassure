@@ -1,18 +1,16 @@
-/* eslint-disable no-console */
 /**
  * Initialiser Sentry pour monitoring des erreurs
  * Usage: importer ce module une fois dans main.jsx
  * 
  * Installation: npm install @sentry/react
  */
+import { logger } from '@/lib/logger';
 
 let Sentry = null;
 
-try {
-  Sentry = require('@sentry/react');
-} catch (e) {
-  console.log('ℹ️ Sentry not installed. Install with: npm install @sentry/react');
-}
+// Sentry is optional - uncomment below when installed
+// import * as SentryModule from '@sentry/react';
+// Sentry = SentryModule;
 
 /**
  * Initialiser Sentry (à appeler AVANT de créer l'app React)
@@ -23,7 +21,7 @@ export const initSentry = () => {
 
   // Ne pas initialiser en développement ou si Sentry n'est pas installé
   if (isDev || !hasSentry) {
-    console.log('ℹ️ Sentry skipped (dev mode or not configured)');
+    logger.info('Sentry skipped (dev mode or not configured)');
     return;
   }
 
@@ -43,9 +41,9 @@ export const initSentry = () => {
       replaysOnErrorSampleRate: 1.0,
     });
 
-    console.log('✅ Sentry initialized');
+    logger.info('Sentry initialized');
   } catch (error) {
-    console.error('Failed to initialize Sentry:', error);
+    logger.error('Failed to initialize Sentry:', error);
   }
 };
 
@@ -54,12 +52,12 @@ export const initSentry = () => {
  */
 export const captureError = (error, context = {}) => {
   if (import.meta.env.DEV) {
-    console.error('Error context:', context);
+    logger.error('Error context:', context);
     return;
   }
 
   if (!Sentry) {
-    console.error('Sentry not available:', error);
+    logger.error('Sentry not available:', error);
     return;
   }
 
@@ -68,7 +66,7 @@ export const captureError = (error, context = {}) => {
       contexts: { app: context },
     });
   } catch (e) {
-    console.error('Failed to capture error:', e);
+    logger.error('Failed to capture error:', e);
   }
 };
 
@@ -77,12 +75,12 @@ export const captureError = (error, context = {}) => {
  */
 export const trackEvent = (eventName, data = {}) => {
   if (import.meta.env.DEV) {
-    console.log(`📊 Event: ${eventName}`, data);
+    logger.log(`Event: ${eventName}`, data);
     return;
   }
 
   if (!Sentry) {
-    console.log(`Event not tracked (Sentry not available): ${eventName}`);
+    logger.log(`Event not tracked (Sentry not available): ${eventName}`);
     return;
   }
 
@@ -92,7 +90,7 @@ export const trackEvent = (eventName, data = {}) => {
       extra: data,
     });
   } catch (e) {
-    console.error('Failed to track event:', e);
+    logger.error('Failed to track event:', e);
   }
 };
 

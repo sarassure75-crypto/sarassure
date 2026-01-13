@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
@@ -8,10 +7,12 @@ import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { logger } from '@/lib/logger';
 
-// ===== Sentry Initialization =====
-import { initSentry } from '@/lib/sentry';
-initSentry();
+// ===== Sentry Initialization (optional) =====
+// Uncomment if @sentry/react is installed: npm install @sentry/react
+// import { initSentry } from '@/lib/sentry';
+// initSentry();
 // ===============================
 
 const queryClient = new QueryClient();
@@ -21,10 +22,10 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js', { scope: '/' })
       .then((registration) => {
-        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        logger.info('ServiceWorker registration successful with scope: ', registration.scope);
       })
       .catch((error) => {
-        console.log('ServiceWorker registration failed: ', error);
+        logger.error('ServiceWorker registration failed: ', error);
       });
   });
 }

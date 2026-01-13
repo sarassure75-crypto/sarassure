@@ -12,6 +12,10 @@ import Layout from '@/pages/Layout';
 import HomePage from '@/pages/HomePage';
 import LoginPage from '@/pages/LoginPage';
 import NotFoundPage from '@/pages/NotFoundPage';
+import DashboardRedirector from '@/pages/DashboardRedirector';
+import AdminGlossaryManager from '@/components/admin/AdminGlossaryManager';
+import QuestionnairePlayerPage from '@/pages/QuestionnairePlayerPage';
+import TaskListPage from '@/pages/TaskListPage';
 
 // Composant de chargement amélioré
 const PageLoader = () => (
@@ -19,10 +23,9 @@ const PageLoader = () => (
 );
 
 // Pages chargées à la demande (lazy loading)
-const TaskListPage = lazy(() => import('@/pages/TaskListPage'));
 const ExercisePage = lazy(() => import('@/pages/ExercisePage'));
 const ExerciseStepsPreviewPage = lazy(() => import('@/pages/ExerciseStepsPreviewPage'));
-const QuestionnairePlayerPage = lazy(() => import('@/pages/QuestionnairePlayerPage'));
+// NOTE: Converted to direct import to avoid React lazy initializer error
 const AdminPage = lazy(() => import('@/pages/AdminPage'));
 const TrainerDashboardPage = lazy(() => import('@/pages/TrainerDashboardPage'));
 const TrainerFaqPage = lazy(() => import('@/pages/TrainerFaqPage'));
@@ -33,7 +36,6 @@ const TrainerAccountPage = lazy(() => import('@/pages/TrainerAccountPage'));
 const LearnerAccountPage = lazy(() => import('@/pages/LearnerAccountPage'));
 const LearnerProgressPage = lazy(() => import('@/pages/LearnerProgressPage'));
 const PwaHomePage = lazy(() => import('@/pages/PwaHomePage'));
-const DashboardRedirector = lazy(() => import('@/pages/DashboardRedirector'));
 const AppPresentationPage = lazy(() => import('@/pages/AppPresentationPage'));
 
 // Pages Contributeur
@@ -62,7 +64,6 @@ const AdminRevenueDashboard = lazy(() => import('@/pages/AdminRevenueDashboard')
 // Ressources
 const WallpapersLibraryPage = lazy(() => import('@/pages/WallpapersLibraryPage'));
 const ExerciseRequestsList = lazy(() => import('@/pages/ExerciseRequestsList'));
-const AdminGlossaryManager = lazy(() => import('@/components/admin/AdminGlossaryManager'));
 const IconManagerPage = lazy(() => import('@/pages/IconManagerPage'));
 
 function AppContent() {
@@ -121,9 +122,6 @@ function AppContent() {
 
         {/* Route Admin - Gestion du Lexique */}
         <Route path="admin/lexique" element={<ProtectedRoute roles={[USER_ROLES.ADMIN]}><AdminGlossaryManager /></ProtectedRoute>} />
-
-        {/* Route Admin - Gestion des Icônes */}
-        <Route path="admin/icons" element={<ProtectedRoute roles={[USER_ROLES.ADMIN]}><IconManagerPage /></ProtectedRoute>} />
 
         <Route path="admin/*" element={
           <ProtectedRoute roles={[USER_ROLES.ADMIN]}>

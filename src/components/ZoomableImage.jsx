@@ -388,15 +388,30 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
     return labels[actionType] || 'l\'action attendue';
   };
 
-  const getAreaStyle = (area) => ({
-    position: 'absolute',
-    left: `${imageOffset.x + (area.x_percent ?? area.x ?? 0) * (imageRef.current?.offsetWidth || 0) / 100}px`,
-    top: `${imageOffset.y + (area.y_percent ?? area.y ?? 0) * (imageRef.current?.offsetHeight || 0) / 100}px`,
-    width: `${area.width_percent ?? area.width ?? 0}%`,
-    height: `${area.height_percent ?? area.height ?? 0}%`,
-    // PAS de transform translate car x_percent/y_percent sont déjà le coin supérieur gauche
-    borderRadius: area.shape === 'ellipse' ? '50%' : '8px',
-  });
+  const getAreaStyle = (area) => {
+    const imgW = imageRef.current?.offsetWidth || 0;
+    const imgH = imageRef.current?.offsetHeight || 0;
+    const xPercent = area.x_percent ?? area.x ?? 0;
+    const yPercent = area.y_percent ?? area.y ?? 0;
+    const wPercent = area.width_percent ?? area.width ?? 0;
+    const hPercent = area.height_percent ?? area.height ?? 0;
+
+    // Compute all dimensions relative to the displayed image, not the outer container,
+    // so the action zone aligns even when the image is letterboxed (object-contain).
+    const leftPx = imageOffset.x + (xPercent * imgW) / 100;
+    const topPx = imageOffset.y + (yPercent * imgH) / 100;
+    const widthPx = (wPercent * imgW) / 100;
+    const heightPx = (hPercent * imgH) / 100;
+
+    return {
+      position: 'absolute',
+      left: `${leftPx}px`,
+      top: `${topPx}px`,
+      width: `${widthPx}px`,
+      height: `${heightPx}px`,
+      borderRadius: area.shape === 'ellipse' ? '50%' : '8px',
+    };
+  };
 
   const getAreaBorderStyle = (area) => {
     // Récupérer les paramètres de bordure depuis les données

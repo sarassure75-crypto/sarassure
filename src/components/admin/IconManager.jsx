@@ -5,11 +5,11 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Copy, Check, Plus, Loader } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
-import * as FA from 'react-icons/fa6';
-import * as BI from 'react-icons/bi';
+import * as FA6 from 'react-icons/fa6';
+import * as BS from 'react-icons/bs';
 import * as MD from 'react-icons/md';
 import * as FI from 'react-icons/fi';
-import * as HI from 'react-icons/hi2';
+import * as HI2 from 'react-icons/hi2';
 import * as AI from 'react-icons/ai';
 import { Icon as IconifyIcon } from '@iconify/react';
 import { ICON_LIBRARIES, getEnabledLibraries } from '@/lib/iconLibraries';
@@ -100,18 +100,18 @@ const IconManager = ({ onSelectIcon }) => {
           }
         });
         break;
-      case 'fa':
+      case 'fa6':
         // Font Awesome - parcourir les icônes disponibles
-        Object.entries(FA).forEach(([name, component]) => {
+        Object.entries(FA6).forEach(([name, component]) => {
           if (typeof component === 'function') {
-            icons.push({ name, component, library: 'fa' });
+            icons.push({ name, component, library: 'fa6' });
           }
         });
         break;
-      case 'bi':
-        Object.entries(BI).forEach(([name, component]) => {
+      case 'bs':
+        Object.entries(BS).forEach(([name, component]) => {
           if (typeof component === 'function') {
-            icons.push({ name, component, library: 'bi' });
+            icons.push({ name, component, library: 'bs' });
           }
         });
         break;
@@ -129,10 +129,10 @@ const IconManager = ({ onSelectIcon }) => {
           }
         });
         break;
-      case 'hi':
-        Object.entries(HI).forEach(([name, component]) => {
+      case 'hi2':
+        Object.entries(HI2).forEach(([name, component]) => {
           if (typeof component === 'function') {
-            icons.push({ name, component, library: 'hi' });
+            icons.push({ name, component, library: 'hi2' });
           }
         });
         break;

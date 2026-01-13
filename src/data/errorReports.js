@@ -13,9 +13,19 @@ export const fetchErrorReports = async () => {
 };
 
 export const createErrorReport = async (reportData) => {
+  // Ensure required fields like 'description' are present to satisfy NOT NULL constraint
+  const payload = {
+    ...reportData,
+    description:
+      reportData?.description ??
+      [reportData?.error_type, reportData?.error_message]
+        .filter(Boolean)
+        .join(' - '),
+  };
+
   const { data, error } = await supabase
     .from('error_reports')
-    .insert([reportData])
+    .insert([payload])
     .select()
     .single();
   if (error) {

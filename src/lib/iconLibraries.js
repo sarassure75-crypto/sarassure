@@ -6,19 +6,19 @@
 export const ICON_LIBRARIES = {
   lucide: {
     name: 'Lucide React',
-    description: 'Belle collection d\'icônes minimalistes',
+    description: 'Icônes minimalistes et nettes',
     color: '#F97316',
     enabled: true,
   },
-  fa: {
+  fa6: {
     name: 'Font Awesome 6',
-    description: 'La plus grande collection d\'icônes (4000+)',
+    description: 'Large collection (4000+)',
     color: '#228AE6',
     enabled: true,
   },
-  bi: {
+  bs: {
     name: 'Bootstrap Icons',
-    description: 'Icônes officielles de Bootstrap (2000+)',
+    description: 'Icônes officielles Bootstrap (2000+)',
     color: '#7952B3',
     enabled: true,
   },
@@ -30,13 +30,13 @@ export const ICON_LIBRARIES = {
   },
   fi: {
     name: 'Feather Icons',
-    description: 'Icônes minimalistes et épurées (290)',
+    description: 'Icônes minimalistes (290)',
     color: '#F0DB4F',
     enabled: true,
   },
-  hi: {
-    name: 'Heroicons',
-    description: 'Icônes Tailwind Labs (300+)',
+  hi2: {
+    name: 'Heroicons v2',
+    description: 'Icônes Tailwind Labs (v2)',
     color: '#06B6D4',
     enabled: true,
   },
@@ -68,11 +68,11 @@ export const getEnabledLibraries = () => {
  */
 export const ICON_CATEGORIES = {
   lucide: ['Statut', 'Contact', 'Actions', 'Navigation', 'Utilisateurs', 'Fichiers', 'Média', 'Outils', 'Évaluation', 'Divers'],
-  fa: ['Interface', 'Médias', 'Affaires', 'Médecine', 'Objets', 'Symboles', 'Marques'],
-  bi: ['Interface', 'Graphiques', 'Lettres', 'Notation', 'Météo'],
+  fa6: ['Interface', 'Médias', 'Affaires', 'Médecine', 'Objets', 'Symboles', 'Marques'],
+  bs: ['Interface', 'Graphiques', 'Lettres', 'Notation', 'Météo'],
   md: ['Interface', 'Navigation', 'Actions', 'Édition', 'Fichiers', 'Formulaires'],
   fi: ['Interface', 'Médias', 'Editeurs', 'Navigation'],
-  hi: ['Solide', 'Outline', 'Mini'],
+  hi2: ['Solide', 'Outline', 'Mini'],
   ai: ['Fill', 'Outline', 'Twotone'],
 };
 
