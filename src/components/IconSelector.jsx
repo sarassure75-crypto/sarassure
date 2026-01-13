@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { X, Search } from 'lucide-react';
@@ -101,6 +101,16 @@ export default function IconSelector({
   const [selectedLibrary, setSelectedLibrary] = useState(libraries[0] || 'lucide');
   const [selectedCategory, setSelectedCategory] = useState(defaultCategory);
   const [isOpen, setIsOpen] = useState(false);
+
+  // Synchroniser selectedLibrary quand libraries prop change
+  useEffect(() => {
+    if (libraries && libraries.length > 0) {
+      // Si la bibliothèque sélectionnée n'existe plus dans la nouvelle liste, changer vers la première
+      if (!libraries.includes(selectedLibrary)) {
+        setSelectedLibrary(libraries[0]);
+      }
+    }
+  }, [libraries, selectedLibrary]);
 
   // Vérifier si c'est vraiment un composant React valide
   const isValidReactComponent = (component) => {
