@@ -307,9 +307,28 @@ import { logger } from '@/lib/logger';
             
             // Mettre à jour les étapes existantes
             if (updateSteps.length > 0) {
-              // Pour les updates: ne pas toucher à created_at, juste mettre à jour updated_at
+              // Pour les updates: faire d'abord un fetch pour récupérer created_at existant
+              const stepIds = updateSteps.map(s => s.id);
+              const { data: existingSteps, error: fetchError } = await supabase
+                .from('steps')
+                .select('id, created_at')
+                .in('id', stepIds);
+              
+              if (fetchError) {
+                console.error("Error fetching existing steps:", fetchError);
+                throw fetchError;
+              }
+              
+              // Créer une map des created_at existants
+              const createdAtMap = {};
+              existingSteps?.forEach(s => {
+                createdAtMap[s.id] = s.created_at;
+              });
+              
+              // Ajouter created_at et updated_at à chaque étape
               const stepsWithTimestamps = updateSteps.map(step => ({
                 ...step,
+                created_at: createdAtMap[step.id] || step.created_at || new Date().toISOString(),
                 updated_at: new Date().toISOString()
               }));
               

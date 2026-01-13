@@ -389,11 +389,7 @@ export default function IconSelector({
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      logger.debug('IconSelector: icon clicked', { iconId: icon.id });
-                      logger.debug('IconSelector: full icon object', icon);
-                      logger.debug('IconSelector: calling onSelect');
                       onSelect(icon);
-                      logger.debug('IconSelector: closing selector');
                       setIsOpen(false);
                     }}
                     className={`p-2 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center border border-transparent hover:border-blue-300 ${
