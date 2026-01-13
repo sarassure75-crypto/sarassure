@@ -353,7 +353,9 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
               id: c.id,
               text: c.text,
               imageId: c.image_id,
-              imageName: c.image_name
+              imageName: c.image_name,
+              isCorrect: c.is_correct || false,
+              iconSvg: c.icon_svg || null
             })),
             correctAnswers: questionChoices.filter(c => c.is_correct).map(c => c.id)
           };

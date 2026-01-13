@@ -101,7 +101,8 @@ const AdminTaskManager = () => {
                     choice_order: cIndex + 1,
                     is_correct: originalQuestion.correctAnswers.includes(choice.id),
                     image_id: choice.imageId,
-                    image_name: choice.imageName
+                    image_name: choice.imageName,
+                    icon_svg: choice.iconSvg || null
                   });
                 });
               }
@@ -172,7 +173,8 @@ const AdminTaskManager = () => {
                     choice_order: cIndex + 1,
                     is_correct: originalQuestion.correctAnswers.includes(choice.id),
                     image_id: choice.imageId,
-                    image_name: choice.imageName
+                    image_name: choice.imageName,
+                    icon_svg: choice.iconSvg || null
                   });
                 });
               }
