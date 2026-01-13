@@ -129,11 +129,19 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
     if (!containerRef.current || !imageRef.current) return;
     const containerRect = containerRef.current.getBoundingClientRect();
     const imgRect = imageRef.current.getBoundingClientRect();
+    // Account for scroll position and calculate relative to container viewport
+    const relativeX = imgRect.left - containerRect.left;
+    const relativeY = imgRect.top - containerRect.top;
     setImageOffset({
-      x: imgRect.left - containerRect.left,
-      y: imgRect.top - containerRect.top,
+      x: relativeX,
+      y: relativeY,
       width: imgRect.width,
       height: imgRect.height,
+      // Store viewport position for pointer validation
+      containerLeft: containerRect.left,
+      containerTop: containerRect.top,
+      containerWidth: containerRect.width,
+      containerHeight: containerRect.height,
     });
   }, []);
 
@@ -147,7 +155,13 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
 
     // Recalculate on window resize
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    // Also recalculate on scroll in case container scrolls
+    window.addEventListener('scroll', handleResize, true);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleResize, true);
+    };
   }, [imageId, isZoomed, recalcImageOffset]);
 
   if (!imageId) {
@@ -217,11 +231,30 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
     // Pour bravo, pas de vérification de zone - n'importe quel tap sur l'image valide
     if (actionType === 'bravo') return true;
     
-    if (!actionArea) return false;
-    const rect = containerRef.current?.querySelector('[data-action-zone]')?.getBoundingClientRect();
-    if (!rect) return true;
-    return event.clientX >= rect.left && event.clientX <= rect.right &&
-           event.clientY >= rect.top && event.clientY <= rect.bottom;
+    if (!actionArea || !imageOffset.width) return false;
+    
+    // Use pre-calculated imageOffset for consistency with rendered position
+    const imgW = imageOffset.width;
+    const imgH = imageOffset.height;
+    const xPercent = actionArea.x_percent ?? actionArea.x ?? 0;
+    const yPercent = actionArea.y_percent ?? actionArea.y ?? 0;
+    const wPercent = actionArea.width_percent ?? actionArea.width ?? 0;
+    const hPercent = actionArea.height_percent ?? actionArea.height ?? 0;
+    
+    const zoneLft = imageOffset.x + (xPercent * imgW) / 100;
+    const zoneTop = imageOffset.y + (yPercent * imgH) / 100;
+    const zoneRgt = zoneLft + (wPercent * imgW) / 100;
+    const zoneBot = zoneTop + (hPercent * imgH) / 100;
+    
+    // Calculate pointer position relative to container, not viewport
+    const containerRect = containerRef.current?.getBoundingClientRect();
+    if (!containerRect) return false;
+    
+    const pointerX = event.clientX - containerRect.left;
+    const pointerY = event.clientY - containerRect.top;
+    
+    return pointerX >= zoneLft && pointerX <= zoneRgt &&
+           pointerY >= zoneTop && pointerY <= zoneBot;
   };
 
   const handlePointerUp = (event) => {
