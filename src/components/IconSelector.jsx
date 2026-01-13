@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import { logger } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { X, Search } from 'lucide-react';
@@ -256,7 +255,7 @@ export default function IconSelector({
       const filtered = availableIcons.filter(icon => categoryIcons.includes(icon.name));
       // Si aucune icône trouvée dans la catégorie, retourner toutes les icônes
       if (filtered.length === 0) {
-        logger.warn(`Aucune icône trouvée pour la catégorie "${selectedCategory}". Affichage de toutes les icônes.`);
+        console.warn(`Aucune icône trouvée pour la catégorie "${selectedCategory}". Affichage de toutes les icônes.`);
         return availableIcons;
       }
       return filtered;
