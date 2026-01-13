@@ -957,7 +957,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                                 updateChoice(question.id, choice.id, 'imageId', null);
                                 updateChoice(question.id, choice.id, 'imageName', '');
                               }}
-                              libraries={['fa6', 'bs', 'md', 'fi', 'hi2', 'ai']}
+                              libraries={['lucide', 'fa6', 'bs', 'md', 'fi', 'hi2', 'ai', 'logos', 'skill', 'devicon']}
                               showSearch={true}
                               showLibraryTabs={true}
                             />

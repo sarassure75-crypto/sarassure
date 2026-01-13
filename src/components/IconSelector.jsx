@@ -344,7 +344,7 @@ export default function IconSelector({
                 >
                   {IconLibraryMap[lib]?.label || lib}
                 </Button>
-              ))}}
+              ))}
             </div>
           )}
 
@@ -366,7 +366,7 @@ export default function IconSelector({
                   >
                     {cat}
                   </Button>
-                ))}}
+                ))}
               </div>
             </div>
           )}

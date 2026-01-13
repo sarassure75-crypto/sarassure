@@ -496,7 +496,7 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
           <IconSelector
             onSelect={handleIconSelect}
             onRemove={() => handleIconSelect(null)}
-            libraries={['lucide', 'fa6', 'bs', 'md', 'fi', 'hi2', 'ai']}
+            libraries={['lucide', 'fa6', 'bs', 'md', 'fi', 'hi2', 'ai', 'logos', 'skill', 'devicon']}
             showSearch={true}
             showLibraryTabs={true}
           />

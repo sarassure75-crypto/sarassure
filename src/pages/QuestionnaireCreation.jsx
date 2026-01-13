@@ -419,13 +419,7 @@ const QuestionnaireCreation = () => {
 											selectedIcon={question.icon}
 											onSelect={(icon) => handleUpdateQuestionText(question.id, 'icon', icon)}
 											onRemove={() => handleUpdateQuestionText(question.id, 'icon', null)}
-											libraries={['fa6', 'bs', 'md', 'fi', 'hi2', 'ai', 'logos', 'skill', 'devicon']}
-										/>
-									</div>
-
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-2">Texte d'aide (optionnel)</label>
-										<input
+										libraries={['lucide', 'fa6', 'bs', 'md', 'fi', 'hi2', 'ai', 'logos', 'skill', 'devicon']}
 											type="text"
 											value={question.helpText}
 											onChange={(e) => handleUpdateQuestionText(question.id, 'helpText', e.target.value)}
@@ -586,7 +580,7 @@ const QuestionnaireCreation = () => {
 																	selectedIcon={choice.icon}
 																	onSelect={(icon) => handleUpdateChoiceText(question.id, choice.id, 'icon', icon)}
 																	onRemove={() => handleUpdateChoiceText(question.id, choice.id, 'icon', null)}
-																	libraries={['fa6', 'bs', 'md', 'fi', 'hi2', 'ai', 'logos', 'skill', 'devicon']}
+																	libraries={['lucide', 'fa6', 'bs', 'md', 'fi', 'hi2', 'ai', 'logos', 'skill', 'devicon']}
 																	showLibraryTabs={false}
 																/>
 															</div>

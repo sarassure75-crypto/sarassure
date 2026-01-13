@@ -162,7 +162,7 @@ const AdminVersionForm = ({ version: initialVersion, onSave, onCancel, onDelete 
                 } : null}
                 onSelect={handleIconSelect}
                 onRemove={handleIconRemove}
-                libraries={['fa6', 'bs', 'md', 'fi', 'hi2', 'ai']}
+                libraries={['lucide', 'fa6', 'bs', 'md', 'fi', 'hi2', 'ai', 'logos', 'skill', 'devicon']}
                 showSearch={true}
                 showLibraryTabs={true}
               />
