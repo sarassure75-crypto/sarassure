@@ -14,6 +14,96 @@ import { useToast } from '@/components/ui/use-toast';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/lib/supabaseClient';
 
+/**
+ * Fonction helper pour sauvegarder les questions d'un QCM dans versions/steps
+ * Crée automatiquement une version v1.0 si nécessaire
+ */
+async function saveQuestionnaireQuestionsAsSteps(taskId, questions) {
+  console.log('=== Sauvegarde QCM dans versions/steps ===');
+  console.log('Task ID:', taskId);
+  console.log('Questions:', questions);
+
+  try {
+    // Vérifier si une version existe déjà
+    const { data: existingVersions } = await supabase
+      .from('versions')
+      .select('id')
+      .eq('task_id', taskId)
+      .order('created_at', { ascending: true })
+      .limit(1);
+
+    let versionId;
+
+    if (existingVersions && existingVersions.length > 0) {
+      // Utiliser la première version existante
+      versionId = existingVersions[0].id;
+      console.log('Version existante trouvée:', versionId);
+
+      // Supprimer les anciens steps
+      const { error: deleteError } = await supabase
+        .from('steps')
+        .delete()
+        .eq('version_id', versionId);
+
+      if (deleteError) throw deleteError;
+      console.log('Anciens steps supprimés');
+    } else {
+      // Créer une nouvelle version v1.0
+      const { data: newVersion, error: versionError } = await supabase
+        .from('versions')
+        .insert({
+          task_id: taskId,
+          version_number: '1.0',
+          status: 'draft'
+        })
+        .select()
+        .single();
+
+      if (versionError) throw versionError;
+      versionId = newVersion.id;
+      console.log('Nouvelle version créée:', versionId);
+    }
+
+    // Créer les steps avec expected_input JSON
+    const stepsToInsert = questions.map((q, idx) => {
+      const questionData = {
+        questionType: 'mixed',
+        type: 'mixed',
+        imageId: q.imageId,
+        imageName: q.imageName,
+        choices: q.choices.map(c => ({
+          id: c.id,
+          imageId: c.imageId,
+          imageName: c.imageName,
+          iconSvg: c.iconSvg || null,
+          text: c.text,
+          isCorrect: q.correctAnswers.includes(c.id)
+        })),
+        correctAnswers: q.correctAnswers
+      };
+
+      return {
+        version_id: versionId,
+        step_order: idx + 1,
+        instruction: q.instruction,
+        expected_input: questionData
+      };
+    });
+
+    const { error: stepsError } = await supabase
+      .from('steps')
+      .insert(stepsToInsert);
+
+    if (stepsError) throw stepsError;
+    console.log('Steps créés avec succès:', stepsToInsert.length);
+
+    return { success: true, versionId };
+  } catch (error) {
+    console.error('Erreur sauvegarde QCM:', error);
+    throw error;
+  }
+}
+
 const AdminTaskManager = () => {
   const { tasks, images, categories, fetchAllData, isLoading, error, deleteTask, updateTask, createTask } = useAdmin();
   const [view, setView] = useState('list'); // 'list', 'form'
@@ -65,136 +155,17 @@ const AdminTaskManager = () => {
         savedTask = await createTask(dataToSave);
         toast({ title: "Tâche créée", description: "Vous pouvez maintenant ajouter des versions." });
         
-        // Si c'est un QCM avec des questions, créer les questions et réponses
+        // Pour les QCM avec questions, créer automatiquement une version et des steps
         if (dataToSave.task_type === 'questionnaire' && questions && questions.length > 0) {
-          try {
-            console.log('=== DEBUG: Sauvegarde questions pour nouveau QCM ===');
-            console.log('Questions reçues:', JSON.stringify(questions, null, 2));
-            
-            // Créer les questions
-            const questionsToInsert = questions.map((q, index) => ({
-              task_id: savedTask.id,
-              instruction: q.instruction,
-              question_order: index + 1,
-              question_type: q.questionType,
-              image_id: q.imageId,
-              image_name: q.imageName
-            }));
-
-            const { data: createdQuestions, error: questionsError } = await supabase
-              .from('questionnaire_questions')
-              .insert(questionsToInsert)
-              .select();
-
-            if (questionsError) throw questionsError;
-            console.log('Questions créées:', createdQuestions);
-
-            // Créer les réponses pour chaque question
-            const choicesToInsert = [];
-            createdQuestions.forEach((createdQuestion, qIndex) => {
-              const originalQuestion = questions[qIndex];
-              if (originalQuestion.choices && originalQuestion.choices.length > 0) {
-                originalQuestion.choices.forEach((choice, cIndex) => {
-                  choicesToInsert.push({
-                    question_id: createdQuestion.id,
-                    text: choice.text,
-                    choice_order: cIndex + 1,
-                    is_correct: originalQuestion.correctAnswers.includes(choice.id),
-                    image_id: choice.imageId,
-                    image_name: choice.imageName,
-                    icon_svg: choice.iconSvg || null
-                  });
-                });
-              }
-            });
-
-            if (choicesToInsert.length > 0) {
-              const { data: choicesData, error: choicesError } = await supabase
-                .from('questionnaire_choices')
-                .insert(choicesToInsert)
-                .select();
-
-              if (choicesError) throw choicesError;
-              console.log('Réponses créées:', choicesData);
-            }
-
-            toast({ title: "Questions sauvegardées", description: "Les questions ont été créées avec succès." });
-          } catch (stepError) {
-            console.error('Erreur sauvegarde questions:', stepError);
-            toast({ title: "Attention", description: "Tâche créée mais erreur sur les questions: " + stepError.message, variant: "destructive" });
-          }
+          await saveQuestionnaireQuestionsAsSteps(savedTask.id, questions);
         }
       } else {
         // Use updateTask for existing tasks
         savedTask = await updateTask(taskData.id, dataToSave);
         
-        // Si c'est un QCM avec des questions, mettre à jour les questions et réponses
+        // Pour les QCM avec questions, mettre à jour les steps de la première version
         if (taskData.task_type === 'questionnaire' && questions && questions.length > 0) {
-          try {
-            console.log('=== DEBUG: Mise à jour questions pour QCM existant ===');
-            console.log('Questions reçues:', JSON.stringify(questions, null, 2));
-
-            // Supprimer les anciennes questions (qui supprimera en cascade les réponses)
-            const { error: deleteError } = await supabase
-              .from('questionnaire_questions')
-              .delete()
-              .eq('task_id', taskData.id);
-            
-            if (deleteError) throw deleteError;
-            console.log('Anciennes questions supprimées');
-
-            // Créer les nouvelles questions
-            const questionsToInsert = questions.map((q, index) => ({
-              task_id: taskData.id,
-              instruction: q.instruction,
-              question_order: index + 1,
-              question_type: q.questionType,
-              image_id: q.imageId,
-              image_name: q.imageName
-            }));
-
-            const { data: createdQuestions, error: questionsError } = await supabase
-              .from('questionnaire_questions')
-              .insert(questionsToInsert)
-              .select();
-
-            if (questionsError) throw questionsError;
-            console.log('Nouvelles questions créées:', createdQuestions);
-
-            // Créer les réponses pour chaque question
-            const choicesToInsert = [];
-            createdQuestions.forEach((createdQuestion, qIndex) => {
-              const originalQuestion = questions[qIndex];
-              if (originalQuestion.choices && originalQuestion.choices.length > 0) {
-                originalQuestion.choices.forEach((choice, cIndex) => {
-                  choicesToInsert.push({
-                    question_id: createdQuestion.id,
-                    text: choice.text,
-                    choice_order: cIndex + 1,
-                    is_correct: originalQuestion.correctAnswers.includes(choice.id),
-                    image_id: choice.imageId,
-                    image_name: choice.imageName,
-                    icon_svg: choice.iconSvg || null
-                  });
-                });
-              }
-            });
-
-            if (choicesToInsert.length > 0) {
-              const { data: choicesData, error: choicesError } = await supabase
-                .from('questionnaire_choices')
-                .insert(choicesToInsert)
-                .select();
-
-              if (choicesError) throw choicesError;
-              console.log('Réponses créées:', choicesData);
-            }
-
-            toast({ title: "Questions mises à jour", description: "Les questions ont été mises à jour avec succès." });
-          } catch (stepError) {
-            console.error('Erreur sauvegarde questions:', stepError);
-            toast({ title: "Attention", description: "Tâche sauvegardée mais erreur sur les questions: " + stepError.message, variant: "destructive" });
-          }
+          await saveQuestionnaireQuestionsAsSteps(taskData.id, questions);
         }
         
         toast({ title: "Tâche enregistrée", description: "Les modifications ont été sauvegardées." });
