@@ -152,6 +152,12 @@ const QuestionnaireCreation = () => {
 
 			const choicesWithContent = q.choices.filter(c => c.imageId || c.icon || c.text.trim());
 
+			console.log(`📋 Q${idx + 1} validation:`, {
+				totalChoices: q.choices.length,
+				choicesWithContent: choicesWithContent.length,
+				choices: q.choices.map(c => ({ id: c.id.substring(0, 5), text: c.text, isCorrect: c.isCorrect, hasImage: !!c.imageId, hasIcon: !!c.icon }))
+			});
+
 			if (choicesWithContent.length < 2) {
 				errors.push(`Question ${idx + 1}: au moins deux réponses (texte, image ou icône) sont requises`);
 			}
@@ -162,6 +168,7 @@ const QuestionnaireCreation = () => {
 			}
 		});
 
+		console.log('🔍 Validation errors:', errors);
 		return errors;
 	};
 
@@ -251,9 +258,16 @@ const QuestionnaireCreation = () => {
 				// La validation amont impose déjà ≥2 propositions remplies et ≥1 correcte.
 				const allChoices = q.choices.map(c => ({ ...c, text: c.text.trim() }));
 
+				console.log(`🔍 DEBUG Q${idx + 1} - Avant JSON:`, {
+					totalChoices: allChoices.length,
+					choices: allChoices.map(c => ({ id: c.id.substring(0, 5), text: c.text, isCorrect: c.isCorrect, hasImage: !!c.imageId, hasIcon: !!c.icon }))
+				});
+
 				const correctAnswers = allChoices
 					.filter(c => c.isCorrect)
 					.map(c => c.id);
+
+				console.log(`✅ Correct answers for Q${idx + 1}:`, correctAnswers.length, 'IDs:', correctAnswers.map(id => id.substring(0, 5)));
 
 				const questionData = {
 					questionType: 'mixed',
@@ -278,11 +292,22 @@ const QuestionnaireCreation = () => {
 					correctAnswers
 				};
 
+				// Vérifier que isCorrect est bien dans les choices
+				const choicesWithIsCorrect = questionData.choices.filter(c => c.isCorrect);
+				console.log(`📊 Q${idx + 1} has ${choicesWithIsCorrect.length} correct choices in final JSON`);
+
+				if (choicesWithIsCorrect.length === 0) {
+					console.warn(`⚠️ WARNING: Question ${idx + 1} has NO correct answers in JSON!`);
+				}
+
+				const jsonStr = JSON.stringify(questionData);
+				console.log(`📤 Q${idx + 1} JSON size: ${jsonStr.length} bytes`);
+
 				return {
 					version_id: version.id,
 					step_order: idx + 1,
 					instruction: q.text,
-					expected_input: JSON.stringify(questionData)
+					expected_input: jsonStr
 				};
 			});
 
@@ -419,7 +444,7 @@ const QuestionnaireCreation = () => {
 											selectedIcon={question.icon}
 											onSelect={(icon) => handleUpdateQuestionText(question.id, 'icon', icon)}
 											onRemove={() => handleUpdateQuestionText(question.id, 'icon', null)}
-										libraries={['lucide', 'fa6', 'bs', 'md', 'fi', 'hi2', 'ai', 'logos', 'skill', 'devicon']}
+										libraries={['fa6', 'bs', 'md', 'fi', 'hi2', 'ai', 'logos', 'skill', 'devicon']}
 											type="text"
 											value={question.helpText}
 											onChange={(e) => handleUpdateQuestionText(question.id, 'helpText', e.target.value)}
@@ -580,8 +605,8 @@ const QuestionnaireCreation = () => {
 																	selectedIcon={choice.icon}
 																	onSelect={(icon) => handleUpdateChoiceText(question.id, choice.id, 'icon', icon)}
 																	onRemove={() => handleUpdateChoiceText(question.id, choice.id, 'icon', null)}
-																	libraries={['lucide', 'fa6', 'bs', 'md', 'fi', 'hi2', 'ai', 'logos', 'skill', 'devicon']}
-																	showLibraryTabs={false}
+																	libraries={['fa6', 'bs', 'md', 'fi', 'hi2', 'ai', 'logos', 'skill', 'devicon']}
+																	showLibraryTabs={true}
 																/>
 															</div>
 														</div>

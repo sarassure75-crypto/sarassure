@@ -619,15 +619,27 @@ const ExercisePage = () => {
             // Refresh in background
             (async () => {
               try {
+                // Charger la task et versions SANS les steps imbriqués
                 const { data: freshData, error: fetchError } = await supabase
                   .from('tasks')
-                  .select('id, title, video_url, task_type, versions(*, steps(*))')
+                  .select('id, title, video_url, task_type, versions(*)')
                   .eq('id', taskId)
                   .maybeSingle();
 
                 if (fetchError) throw fetchError;
                 
-                if (freshData) {
+                if (freshData && freshData.versions) {
+                  // Charger les steps séparément pour chaque version
+                  for (const version of freshData.versions) {
+                    const { data: stepsData, error: stepsError } = await supabase
+                      .from('steps')
+                      .select('*')
+                      .eq('version_id', version.id)
+                      .order('step_order');
+                    
+                    version.steps = stepsData || [];
+                  }
+                  
                   cacheData(cacheKey, freshData, 3600000);
                   const freshVersion = freshData.versions.find(e => e.id === versionId);
                   if (freshVersion) {
@@ -643,17 +655,28 @@ const ExercisePage = () => {
             return;
           }
 
-          // No cache, fetch fresh data
+          // No cache, fetch fresh data - Charger task et versions SANS steps imbriqués
           const { data: taskResult, error: taskError } = await supabase
             .from('tasks')
-            .select('id, title, video_url, task_type, versions(*, steps(*))')
+            .select('id, title, video_url, task_type, versions(*)')
             .eq('id', taskId)
             .maybeSingle();
 
           if (taskError) throw taskError;
           taskData = taskResult;
           
-          if (taskData) {
+          if (taskData && taskData.versions) {
+            // Charger les steps séparément pour chaque version
+            for (const version of taskData.versions) {
+              const { data: stepsData } = await supabase
+                .from('steps')
+                .select('*')
+                .eq('version_id', version.id)
+                .order('step_order');
+              
+              version.steps = stepsData || [];
+            }
+            
             cacheData(cacheKey, taskData, 3600000);
           }
         }

@@ -7,7 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { AlertTriangle, ChevronLeft, CheckCircle, XCircle, Home, Volume2, Type, Globe } from 'lucide-react';
+import { AlertTriangle, ChevronLeft, CheckCircle, XCircle, Home, Volume2, Type, Globe, ListChecks } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
+import * as FontAwesome6 from 'react-icons/fa6';
+import * as BootstrapIcons from 'react-icons/bs';
+import * as MaterialIcons from 'react-icons/md';
+import * as FeatherIcons from 'react-icons/fi';
+import * as HeroiconsIcons from 'react-icons/hi2';
+import * as AntIcons from 'react-icons/ai';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
@@ -16,6 +23,86 @@ import {
   getQuestionnaireQuestionTranslations,
   getQuestionnaireChoiceTranslations
 } from '@/data/translation';
+
+// Helper function to render icons from different libraries
+const toPascalCase = (str) => {
+  if (!str) return null;
+  return str
+    .split(/[\s-]+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join('');
+};
+
+const getIconComponent = (iconData) => {
+  if (!iconData) return ListChecks;
+  
+  // Si iconData est juste un string 
+  if (typeof iconData === 'string') {
+    let library, name;
+    
+    // Format 1: "library:name" (avec deux-points)
+    if (iconData.includes(':')) {
+      [library, name] = iconData.split(':');
+    } else if (iconData.includes('-')) {
+      // Format 2: "library-Name" (comme "md-MdAddCircle" ou "fa6-Fa2")
+      // Extraire library et name du format "library-Name"
+      const parts = iconData.split('-');
+      library = parts[0];
+      name = parts.slice(1).join('-');
+      
+      console.log(`[Icon Debug] String format: "${iconData}" → library="${library}", name="${name}"`);
+    } else {
+      // Fallback: Lucide avec PascalCase
+      const pascalIcon = toPascalCase(iconData);
+      return LucideIcons[pascalIcon] || ListChecks;
+    }
+    
+    const libraries = {
+      lucide: LucideIcons,
+      fa6: FontAwesome6,
+      fa: FontAwesome6,
+      bs: BootstrapIcons,
+      md: MaterialIcons,
+      fi: FeatherIcons,
+      hi2: HeroiconsIcons,
+      ai: AntIcons,
+    };
+    const lib = libraries[library];
+    console.log(`[Icon Debug] Resolved library="${library}" to:`, lib ? 'FOUND' : 'NOT FOUND');
+    console.log(`[Icon Debug] Looking for name="${name}" in library`);
+    if (lib && lib[name]) {
+      console.log(`[Icon Debug] ✅ Found icon: ${library}.${name}`);
+      return lib[name];
+    }
+    console.log(`[Icon Debug] ❌ Icon not found: ${library}.${name}`);
+    return ListChecks;
+  }
+  
+  // Si iconData est un objet avec library et name
+  if (iconData.library && iconData.name) {
+    const libraries = {
+      lucide: LucideIcons,
+      fa6: FontAwesome6,
+      fa: FontAwesome6,
+      bs: BootstrapIcons,
+      md: MaterialIcons,
+      fi: FeatherIcons,
+      hi2: HeroiconsIcons,
+      ai: AntIcons,
+    };
+    const lib = libraries[iconData.library];
+    console.log(`[Icon Debug] Object format: library="${iconData.library}", name="${iconData.name}"`);
+    console.log(`[Icon Debug] Resolved library to:`, lib ? 'FOUND' : 'NOT FOUND');
+    return lib && lib[iconData.name] ? lib[iconData.name] : ListChecks;
+  }
+  
+  return ListChecks;
+};
+
+const renderIconComponent = (iconData) => {
+  const IconComponent = getIconComponent(iconData);
+  return <IconComponent className="w-16 h-16 text-blue-600" />;
+};
 
 /**
  * QuestionnairePlayerPage
@@ -198,7 +285,81 @@ const QuestionnairePlayerPage = () => {
 
       setTask(taskData);
 
-      // Récupérer les questions avec les images associées
+      // NOUVEAU SYSTÈME: Essayer de charger depuis versions/steps (système actuel)
+      const { data: versionsData, error: versionsError } = await supabase
+        .from('versions')
+        .select('id, steps(*)')
+        .eq('task_id', taskId)
+        .order('created_at');
+
+      if (versionsError) {
+        console.error('Erreur chargement versions:', versionsError);
+      }
+
+      console.log('📋 Versions chargées:', versionsData);
+
+      if (versionsData && versionsData.length > 0) {
+        const firstVersion = versionsData[0];
+        if (firstVersion.steps && firstVersion.steps.length > 0) {
+          const formattedQuestions = firstVersion.steps.map(step => {
+            let expectedInput = step.expected_input || {};
+            
+            // Parse le JSON si c'est une string
+            if (typeof expectedInput === 'string') {
+              try {
+                expectedInput = JSON.parse(expectedInput);
+              } catch (error) {
+                console.error('❌ Erreur parsing JSON pour step', step.id, ':', error);
+                expectedInput = {};
+              }
+            }
+
+            const formattedChoices = (expectedInput.choices || []).map(c => {
+              // Vérifier si imageId est une icône (ancien système) ou une vraie image
+              const isIconId = c.imageId && (
+                c.imageId.startsWith('fa6-') || 
+                c.imageId.startsWith('fa-') || 
+                c.imageId.startsWith('bs-') || 
+                c.imageId.startsWith('md-') || 
+                c.imageId.startsWith('fi-') || 
+                c.imageId.startsWith('hi2-') || 
+                c.imageId.startsWith('ai-') || 
+                c.imageId.startsWith('lucide-') ||
+                c.imageId.includes(':')
+              );
+
+              console.log(`[Choice] text="${c.text}", imageId="${c.imageId}", isIconId=${isIconId}, c.icon=`, c.icon);
+
+              return {
+                id: c.id,
+                text: c.text || '',
+                // Si c'est une icône (ancien système), la mettre dans icon
+                icon: c.icon || (isIconId ? c.imageId : null),
+                // Vraies images Supabase seulement
+                image: (!isIconId && c.imageId) ? { id: c.imageId, name: c.imageName } : null,
+                isCorrect: c.isCorrect || false
+              };
+            });
+
+            return {
+              id: step.id,
+              instruction: step.instruction,
+              type: expectedInput.questionType || 'mixed',
+              image: expectedInput.imageId ? { id: expectedInput.imageId, name: expectedInput.imageName } : null,
+              choices: formattedChoices,
+              correctAnswers: expectedInput.correctAnswers || []
+            };
+          });
+
+          console.log('✅ Questions formatted (NEW SYSTEM):', formattedQuestions);
+          setQuestions(formattedQuestions);
+          return;
+        }
+      }
+
+      // FALLBACK: Ancienne table questionnaire_questions (système legacy)
+      console.log('⚠️ Pas de versions/steps trouvées, essai système legacy...');
+      
       const { data: questionsData, error: questionsError } = await supabase
         .from('questionnaire_questions')
         .select(`
@@ -212,7 +373,7 @@ const QuestionnairePlayerPage = () => {
         .eq('task_id', taskId)
         .order('question_order');
       
-      logger.log('🔍 Raw questionsData from DB:', questionsData);
+      logger.log('🔍 Raw questionsData from DB (LEGACY):', questionsData);
 
       if (questionsError) throw questionsError;
 
@@ -225,7 +386,7 @@ const QuestionnairePlayerPage = () => {
       const formattedQuestions = questionsData.map(q => {
         const formattedChoices = (q.questionnaire_choices || []).sort((a, b) => a.choice_order - b.choice_order).map(c => ({
           id: c.id,
-          text: c.text, // Le champ s'appelle 'text', pas 'choice_text'
+          text: c.text,
           image: c.app_images ? {
             id: c.app_images.id,
             name: c.app_images.name,
@@ -249,7 +410,7 @@ const QuestionnairePlayerPage = () => {
         };
       });
       
-      logger.log('✅ Formatted questions:', formattedQuestions);
+      logger.log('✅ Formatted questions (LEGACY):', formattedQuestions);
 
       setQuestions(formattedQuestions);
     } catch (err) {
@@ -617,7 +778,7 @@ const QuestionnairePlayerPage = () => {
                       {currentQuestion.choices && currentQuestion.choices.length > 0 ? (
                         currentQuestion.choices.map(choice => {
                           const choiceText = getChoiceText(choice);
-                          logger.log(`🎯 Rendering choice ${choice.id}: text="${choiceText}"`);
+                          logger.log(`🎯 Rendering choice ${choice.id}: text="${choiceText}", icon=${choice.icon?.id}, image=${choice.image?.id}`);
                           return (
                         <motion.button
                           key={choice.id}
@@ -649,6 +810,17 @@ const QuestionnairePlayerPage = () => {
                               </span>
                             </div>
                           </div>
+                          
+                          {/* Afficher l'icône si présente */}
+                          {choice.icon && (() => {
+                            return (
+                              <div className="mt-2 ml-8 bg-white border border-gray-200 rounded-lg p-3 flex justify-center items-center h-24">
+                                {renderIconComponent(choice.icon)}
+                              </div>
+                            );
+                          })()}
+                          
+                          {/* Afficher l'image si présente */}
                           {choice.image?.filePath && (() => {
                             const imageUrl = getImageUrl(choice.image.filePath);
                             return imageUrl && (

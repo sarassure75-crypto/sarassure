@@ -116,6 +116,7 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
 
   // Charger les questions du questionnaire
   useEffect(() => {
+    console.log('🎬 QuestionnairePlayer mounted with props:', { versionId, taskId, learner_id });
     loadQuestions();
     startAttempt();
   }, [versionId]);
@@ -123,13 +124,30 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
   const loadQuestions = async () => {
     setLoading(true);
     try {
+      console.log('🔄 Loading questions for versionId:', versionId, 'taskId:', taskId);
+      
       const { data, error } = await supabase
         .from('steps')
         .select('*')
         .eq('version_id', versionId)
         .order('step_order', { ascending: true });
 
+      console.log('📊 Query result:', { error, dataLength: data?.length, versionId });
+
       if (error) throw error;
+
+      if (!data || data.length === 0) {
+        console.warn('⚠️ No steps found for versionId:', versionId);
+        console.warn('Check if:');
+        console.warn('1. versionId is correct');
+        console.warn('2. Steps exist in the database for this version');
+        console.warn('3. RLS policies allow reading');
+        setQuestions([]);
+        setLoading(false);
+        return;
+      }
+
+      console.log('✅ Steps found:', data.length);
 
       const processedQuestions = (data || []).map(step => {
         const rawExpected = step.expected_input;
@@ -168,6 +186,8 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
             isCorrect: !!choice.isCorrect
           };
         });
+        
+        console.log('🔍 DEBUG QCM - Choices chargées:', normalizedChoices);
 
         const correctAnswers = Array.isArray(expected.correctAnswers) && expected.correctAnswers.length > 0
           ? expected.correctAnswers
@@ -192,6 +212,16 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
         initialAnswers[q.id] = [];
       });
       setAnswers(initialAnswers);
+      
+      console.log('✅ Questions loaded successfully:', {
+        totalQuestions: processedQuestions.length,
+        firstQuestion: processedQuestions[0] ? {
+          id: processedQuestions[0].id,
+          instruction: processedQuestions[0].instruction,
+          choiceCount: processedQuestions[0].choices.length,
+          choices: processedQuestions[0].choices.map(c => ({ id: c.id.substring(0, 5), text: c.text, isCorrect: c.isCorrect }))
+        } : null
+      });
     } catch (error) {
       console.error('Erreur chargement questions:', error);
       toast({ title: 'Erreur', description: 'Impossible de charger les questions', variant: 'destructive' });
@@ -490,6 +520,7 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
         {/* Réponses possibles */}
         <div className="space-y-3">
           {currentQuestion.choices.map((choice, idx) => {
+            console.log('🎯 Affichage choice:', { id: choice.id, text: choice.text, imageId: choice.imageId, iconId: choice.iconId });
             const choiceId = choice.id || idx;
             const isSelected = selectedAnswers.includes(choiceId);
             const iconId = choice.iconId || choice.icon?.id || (typeof choice.icon === 'string' ? choice.icon : null) || (isIconReference(choice.imageId) ? choice.imageId : null);

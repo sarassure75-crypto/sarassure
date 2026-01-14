@@ -33,6 +33,7 @@ import { Save, Trash2, XCircle, Plus, ListChecks, Image as ImageIcon, X,
   // Misc
   Package, Gift, Lightbulb, Target, Trophy, Award, ZapOff
 } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import * as FA from 'react-icons/fa6';
 import * as BS from 'react-icons/bs';
 import * as MD from 'react-icons/md';
@@ -326,7 +327,25 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
         const firstVersion = versionsData[0];
         if (firstVersion.steps && firstVersion.steps.length > 0) {
           const loadedQuestions = firstVersion.steps.map(step => {
-            const expectedInput = step.expected_input || {};
+            let expectedInput = step.expected_input || {};
+            
+            // Parse le JSON si c'est une string
+            if (typeof expectedInput === 'string') {
+              try {
+                expectedInput = JSON.parse(expectedInput);
+                console.log('✅ JSON parsed successfully for step:', step.id);
+              } catch (error) {
+                console.error('❌ Erreur parsing JSON pour step', step.id, ':', error);
+                expectedInput = {};
+              }
+            }
+            
+            console.log('📦 Expected input after parsing:', { 
+              stepId: step.id, 
+              hasChoices: !!expectedInput.choices,
+              choiceCount: (expectedInput.choices || []).length
+            });
+            
             return {
               id: step.id,
               order: step.step_order,
@@ -340,7 +359,9 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                 imageId: c.imageId,
                 imageName: c.imageName,
                 iconId: c.iconId,
-                iconSvg: c.iconSvg
+                icon: c.icon,
+                iconSvg: c.iconSvg,
+                isCorrect: c.isCorrect || false
               })),
               correctAnswers: expectedInput.correctAnswers || []
             };
@@ -854,18 +875,46 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                             </Button>
                           </div>
 
-                          {/* Image/Icône sélectionnée */}
-                          {choice.imageName && (
+                          {/* Image/Icône sélectionnée - NOUVEAU SYSTÈME (choice.icon) OU ANCIEN (choice.imageName) */}
+                          {(choice.imageName || choice.icon) && (
                             <div className="p-2 bg-blue-50 rounded border border-blue-200 flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                {(choice.imageId && (choice.imageId.startsWith('fa6-') || choice.imageId.startsWith('fa-') || choice.imageId.startsWith('bs-') || choice.imageId.startsWith('md-') || choice.imageId.startsWith('fi-') || choice.imageId.startsWith('hi2-') || choice.imageId.startsWith('ai-') || choice.imageId.startsWith('lucide-') || choice.imageId.includes(':'))) ? (
+                                {choice.icon ? (
+                                  // NOUVEAU SYSTÈME: choice.icon avec { id, library, name }
                                   (() => {
-                                    // Passer le SVG stocké si disponible
+                                    const IconComponent = (() => {
+                                      if (choice.icon.library && choice.icon.name) {
+                                        const libraries = {
+                                          lucide: LucideIcons,
+                                          fa6: FA,
+                                          fa: FA,
+                                          bs: BS,
+                                          md: MD,
+                                          fi: FI,
+                                          hi2: HI,
+                                          ai: AI,
+                                        };
+                                        const lib = libraries[choice.icon.library];
+                                        return lib && lib[choice.icon.name] ? lib[choice.icon.name] : null;
+                                      }
+                                      return null;
+                                    })();
+                                    
+                                    return IconComponent ? (
+                                      <IconComponent className="w-32 h-32 text-blue-600" />
+                                    ) : (
+                                      <ImageIcon className="w-32 h-32 text-blue-600" />
+                                    );
+                                  })()
+                                ) : choice.imageId && (choice.imageId.startsWith('fa6-') || choice.imageId.startsWith('fa-') || choice.imageId.startsWith('bs-') || choice.imageId.startsWith('md-') || choice.imageId.startsWith('fi-') || choice.imageId.startsWith('hi2-') || choice.imageId.startsWith('ai-') || choice.imageId.startsWith('lucide-') || choice.imageId.includes(':')) ? (
+                                  // ANCIEN SYSTÈME: choice.imageId avec format "library-name"
+                                  (() => {
                                     const iconRender = renderIcon(choice.imageId, 'w-32 h-32 text-blue-600', choice.iconSvg);
                                     if (iconRender) return iconRender;
                                     return <ImageIcon className="w-32 h-32 text-blue-600" />;
                                   })()
                                 ) : (
+                                  // IMAGE SUPABASE
                                   <img 
                                     src={images.find(img => img.id === choice.imageId)?.publicUrl} 
                                     alt={choice.imageName}
@@ -875,7 +924,9 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                                     }}
                                   />
                                 )}
-                                <span className="text-sm text-blue-900">{choice.imageName}</span>
+                                <span className="text-sm text-blue-900">
+                                  {choice.icon ? `Icône: ${choice.icon.name}` : choice.imageName}
+                                </span>
                               </div>
                               <Button
                                 variant="ghost"
@@ -883,6 +934,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                                 onClick={() => {
                                   updateChoice(question.id, choice.id, 'imageId', null);
                                   updateChoice(question.id, choice.id, 'imageName', '');
+                                  updateChoice(question.id, choice.id, 'icon', null);
                                 }}
                                 className="text-blue-600 hover:text-blue-700 p-0 h-6"
                               >
