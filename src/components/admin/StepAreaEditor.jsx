@@ -193,10 +193,12 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
   }, [area, imageDimensions.width, onAreaChange]);
 
   const updateImageDimensions = useCallback(() => {
-    if (imageRef.current) {
+    if (imageRef.current && imageRef.current.complete) {
+      // Utiliser getBoundingClientRect pour obtenir les dimensions réelles de l'image affichée
+      const rect = imageRef.current.getBoundingClientRect();
       const dims = {
-        width: imageRef.current.offsetWidth,
-        height: imageRef.current.offsetHeight,
+        width: rect.width,
+        height: rect.height,
       };
       setImageDimensions(dims);
       if (onImageLoad) {

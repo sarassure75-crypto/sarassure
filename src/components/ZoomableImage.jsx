@@ -427,17 +427,17 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
   };
 
   const getAreaStyle = (area) => {
-    const imgW = imageOffset.width || imageRef.current?.offsetWidth || 0;
-    const imgH = imageOffset.height || imageRef.current?.offsetHeight || 0;
+    // Utiliser directement les dimensions de l'image sans offset du conteneur
+    const imgW = imageOffset.width || imageRef.current?.getBoundingClientRect().width || 0;
+    const imgH = imageOffset.height || imageRef.current?.getBoundingClientRect().height || 0;
     const xPercent = area.x_percent ?? area.x ?? 0;
     const yPercent = area.y_percent ?? area.y ?? 0;
     const wPercent = area.width_percent ?? area.width ?? 0;
     const hPercent = area.height_percent ?? area.height ?? 0;
 
-    // Compute all dimensions relative to the displayed image, not the outer container,
-    // so the action zone aligns even when the image is letterboxed (object-contain).
-    const leftPx = imageOffset.x + (xPercent * imgW) / 100;
-    const topPx = imageOffset.y + (yPercent * imgH) / 100;
+    // Calcul simple : pourcentage × dimension de l'image (sans offset)
+    const leftPx = (xPercent * imgW) / 100;
+    const topPx = (yPercent * imgH) / 100;
     const widthPx = (wPercent * imgW) / 100;
     const heightPx = (hPercent * imgH) / 100;
 

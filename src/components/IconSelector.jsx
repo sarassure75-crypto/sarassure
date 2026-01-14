@@ -206,16 +206,13 @@ export default function IconSelector({
           // Exclure les patterns problématiques
           if (name.startsWith('create') || name === 'Fragment' || name === 'StrictMode') return false;
           
+          // Pour Lucide, exclure les utilitaires et fonctions non-icon
+          if (selectedLibrary === 'lucide' && name === 'createLucideIcon') return false;
+          
           // Filtre de recherche
           if (searchTerm && !name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
           
-          // Validation stricte pour les composants rendables
-          try {
-            React.createElement(component);
-            return true;
-          } catch (e) {
-            return false;
-          }
+          return true;
         })
         .map(([name, component]) => ({
           id: `${selectedLibrary}-${name}`,
