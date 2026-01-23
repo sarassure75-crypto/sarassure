@@ -547,11 +547,13 @@ const ExercisePage = () => {
     const onFocusIn = (e) => {
       const tag = e.target?.tagName?.toLowerCase();
       if (tag === 'input' || tag === 'textarea' || e.target?.isContentEditable) {
-        // Forcer le scroll en haut pour afficher le header et le haut de la capture d'écran
-        // Scroller vers le header qui contient les instructions
+        // Forcer le scroll en haut pour afficher le header ET les instructions
         const headerElement = document.querySelector('[data-exercise-header]');
         if (headerElement) {
-          headerElement.scrollIntoView({ behavior: 'instant', block: 'start' });
+          // ✅ Scroll avec un petit offset négatif pour laisser les instructions visibles en haut
+          const headerRect = headerElement.getBoundingClientRect();
+          const scrollTarget = window.pageYOffset + headerRect.top - 20; // -20px de padding en haut
+          window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'instant' });
         } else {
           window.scrollTo({ top: 0, behavior: 'instant' });
         }
