@@ -83,7 +83,7 @@ const ExerciseHeader = ({ taskTitle, currentStep, onPlayAudio, showInstructions,
   }
   
   return (
-    <div className={cn("flex justify-between items-center shrink-0 relative bg-white p-4 rounded-lg shadow", isMobileLayout ? "mb-1 p-2" : "mb-4")}>
+    <div className={cn("flex justify-between items-center shrink-0 relative bg-white p-4 rounded-lg shadow", isMobileLayout ? "mb-1 p-2" : "mb-4")} data-exercise-header>
       {/* Titre à gauche */}
       <div className="flex items-center gap-1 flex-grow min-w-0">
         <div className={cn("font-bold text-primary line-clamp-3", isMobileLayout ? "text-xs" : "text-xl sm:text-2xl")} style={{ fontSize: `${100 * textZoom}%` }}>
@@ -405,6 +405,7 @@ const ExercisePage = () => {
   const [confidenceBefore, setConfidenceBefore] = useState(null);
   const [currentLanguage, setCurrentLanguageState] = useState('fr'); // Sera mis à jour après la récupération de user
   const [preferredLanguageFromProfile, setPreferredLanguageFromProfile] = useState('en'); // La vraie langue préférée du profil
+  const lastToastRef = useRef(null); // Référence au dernier toast affiché
 
   // ============ ALL HOOKS AFTER STATES ============
   const { taskId, versionId } = useParams();
@@ -546,8 +547,14 @@ const ExercisePage = () => {
     const onFocusIn = (e) => {
       const tag = e.target?.tagName?.toLowerCase();
       if (tag === 'input' || tag === 'textarea' || e.target?.isContentEditable) {
-        // Forcer le scroll en haut pour afficher le haut de la capture d'écran
-        window.scrollTo({ top: 0, behavior: 'instant' });
+        // Forcer le scroll en haut pour afficher le header et le haut de la capture d'écran
+        // Scroller vers le header qui contient les instructions
+        const headerElement = document.querySelector('[data-exercise-header]');
+        if (headerElement) {
+          headerElement.scrollIntoView({ behavior: 'instant', block: 'start' });
+        } else {
+          window.scrollTo({ top: 0, behavior: 'instant' });
+        }
         setTimeout(() => applyFixed(), 100);
       }
     };
@@ -797,11 +804,21 @@ const ExercisePage = () => {
         return;
       }
       
-      toast({
+      // Dismiss le toast précédent s'il existe
+      if (lastToastRef.current) {
+        lastToastRef.current.dismiss();
+      }
+      
+      // Afficher le nouveau toast avec le numéro d'étape
+      const toastInstance = toast({
         title: "Bien joué !",
-        description: "Action correcte.",
+        description: `Étape ${currentStepIndex + 1} réussie.`,
         action: <CheckCircle className="text-green-500" />,
+        duration: 2000,
       });
+      
+      // Stocker la référence du toast
+      lastToastRef.current = toastInstance;
       if (currentStepIndex < currentVersion.steps.length - 1) {
         setCurrentStepIndex(prev => prev + 1);
       } else {
