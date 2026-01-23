@@ -547,8 +547,13 @@ const ExercisePage = () => {
     const onFocusIn = (e) => {
       const tag = e.target?.tagName?.toLowerCase();
       if (tag === 'input' || tag === 'textarea' || e.target?.isContentEditable) {
-        // ✅ Scroller simplement vers le top pour afficher instructions + capture au minimum d'espace
-        window.scrollTo({ top: 0, behavior: 'instant' });
+        // Scroller vers le header qui contient les instructions
+        const headerElement = document.querySelector('[data-exercise-header]');
+        if (headerElement) {
+          headerElement.scrollIntoView({ behavior: 'instant', block: 'start' });
+        } else {
+          window.scrollTo({ top: 0, behavior: 'instant' });
+        }
         setTimeout(() => applyFixed(), 100);
       }
     };
@@ -558,9 +563,8 @@ const ExercisePage = () => {
       if (tag === 'input' || tag === 'textarea' || e.target?.isContentEditable) {
         setTimeout(() => {
           restore();
-          // ✅ Donner du temps pour que la page redevienne scrollable
+          // Forcer un reflow pour mettre à jour le layout
           setTimeout(() => {
-            // Forcer un reflow pour mettre à jour le layout
             void document.body.offsetHeight;
           }, 50);
         }, 300);
