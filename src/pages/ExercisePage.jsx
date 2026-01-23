@@ -547,13 +547,8 @@ const ExercisePage = () => {
     const onFocusIn = (e) => {
       const tag = e.target?.tagName?.toLowerCase();
       if (tag === 'input' || tag === 'textarea' || e.target?.isContentEditable) {
-        // Scroller vers le header qui contient les instructions
-        const headerElement = document.querySelector('[data-exercise-header]');
-        if (headerElement) {
-          headerElement.scrollIntoView({ behavior: 'instant', block: 'start' });
-        } else {
-          window.scrollTo({ top: 0, behavior: 'instant' });
-        }
+        // ✅ Scroller toujours à la même base: top 0 pour position constante à chaque étape
+        window.scrollTo({ top: 0, behavior: 'instant' });
         setTimeout(() => applyFixed(), 100);
       }
     };
