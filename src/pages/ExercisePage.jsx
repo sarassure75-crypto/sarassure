@@ -550,9 +550,9 @@ const ExercisePage = () => {
         // Forcer le scroll en haut pour afficher le header ET les instructions
         const headerElement = document.querySelector('[data-exercise-header]');
         if (headerElement) {
-          // ✅ Scroll avec offset pour laisser les instructions bien visibles et scroller vers le bas
+          // ✅ Scroll avec offset minimal pour réduire l'espace entre instructions et capture
           const headerRect = headerElement.getBoundingClientRect();
-          const scrollTarget = window.pageYOffset + headerRect.top + 60; // +60px pour scroller plus bas
+          const scrollTarget = window.pageYOffset + headerRect.top + 5; // +5px minimal
           window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'instant' });
         } else {
           window.scrollTo({ top: 0, behavior: 'instant' });
