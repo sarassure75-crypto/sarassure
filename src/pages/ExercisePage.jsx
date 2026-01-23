@@ -546,6 +546,8 @@ const ExercisePage = () => {
     const onFocusIn = (e) => {
       const tag = e.target?.tagName?.toLowerCase();
       if (tag === 'input' || tag === 'textarea' || e.target?.isContentEditable) {
+        // Forcer le scroll en haut pour afficher le haut de la capture d'écran
+        window.scrollTo({ top: 0, behavior: 'instant' });
         setTimeout(() => applyFixed(), 100);
       }
     };
