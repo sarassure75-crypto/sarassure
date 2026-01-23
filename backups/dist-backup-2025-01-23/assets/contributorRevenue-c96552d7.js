@@ -1,0 +1,10 @@
+var a=(r,t,e)=>new Promise((s,u)=>{var _=n=>{try{o(e.next(n))}catch(c){u(c)}},l=n=>{try{o(e.throw(n))}catch(c){u(c)}},o=n=>n.done?s(n.value):Promise.resolve(n.value).then(_,l);o((e=e.apply(r,t)).next())});import{s as i}from"./index-426aa6f1.js";const f=r=>a(void 0,null,function*(){try{const{data:t,error:e}=yield i.from("contributor_revenue_summary").select("*").eq("contributor_id",r).single();if(e){if(e.code==="PGRST116"||e.code==="PGRST301"||e.status===406)return console.warn("Contributor revenue summary not available, returning empty structure:",e.message),{exercise_sales_count:0,exercise_revenue_cents:0,image_sales_count:0,image_revenue_cents:0,total_revenue_cents:0,total_sales_count:0,milestone_count:0};throw e}return t||{exercise_sales_count:0,exercise_revenue_cents:0,image_sales_count:0,image_revenue_cents:0,total_revenue_cents:0,total_sales_count:0,milestone_count:0}}catch(t){return console.error("Error fetching contributor revenue:",t),{exercise_sales_count:0,exercise_revenue_cents:0,image_sales_count:0,image_revenue_cents:0,total_revenue_cents:0,total_sales_count:0,milestone_count:0}}}),b=(r,t=100)=>a(void 0,null,function*(){try{const{data:e,error:s}=yield i.from("contributor_exercise_sales").select(`
+        *,
+        task:tasks(title),
+        version:versions(name),
+        buyer:profiles(first_name, last_name, email)
+      `).eq("contributor_id",r).order("purchase_date",{ascending:!1}).limit(t);if(s)throw s;return e||[]}catch(e){throw console.error("Error fetching exercise sales:",e),e}}),v=(r,t=100)=>a(void 0,null,function*(){try{const{data:e,error:s}=yield i.from("contributor_image_sales").select(`
+        *,
+        image:images_metadata(title, name),
+        buyer:profiles(first_name, last_name, email)
+      `).eq("contributor_id",r).order("purchase_date",{ascending:!1}).limit(t);if(s)throw s;return e||[]}catch(e){throw console.error("Error fetching image sales:",e),e}}),d=r=>new Intl.NumberFormat("fr-FR",{style:"currency",currency:"EUR"}).format(r/100);export{b as a,v as b,d as f,f as g};

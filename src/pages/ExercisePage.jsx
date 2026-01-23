@@ -547,15 +547,22 @@ const ExercisePage = () => {
     const onFocusIn = (e) => {
       const tag = e.target?.tagName?.toLowerCase();
       if (tag === 'input' || tag === 'textarea' || e.target?.isContentEditable) {
+        // ✅ D'abord, s'assurer que la page est scrollable (au cas où restore n'aurait pas fini)
+        document.body.style.position = 'static';
+        document.body.style.overflow = 'auto';
+        
         // Forcer le scroll en haut pour afficher le header et le haut de la capture d'écran
         // Scroller vers le header qui contient les instructions
-        const headerElement = document.querySelector('[data-exercise-header]');
-        if (headerElement) {
-          headerElement.scrollIntoView({ behavior: 'instant', block: 'start' });
-        } else {
-          window.scrollTo({ top: 0, behavior: 'instant' });
-        }
-        setTimeout(() => applyFixed(), 100);
+        requestAnimationFrame(() => {
+          const headerElement = document.querySelector('[data-exercise-header]');
+          if (headerElement) {
+            headerElement.scrollIntoView({ behavior: 'instant', block: 'start' });
+          } else {
+            window.scrollTo({ top: 0, behavior: 'instant' });
+          }
+          // Attendre que le scroll soit complètement appliqué avant de fixer la page
+          setTimeout(() => applyFixed(), 200);
+        });
       }
     };
 

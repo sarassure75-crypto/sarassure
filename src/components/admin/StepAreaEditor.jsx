@@ -322,7 +322,12 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
 
       // Convert back to percent and pass to parent
       const updatedArea = {
-        ...newArea,
+        // ✅ Garder les propriétés essentielles de localArea (sauf x, y, width, height)
+        ...(() => {
+          const { x: _x, y: _y, width: _w, height: _h, ...rest } = localArea;
+          return rest;
+        })(),
+        // ✅ Ajouter UNIQUEMENT les pourcentages (pas les PX)
         x_percent: (newArea.x / imageDimensions.width) * 100,
         y_percent: (newArea.y / imageDimensions.height) * 100,
         width_percent: (newArea.width / imageDimensions.width) * 100,

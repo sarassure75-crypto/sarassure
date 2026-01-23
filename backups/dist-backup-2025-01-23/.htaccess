@@ -1,0 +1,33 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  
+  # Ne pas rediriger les fichiers dans /assets/
+  RewriteCond %{REQUEST_URI} ^/assets/
+  RewriteRule ^ - [L]
+  
+  # Ne pas rediriger les fichiers dans /wallpapers/ (sauf les routes React)
+  RewriteCond %{REQUEST_URI} ^/wallpapers/
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_URI} \.(png|svg|jpg)$
+  RewriteRule ^ - [L]
+  
+  # Ne pas rediriger les fichiers existants
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  
+  # Rediriger vers index.html pour React Router
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header set X-Powered-By "Hostinger Horizons"
+
+  # Cache everything on CDN by default
+  Header set Cache-Control "public, s-maxage=604800, max-age=0"
+  
+  # Cache in browser all assets
+  <If "%{REQUEST_URI} =~ m#^/assets/.*$#">
+    Header set Cache-Control "public, max-age=604800"
+  </If>
+</IfModule>

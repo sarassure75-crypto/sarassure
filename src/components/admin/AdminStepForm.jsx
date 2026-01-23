@@ -135,35 +135,15 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
     
     const zoneKey = ['swipe_left', 'swipe_right', 'swipe_up', 'swipe_down', 'scroll', 'drag_and_drop', 'tap', 'double_tap', 'long_press'].includes(selectedActionType) ? 'start_area' : 'target_area';
     
-    // Convert px values from editor to percentage before saving
+    // ✅ StepAreaEditor already sends data with x_percent, y_percent, etc.
+    // We just need to ensure expected_input is added if needed
     // MAIS PAS pour les boutons physiques !
-    if (!isPhysicalButton && dataToSave[zoneKey] && editorImageDimensions.width > 0 && editorImageDimensions.height > 0) {
-      const { x, y, width, height, ...restOfArea } = dataToSave[zoneKey];
-      // Make sure all values are numbers
-      const numX = Number(x) || 0;
-      const numY = Number(y) || 0;
-      const numWidth = Number(width) || 0;
-      const numHeight = Number(height) || 0;
-
-      if (zoneKey === 'start_area') {
-        dataToSave.start_area = {
-          ...restOfArea,
-          x_percent: (numX / editorImageDimensions.width) * 100,
-          y_percent: (numY / editorImageDimensions.height) * 100,
-          width_percent: (numWidth / editorImageDimensions.width) * 100,
-          height_percent: (numHeight / editorImageDimensions.height) * 100,
-          // Ajouter expected_input à la zone si présent
-          ...(data.expected_input && { expected_input: data.expected_input }),
-        };
-      } else {
-        dataToSave.target_area = {
-          ...restOfArea,
-          x_percent: (numX / editorImageDimensions.width) * 100,
-          y_percent: (numY / editorImageDimensions.height) * 100,
-          width_percent: (numWidth / editorImageDimensions.width) * 100,
-          height_percent: (numHeight / editorImageDimensions.height) * 100,
-          // Ajouter expected_input à la zone si présent
-          ...(data.expected_input && { expected_input: data.expected_input }),
+    if (!isPhysicalButton && dataToSave[zoneKey]) {
+      // If expected_input should be included, add it
+      if (data.expected_input) {
+        dataToSave[zoneKey] = {
+          ...dataToSave[zoneKey],
+          expected_input: data.expected_input,
         };
       }
     }
