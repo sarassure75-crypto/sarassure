@@ -547,16 +547,8 @@ const ExercisePage = () => {
     const onFocusIn = (e) => {
       const tag = e.target?.tagName?.toLowerCase();
       if (tag === 'input' || tag === 'textarea' || e.target?.isContentEditable) {
-        // Forcer le scroll en haut pour afficher le header ET les instructions
-        const headerElement = document.querySelector('[data-exercise-header]');
-        if (headerElement) {
-          // ✅ Scroll avec offset minimal pour réduire l'espace entre instructions et capture
-          const headerRect = headerElement.getBoundingClientRect();
-          const scrollTarget = window.pageYOffset + headerRect.top + 5; // +5px minimal
-          window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'instant' });
-        } else {
-          window.scrollTo({ top: 0, behavior: 'instant' });
-        }
+        // ✅ Scroller simplement vers le top pour afficher instructions + capture au minimum d'espace
+        window.scrollTo({ top: 0, behavior: 'instant' });
         setTimeout(() => applyFixed(), 100);
       }
     };
