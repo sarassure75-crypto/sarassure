@@ -571,7 +571,8 @@ const ExercisePage = () => {
         } else {
           window.scrollTo({ top: 0, behavior: 'instant' });
         }
-        setTimeout(() => applyFixed(), 100);
+        // ✅ Attendre que le scroll soit complètement appliqué avant de figer
+        setTimeout(() => applyFixed(), 150);
       }
     };
 
