@@ -523,15 +523,7 @@ const ExercisePage = () => {
     };
 
     const applyFixed = () => {
-      // ✅ Utiliser la même méthode de scroll que le useEffect pour cohérence
-      const headerElement = document.querySelector('[data-exercise-header]');
-      if (headerElement) {
-        headerElement.scrollIntoView({ behavior: 'instant', block: 'start' });
-      } else {
-        window.scrollTo({ top: 0, behavior: 'instant' });
-      }
-      
-      // Sauvegarder la position APRÈS le scroll forcé
+      // ✅ NE PAS SCROLLER - juste figer la position actuelle pour que le clavier recouvre la capture
       scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
       document.body.style.overflow = 'hidden';
       document.body.style.position = 'fixed';
@@ -573,15 +565,8 @@ const ExercisePage = () => {
     const onFocusIn = (e) => {
       const tag = e.target?.tagName?.toLowerCase();
       if (tag === 'input' || tag === 'textarea' || e.target?.isContentEditable) {
-        // ✅ Scroller vers le header qui contient les instructions pour s'assurer qu'elles sont TOUTES visibles
-        const headerElement = document.querySelector('[data-exercise-header]');
-        if (headerElement) {
-          headerElement.scrollIntoView({ behavior: 'instant', block: 'start' });
-        } else {
-          window.scrollTo({ top: 0, behavior: 'instant' });
-        }
-        // ✅ Attendre que le scroll soit complètement appliqué avant de figer
-        setTimeout(() => applyFixed(), 150);
+        // ✅ Juste figer sans scroller - le clavier va recouvrir naturellement
+        setTimeout(() => applyFixed(), 50);
       }
     };
 
