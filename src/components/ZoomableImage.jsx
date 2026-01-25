@@ -128,15 +128,40 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
   const recalcImageOffset = useCallback(() => {
     if (!containerRef.current || !imageRef.current) return;
     const containerRect = containerRef.current.getBoundingClientRect();
-    const imgRect = imageRef.current.getBoundingClientRect();
-    // Account for scroll position and calculate relative to container viewport
-    const relativeX = imgRect.left - containerRect.left;
-    const relativeY = imgRect.top - containerRect.top;
+    const img = imageRef.current;
+    
+    // ✅ Calculer les dimensions RÉELLES de l'image visible (sans les marges de object-fit: contain)
+    const naturalWidth = img.naturalWidth;
+    const naturalHeight = img.naturalHeight;
+    const containerWidth = containerRect.width;
+    const containerHeight = containerRect.height;
+    
+    // Ratio de l'image originale
+    const imageRatio = naturalWidth / naturalHeight;
+    // Ratio du conteneur
+    const containerRatio = containerWidth / containerHeight;
+    
+    let actualWidth, actualHeight, offsetX, offsetY;
+    
+    if (imageRatio > containerRatio) {
+      // Image plus large : limitée par la largeur
+      actualWidth = containerWidth;
+      actualHeight = containerWidth / imageRatio;
+      offsetX = 0;
+      offsetY = (containerHeight - actualHeight) / 2;
+    } else {
+      // Image plus haute : limitée par la hauteur
+      actualHeight = containerHeight;
+      actualWidth = containerHeight * imageRatio;
+      offsetX = (containerWidth - actualWidth) / 2;
+      offsetY = 0;
+    }
+    
     setImageOffset({
-      x: relativeX,
-      y: relativeY,
-      width: imgRect.width,
-      height: imgRect.height,
+      x: offsetX,
+      y: offsetY,
+      width: actualWidth,
+      height: actualHeight,
       // Store viewport position for pointer validation
       containerLeft: containerRect.left,
       containerTop: containerRect.top,
