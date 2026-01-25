@@ -523,13 +523,10 @@ const ExercisePage = () => {
     };
 
     const applyFixed = () => {
-      // ✅ Re-forcer le scroll vers le header juste avant de figer pour éviter le conflit avec le scroll natif du clavier
+      // ✅ Utiliser la même méthode de scroll que le useEffect pour cohérence
       const headerElement = document.querySelector('[data-exercise-header]');
       if (headerElement) {
-        // Scroller à la position absolue du header depuis le top du document
-        const headerTop = headerElement.offsetTop || 0;
-        // Scroller 100px avant le header pour tester si c'est le bon paramètre
-        window.scrollTo({ top: Math.max(0, headerTop - 100), behavior: 'instant' });
+        headerElement.scrollIntoView({ behavior: 'instant', block: 'start' });
       } else {
         window.scrollTo({ top: 0, behavior: 'instant' });
       }
