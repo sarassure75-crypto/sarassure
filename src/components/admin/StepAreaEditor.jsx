@@ -149,6 +149,7 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
   const containerRef = useRef(null);
   const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
     const [imageOffset, setImageOffset] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1.0);
   const [activeDrag, setActiveDrag] = useState(null);
   const [localArea, setLocalArea] = useState(area);
 
@@ -565,8 +566,23 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
         </div>
       )}
 
+      {/* Zoom aperçu pour faciliter le placement côté admin */}
+      <div className="mt-3 flex items-center gap-3">
+        <label className="text-xs font-semibold text-blue-900">Zoom aperçu:</label>
+        <input
+          type="range"
+          min="0.8"
+          max="1.6"
+          step="0.05"
+          value={zoom}
+          onChange={(e) => setZoom(parseFloat(e.target.value))}
+          className="w-40"
+        />
+        <span className="text-xs font-mono text-blue-700">{Math.round(zoom * 100)}%</span>
+      </div>
+
       {/* Image avec zone */}
-      <div ref={containerRef} className="relative mx-auto border-4 border-gray-400 rounded-lg bg-gray-900 overflow-auto shadow-2xl" style={{ maxWidth: '100%', maxHeight: '85vh', aspectRatio: '9/16' }}>
+      <div ref={containerRef} className="relative mx-auto border-4 border-gray-400 rounded-lg bg-gray-900 overflow-auto shadow-2xl" style={{ maxWidth: '100%', maxHeight: `${Math.round(85 * zoom)}vh`, aspectRatio: '9/16' }}>
         <img
           ref={imageRef}
           src={imageUrl}
