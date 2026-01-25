@@ -523,6 +523,15 @@ const ExercisePage = () => {
     };
 
     const applyFixed = () => {
+      // ✅ Re-forcer le scroll vers le header juste avant de figer pour éviter le conflit avec le scroll natif du clavier
+      const headerElement = document.querySelector('[data-exercise-header]');
+      if (headerElement) {
+        headerElement.scrollIntoView({ behavior: 'instant', block: 'start' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      }
+      
+      // Sauvegarder la position APRÈS le scroll forcé
       scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
       document.body.style.overflow = 'hidden';
       document.body.style.position = 'fixed';
