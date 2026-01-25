@@ -56,15 +56,15 @@ const getIconComponent = (iconString) => {
   return lib ? lib[name] : null;
 };
 
-const ResizableArea = ({ area, imageDimensions, onMouseDown, onResizeMouseDown }) => {
-  if (!area || !imageDimensions.width) return null;
+const ResizableArea = ({ area, imageDimensions, imageOffset, onMouseDown, onResizeMouseDown }) => {
+  if (!area || !imageDimensions.width || imageOffset === undefined) return null;
   
   // Define resize handles for corners
   const handles = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
   
   // Convert percent to px for display
-  const xPx = (area.x_percent || 0) * imageDimensions.width / 100;
-  const yPx = (area.y_percent || 0) * imageDimensions.height / 100;
+  const xPx = imageOffset.x + (area.x_percent || 0) * imageDimensions.width / 100;
+  const yPx = imageOffset.y + (area.y_percent || 0) * imageDimensions.height / 100;
   const widthPx = (area.width_percent || 0) * imageDimensions.width / 100;
   const heightPx = (area.height_percent || 0) * imageDimensions.height / 100;
 
@@ -148,6 +148,7 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
   const imageRef = useRef(null);
   const containerRef = useRef(null);
   const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
+    const [imageOffset, setImageOffset] = useState({ x: 0, y: 0 });
   const [activeDrag, setActiveDrag] = useState(null);
   const [localArea, setLocalArea] = useState(area);
 
@@ -194,13 +195,42 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
 
   const updateImageDimensions = useCallback(() => {
     if (imageRef.current && imageRef.current.complete) {
-      // Utiliser getBoundingClientRect pour obtenir les dimensions réelles de l'image affichée
+      const img = imageRef.current;
       const rect = imageRef.current.getBoundingClientRect();
+      
+      // ✅ Calculer les dimensions RÉELLES de l'image visible (sans les marges de object-fit: contain)
+      const naturalWidth = img.naturalWidth;
+      const naturalHeight = img.naturalHeight;
+      const containerWidth = rect.width;
+      const containerHeight = rect.height;
+      
+      // Ratio de l'image originale
+      const imageRatio = naturalWidth / naturalHeight;
+      // Ratio du conteneur
+      const containerRatio = containerWidth / containerHeight;
+      
+      let actualWidth, actualHeight, offsetX, offsetY;
+      
+      if (imageRatio > containerRatio) {
+        // Image plus large : limitée par la largeur
+        actualWidth = containerWidth;
+        actualHeight = containerWidth / imageRatio;
+        offsetX = 0;
+        offsetY = (containerHeight - actualHeight) / 2;
+      } else {
+        // Image plus haute : limitée par la hauteur
+        actualHeight = containerHeight;
+        actualWidth = containerHeight * imageRatio;
+        offsetX = (containerWidth - actualWidth) / 2;
+        offsetY = 0;
+      }
+      
       const dims = {
-        width: rect.width,
-        height: rect.height,
+        width: actualWidth,
+        height: actualHeight,
       };
       setImageDimensions(dims);
+        setImageOffset({ x: offsetX, y: offsetY });
       if (onImageLoad) {
         onImageLoad(dims);
       }
@@ -235,8 +265,8 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
     const startY = e.clientY;
 
     // Convert area from percent to px
-    const xPx = (localArea.x_percent || 0) * imageDimensions.width / 100;
-    const yPx = (localArea.y_percent || 0) * imageDimensions.height / 100;
+    const xPx = (localArea.x_percent || 0) * imageDimensions.width / 100 + imageOffset.x;
+    const yPx = (localArea.y_percent || 0) * imageDimensions.height / 100 + imageOffset.y;
     const widthPx = (localArea.width_percent || 0) * imageDimensions.width / 100;
     const heightPx = (localArea.height_percent || 0) * imageDimensions.height / 100;
 
@@ -249,7 +279,7 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
     };
 
     setActiveDrag({ type: 'move', startX, startY, initialArea });
-  }, [localArea, imageDimensions]);
+  }, [localArea, imageDimensions, imageOffset]);
 
   const handleResizeMouseDown = useCallback((e, handleName) => {
     e.preventDefault();
@@ -260,8 +290,8 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
     const startY = e.clientY;
 
     // Convert area from percent to px
-    const xPx = (localArea.x_percent || 0) * imageDimensions.width / 100;
-    const yPx = (localArea.y_percent || 0) * imageDimensions.height / 100;
+    const xPx = (localArea.x_percent || 0) * imageDimensions.width / 100 + imageOffset.x;
+    const yPx = (localArea.y_percent || 0) * imageDimensions.height / 100 + imageOffset.y;
     const widthPx = (localArea.width_percent || 0) * imageDimensions.width / 100;
     const heightPx = (localArea.height_percent || 0) * imageDimensions.height / 100;
 
@@ -274,7 +304,7 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
     };
 
     setActiveDrag({ type: 'resize', handleName, startX, startY, initialArea });
-  }, [localArea, imageDimensions]);
+  }, [localArea, imageDimensions, imageOffset]);
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -317,8 +347,8 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
 
       newArea.width = Math.max(10, newArea.width);
       newArea.height = Math.max(10, newArea.height);
-      newArea.x = Math.max(0, Math.min(newArea.x, imageDimensions.width - newArea.width));
-      newArea.y = Math.max(0, Math.min(newArea.y, imageDimensions.height - newArea.height));
+      newArea.x = Math.max(imageOffset.x, Math.min(newArea.x, imageOffset.x + imageDimensions.width - newArea.width));
+      newArea.y = Math.max(imageOffset.y, Math.min(newArea.y, imageOffset.y + imageDimensions.height - newArea.height));
 
       // Convert back to percent and pass to parent
       const updatedArea = {
@@ -327,9 +357,9 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
           const { x: _x, y: _y, width: _w, height: _h, ...rest } = localArea;
           return rest;
         })(),
-        // ✅ Ajouter UNIQUEMENT les pourcentages (pas les PX)
-        x_percent: (newArea.x / imageDimensions.width) * 100,
-        y_percent: (newArea.y / imageDimensions.height) * 100,
+        // ✅ Soustraire imageOffset avant de convertir en pourcentage
+        x_percent: ((newArea.x - imageOffset.x) / imageDimensions.width) * 100,
+        y_percent: ((newArea.y - imageOffset.y) / imageDimensions.height) * 100,
         width_percent: (newArea.width / imageDimensions.width) * 100,
         height_percent: (newArea.height / imageDimensions.height) * 100,
         // Ensure color and opacity are preserved
@@ -548,6 +578,7 @@ const StepAreaEditor = ({ imageUrl, area, onAreaChange, onImageLoad }) => {
           <ResizableArea
             area={localArea}
             imageDimensions={imageDimensions}
+                        imageOffset={imageOffset}
             onMouseDown={handleMouseDown}
             onResizeMouseDown={handleResizeMouseDown}
           />
