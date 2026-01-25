@@ -526,8 +526,10 @@ const ExercisePage = () => {
       // ✅ Re-forcer le scroll vers le header juste avant de figer pour éviter le conflit avec le scroll natif du clavier
       const headerElement = document.querySelector('[data-exercise-header]');
       if (headerElement) {
-        // ✅ Utiliser block: 'center' pour laisser de la place au-dessus des instructions (visible quand clavier apparaît)
-        headerElement.scrollIntoView({ behavior: 'instant', block: 'center' });
+        // Scroller 5px avant le header pour le laisser un peu visible en haut
+        const headerRect = headerElement.getBoundingClientRect();
+        const scrollTarget = window.pageYOffset + headerRect.top - 5;
+        window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'instant' });
       } else {
         window.scrollTo({ top: 0, behavior: 'instant' });
       }
