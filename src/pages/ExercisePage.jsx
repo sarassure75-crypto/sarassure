@@ -528,8 +528,8 @@ const ExercisePage = () => {
       if (headerElement) {
         // Scroller à la position absolue du header depuis le top du document
         const headerTop = headerElement.offsetTop || 0;
-        // Scroller 5px avant le header pour le laisser un peu visible en haut
-        window.scrollTo({ top: Math.max(0, headerTop - 5), behavior: 'instant' });
+        // Scroller 30px avant le header pour voir les instructions complètement au-dessus
+        window.scrollTo({ top: Math.max(0, headerTop - 30), behavior: 'instant' });
       } else {
         window.scrollTo({ top: 0, behavior: 'instant' });
       }
