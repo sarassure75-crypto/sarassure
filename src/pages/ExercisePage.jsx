@@ -498,10 +498,10 @@ const ExercisePage = () => {
     };
 
     // Scroller au chargement de l'étape
-    if (!isLoading && currentVersion && currentStep) {
+    if (!isLoading && currentVersion?.steps?.length > 0) {
       scrollToHeader();
     }
-  }, [currentStepIndex, isLoading, currentVersion, currentStep]);
+  }, [currentStepIndex, isLoading, currentVersion]);
 
   useEffect(() => {
     const originalOverflow = document.body.style.overflow;
