@@ -486,6 +486,23 @@ const ExercisePage = () => {
     return () => window.removeEventListener('openNotesModal', handler);
   }, []);
 
+  // ✅ Scroller vers le header au chargement de chaque étape pour éviter les conflits de scroll clavier
+  useEffect(() => {
+    const scrollToHeader = () => {
+      const headerElement = document.querySelector('[data-exercise-header]');
+      if (headerElement) {
+        headerElement.scrollIntoView({ behavior: 'instant', block: 'start' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      }
+    };
+
+    // Scroller au chargement de l'étape
+    if (!isLoading && currentVersion && currentStep) {
+      scrollToHeader();
+    }
+  }, [currentStepIndex, isLoading, currentVersion, currentStep]);
+
   useEffect(() => {
     const originalOverflow = document.body.style.overflow;
     const originalPosition = document.body.style.position;
