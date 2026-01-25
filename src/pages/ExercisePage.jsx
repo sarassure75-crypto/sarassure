@@ -526,7 +526,8 @@ const ExercisePage = () => {
       // ✅ Re-forcer le scroll vers le header juste avant de figer pour éviter le conflit avec le scroll natif du clavier
       const headerElement = document.querySelector('[data-exercise-header]');
       if (headerElement) {
-        headerElement.scrollIntoView({ behavior: 'instant', block: 'start' });
+        // ✅ Utiliser block: 'center' pour laisser de la place au-dessus des instructions (visible quand clavier apparaît)
+        headerElement.scrollIntoView({ behavior: 'instant', block: 'center' });
       } else {
         window.scrollTo({ top: 0, behavior: 'instant' });
       }
