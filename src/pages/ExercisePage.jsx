@@ -83,7 +83,7 @@ const ExerciseHeader = ({ taskTitle, currentStep, onPlayAudio, showInstructions,
   }
   
   return (
-    <div className={cn("flex justify-between items-center shrink-0 relative bg-white p-4 rounded-lg shadow", isMobileLayout ? "mb-1 p-2" : "mb-4")} data-exercise-header>
+    <div className={cn("flex justify-between items-center shrink-0 relative bg-white p-4 rounded-lg shadow", isMobileLayout ? "mb-0 p-2" : "mb-1")} data-exercise-header>
       {/* Titre à gauche */}
       <div className="flex items-center gap-1 flex-grow min-w-0">
         <div className={cn("font-bold text-primary line-clamp-3", isMobileLayout ? "text-xs" : "text-xl sm:text-2xl")} style={{ fontSize: `${100 * textZoom}%` }}>
@@ -528,7 +528,7 @@ const ExercisePage = () => {
       if (headerElement) {
         // Scroller à la position absolue du header depuis le top du document
         const headerTop = headerElement.offsetTop || 0;
-        // Scroller 30px avant le header pour voir les instructions complètement au-dessus
+        // Scroller 30px avant le header pour voir les instructions avec marge minimale
         window.scrollTo({ top: Math.max(0, headerTop - 30), behavior: 'instant' });
       } else {
         window.scrollTo({ top: 0, behavior: 'instant' });
