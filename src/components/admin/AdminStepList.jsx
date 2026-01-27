@@ -14,6 +14,23 @@ import * as FeatherIcons from 'react-icons/fi';
 import * as HeroiconsIcons from 'react-icons/hi2';
 import * as AntIcons from 'react-icons/ai';
 import { Icon as IconifyIcon } from '@iconify/react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const IconLibraryMap = {
   lucide: { module: LucideIcons, prefix: '', color: '#181818', label: 'Lucide' },
@@ -53,18 +70,124 @@ const toPascalCase = (str) => {
     .join('');
 };
 
+// Composant pour un élément d'étape déplaçable
+const SortableStepItem = ({ step, index, imageArray, onEdit, onDelete, onInsertAfter }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: step.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  const pictogramInfo = step.pictogram_app_image_id 
+    ? imageArray.find(img => img.id === step.pictogram_app_image_id) 
+    : null;
+  const IconComponent = getIconComponent(step.icon_name);
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center justify-between p-2 rounded-md hover:bg-muted/50 transition-colors group border-b border-gray-100"
+    >
+      <div className="flex items-center flex-1 truncate pr-4">
+        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
+          <GripVertical className="h-5 w-5 text-muted-foreground mr-2" />
+        </div>
+        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center mr-2">
+          {IconComponent ? (
+            <IconComponent className="h-5 w-5 text-primary" />
+          ) : pictogramInfo ? (
+            <img src={pictogramInfo.publicUrl} alt={pictogramInfo.name} className="h-6 w-6 object-contain" />
+          ) : (
+            <HelpCircle className="h-5 w-5 text-muted-foreground" />
+          )}
+        </div>
+        <span className="flex-1 truncate" title={step.instruction}>
+          {index + 1}. {step.instruction}
+        </span>
+      </div>
+      <div className="flex items-center gap-1">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => onInsertAfter(index)}
+          className="opacity-0 group-hover:opacity-100 transition-opacity text-xs px-2"
+          title="Insérer une étape après"
+        >
+          <PlusCircle className="h-3 w-3 mr-1" />
+          Insérer
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => onEdit(step)}>
+          <Edit className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => onDelete(step.id)}>
+          <Trash2 className="h-4 w-4 text-muted-foreground group-hover:text-destructive" />
+        </Button>
+      </div>
+    </li>
+  );
+};
+
 const AdminStepList = ({ version }) => {
   const { upsertManySteps, deleteStep, isLoading, images } = useAdmin();
   const imageArray = images instanceof Map ? Array.from(images.values()) : [];
   const { toast } = useToast();
   const [steps, setSteps] = useState(version.steps || []);
   const [editingStep, setEditingStep] = useState(null);
+  const [activeId, setActiveId] = useState(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragStart = (event) => {
+    setActiveId(event.active.id);
+  };
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setSteps((items) => {
+        const oldIndex = items.findIndex(item => item.id === active.id);
+        const newIndex = items.findIndex(item => item.id === over.id);
+        const reorderedSteps = arrayMove(items, oldIndex, newIndex);
+        return reorderedSteps.map((s, i) => ({ ...s, step_order: i }));
+      });
+    }
+
+    setActiveId(null);
+  };
 
   const handleAddStep = () => {
     const newStep = {
       id: uuidv4(),
       version_id: version.id,
       step_order: steps.length,
+      instruction: '',
+      action_type: 'tap',
+      isNew: true,
+    };
+    setEditingStep(newStep);
+  };
+
+  const handleInsertStepAfter = (index) => {
+    const newStep = {
+      id: uuidv4(),
+      version_id: version.id,
+      step_order: index + 1,
       instruction: '',
       action_type: 'tap',
       isNew: true,
@@ -79,7 +202,17 @@ const AdminStepList = ({ version }) => {
   const handleSaveStep = (stepData) => {
     let updatedSteps;
     if (stepData.isNew) {
-      updatedSteps = [...steps, { ...stepData, isNew: false }];
+      // Si l'étape a un step_order spécifique, l'insérer à cette position
+      if (stepData.step_order < steps.length) {
+        updatedSteps = [
+          ...steps.slice(0, stepData.step_order),
+          { ...stepData, isNew: false },
+          ...steps.slice(stepData.step_order)
+        ];
+      } else {
+        // Sinon l'ajouter à la fin
+        updatedSteps = [...steps, { ...stepData, isNew: false }];
+      }
     } else {
       updatedSteps = steps.map(s => s.id === stepData.id ? stepData : s);
     }
@@ -132,51 +265,49 @@ const AdminStepList = ({ version }) => {
     <Card>
       <CardHeader>
         <CardTitle>Étapes</CardTitle>
-        <CardDescription>Gérez les étapes pour cette version.</CardDescription>
+        <CardDescription>Gérez les étapes pour cette version. Glissez-déposez pour réorganiser.</CardDescription>
       </CardHeader>
       <CardContent>
-        <ul className="space-y-2">
-          {steps && steps.length > 0 ? (
-            steps.map((step, index) => {
-              const pictogramInfo = step.pictogram_app_image_id ? imageArray.find(img => img.id === step.pictogram_app_image_id) : null;
-              const IconComponent = getIconComponent(step.icon_name);
-              return (
-                <li
-                  key={step.id}
-                  className="flex items-center justify-between p-2 rounded-md hover:bg-muted/50 transition-colors group"
-                >
-                  <div className="flex items-center flex-1 truncate pr-4">
-                    <GripVertical className="h-5 w-5 text-muted-foreground mr-2 cursor-grab" />
-                    <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center mr-2">
-                      {IconComponent ? (
-                        <IconComponent className="h-5 w-5 text-primary" />
-                      ) : pictogramInfo ? (
-                        <img src={pictogramInfo.publicUrl} alt={pictogramInfo.name} className="h-6 w-6 object-contain" />
-                      ) : (
-                        <HelpCircle className="h-5 w-5 text-muted-foreground" />
-                      )}
-                    </div>
-                    <span className="flex-1 truncate" title={step.instruction}>
-                      {index + 1}. {step.instruction}
-                    </span>
-                  </div>
-                  <div>
-                     <Button variant="ghost" size="icon" onClick={() => handleEditStep(step)}>
-                       <Edit className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-                     </Button>
-                     <Button variant="ghost" size="icon" onClick={() => handleDeleteStep(step.id)}>
-                       <Trash2 className="h-4 w-4 text-muted-foreground group-hover:text-destructive" />
-                     </Button>
-                  </div>
-                </li>
-              );
-            })
-          ) : (
-            <p className="text-center text-muted-foreground py-4">
-              Aucune étape pour cette version.
-            </p>
-          )}
-        </ul>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={steps.map(s => s.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <ul className="space-y-1">
+              {steps && steps.length > 0 ? (
+                steps.map((step, index) => (
+                  <SortableStepItem
+                    key={step.id}
+                    step={step}
+                    index={index}
+                    imageArray={imageArray}
+                    onEdit={handleEditStep}
+                    onDelete={handleDeleteStep}
+                    onInsertAfter={handleInsertStepAfter}
+                  />
+                ))
+              ) : (
+                <p className="text-center text-muted-foreground py-4">
+                  Aucune étape pour cette version.
+                </p>
+              )}
+            </ul>
+          </SortableContext>
+          <DragOverlay>
+            {activeId ? (
+              <div className="bg-white rounded-md shadow-lg p-2 border-2 border-blue-500">
+                <span className="font-medium">
+                  {steps.find(s => s.id === activeId)?.instruction}
+                </span>
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
         <div className="flex justify-between mt-4">
           <Button onClick={handleAddStep} variant="outline" size="sm">
             <PlusCircle className="mr-2 h-4 w-4" /> Ajouter une Étape
