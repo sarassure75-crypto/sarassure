@@ -757,13 +757,13 @@ const QuestionnairePlayerPage = () => {
               transition={{ duration: 0.3 }}
             >
               {/* Question Card */}
-              <Card className="border-2 border-blue-500 shadow-lg mb-6">
-                <CardHeader className="bg-blue-50 border-b-2 border-blue-500">
-                  <CardTitle className="text-blue-700" style={{ fontSize: `${100 * textZoom}%` }}>
+              <Card className="border-2 border-blue-500 shadow-lg mb-3">
+                <CardHeader className="bg-blue-50 border-b-2 border-blue-500 p-3">
+                  <CardTitle className="text-blue-700 text-sm md:text-base" style={{ fontSize: `${100 * textZoom}%` }}>
                     {getQuestionText(currentQuestion)}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-6 space-y-6">
+                <CardContent className="p-3 md:p-4 space-y-3">
                   {/* Question Image - Conteneur dédié */}
                   {currentQuestion.image?.filePath && (() => {
                     const imageUrl = getImageUrl(currentQuestion.image.filePath);
