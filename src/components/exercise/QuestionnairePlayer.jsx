@@ -392,24 +392,191 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
 
   if (isCompleted && finalScore) {
     return (
-      <Card className="w-full max-w-2xl mx-auto">
-        <CardContent className="pt-8 text-center">
-          <div className="mb-6">
-            {finalScore.percentage >= 80 ? (
-              <CheckCircle className="w-16 h-16 text-blue-600 mx-auto mb-4" />
-            ) : (
-              <AlertCircle className="w-16 h-16 text-blue-400 mx-auto mb-4" />
-            )}
-          </div>
-          <h2 className="text-3xl font-bold mb-4">Résultat: {finalScore.percentage}%</h2>
-          <p className="text-lg text-gray-600 mb-2">
-            {finalScore.score} / {finalScore.maxScore} réponses correctes
-          </p>
-          <p className="text-sm text-gray-500">
-            {finalScore.percentage >= 80 ? '✓ Excellent travail!' : 'Continuez vos efforts!'}
-          </p>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col w-full max-w-4xl mx-auto gap-4">
+        {/* Barre d'outils */}
+        <div className="flex gap-2 bg-white border-2 border-gray-300 rounded-lg p-3 shadow-md sticky top-0 z-10">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/taches')}
+            title="Retour à la liste des exercices"
+            className="flex items-center gap-2 hover:bg-gray-100"
+          >
+            <Home className="h-4 w-4" />
+            <span className="hidden sm:inline">Accueil</span>
+          </Button>
+        </div>
+
+        {/* Résultat global */}
+        <Card className="w-full border-2 border-blue-500">
+          <CardContent className="pt-8 text-center">
+            <div className="mb-6">
+              {finalScore.percentage >= 80 ? (
+                <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
+              ) : (
+                <AlertCircle className="w-16 h-16 text-orange-500 mx-auto mb-4" />
+              )}
+            </div>
+            <h2 className="text-3xl font-bold mb-4 text-blue-900">Résultat: {finalScore.percentage}%</h2>
+            <p className="text-lg text-gray-600 mb-2">
+              {finalScore.score} / {finalScore.maxScore} réponses correctes
+            </p>
+            <p className="text-sm text-gray-500">
+              {finalScore.percentage >= 80 ? '✓ Excellent travail!' : 'Continuez vos efforts!'}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Récapitulatif des questions */}
+        <div className="space-y-4">
+          <h3 className="text-2xl font-bold text-gray-900">Détail des réponses</h3>
+          
+          {questions.map((question, qIdx) => {
+            const userAnswers = answers[question.id] || [];
+            const correctAnswerIds = question.correctAnswers || [];
+            const isQuestionCorrect = userAnswers.length === correctAnswerIds.length && userAnswers.every(id => correctAnswerIds.includes(id));
+
+            return (
+              <Card key={question.id} className={`border-2 ${isQuestionCorrect ? 'border-green-400 bg-green-50' : 'border-orange-400 bg-orange-50'}`}>
+                <CardHeader className={`${isQuestionCorrect ? 'bg-green-100' : 'bg-orange-100'}`}>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className={`text-lg ${isQuestionCorrect ? 'text-green-900' : 'text-orange-900'}`}>
+                        Question {qIdx + 1}: {question.instruction}
+                      </CardTitle>
+                    </div>
+                    <div className="ml-4">
+                      {isQuestionCorrect ? (
+                        <div className="flex items-center gap-2 px-3 py-1 bg-green-200 text-green-900 rounded-full text-sm font-semibold">
+                          <CheckCircle className="w-4 h-4" />
+                          Correcte
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 px-3 py-1 bg-orange-200 text-orange-900 rounded-full text-sm font-semibold">
+                          <XCircle className="w-4 h-4" />
+                          Incorrecte
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="pt-6 space-y-3">
+                  {/* Image de la question si présente */}
+                  {question.imageId && (
+                    <div className="mb-4 flex justify-center">
+                      <ImageFromSupabase
+                        imageId={question.imageId}
+                        alt="Question"
+                        className="w-full max-w-md h-auto rounded-lg object-contain"
+                      />
+                    </div>
+                  )}
+
+                  {/* Réponses avec indication des bonnes réponses */}
+                  {question.choices.map((choice, cIdx) => {
+                    const isCorrect = correctAnswerIds.includes(choice.id);
+                    const isSelected = userAnswers.includes(choice.id);
+                    const iconId = choice.iconId || choice.icon?.id || (typeof choice.icon === 'string' ? choice.icon : null);
+                    const imageId = iconId ? null : choice.imageId;
+
+                    return (
+                      <div
+                        key={choice.id}
+                        className={`p-4 rounded-lg border-2 transition-all ${
+                          isCorrect
+                            ? 'border-green-500 bg-green-50'
+                            : isSelected && !isCorrect
+                              ? 'border-red-500 bg-red-50'
+                              : 'border-gray-300 bg-white'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          {/* Indicateur visuel */}
+                          <div className="mt-1 flex-shrink-0">
+                            {isCorrect ? (
+                              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500 text-white">
+                                <CheckCircle className="w-5 h-5" />
+                              </div>
+                            ) : isSelected && !isCorrect ? (
+                              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white">
+                                <XCircle className="w-5 h-5" />
+                              </div>
+                            ) : (
+                              <div className="w-6 h-6 rounded-full border-2 border-gray-300 bg-gray-100" />
+                            )}
+                          </div>
+
+                          <div className="flex-1">
+                            {/* Affichage: SVG → Icône → Image */}
+                            {choice.iconSvg ? (
+                              <div className="mb-2 flex justify-center">
+                                <div className="w-24 h-24 flex items-center justify-center bg-gray-100 rounded-lg">
+                                  <div dangerouslySetInnerHTML={{ __html: choice.iconSvg }} />
+                                </div>
+                              </div>
+                            ) : iconId ? (
+                              <div className="mb-2 flex justify-center">
+                                <div className="w-24 h-24 flex items-center justify-center bg-gray-100 rounded-lg">
+                                  {renderIcon(iconId)}
+                                </div>
+                              </div>
+                            ) : imageId ? (
+                              <div className="mb-2 flex justify-center">
+                                <ImageFromSupabase
+                                  imageId={imageId}
+                                  alt={choice.text || 'Réponse'}
+                                  className="w-24 h-24 rounded object-contain"
+                                />
+                              </div>
+                            ) : null}
+
+                            {/* Texte de la réponse */}
+                            {choice.text && (
+                              <p className="text-base font-medium">
+                                <HighlightGlossaryTerms text={choice.text} />
+                              </p>
+                            )}
+
+                            {/* Légende */}
+                            <div className="mt-2 flex gap-2 text-xs font-semibold">
+                              {isCorrect && (
+                                <span className="inline-block px-2 py-1 bg-green-200 text-green-900 rounded">
+                                  ✓ Bonne réponse
+                                </span>
+                              )}
+                              {isSelected && !isCorrect && (
+                                <span className="inline-block px-2 py-1 bg-red-200 text-red-900 rounded">
+                                  ✗ Votre réponse (incorrecte)
+                                </span>
+                              )}
+                              {isSelected && isCorrect && (
+                                <span className="inline-block px-2 py-1 bg-green-200 text-green-900 rounded">
+                                  ✓ Votre réponse (correcte)
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Bouton retour */}
+        <div className="flex gap-2 pt-4">
+          <Button
+            onClick={() => navigate('/taches')}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Retour à la liste des exercices
+          </Button>
+        </div>
+      </div>
     );
   }
 
@@ -527,16 +694,22 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
             const imageId = iconId ? null : choice.imageId;
 
             return (
-              <div key={choiceId} className={`flex items-start gap-3 p-3 rounded-lg border-2 transition-all ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
+              <div key={choiceId} className={`flex items-start gap-3 p-3 rounded-lg border-2 transition-all cursor-pointer ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`} onClick={() => handleSelectChoice(choiceId)}>
                 {/* Mixed mode: checkboxes for multiple answers */}
                 <input
                   type="checkbox"
                   checked={isSelected}
-                  onChange={() => handleSelectChoice(choiceId)}
-                  className="w-5 h-5 mt-1 cursor-pointer accent-blue-600"
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    handleSelectChoice(choiceId);
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                  className="w-5 h-5 mt-1 cursor-pointer accent-blue-600 flex-shrink-0"
                 />
 
-                <label className="flex-1 cursor-pointer">
+                <div className="flex-1">
                   {/* Affichage priorité: SVG stocké → Icône → Image Supabase */}
                   {choice.iconSvg ? (
                     <div className="mb-2 flex justify-center">
@@ -555,14 +728,14 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
                       <ImageFromSupabase
                         imageId={imageId}
                         alt={choice.text || 'Réponse'}
-                        className="w-32 h-32 rounded object-contain cursor-pointer"
+                        className="w-32 h-32 rounded object-contain"
                       />
                     </div>
                   ) : null}
 
                   {/* Texte de la réponse */}
                   {choice.text && <p className="text-base" style={{ fontSize: `${100 * textZoom}%` }}><HighlightGlossaryTerms text={choice.text} /></p>}
-                </label>
+                </div>
               </div>
             );
           })}
