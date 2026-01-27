@@ -875,6 +875,20 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                             </Button>
                           </div>
 
+                          {/* Champ d'indice */}
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1 flex items-center gap-1">
+                              <Lightbulb className="h-3 w-3" />
+                              Indice (optionnel)
+                            </label>
+                            <Input
+                              value={choice.hint || ''}
+                              onChange={(e) => updateChoice(question.id, choice.id, 'hint', e.target.value)}
+                              placeholder="Ex: Pensez à vérifier les paramètres..."
+                              className="text-sm"
+                            />
+                          </div>
+
                           {/* Image/Icône sélectionnée - NOUVEAU SYSTÈME (choice.icon) OU ANCIEN (choice.imageName) */}
                           {(choice.imageName || choice.icon) && (
                             <div className="p-2 bg-blue-50 rounded border border-blue-200 flex items-center justify-between">
