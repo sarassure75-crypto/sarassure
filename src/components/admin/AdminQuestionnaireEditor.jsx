@@ -361,6 +361,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                 iconId: c.iconId,
                 icon: c.icon,
                 iconSvg: c.iconSvg,
+                hint: c.hint || '',
                 isCorrect: c.isCorrect || false
               })),
               correctAnswers: expectedInput.correctAnswers || []
@@ -414,6 +415,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
               text: c.text,
               imageId: c.image_id,
               imageName: c.image_name,
+              hint: c.hint || '',
               isCorrect: c.is_correct || false,
               iconSvg: c.icon_svg || null
             })),
@@ -536,7 +538,8 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
           id: `choice-${Date.now()}`,
           text: '',
           imageId: null,
-          imageName: null
+          imageName: null,
+          hint: ''
         };
         return { ...q, choices: [...q.choices, newChoice] };
       }
