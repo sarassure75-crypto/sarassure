@@ -250,6 +250,25 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
     }
   };
 
+  const handleSelectChoice = (choiceId) => {
+    const currentQ = questions[currentQuestionIndex];
+    if (!currentQ) return;
+
+    // Mixed mode: multiple answers allowed (checkboxes)
+    const current = answers[currentQ.id] || [];
+    if (current.includes(choiceId)) {
+      setAnswers({
+        ...answers,
+        [currentQ.id]: current.filter(id => id !== choiceId)
+      });
+    } else {
+      setAnswers({
+        ...answers,
+        [currentQ.id]: [...current, choiceId]
+      });
+    }
+  };
+
   const currentQuestion = questions[currentQuestionIndex];
   
   // Protection contre les questions invalides
@@ -257,24 +276,6 @@ export default function QuestionnairePlayer({ versionId, taskId, learner_id, onC
     console.error('❌ Question invalide:', currentQuestionIndex, currentQuestion);
     return <div className="text-center py-8 text-red-600">Erreur: Question invalide</div>;
   }
-
-  const handleSelectChoice = (choiceId) => {
-    if (!currentQuestion) return;
-
-    // Mixed mode: multiple answers allowed (checkboxes)
-    const current = answers[currentQuestion.id] || [];
-    if (current.includes(choiceId)) {
-      setAnswers({
-        ...answers,
-        [currentQuestion.id]: current.filter(id => id !== choiceId)
-      });
-    } else {
-      setAnswers({
-        ...answers,
-        [currentQuestion.id]: [...current, choiceId]
-      });
-    }
-  };
 
   const goToPreviousQuestion = () => {
     if (currentQuestionIndex > 0) {
