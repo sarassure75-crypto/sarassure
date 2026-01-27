@@ -422,10 +422,22 @@ const QuestionnairePlayerPage = () => {
   };
 
   const handleSelectAnswer = (questionId, choiceId) => {
-    setUserAnswers(prev => ({
-      ...prev,
-      [questionId]: choiceId
-    }));
+    setUserAnswers(prev => {
+      const current = prev[questionId] || [];
+      if (current.includes(choiceId)) {
+        // Retirer le choix si déjà sélectionné
+        return {
+          ...prev,
+          [questionId]: current.filter(id => id !== choiceId)
+        };
+      } else {
+        // Ajouter le choix
+        return {
+          ...prev,
+          [questionId]: [...current, choiceId]
+        };
+      }
+    });
   };
 
   const handleNext = () => {
@@ -497,12 +509,15 @@ const QuestionnairePlayerPage = () => {
   const calculateScore = () => {
     let correctCount = 0;
     questions.forEach(question => {
-      const selectedChoiceId = userAnswers[question.id];
-      if (selectedChoiceId) {
-        const selectedChoice = question.choices.find(c => c.id === selectedChoiceId);
-        if (selectedChoice?.isCorrect) {
-          correctCount++;
-        }
+      const selectedChoiceIds = userAnswers[question.id] || [];
+      const correctAnswerIds = question.correctAnswers || [];
+      
+      // Vérifier si toutes les réponses sélectionnées sont correctes ET qu'aucune n'est oubliée
+      const isCorrect = selectedChoiceIds.length === correctAnswerIds.length &&
+        selectedChoiceIds.every(id => correctAnswerIds.includes(id));
+      
+      if (isCorrect) {
+        correctCount++;
       }
     });
     const percentage = Math.round((correctCount / questions.length) * 100);
@@ -625,7 +640,7 @@ const QuestionnairePlayerPage = () => {
 
   const currentQuestion = questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
-  const selectedAnswerId = userAnswers[currentQuestion.id];
+  const selectedAnswers = userAnswers[currentQuestion.id] || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -787,21 +802,21 @@ const QuestionnairePlayerPage = () => {
                           whileTap={{ scale: 0.98 }}
                           onClick={() => handleSelectAnswer(currentQuestion.id, choice.id)}
                           className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
-                            selectedAnswerId === choice.id
+                            selectedAnswers.includes(choice.id)
                               ? 'border-blue-500 bg-blue-50'
                               : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/50'
                           }`}
                         >
                           <div className="flex items-start gap-3">
                             <div
-                              className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center mt-1 ${
-                                selectedAnswerId === choice.id
+                              className={`w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center mt-1 ${
+                                selectedAnswers.includes(choice.id)
                                   ? 'border-blue-500 bg-blue-500'
                                   : 'border-gray-300'
                               }`}
                             >
-                              {selectedAnswerId === choice.id && (
-                                <div className="w-2 h-2 bg-white rounded-full"></div>
+                              {selectedAnswers.includes(choice.id) && (
+                                <CheckCircle className="w-3 h-3 text-white" />
                               )}
                             </div>
                             <div className="flex-1">
@@ -860,7 +875,7 @@ const QuestionnairePlayerPage = () => {
                 <Button
                   className="bg-blue-600 hover:bg-blue-700"
                   onClick={handleNext}
-                  disabled={!selectedAnswerId}
+                  disabled={selectedAnswers.length === 0}
                 >
                   {currentQuestionIndex === questions.length - 1 ? 'Terminer' : 'Suivant'}
                 </Button>
@@ -872,35 +887,167 @@ const QuestionnairePlayerPage = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
-              className="text-center py-12"
+              className="py-6"
             >
-              <div className="mb-6">
-                {score >= 80 ? (
-                  <CheckCircle className="h-20 w-20 text-green-500 mx-auto" />
-                ) : score >= 50 ? (
-                  <AlertTriangle className="h-20 w-20 text-yellow-500 mx-auto" />
-                ) : (
-                  <XCircle className="h-20 w-20 text-red-500 mx-auto" />
-                )}
-              </div>
+              {/* Résultat global */}
+              <Card className="border-2 border-blue-500 shadow-lg mb-6">
+                <CardContent className="pt-8 text-center">
+                  <div className="mb-6">
+                    {score >= 80 ? (
+                      <CheckCircle className="h-20 w-20 text-green-600 mx-auto" />
+                    ) : score >= 50 ? (
+                      <AlertTriangle className="h-20 w-20 text-orange-500 mx-auto" />
+                    ) : (
+                      <XCircle className="h-20 w-20 text-red-500 mx-auto" />
+                    )}
+                  </div>
 
-              <h2 className="text-3xl font-bold mb-2">Questionnaire terminé !</h2>
-              <p className="text-gray-600 mb-6">
-                {score >= 80
-                  ? '🎉 Excellent travail !'
-                  : score >= 50
-                  ? '👍 Pas mal !'
-                  : '📚 Continuez vos efforts'}
-              </p>
+                  <h2 className="text-3xl font-bold mb-2 text-blue-900">Questionnaire terminé !</h2>
+                  <p className="text-gray-600 mb-4">
+                    {score >= 80
+                      ? '🎉 Excellent travail !'
+                      : score >= 50
+                      ? '👍 Pas mal !'
+                      : '📚 Continuez vos efforts'}
+                  </p>
 
-              <Card className="bg-blue-50 border-blue-200 mb-6">
-                <CardContent className="pt-6">
-                  <div className="text-5xl font-bold text-blue-600 mb-2">{score}%</div>
-                  <p className="text-gray-600">Votre score</p>
+                  <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-4">
+                    <div className="text-5xl font-bold text-blue-600 mb-2">{score}%</div>
+                    <p className="text-gray-600">Votre score</p>
+                  </div>
                 </CardContent>
               </Card>
 
-              <div className="flex gap-4 justify-center">
+              {/* Détail des réponses */}
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Détail de vos réponses</h3>
+
+              <div className="space-y-4">
+                {questions.map((question, qIdx) => {
+                  const userAnswerIds = userAnswers[question.id] || [];
+                  const correctAnswerIds = question.correctAnswers || [];
+                  const isQuestionCorrect = userAnswerIds.length === correctAnswerIds.length &&
+                    userAnswerIds.every(id => correctAnswerIds.includes(id));
+
+                  return (
+                    <Card 
+                      key={question.id} 
+                      className={`border-2 ${isQuestionCorrect ? 'border-green-400 bg-green-50' : 'border-orange-400 bg-orange-50'}`}
+                    >
+                      <CardHeader className={`${isQuestionCorrect ? 'bg-green-100' : 'bg-orange-100'}`}>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <CardTitle className={`text-lg ${isQuestionCorrect ? 'text-green-900' : 'text-orange-900'}`}>
+                              Question {qIdx + 1}: {getQuestionText(question)}
+                            </CardTitle>
+                          </div>
+                          <div className="ml-4">
+                            {isQuestionCorrect ? (
+                              <Badge className="bg-green-200 text-green-900 hover:bg-green-200">
+                                <CheckCircle className="w-4 h-4 mr-1" />
+                                Correcte
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-orange-200 text-orange-900 hover:bg-orange-200">
+                                <XCircle className="w-4 h-4 mr-1" />
+                                Incorrecte
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </CardHeader>
+
+                      <CardContent className="pt-6 space-y-3">
+                        {question.choices.map((choice) => {
+                          const isCorrect = correctAnswerIds.includes(choice.id);
+                          const isSelected = userAnswerIds.includes(choice.id);
+                          const choiceText = getChoiceText(choice);
+
+                          return (
+                            <div
+                              key={choice.id}
+                              className={`p-3 rounded-lg border-2 ${
+                                isCorrect
+                                  ? 'border-green-500 bg-green-50'
+                                  : isSelected && !isCorrect
+                                    ? 'border-red-500 bg-red-50'
+                                    : 'border-gray-300 bg-white'
+                              }`}
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="mt-1 flex-shrink-0">
+                                  {isCorrect ? (
+                                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500 text-white">
+                                      <CheckCircle className="w-5 h-5" />
+                                    </div>
+                                  ) : isSelected && !isCorrect ? (
+                                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white">
+                                      <XCircle className="w-5 h-5" />
+                                    </div>
+                                  ) : (
+                                    <div className="w-6 h-6 rounded-full border-2 border-gray-300 bg-gray-100" />
+                                  )}
+                                </div>
+
+                                <div className="flex-1">
+                                  {/* Texte du choix */}
+                                  {choiceText && (
+                                    <p className="text-base font-medium mb-2">{choiceText}</p>
+                                  )}
+
+                                  {/* Icône si présente */}
+                                  {choice.icon && (
+                                    <div className="mb-2 flex justify-center">
+                                      <div className="w-20 h-20 flex items-center justify-center bg-gray-100 rounded-lg border border-gray-200">
+                                        {renderIconComponent(choice.icon)}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Image si présente */}
+                                  {choice.image?.filePath && (() => {
+                                    const imageUrl = getImageUrl(choice.image.filePath);
+                                    return imageUrl && (
+                                      <div className="mb-2 flex justify-center">
+                                        <img
+                                          src={imageUrl}
+                                          alt={choice.image.name}
+                                          className="w-20 h-20 rounded object-contain"
+                                        />
+                                      </div>
+                                    );
+                                  })()}
+
+                                  {/* Légende */}
+                                  <div className="mt-2 flex gap-2 text-xs font-semibold">
+                                    {isCorrect && (
+                                      <span className="inline-block px-2 py-1 bg-green-200 text-green-900 rounded">
+                                        ✓ Bonne réponse
+                                      </span>
+                                    )}
+                                    {isSelected && !isCorrect && (
+                                      <span className="inline-block px-2 py-1 bg-red-200 text-red-900 rounded">
+                                        ✗ Votre réponse (incorrecte)
+                                      </span>
+                                    )}
+                                    {isSelected && isCorrect && (
+                                      <span className="inline-block px-2 py-1 bg-green-200 text-green-900 rounded">
+                                        ✓ Votre réponse (correcte)
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              {/* Boutons d'action */}
+              <div className="flex gap-4 justify-center mt-6">
                 <Button variant="outline" onClick={() => navigate('/taches')}>
                   <ChevronLeft className="mr-2 h-4 w-4" />
                   Retour à la liste
