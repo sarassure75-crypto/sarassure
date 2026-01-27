@@ -76,6 +76,7 @@ const QuestionnaireCreation = () => {
 					imageName: '',
 					icon: null,
 					text: '',
+					hint: '',
 					isCorrect: false
 				}))
 		};
@@ -98,7 +99,7 @@ const QuestionnaireCreation = () => {
 				if (q.choices.length >= 6) return q;
 				return {
 					...q,
-					choices: [...q.choices, { id: uuidv4(), imageId: null, imageName: '', icon: null, text: '', isCorrect: false }]
+					choices: [...q.choices, { id: uuidv4(), imageId: null, imageName: '', icon: null, text: '', hint: '', isCorrect: false }]
 				};
 			})
 		);
@@ -607,6 +608,20 @@ const QuestionnaireCreation = () => {
 																	onRemove={() => handleUpdateChoiceText(question.id, choice.id, 'icon', null)}
 																	libraries={['fa6', 'bs', 'md', 'fi', 'hi2', 'ai', 'logos', 'skill', 'devicon']}
 																	showLibraryTabs={true}
+																/>
+															</div>
+
+															<div>
+																<label className="block text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
+																	<HelpCircle className="w-3 h-3" />
+																	Indice (optionnel)
+																</label>
+																<textarea
+																	value={choice.hint || ''}
+																	onChange={(e) => handleUpdateChoiceText(question.id, choice.id, 'hint', e.target.value)}
+																	placeholder="Ex: Pensez à vérifier les paramètres..."
+																	className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none"
+																	rows="2"
 																/>
 															</div>
 														</div>

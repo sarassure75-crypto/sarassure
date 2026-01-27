@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { AlertTriangle, ChevronLeft, CheckCircle, XCircle, Home, Volume2, Type, Globe, ListChecks } from 'lucide-react';
+import { AlertTriangle, ChevronLeft, CheckCircle, XCircle, Home, Volume2, Type, Globe, ListChecks, Lightbulb } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import * as FontAwesome6 from 'react-icons/fa6';
 import * as BootstrapIcons from 'react-icons/bs';
@@ -124,6 +124,7 @@ const QuestionnairePlayerPage = () => {
   const [score, setScore] = useState(0);
   const [textZoom, setTextZoom] = useState(1);
   const [showTextZoomMenu, setShowTextZoomMenu] = useState(false);
+  const [showHints, setShowHints] = useState(false);
   const [currentLanguage, setCurrentLanguageState] = useState('fr'); // Sera mis à jour après la récupération de user
   const [preferredLanguageFromProfile, setPreferredLanguageFromProfile] = useState('fr'); // La vraie langue préférée du profil
   const [availableLanguages, setAvailableLanguages] = useState([]);
@@ -644,9 +645,16 @@ const QuestionnairePlayerPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <div className="max-w-2xl mx-auto p-4 md:p-6">
-        {/* Barre d'outils */}
-        <div className="flex gap-2 bg-white border-2 border-gray-300 rounded-lg p-3 shadow-md mb-6">
+      <div className="max-w-2xl mx-auto p-2 md:p-4">
+        {/* Header compact avec titre et outils */}
+        <div className="bg-white border-2 border-blue-500 rounded-lg shadow-md mb-3 overflow-hidden">
+          {/* Titre du questionnaire dans bandeau bleu */}
+          <div className="bg-blue-600 text-white px-3 py-2 text-center">
+            <h1 className="text-base md:text-xl font-bold truncate">{task.title}</h1>
+          </div>
+          
+          {/* Barre d'outils */}
+          <div className="flex gap-2 p-2">
           {/* Bouton Accueil */}
           <Button
             variant="ghost"
@@ -686,6 +694,18 @@ const QuestionnairePlayerPage = () => {
               <span className="text-sm font-medium">{currentLanguage.toUpperCase()}</span>
             </Button>
           )}
+
+          {/* Bouton Indices */}
+          <Button
+            variant={showHints ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setShowHints(!showHints)}
+            title="Afficher/masquer les indices"
+            className="flex items-center gap-2 hover:bg-gray-100"
+          >
+            <Lightbulb className="h-4 w-4" />
+            <span className="hidden sm:inline">Indices</span>
+          </Button>
 
           {/* Bouton Taille de Texte */}
           <div className="relative ml-auto">
@@ -728,24 +748,18 @@ const QuestionnairePlayerPage = () => {
             )}
           </div>
         </div>
-
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="w-24"></div>
-          <h1 className="text-2xl font-bold text-blue-700">{task.title}</h1>
-          <div className="w-24"></div>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="mb-6">
-          <div className="flex justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">
+        
+        {/* Progress Bar compacte */}
+        <div className="px-2 pb-2">
+          <div className="flex justify-between mb-1">
+            <span className="text-xs font-medium text-gray-700">
               Question {currentQuestionIndex + 1}/{questions.length}
             </span>
-            <span className="text-sm font-medium text-blue-600">{Math.round(progress)}%</span>
+            <span className="text-xs font-medium text-blue-600">{Math.round(progress)}%</span>
           </div>
-          <Progress value={progress} className="h-2 bg-blue-100" />
+          <Progress value={progress} className="h-1.5 bg-blue-100" />
         </div>
+      </div>
 
         <AnimatePresence mode="wait">
           {!showCompletionScreen ? (
@@ -788,8 +802,8 @@ const QuestionnairePlayerPage = () => {
 
                   {/* Choices - Conteneur */}
                   <div>
-                    <p className="text-xs font-semibold text-gray-600 mb-3 uppercase tracking-wide">Sélectionnez votre réponse</p>
-                    <div className="space-y-3">
+                    <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Sélectionnez votre réponse</p>
+                    <div className="space-y-2">
                       {currentQuestion.choices && currentQuestion.choices.length > 0 ? (
                         currentQuestion.choices.map(choice => {
                           const choiceText = getChoiceText(choice);
@@ -798,16 +812,16 @@ const QuestionnairePlayerPage = () => {
                         <motion.button
                           key={choice.id}
                           type="button"
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
+                          whileHover={{ scale: 1.01 }}
+                          whileTap={{ scale: 0.99 }}
                           onClick={() => handleSelectAnswer(currentQuestion.id, choice.id)}
-                          className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                          className={`w-full p-2 rounded-lg border-2 transition-all text-left ${
                             selectedAnswers.includes(choice.id)
                               ? 'border-blue-500 bg-blue-50'
                               : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/50'
                           }`}
                         >
-                          <div className="flex items-start gap-3">
+                          <div className="flex items-center gap-2">
                             <div
                               className={`w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center mt-1 ${
                                 selectedAnswers.includes(choice.id)
@@ -852,6 +866,16 @@ const QuestionnairePlayerPage = () => {
                               </div>
                             );
                           })()}
+                          
+                          {/* Afficher l'indice si activé */}
+                          {showHints && choice.hint && (
+                            <div className="mt-2 ml-8 bg-yellow-50 border-l-4 border-yellow-400 p-2 rounded">
+                              <p className="text-xs text-yellow-800 flex items-start gap-2">
+                                <Lightbulb className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                                <span>{choice.hint}</span>
+                              </p>
+                            </div>
+                          )}
                         </motion.button>
                           );
                         })
