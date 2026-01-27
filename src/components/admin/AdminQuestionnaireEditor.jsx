@@ -351,6 +351,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
               order: step.step_order,
               instruction: step.instruction,
               questionType: 'mixed',
+              hint: expectedInput.hint || '',
               imageId: expectedInput.imageId,
               imageName: expectedInput.imageName,
               choices: (expectedInput.choices || []).map(c => ({
@@ -361,7 +362,6 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                 iconId: c.iconId,
                 icon: c.icon,
                 iconSvg: c.iconSvg,
-                hint: c.hint || '',
                 isCorrect: c.isCorrect || false
               })),
               correctAnswers: expectedInput.correctAnswers || []
@@ -408,6 +408,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
             order: q.question_order,
             instruction: q.instruction,
             questionType: q.question_type,
+            hint: q.hint || q.help_text || '',
             imageId: q.image_id,
             imageName: q.image_name,
             choices: questionChoices.map(c => ({
@@ -415,7 +416,6 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
               text: c.text,
               imageId: c.image_id,
               imageName: c.image_name,
-              hint: c.hint || '',
               isCorrect: c.is_correct || false,
               iconSvg: c.icon_svg || null
             })),
@@ -513,6 +513,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
       order: questions.length + 1,
       instruction: '',
       questionType: 'mixed', // All questions now use mixed mode
+      hint: '',
       imageId: null,
       imageName: null,
       choices: [],
@@ -538,8 +539,7 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
           id: `choice-${Date.now()}`,
           text: '',
           imageId: null,
-          imageName: null,
-          hint: ''
+          imageName: null
         };
         return { ...q, choices: [...q.choices, newChoice] };
       }
@@ -795,6 +795,20 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                     />
                   </div>
 
+                  <div>
+                    <Label className="flex items-center gap-2 text-sm">
+                      <Lightbulb className="h-4 w-4" />
+                      Indice pour cette question (optionnel)
+                    </Label>
+                    <Textarea
+                      value={question.hint || ''}
+                      onChange={(e) => updateQuestion(question.id, 'hint', e.target.value)}
+                      placeholder="Ex: Pensez au menu Paramètres > Connexions"
+                      rows={2}
+                      className="mt-1"
+                    />
+                  </div>
+
                   {/* Image de la question */}
                   <div>
                     <Label>Image de la question (optionnelle)</Label>
@@ -876,20 +890,6 @@ const AdminQuestionnaireEditor = ({ task: initialTask, onSave, onCancel, onDelet
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
-                          </div>
-
-                          {/* Champ d'indice */}
-                          <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1 flex items-center gap-1">
-                              <Lightbulb className="h-3 w-3" />
-                              Indice (optionnel)
-                            </label>
-                            <Input
-                              value={choice.hint || ''}
-                              onChange={(e) => updateChoice(question.id, choice.id, 'hint', e.target.value)}
-                              placeholder="Ex: Pensez à vérifier les paramètres..."
-                              className="text-sm"
-                            />
                           </div>
 
                           {/* Image/Icône sélectionnée - NOUVEAU SYSTÈME (choice.icon) OU ANCIEN (choice.imageName) */}

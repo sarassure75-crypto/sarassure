@@ -63,6 +63,7 @@ const QuestionnaireCreation = () => {
 		const newQuestion = {
 			id: uuidv4(),
 			text: '',
+			hint: '',
 			helpText: '',
 			questionType: 'mixed',
 			icon: null,
@@ -76,7 +77,6 @@ const QuestionnaireCreation = () => {
 					imageName: '',
 					icon: null,
 					text: '',
-					hint: '',
 					isCorrect: false
 				}))
 		};
@@ -272,8 +272,7 @@ const QuestionnaireCreation = () => {
 
 				const questionData = {
 					questionType: 'mixed',
-					type: 'mixed',
-					imageId: q.imageId,
+					type: 'mixed',				hint: q.hint || '',					imageId: q.imageId,
 					imageName: q.imageName,
 					iconId: q.icon?.id || null,
 					icon: q.icon
@@ -435,42 +434,52 @@ const QuestionnaireCreation = () => {
 											value={question.text}
 											onChange={(e) => handleUpdateQuestionText(question.id, 'text', e.target.value)}
 											placeholder="Ex: Quelle capture montre le menu des paramètres Wi-Fi?"
-											className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-										/>
-									</div>
+										className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+									/>
+								</div>
 
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-2">Icône de la question (optionnel)</label>
-										<IconSelector
-											selectedIcon={question.icon}
-											onSelect={(icon) => handleUpdateQuestionText(question.id, 'icon', icon)}
-											onRemove={() => handleUpdateQuestionText(question.id, 'icon', null)}
+								<div>
+									<label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+										<HelpCircle className="w-4 h-4" />
+										Indice pour cette question (optionnel)
+									</label>
+									<textarea
+										value={question.hint || ''}
+										onChange={(e) => handleUpdateQuestionText(question.id, 'hint', e.target.value)}
+										placeholder="Ex: Pensez à vérifier les paramètres..."
+										className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none"
+										rows="2"
+									/>
+								</div>
+
+								<div>
+									<label className="block text-sm font-medium text-gray-700 mb-2">Icône de la question (optionnel)</label>
+									<IconSelector
+										selectedIcon={question.icon}
+										onSelect={(icon) => handleUpdateQuestionText(question.id, 'icon', icon)}
+										onRemove={() => handleUpdateQuestionText(question.id, 'icon', null)}
 										libraries={['fa6', 'bs', 'md', 'fi', 'hi2', 'ai', 'logos', 'skill', 'devicon']}
-											type="text"
-											value={question.helpText}
-											onChange={(e) => handleUpdateQuestionText(question.id, 'helpText', e.target.value)}
-											placeholder="Ex: Cherchez l'engrenage et Wi-Fi"
-											className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-										/>
-									</div>
+										showLibraryTabs={true}
+								/>
+							</div>
 
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-2">Image de la question (optionnel)</label>
-										{question.imageId ? (
-											<div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200 flex items-center justify-between">
-												<div className="flex items-center gap-2">
-													<ImageIcon className="w-4 h-4 text-blue-600" />
-													<span className="text-sm font-medium text-blue-900">{question.imageName}</span>
-												</div>
-												<div className="flex gap-2">
-													<Button
-														variant="ghost"
-														size="sm"
-														onClick={() => {
-															handleUpdateQuestionText(question.id, 'imageId', null);
-															handleUpdateQuestionText(question.id, 'imageName', '');
-														}}
-														className="text-blue-600 hover:text-blue-700"
+							<div>
+								<label className="block text-sm font-medium text-gray-700 mb-2">Image de la question (optionnelle)</label>
+								{question.imageId ? (
+									<div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200 flex items-center justify-between">
+										<div className="flex items-center gap-2">
+											<ImageIcon className="w-4 h-4 text-blue-600" />
+											<span className="text-sm font-medium text-blue-900">{question.imageName}</span>
+										</div>
+									<div className="flex gap-2">
+										<Button
+											variant="ghost"
+											size="sm"
+											onClick={() => {
+												handleUpdateQuestionText(question.id, 'imageId', null);
+												handleUpdateQuestionText(question.id, 'imageName', '');
+											}}
+											className="text-blue-600 hover:text-blue-700"
 													>
 														Retirer
 													</Button>
@@ -611,19 +620,6 @@ const QuestionnaireCreation = () => {
 																/>
 															</div>
 
-															<div>
-																<label className="block text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
-																	<HelpCircle className="w-3 h-3" />
-																	Indice (optionnel)
-																</label>
-																<textarea
-																	value={choice.hint || ''}
-																	onChange={(e) => handleUpdateChoiceText(question.id, choice.id, 'hint', e.target.value)}
-																	placeholder="Ex: Pensez à vérifier les paramètres..."
-																	className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none"
-																	rows="2"
-																/>
-															</div>
 														</div>
 													</div>
 												</div>

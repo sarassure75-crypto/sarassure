@@ -338,7 +338,6 @@ const QuestionnairePlayerPage = () => {
                 icon: c.icon || (isIconId ? c.imageId : null),
                 // Vraies images Supabase seulement
                 image: (!isIconId && c.imageId) ? { id: c.imageId, name: c.imageName } : null,
-                hint: c.hint || '',
                 isCorrect: c.isCorrect || false
               };
             });
@@ -346,6 +345,7 @@ const QuestionnairePlayerPage = () => {
             return {
               id: step.id,
               instruction: step.instruction,
+              hint: expectedInput.hint || '',
               type: expectedInput.questionType || 'mixed',
               image: expectedInput.imageId ? { id: expectedInput.imageId, name: expectedInput.imageName } : null,
               choices: formattedChoices,
@@ -394,7 +394,6 @@ const QuestionnairePlayerPage = () => {
             name: c.app_images.name,
             filePath: c.app_images.file_path
           } : null,
-          hint: c.hint || '',
           isCorrect: c.is_correct
         }));
         
@@ -403,6 +402,7 @@ const QuestionnairePlayerPage = () => {
         return {
           id: q.id,
           instruction: q.instruction,
+          hint: q.hint || q.help_text || '',
           type: q.question_type,
           image: q.app_images ? {
             id: q.app_images.id,
@@ -802,6 +802,16 @@ const QuestionnairePlayerPage = () => {
                     );
                   })()}
 
+                  {/* Indice pour la question */}
+                  {showHints && currentQuestion.hint && (
+                    <div className="bg-yellow-50 border-l-4 border-yellow-400 rounded p-3">
+                      <p className="text-xs text-yellow-800 flex items-start gap-2">
+                        <Lightbulb className="h-4 w-4 mt-0.5" />
+                        <span>{currentQuestion.hint}</span>
+                      </p>
+                    </div>
+                  )}
+
                   {/* Choices - Conteneur */}
                   <div>
                     <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Sélectionnez votre réponse</p>
@@ -868,16 +878,6 @@ const QuestionnairePlayerPage = () => {
                               </div>
                             );
                           })()}
-                          
-                          {/* Afficher l'indice si activé */}
-                          {showHints && choice.hint && (
-                            <div className="mt-2 ml-8 bg-yellow-50 border-l-4 border-yellow-400 p-2 rounded">
-                              <p className="text-xs text-yellow-800 flex items-start gap-2">
-                                <Lightbulb className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                                <span>{choice.hint}</span>
-                              </p>
-                            </div>
-                          )}
                         </motion.button>
                           );
                         })

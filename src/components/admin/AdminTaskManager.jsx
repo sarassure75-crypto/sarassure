@@ -69,6 +69,7 @@ async function saveQuestionnaireQuestionsAsSteps(taskId, questions) {
       const questionData = {
         questionType: 'mixed',
         type: 'mixed',
+        hint: q.hint || '',
         imageId: q.imageId,
         imageName: q.imageName,
         choices: q.choices.map(c => ({
