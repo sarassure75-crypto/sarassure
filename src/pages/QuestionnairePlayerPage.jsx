@@ -338,6 +338,7 @@ const QuestionnairePlayerPage = () => {
                 icon: c.icon || (isIconId ? c.imageId : null),
                 // Vraies images Supabase seulement
                 image: (!isIconId && c.imageId) ? { id: c.imageId, name: c.imageName } : null,
+                hint: c.hint || '',
                 isCorrect: c.isCorrect || false
               };
             });
@@ -393,6 +394,7 @@ const QuestionnairePlayerPage = () => {
             name: c.app_images.name,
             filePath: c.app_images.file_path
           } : null,
+          hint: c.hint || '',
           isCorrect: c.is_correct
         }));
         
