@@ -8,18 +8,20 @@ export const USER_ROLES = {
 };    export const fetchAllUsers = async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
-        .order('first_name');
+        .select('*', { head: false, count: 'exact' })
+        .order('first_name', { foreignTable: undefined })
+        .headers({ Accept: 'application/json' });
       if (error) throw error;
       return data;
     };
     
     export const getAllUsersByRole = async (role) => {
         const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('role', role)
-            .order('first_name');
+          .from('profiles')
+          .select('*', { head: false, count: 'exact' })
+          .eq('role', role)
+          .order('first_name', { foreignTable: undefined })
+          .headers({ Accept: 'application/json' });
         if (error) throw error;
         return data;
     };
@@ -34,9 +36,10 @@ export const USER_ROLES = {
           // Fallback: essayer l'accès direct si la function échoue
           const { data: fallbackData, error: fallbackError } = await supabase
             .from('profiles')
-            .select('*')
+            .select('*', { head: false, count: 'exact' })
             .eq('id', userId)
-            .single();
+            .single()
+            .headers({ Accept: 'application/json' });
           if (fallbackError && fallbackError.code !== 'PGRST116') {
             throw fallbackError;
           }
@@ -52,9 +55,10 @@ export const USER_ROLES = {
     export const getLearnersByTrainer = async (trainerId) => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*', { head: false, count: 'exact' })
         .eq('assigned_trainer_id', trainerId)
-        .eq('role', USER_ROLES.LEARNER);
+        .eq('role', USER_ROLES.LEARNER)
+        .headers({ Accept: 'application/json' });
       if (error) throw error;
       return data;
     };
@@ -62,9 +66,10 @@ export const USER_ROLES = {
     export const getUnassignedLearners = async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*', { head: false, count: 'exact' })
         .is('assigned_trainer_id', null)
-        .eq('role', USER_ROLES.LEARNER);
+        .eq('role', USER_ROLES.LEARNER)
+        .headers({ Accept: 'application/json' });
       if (error) throw error;
       return data;
     };
@@ -73,7 +78,10 @@ export const USER_ROLES = {
       const { data, error } = await supabase
         .from('profiles')
         .update({ assigned_trainer_id: trainerId })
-        .eq('id', learnerId);
+        .eq('id', learnerId)
+        .select()
+        .single()
+        .headers({ Accept: 'application/json' });
       if (error) throw error;
       return data;
     };
@@ -82,30 +90,35 @@ export const USER_ROLES = {
       const { data, error } = await supabase
         .from('profiles')
         .update({ assigned_trainer_id: null })
-        .eq('id', learnerId);
+        .eq('id', learnerId)
+        .select()
+        .single()
+        .headers({ Accept: 'application/json' });
       if (error) throw error;
       return data;
     };
 
     export const getLearnerByCode = async (code) => {
         const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('learner_code', code)
-            .eq('role', USER_ROLES.LEARNER)
-            .single();
+          .from('profiles')
+          .select('*', { head: false, count: 'exact' })
+          .eq('learner_code', code)
+          .eq('role', USER_ROLES.LEARNER)
+          .single()
+          .headers({ Accept: 'application/json' });
         if (error && error.code !== 'PGRST116') throw error;
         return data;
     };
 
     export const getTrainerByPseudoAndCode = async (pseudo, code) => {
         const { data, error } = await supabase
-            .from('profiles')
-            .select('id, pseudo')
-            .eq('pseudo', pseudo)
-            .eq('trainer_code', code)
-            .eq('role', USER_ROLES.TRAINER)
-            .single();
+          .from('profiles')
+          .select('id, pseudo', { head: false, count: 'exact' })
+          .eq('pseudo', pseudo)
+          .eq('trainer_code', code)
+          .eq('role', USER_ROLES.TRAINER)
+          .single()
+          .headers({ Accept: 'application/json' });
         if (error && error.code !== 'PGRST116') throw error;
         return data;
     };
@@ -116,7 +129,8 @@ export const USER_ROLES = {
         .update(updates)
         .eq('id', userId)
         .select()
-        .single();
+        .single()
+        .headers({ Accept: 'application/json' });
       if (error) throw error;
       return data;
     };
