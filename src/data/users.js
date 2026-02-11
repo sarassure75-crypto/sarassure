@@ -38,7 +38,7 @@ export const USER_ROLES = {
             .from('profiles')
             .select('*', { head: false, count: 'exact' })
             .eq('id', userId)
-            .single()
+            .maybeSingle()
             .headers({ Accept: 'application/json' });
           if (fallbackError && fallbackError.code !== 'PGRST116') {
             throw fallbackError;
@@ -80,7 +80,7 @@ export const USER_ROLES = {
         .update({ assigned_trainer_id: trainerId })
         .eq('id', learnerId)
         .select()
-        .single()
+        .maybeSingle()
         .headers({ Accept: 'application/json' });
       if (error) throw error;
       return data;
@@ -92,7 +92,7 @@ export const USER_ROLES = {
         .update({ assigned_trainer_id: null })
         .eq('id', learnerId)
         .select()
-        .single()
+        .maybeSingle()
         .headers({ Accept: 'application/json' });
       if (error) throw error;
       return data;
@@ -104,7 +104,7 @@ export const USER_ROLES = {
           .select('*', { head: false, count: 'exact' })
           .eq('learner_code', code)
           .eq('role', USER_ROLES.LEARNER)
-          .single()
+          .maybeSingle()
           .headers({ Accept: 'application/json' });
         if (error && error.code !== 'PGRST116') throw error;
         return data;
@@ -117,7 +117,7 @@ export const USER_ROLES = {
           .eq('pseudo', pseudo)
           .eq('trainer_code', code)
           .eq('role', USER_ROLES.TRAINER)
-          .single()
+          .maybeSingle()
           .headers({ Accept: 'application/json' });
         if (error && error.code !== 'PGRST116') throw error;
         return data;
@@ -129,7 +129,7 @@ export const USER_ROLES = {
         .update(updates)
         .eq('id', userId)
         .select()
-        .single()
+        .maybeSingle()
         .headers({ Accept: 'application/json' });
       if (error) throw error;
       return data;
@@ -172,10 +172,10 @@ export const USER_ROLES = {
         if (!signUpData.user) throw new Error("La création de l'utilisateur a échoué.");
 
         const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('id, learner_code')
-            .eq('id', signUpData.user.id)
-            .single();
+          .from('profiles')
+          .select('id, learner_code')
+          .eq('id', signUpData.user.id)
+          .maybeSingle();
         
         if (profileError) throw profileError;
         if (!profile || !profile.learner_code) throw new Error("Impossible de récupérer le code apprenant après la création.");
@@ -214,10 +214,10 @@ export const USER_ROLES = {
         if (!data.user) throw new Error("La création du formateur a échoué.");
 
         const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', data.user.id)
-            .single();
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .maybeSingle();
         
         if (profileError) throw profileError;
 
