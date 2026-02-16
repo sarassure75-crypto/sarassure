@@ -56,6 +56,25 @@ export const AuthProvider = ({ children }) => {
         }
       } catch (error) {
         console.error('❌ Error checking session:', error);
+
+        // If refresh token is invalid or not found, clear stored session to avoid
+        // repeated failed refresh attempts and force a clean sign-out.
+        try {
+          const msg = String(error?.message || '');
+          if (msg.includes('Invalid Refresh Token') || msg.includes('Refresh Token Not Found')) {
+            console.warn('ℹ️ Invalid refresh token detected — clearing local session.');
+            // attempt a graceful sign out and remove stored session
+            await supabase.auth.signOut();
+            try {
+              window.localStorage.removeItem('sarassure-auth-token');
+            } catch (e) {
+              /* ignore */
+            }
+          }
+        } catch (cleanupErr) {
+          console.error('Error while cleaning invalid session:', cleanupErr);
+        }
+
         if (isMounted) {
           setLoading(false);
         }
