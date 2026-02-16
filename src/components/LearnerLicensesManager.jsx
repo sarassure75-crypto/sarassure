@@ -4,7 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
-import { getCategoriesWithLicenseStatusForLearner, assignCategoryToLearner, removeCategoryFromLearner } from '@/data/licenses';
+import {
+  getCategoriesWithLicenseStatusForLearner,
+  assignCategoryToLearner,
+  removeCategoryFromLearner,
+} from '@/data/licenses';
 import { Shield, Lock, Unlock } from 'lucide-react';
 
 export default function LearnerLicensesManager({ learnerId, learnerName, trainerId, onUpdate }) {
@@ -26,7 +30,7 @@ export default function LearnerLicensesManager({ learnerId, learnerName, trainer
       toast({
         title: 'Erreur',
         description: error.message || 'Impossible de charger les catégories',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -39,13 +43,13 @@ export default function LearnerLicensesManager({ learnerId, learnerName, trainer
         await removeCategoryFromLearner(learnerId, categoryId);
         toast({
           title: 'Catégorie retirée',
-          description: `${categoryName} a été retiré pour ${learnerName}`
+          description: `${categoryName} a été retiré pour ${learnerName}`,
         });
       } else {
         await assignCategoryToLearner(learnerId, categoryId, trainerId);
         toast({
           title: 'Catégorie accordée',
-          description: `${categoryName} a été accordé à ${learnerName}`
+          description: `${categoryName} a été accordé à ${learnerName}`,
         });
       }
       await loadLicenses();
@@ -53,8 +57,8 @@ export default function LearnerLicensesManager({ learnerId, learnerName, trainer
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: 'Impossible de modifier l\'accès',
-        variant: 'destructive'
+        description: "Impossible de modifier l'accès",
+        variant: 'destructive',
       });
     }
   };
@@ -66,16 +70,14 @@ export default function LearnerLicensesManager({ learnerId, learnerName, trainer
           <Shield className="w-5 h-5" />
           Accès aux Catégories
         </CardTitle>
-        <CardDescription>
-          Gérez l'accès aux catégories pour {learnerName}
-        </CardDescription>
+        <CardDescription>Gérez l'accès aux catégories pour {learnerName}</CardDescription>
       </CardHeader>
       <CardContent>
         {loading ? (
           <p className="text-sm text-muted-foreground text-center py-8">Chargement...</p>
         ) : (
           <div className="space-y-2">
-            {categories.map(category => (
+            {categories.map((category) => (
               <div
                 key={category.id}
                 className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/30 transition-colors"
@@ -96,10 +98,10 @@ export default function LearnerLicensesManager({ learnerId, learnerName, trainer
                     )}
                   </div>
                 </div>
-                
+
                 <Switch
                   checked={category.hasLicense}
-                  onCheckedChange={() => 
+                  onCheckedChange={() =>
                     handleToggleLicense(category.id, category.hasLicense, category.name)
                   }
                 />

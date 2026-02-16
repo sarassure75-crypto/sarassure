@@ -1,7 +1,25 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, LayoutGrid, Image, CheckCircle, Users, MessageSquare, AlertTriangle, Mail, ListTodo, DollarSign, ClipboardList, Zap, ListChecks, Star, Book, Languages, Globe } from 'lucide-react';
+import {
+  Home,
+  LayoutGrid,
+  Image,
+  CheckCircle,
+  Users,
+  MessageSquare,
+  AlertTriangle,
+  Mail,
+  ListTodo,
+  DollarSign,
+  ClipboardList,
+  Zap,
+  ListChecks,
+  Star,
+  Book,
+  Languages,
+  Globe,
+} from 'lucide-react';
 
 export default function AdminTabNavigation({ counters = {} }) {
   const navigate = useNavigate();
@@ -29,33 +47,83 @@ export default function AdminTabNavigation({ counters = {} }) {
 
   const navItems = [
     { id: 'dashboard', label: 'Tâches', icon: ListTodo, path: '/admin/dashboard', count: 0 },
-    { id: 'categories', label: 'Catégories', icon: LayoutGrid, path: '/admin/categories', count: 0 },
+    {
+      id: 'categories',
+      label: 'Catégories',
+      icon: LayoutGrid,
+      path: '/admin/categories',
+      count: 0,
+    },
     { id: 'images', label: 'Images', icon: Image, path: '/admin/images', count: 0 },
     { id: 'requests', label: 'Demandes', icon: ClipboardList, path: '/admin/requests', count: 0 },
-    { id: 'validation-images', label: 'Valider images', icon: CheckCircle, path: '/admin/validation/images', count: counters.pendingImages || 0 },
-    { id: 'validation-exercices', label: 'Valider exercices', icon: CheckCircle, path: '/admin/validation/exercices', count: counters.pendingContributions || 0 },
-    { id: 'validation-questionnaires', label: 'Valider QCM', icon: ListChecks, path: '/admin/validation/questionnaires', count: counters.pendingQuestionnaires || 0 },
+    {
+      id: 'validation-images',
+      label: 'Valider images',
+      icon: CheckCircle,
+      path: '/admin/validation/images',
+      count: counters.pendingImages || 0,
+    },
+    {
+      id: 'validation-exercices',
+      label: 'Valider exercices',
+      icon: CheckCircle,
+      path: '/admin/validation/exercices',
+      count: counters.pendingContributions || 0,
+    },
+    {
+      id: 'validation-questionnaires',
+      label: 'Valider QCM',
+      icon: ListChecks,
+      path: '/admin/validation/questionnaires',
+      count: counters.pendingQuestionnaires || 0,
+    },
     { id: 'revenus', label: 'Revenus', icon: DollarSign, path: '/admin/revenus', count: 0 },
     { id: 'points', label: 'Points', icon: Zap, path: '/admin/points', count: 0 },
     { id: 'reviews', label: 'Avis', icon: Star, path: '/admin/reviews', count: 0 },
     { id: 'users', label: 'Utilisateurs', icon: Users, path: '/admin/users', count: 0 },
-    { id: 'faq', label: 'FAQ', icon: MessageSquare, path: '/admin/faq', count: counters.pendingFaq || 0 },
+    {
+      id: 'faq',
+      label: 'FAQ',
+      icon: MessageSquare,
+      path: '/admin/faq',
+      count: counters.pendingFaq || 0,
+    },
     { id: 'lexique', label: 'Lexique', icon: Book, path: '/admin/lexique', count: 0 },
-    { id: 'traductions', label: 'Traductions', icon: Languages, path: '/admin/traductions', count: 0 },
-    { id: 'traductions-qcm', label: 'QCM 🌐', icon: Globe, path: '/admin/traductions-qcm', count: 0 },
+    {
+      id: 'traductions',
+      label: 'Traductions',
+      icon: Languages,
+      path: '/admin/traductions',
+      count: 0,
+    },
+    {
+      id: 'traductions-qcm',
+      label: 'QCM 🌐',
+      icon: Globe,
+      path: '/admin/traductions-qcm',
+      count: 0,
+    },
     { id: 'errors', label: 'Rapports', icon: AlertTriangle, path: '/admin/errors', count: 0 },
-    { id: 'contact', label: 'Messages', icon: Mail, path: '/admin/contact', count: counters.pendingMessages || 0 },
+    {
+      id: 'contact',
+      label: 'Messages',
+      icon: Mail,
+      path: '/admin/contact',
+      count: counters.pendingMessages || 0,
+    },
   ];
 
   return (
     <div className="mb-6 overflow-x-auto pb-2">
       <div className="grid grid-cols-5 md:grid-cols-5 lg:grid-cols-11 gap-2 min-w-min">
-        {navItems.map(item => (
+        {navItems.map((item) => (
           <Button
             key={item.id}
             onClick={() => navigate(item.path)}
-            variant={currentTab === item.id ? "default" : "outline"}
-            className={`w-24 relative h-auto flex-col p-2 text-xs flex-shrink-0 ${currentTab === item.id ? 'ring-2 ring-primary' : ''}`}
+            variant={currentTab === item.id ? 'default' : 'outline'}
+            className={`w-24 relative h-auto flex-col p-2 text-xs flex-shrink-0 ${
+              currentTab === item.id ? 'ring-2 ring-primary' : ''
+            }`}
           >
             <div className="relative inline-block mb-1">
               <item.icon className="h-5 w-5" />

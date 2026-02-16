@@ -3,16 +3,16 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { useAdminCounters } from '../hooks/useAdminCounters';
 import AdminTabNavigation from '../components/admin/AdminTabNavigation';
-import { 
-  Check, 
-  X, 
-  ChevronLeft, 
-  ChevronRight, 
+import {
+  Check,
+  X,
+  ChevronLeft,
+  ChevronRight,
   AlertTriangle,
   Eye,
   Trash2,
   Image,
-  Home
+  Home,
 } from 'lucide-react';
 
 export default function AdminImageValidation() {
@@ -29,7 +29,7 @@ export default function AdminImageValidation() {
   const [rejectReason, setRejectReason] = useState('');
   const [imageToReject, setImageToReject] = useState(null);
   const loadingRef = useRef(false);
-  
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
@@ -46,10 +46,10 @@ export default function AdminImageValidation() {
       console.log('⚠️ Chargement déjà en cours, annulation...');
       return;
     }
-    
+
     loadingRef.current = true;
     setLoading(true);
-    
+
     try {
       // Compter le total d'images en attente
       const { count, error: countError } = await supabase
@@ -66,7 +66,8 @@ export default function AdminImageValidation() {
 
       const { data, error } = await supabase
         .from('images_metadata')
-        .select(`
+        .select(
+          `
           *,
           uploader:uploaded_by (
             id,
@@ -75,13 +76,14 @@ export default function AdminImageValidation() {
             email,
             role
           )
-        `)
+        `
+        )
         .eq('moderation_status', 'pending')
         .order('uploaded_at', { ascending: false })
         .range(from, to);
 
       if (error) throw error;
-      
+
       setImages(data || []);
       setCurrentPage(page);
       if (data && data.length > 0) {
@@ -104,24 +106,24 @@ export default function AdminImageValidation() {
 
   const approveImage = async (imageId) => {
     if (validatingId) return; // Empêcher les clics multiples
-    
+
     setValidatingId(imageId);
     try {
       const { error } = await supabase
         .from('images_metadata')
-        .update({ 
+        .update({
           moderation_status: 'approved',
           reviewed_by: currentUser.id,
-          reviewed_at: new Date().toISOString()
+          reviewed_at: new Date().toISOString(),
         })
         .eq('id', imageId);
 
       if (error) throw error;
 
       // Mettre à jour la liste localement
-      const updatedImages = images.filter(img => img.id !== imageId);
+      const updatedImages = images.filter((img) => img.id !== imageId);
       setImages(updatedImages);
-      
+
       // Sélectionner l'image suivante
       if (updatedImages.length > 0) {
         const newIndex = Math.min(currentIndex, updatedImages.length - 1);
@@ -154,20 +156,20 @@ export default function AdminImageValidation() {
     try {
       const { error } = await supabase
         .from('images_metadata')
-        .update({ 
+        .update({
           moderation_status: 'rejected',
           rejection_reason: rejectReason.trim(),
           reviewed_by: currentUser.id,
-          reviewed_at: new Date().toISOString()
+          reviewed_at: new Date().toISOString(),
         })
         .eq('id', imageToReject);
 
       if (error) throw error;
 
       // Mettre à jour la liste localement
-      const updatedImages = images.filter(img => img.id !== imageToReject);
+      const updatedImages = images.filter((img) => img.id !== imageToReject);
       setImages(updatedImages);
-      
+
       // Sélectionner l'image suivante
       if (updatedImages.length > 0) {
         const newIndex = Math.min(currentIndex, updatedImages.length - 1);
@@ -204,11 +206,9 @@ export default function AdminImageValidation() {
       // Mettre à jour l'image sélectionnée
       const updatedImage = { ...selectedImage, android_version: newAndroidVersion.trim() };
       setSelectedImage(updatedImage);
-      
+
       // Mettre à jour dans la liste
-      setImages(images.map(img => 
-        img.id === selectedImage.id ? updatedImage : img
-      ));
+      setImages(images.map((img) => (img.id === selectedImage.id ? updatedImage : img)));
 
       setEditingAndroidVersion(false);
       setNewAndroidVersion('');
@@ -235,25 +235,20 @@ export default function AdminImageValidation() {
     setValidatingId(imageId);
     try {
       // Supprimer de la storage
-      const image = images.find(img => img.id === imageId);
+      const image = images.find((img) => img.id === imageId);
       if (image?.file_path) {
-        await supabase.storage
-          .from('images')
-          .remove([image.file_path]);
+        await supabase.storage.from('images').remove([image.file_path]);
       }
 
       // Supprimer les métadonnées
-      const { error } = await supabase
-        .from('images_metadata')
-        .delete()
-        .eq('id', imageId);
+      const { error } = await supabase.from('images_metadata').delete().eq('id', imageId);
 
       if (error) throw error;
 
       // Mettre à jour la liste localement
-      const updatedImages = images.filter(img => img.id !== imageId);
+      const updatedImages = images.filter((img) => img.id !== imageId);
       setImages(updatedImages);
-      
+
       // Sélectionner l'image suivante
       if (updatedImages.length > 0) {
         const newIndex = Math.min(currentIndex, updatedImages.length - 1);
@@ -291,7 +286,7 @@ export default function AdminImageValidation() {
         <div className="bg-white rounded-lg border shadow-sm mb-6">
           <div className="flex flex-col space-y-1.5 p-6">
             <h3 className="flex items-center text-3xl font-semibold leading-none tracking-tight">
-              <Home className="mr-3 h-8 w-8 text-primary"/>
+              <Home className="mr-3 h-8 w-8 text-primary" />
               Validation des images
             </h3>
             <p className="text-sm text-muted-foreground">
@@ -318,7 +313,7 @@ export default function AdminImageValidation() {
       <div className="bg-white rounded-lg border shadow-sm mb-6">
         <div className="flex flex-col space-y-1.5 p-6">
           <h3 className="flex items-center text-3xl font-semibold leading-none tracking-tight">
-            <Home className="mr-3 h-8 w-8 text-primary"/>
+            <Home className="mr-3 h-8 w-8 text-primary" />
             Validation des images
           </h3>
           <p className="text-sm text-muted-foreground">
@@ -409,7 +404,9 @@ export default function AdminImageValidation() {
                   <div>
                     <span className="text-gray-600">Statut</span>
                     <p className="font-medium text-gray-900 capitalize">
-                      {selectedImage.moderation_status === 'pending' ? 'En attente' : selectedImage.moderation_status}
+                      {selectedImage.moderation_status === 'pending'
+                        ? 'En attente'
+                        : selectedImage.moderation_status}
                     </p>
                   </div>
                 </div>
@@ -419,7 +416,10 @@ export default function AdminImageValidation() {
                     <span className="text-gray-600 text-sm">Tags</span>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {selectedImage.tags.map((tag, i) => (
-                        <span key={i} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
+                        <span
+                          key={i}
+                          className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+                        >
                           {tag}
                         </span>
                       ))}
@@ -493,9 +493,7 @@ export default function AdminImageValidation() {
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full">
             <div className="p-4 border-b bg-gray-50">
-              <h3 className="font-semibold text-gray-900">
-                En attente ({totalCount})
-              </h3>
+              <h3 className="font-semibold text-gray-900">En attente ({totalCount})</h3>
               <p className="text-xs text-gray-500 mt-1">
                 Page {currentPage + 1} / {Math.ceil(totalCount / ITEMS_PER_PAGE)}
               </p>
@@ -513,7 +511,8 @@ export default function AdminImageValidation() {
                 Préc.
               </button>
               <span className="text-sm text-gray-600">
-                {currentPage * ITEMS_PER_PAGE + 1} - {Math.min((currentPage + 1) * ITEMS_PER_PAGE, totalCount)} / {totalCount}
+                {currentPage * ITEMS_PER_PAGE + 1} -{' '}
+                {Math.min((currentPage + 1) * ITEMS_PER_PAGE, totalCount)} / {totalCount}
               </span>
               <button
                 onClick={() => loadPendingImages(currentPage + 1)}
@@ -545,9 +544,7 @@ export default function AdminImageValidation() {
                     alt={image.title}
                     className="w-full h-20 object-cover rounded mb-2"
                   />
-                  <p className="font-medium text-gray-900 text-sm truncate">
-                    {image.title}
-                  </p>
+                  <p className="font-medium text-gray-900 text-sm truncate">{image.title}</p>
                   <p className="text-xs text-gray-600">
                     {image.uploader?.first_name} {image.uploader?.last_name}
                   </p>
@@ -564,9 +561,7 @@ export default function AdminImageValidation() {
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Rejeter l'image
-                </h3>
+                <h3 className="text-lg font-semibold text-gray-900">Rejeter l'image</h3>
                 <button
                   onClick={() => {
                     setShowRejectModal(false);

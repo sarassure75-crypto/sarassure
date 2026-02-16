@@ -3,7 +3,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Trash2, Download, Upload, Share2, Lock, Globe, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -106,7 +113,7 @@ const CustomIconCollections = () => {
     try {
       const success = await removeIconFromCollection(iconId);
       if (success) {
-        setCollectionIcons(collectionIcons.filter(icon => icon.id !== iconId));
+        setCollectionIcons(collectionIcons.filter((icon) => icon.id !== iconId));
         toast({
           title: 'Succès',
           description: 'Icône supprimée de la collection',
@@ -143,7 +150,7 @@ const CustomIconCollections = () => {
         console.error('Erreur import:', error);
         toast({
           title: 'Erreur',
-          description: 'Impossible d\'importer la collection',
+          description: "Impossible d'importer la collection",
           variant: 'destructive',
         });
       }
@@ -194,7 +201,8 @@ const CustomIconCollections = () => {
                     <h3 className="font-semibold">{collection.name}</h3>
                     <p className="text-sm text-gray-600">{collection.description}</p>
                     <p className="text-xs text-gray-500 mt-2">
-                      {collectionIcons.filter(i => i.collection_id === collection.id).length} icônes
+                      {collectionIcons.filter((i) => i.collection_id === collection.id).length}{' '}
+                      icônes
                     </p>
                   </button>
                 ))}

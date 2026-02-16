@@ -4,7 +4,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Users, Mail, Calendar, Plus, Link2, Trash2, CheckCircle2, AlertCircle, UserPlus } from 'lucide-react';
+import {
+  Users,
+  Mail,
+  Calendar,
+  Plus,
+  Link2,
+  Trash2,
+  CheckCircle2,
+  AlertCircle,
+  UserPlus,
+} from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 
 import { createLearner } from '@/data/users';
@@ -49,7 +59,7 @@ export default function TrainerLearnersPage() {
 
   const handleLinkLearner = async (e) => {
     e.preventDefault();
-    
+
     if (!learnerCode.trim()) {
       setMessage({ type: 'error', text: 'Veuillez entrer un code apprenant' });
       return;
@@ -57,7 +67,7 @@ export default function TrainerLearnersPage() {
 
     try {
       setIsLinking(true);
-      
+
       // Chercher l'apprenant par code
       const { data: learnerData, error: fetchError } = await supabase
         .from('profiles')
@@ -108,7 +118,7 @@ export default function TrainerLearnersPage() {
       setIsCreating(true);
 
       const newLearner = await createLearner(newLearnerFirstName);
-      
+
       // Lier l'apprenant au formateur
       const { error: linkError } = await supabase
         .from('profiles')
@@ -117,11 +127,11 @@ export default function TrainerLearnersPage() {
 
       if (linkError) throw linkError;
 
-      setMessage({ 
-        type: 'success', 
-        text: `Apprenant "${newLearner.first_name}" créé avec succès! Code: ${newLearner.learner_code}` 
+      setMessage({
+        type: 'success',
+        text: `Apprenant "${newLearner.first_name}" créé avec succès! Code: ${newLearner.learner_code}`,
       });
-      
+
       setNewLearnerFirstName('');
       setShowCreateForm(false);
       loadLearners();
@@ -185,13 +195,21 @@ export default function TrainerLearnersPage() {
 
         {/* Messages */}
         {message.text && (
-          <Alert className={message.type === 'error' ? 'bg-red-50 border-red-200 mb-8' : 'bg-green-50 border-green-200 mb-8'}>
+          <Alert
+            className={
+              message.type === 'error'
+                ? 'bg-red-50 border-red-200 mb-8'
+                : 'bg-green-50 border-green-200 mb-8'
+            }
+          >
             {message.type === 'error' ? (
               <AlertCircle className="text-red-600" />
             ) : (
               <CheckCircle2 className="text-green-600" />
             )}
-            <AlertDescription className={message.type === 'error' ? 'text-red-800' : 'text-green-800'}>
+            <AlertDescription
+              className={message.type === 'error' ? 'text-red-800' : 'text-green-800'}
+            >
               {message.text}
             </AlertDescription>
           </Alert>
@@ -206,7 +224,8 @@ export default function TrainerLearnersPage() {
                 Créer un apprenant (sans email)
               </CardTitle>
               <CardDescription className="text-green-800">
-                Créez un compte pour un apprenant qui n'a pas d'adresse email. Un code unique sera généré.
+                Créez un compte pour un apprenant qui n'a pas d'adresse email. Un code unique sera
+                généré.
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
@@ -285,7 +304,7 @@ export default function TrainerLearnersPage() {
                     disabled={isLinking}
                     className="flex-1 bg-primary hover:bg-primary/90"
                   >
-                    {isLinking ? 'Liaison en cours...' : 'Lier l\'apprenant'}
+                    {isLinking ? 'Liaison en cours...' : "Lier l'apprenant"}
                   </Button>
                   <Button
                     type="button"
@@ -322,9 +341,7 @@ export default function TrainerLearnersPage() {
           <Card>
             <CardContent className="pt-12 pb-12 text-center">
               <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Aucun apprenant lié
-              </h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucun apprenant lié</h3>
               <p className="text-gray-600 mb-6">
                 Créez ou liez des apprenants à votre compte formateur
               </p>
@@ -351,9 +368,7 @@ export default function TrainerLearnersPage() {
             {learners.map((learner) => (
               <Card key={learner.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
-                  <CardTitle className="text-lg">
-                    {learner.first_name || 'Apprenant'}
-                  </CardTitle>
+                  <CardTitle className="text-lg">{learner.first_name || 'Apprenant'}</CardTitle>
                   <CardDescription className="flex items-center gap-1 mt-2">
                     <Mail className="h-4 w-4" />
                     {learner.email?.includes('@example.com') ? 'Aucun' : learner.email}
@@ -362,7 +377,10 @@ export default function TrainerLearnersPage() {
                 <CardContent>
                   <div className="space-y-3">
                     <div className="p-3 bg-gray-100 rounded font-mono text-sm text-center">
-                      Code: <span className="font-bold text-primary">{learner.learner_code || 'N/A'}</span>
+                      Code:{' '}
+                      <span className="font-bold text-primary">
+                        {learner.learner_code || 'N/A'}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Calendar className="h-4 w-4" />

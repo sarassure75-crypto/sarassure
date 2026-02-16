@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabaseClient';
 export function useContributorPoints(contributorId) {
   const [points, setPoints] = useState({
     contributorTotal: 0,
-    platformTotal: 0
+    platformTotal: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -47,11 +47,14 @@ export function useContributorPoints(contributorId) {
           throw platformError;
         }
 
-        const platformTotal = (platformData || []).reduce((sum, row) => sum + (row.total_points || 0), 0);
+        const platformTotal = (platformData || []).reduce(
+          (sum, row) => sum + (row.total_points || 0),
+          0
+        );
 
         setPoints({
           contributorTotal: contributorPoints,
-          platformTotal: platformTotal
+          platformTotal: platformTotal,
         });
       } catch (err) {
         console.error('Error fetching points:', err);
@@ -67,7 +70,7 @@ export function useContributorPoints(contributorId) {
   return {
     points,
     loading,
-    error
+    error,
   };
 }
 

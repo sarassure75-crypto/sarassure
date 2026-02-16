@@ -3,30 +3,30 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  ListChecks, 
-  Search, 
+import {
+  ListChecks,
+  Search,
   ArrowUp,
   ArrowRight,
   ArrowDown,
   Clock,
   AlertCircle,
   CheckCircle2,
-  XCircle
+  XCircle,
 } from 'lucide-react';
 import { fetchExerciseRequests } from '@/data/exerciseRequests';
 
 const priorityConfig = {
   high: { label: 'Prioritaire', icon: ArrowUp, color: 'text-red-600 bg-red-50' },
   normal: { label: 'Normal', icon: ArrowRight, color: 'text-blue-600 bg-blue-50' },
-  low: { label: 'Optionnel', icon: ArrowDown, color: 'text-gray-600 bg-gray-50' }
+  low: { label: 'Optionnel', icon: ArrowDown, color: 'text-gray-600 bg-gray-50' },
 };
 
 const statusConfig = {
   pending: { label: 'À faire', icon: Clock, color: 'text-yellow-600 bg-yellow-50' },
   in_progress: { label: 'En cours', icon: AlertCircle, color: 'text-blue-600 bg-blue-50' },
   completed: { label: 'Terminé', icon: CheckCircle2, color: 'text-green-600 bg-green-50' },
-  cancelled: { label: 'Annulé', icon: XCircle, color: 'text-gray-600 bg-gray-50' }
+  cancelled: { label: 'Annulé', icon: XCircle, color: 'text-gray-600 bg-gray-50' },
 };
 
 export default function ExerciseRequestsList() {
@@ -41,10 +41,10 @@ export default function ExerciseRequestsList() {
   const loadRequests = async () => {
     setLoading(true);
     try {
-      const data = await fetchExerciseRequests({ 
+      const data = await fetchExerciseRequests({
         // N'afficher que les demandes actives (pas completed ni cancelled)
       });
-      setRequests(data.filter(r => r.status !== 'completed' && r.status !== 'cancelled'));
+      setRequests(data.filter((r) => r.status !== 'completed' && r.status !== 'cancelled'));
     } catch (error) {
       console.error('Error loading exercise requests:', error);
     } finally {
@@ -54,21 +54,22 @@ export default function ExerciseRequestsList() {
 
   const filteredRequests = useMemo(() => {
     if (!searchTerm) return requests;
-    
-    return requests.filter(req => 
-      req.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      req.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      req.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      req.category?.name.toLowerCase().includes(searchTerm.toLowerCase())
+
+    return requests.filter(
+      (req) =>
+        req.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        req.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        req.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        req.category?.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [requests, searchTerm]);
 
   // Grouper par priorité
   const priorityGroups = useMemo(() => {
     const groups = {
-      high: filteredRequests.filter(r => r.priority === 'high'),
-      normal: filteredRequests.filter(r => r.priority === 'normal'),
-      low: filteredRequests.filter(r => r.priority === 'low')
+      high: filteredRequests.filter((r) => r.priority === 'high'),
+      normal: filteredRequests.filter((r) => r.priority === 'normal'),
+      low: filteredRequests.filter((r) => r.priority === 'low'),
     };
     return groups;
   }, [filteredRequests]);
@@ -106,7 +107,9 @@ export default function ExerciseRequestsList() {
               <p className="font-semibold mb-1">Comment utiliser cette liste ?</p>
               <ol className="list-decimal list-inside space-y-1">
                 <li>Choisissez un exercice à créer (priorité "Prioritaire" recommandée)</li>
-                <li>Notez le <strong>code de référence</strong> (ex: EX-2025-001)</li>
+                <li>
+                  Notez le <strong>code de référence</strong> (ex: EX-2025-001)
+                </li>
                 <li>Lors de la création, indiquez ce code pour lier votre contribution</li>
                 <li>Votre exercice sera automatiquement associé à la demande</li>
               </ol>
@@ -137,13 +140,15 @@ export default function ExerciseRequestsList() {
             return (
               <div key={priority}>
                 <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                  <PriorityIcon className={`h-5 w-5 ${priorityConfig[priority].color.split(' ')[0]}`} />
+                  <PriorityIcon
+                    className={`h-5 w-5 ${priorityConfig[priority].color.split(' ')[0]}`}
+                  />
                   {priorityConfig[priority].label}
                   <Badge variant="secondary">{items.length}</Badge>
                 </h3>
 
                 <div className="grid gap-4">
-                  {items.map(request => {
+                  {items.map((request) => {
                     const StatusIcon = statusConfig[request.status].icon;
 
                     return (
@@ -160,9 +165,7 @@ export default function ExerciseRequestsList() {
                                   {statusConfig[request.status].label}
                                 </Badge>
                                 {request.category_name && (
-                                  <Badge variant="outline">
-                                    {request.category_name}
-                                  </Badge>
+                                  <Badge variant="outline">{request.category_name}</Badge>
                                 )}
                               </div>
                               <CardTitle className="text-lg">{request.title}</CardTitle>
@@ -180,19 +183,22 @@ export default function ExerciseRequestsList() {
                               <CheckCircle2 className="h-4 w-4 text-green-600" />
                               <span className="font-medium text-green-600">
                                 {request.validated_versions_count || 0}
-                              </span> validée(s)
+                              </span>{' '}
+                              validée(s)
                             </div>
                             <div className="flex items-center gap-1">
                               <Clock className="h-4 w-4 text-yellow-600" />
                               <span className="font-medium text-yellow-600">
                                 {request.pending_versions_count || 0}
-                              </span> en attente
+                              </span>{' '}
+                              en attente
                             </div>
                             <div className="flex items-center gap-1">
                               <ListChecks className="h-4 w-4" />
                               <span className="font-medium">
                                 {request.linked_task_ids?.length || 0}
-                              </span> exercice(s) lié(s)
+                              </span>{' '}
+                              exercice(s) lié(s)
                             </div>
                           </div>
 
@@ -217,10 +223,9 @@ export default function ExerciseRequestsList() {
                 <ListChecks className="h-16 w-16 text-muted-foreground mb-4" />
                 <p className="text-lg font-medium">Aucun exercice à créer</p>
                 <p className="text-sm text-muted-foreground">
-                  {searchTerm 
+                  {searchTerm
                     ? 'Aucun résultat pour cette recherche'
-                    : 'Toutes les demandes sont terminées ou annulées'
-                  }
+                    : 'Toutes les demandes sont terminées ou annulées'}
                 </p>
               </CardContent>
             </Card>

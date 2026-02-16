@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { useImageLibrary, useImageActions } from '../../hooks/useImageLibrary';
-import { 
-  CheckCircle, 
-  XCircle, 
+import {
+  CheckCircle,
+  XCircle,
   Eye,
   X,
   User,
   Calendar,
   Tag,
   AlertTriangle,
-  Image as ImageIcon
+  Image as ImageIcon,
 } from 'lucide-react';
 
 export default function ImageModerationGrid() {
@@ -24,10 +24,8 @@ export default function ImageModerationGrid() {
 
   // Sélection multiple
   const toggleImageSelection = (imageId) => {
-    setSelectedImages(prev => 
-      prev.includes(imageId) 
-        ? prev.filter(id => id !== imageId)
-        : [...prev, imageId]
+    setSelectedImages((prev) =>
+      prev.includes(imageId) ? prev.filter((id) => id !== imageId) : [...prev, imageId]
     );
   };
 
@@ -35,7 +33,7 @@ export default function ImageModerationGrid() {
     if (selectedImages.length === images?.length) {
       setSelectedImages([]);
     } else {
-      setSelectedImages(images?.map(img => img.id) || []);
+      setSelectedImages(images?.map((img) => img.id) || []);
     }
   };
 
@@ -52,7 +50,7 @@ export default function ImageModerationGrid() {
   // Approuver en masse
   const handleBulkApprove = async () => {
     if (selectedImages.length === 0) return;
-    
+
     if (!window.confirm(`Approuver ${selectedImages.length} image(s) ?`)) return;
 
     let successCount = 0;
@@ -88,10 +86,10 @@ export default function ImageModerationGrid() {
   // Formatage date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', { 
+    return date.toLocaleDateString('fr-FR', {
       day: '2-digit',
       month: 'short',
-      year: 'numeric'
+      year: 'numeric',
     });
   };
 
@@ -151,19 +149,17 @@ export default function ImageModerationGrid() {
         >
           {selectedImages.length === images?.length ? 'Désélectionner tout' : 'Sélectionner tout'}
         </button>
-        <div className="text-sm text-gray-600">
-          {images?.length} image(s) à modérer
-        </div>
+        <div className="text-sm text-gray-600">{images?.length} image(s) à modérer</div>
       </div>
 
       {/* Grille d'images */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {images.map((image) => (
-          <div 
+          <div
             key={image.id}
             className={`bg-white rounded-lg shadow-sm border-2 overflow-hidden transition-all ${
-              selectedImages.includes(image.id) 
-                ? 'border-purple-500 shadow-md' 
+              selectedImages.includes(image.id)
+                ? 'border-purple-500 shadow-md'
                 : 'border-gray-200 hover:border-gray-300'
             }`}
           >
@@ -175,14 +171,14 @@ export default function ImageModerationGrid() {
                 onChange={() => toggleImageSelection(image.id)}
                 className="absolute top-2 left-2 w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer z-10"
               />
-              
+
               {/* Image */}
-              <div 
+              <div
                 className="aspect-square bg-gray-100 cursor-pointer group relative"
                 onClick={() => setSelectedImage(image)}
               >
-                <img 
-                  src={image.public_url} 
+                <img
+                  src={image.public_url}
                   alt={image.title}
                   className="w-full h-full object-cover"
                 />
@@ -195,7 +191,7 @@ export default function ImageModerationGrid() {
             {/* Infos */}
             <div className="p-3 space-y-2">
               <h4 className="font-medium text-gray-900 truncate text-sm">{image.title}</h4>
-              
+
               <div className="space-y-1 text-xs text-gray-500">
                 <div className="flex items-center space-x-1">
                   <User className="w-3 h-3" />
@@ -246,7 +242,7 @@ export default function ImageModerationGrid() {
 
       {/* Modal Prévisualisation */}
       {selectedImage && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"
           onClick={() => setSelectedImage(null)}
         >
@@ -278,9 +274,9 @@ export default function ImageModerationGrid() {
                 <X className="w-8 h-8" />
               </button>
             </div>
-            
-            <img 
-              src={selectedImage.public_url} 
+
+            <img
+              src={selectedImage.public_url}
               alt={selectedImage.title}
               className="w-full h-auto rounded-lg mb-4"
             />
@@ -323,8 +319,8 @@ export default function ImageModerationGrid() {
             <div className="p-6 space-y-4">
               {/* Prévisualisation */}
               <div className="flex justify-center">
-                <img 
-                  src={imageToReject.public_url} 
+                <img
+                  src={imageToReject.public_url}
                   alt={imageToReject.title}
                   className="max-h-48 rounded border border-gray-300"
                 />

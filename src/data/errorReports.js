@@ -18,16 +18,10 @@ export const createErrorReport = async (reportData) => {
     ...reportData,
     description:
       reportData?.description ??
-      [reportData?.error_type, reportData?.error_message]
-        .filter(Boolean)
-        .join(' - '),
+      [reportData?.error_type, reportData?.error_message].filter(Boolean).join(' - '),
   };
 
-  const { data, error } = await supabase
-    .from('error_reports')
-    .insert([payload])
-    .select()
-    .single();
+  const { data, error } = await supabase.from('error_reports').insert([payload]).select().single();
   if (error) {
     console.error('Error creating error report:', error);
     throw error;
@@ -50,10 +44,7 @@ export const updateErrorReport = async (id, updates) => {
 };
 
 export const deleteErrorReport = async (id) => {
-  const { error } = await supabase
-    .from('error_reports')
-    .delete()
-    .eq('id', id);
+  const { error } = await supabase.from('error_reports').delete().eq('id', id);
   if (error) {
     console.error('Error deleting error report:', error);
     throw error;

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import AreaStyleEditorClient from './AreaStyleEditorClient';
@@ -12,14 +11,14 @@ const AreaStyleEditor = ({ area, onAreaChange }) => {
       if (!rootRef.current) {
         rootRef.current = createRoot(containerRef.current);
       }
-      
+
       rootRef.current.render(
         <React.StrictMode>
           <AreaStyleEditorClient area={area} onAreaChange={onAreaChange} />
         </React.StrictMode>
       );
     }
-    
+
     // Cleanup function to unmount the React root when the component is unmounted
     return () => {
       if (rootRef.current) {

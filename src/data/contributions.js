@@ -24,8 +24,8 @@ export async function createContributorRequest(userId, { message, experience }) 
           user_id: userId,
           message,
           experience,
-          status: 'pending'
-        }
+          status: 'pending',
+        },
       ])
       .select()
       .single();
@@ -66,7 +66,8 @@ export async function getPendingContributorRequests() {
   try {
     const { data, error } = await supabase
       .from('contributor_requests')
-      .select(`
+      .select(
+        `
         *,
         users:user_id (
           id,
@@ -75,7 +76,8 @@ export async function getPendingContributorRequests() {
           last_name,
           created_at
         )
-      `)
+      `
+      )
       .eq('status', 'pending')
       .order('created_at', { ascending: true });
 
@@ -115,7 +117,7 @@ export async function approveContributorRequest(requestId, adminId, adminNotes =
         status: 'approved',
         reviewed_by: adminId,
         reviewed_at: new Date().toISOString(),
-        admin_notes: adminNotes
+        admin_notes: adminNotes,
       })
       .eq('id', requestId)
       .select()
@@ -128,7 +130,8 @@ export async function approveContributorRequest(requestId, adminId, adminNotes =
       .from('contributor_stats')
       .insert([{ user_id: request.user_id }]);
 
-    if (statsError && statsError.code !== '23505') { // Ignore si déjà existe
+    if (statsError && statsError.code !== '23505') {
+      // Ignore si déjà existe
       console.warn('Stats initialization warning:', statsError);
     }
 
@@ -150,7 +153,7 @@ export async function rejectContributorRequest(requestId, adminId, adminNotes = 
         status: 'rejected',
         reviewed_by: adminId,
         reviewed_at: new Date().toISOString(),
-        admin_notes: adminNotes
+        admin_notes: adminNotes,
       })
       .eq('id', requestId)
       .select()
@@ -180,8 +183,8 @@ export async function createContribution(contributorId, type, content) {
           contributor_id: contributorId,
           type,
           content,
-          status: 'draft'
-        }
+          status: 'draft',
+        },
       ])
       .select()
       .single();
@@ -224,7 +227,7 @@ export async function submitContribution(contributionId) {
       .from('contributions')
       .update({
         status: 'pending',
-        submitted_at: new Date().toISOString()
+        submitted_at: new Date().toISOString(),
       })
       .eq('id', contributionId)
       .select()
@@ -243,10 +246,7 @@ export async function submitContribution(contributionId) {
  */
 export async function getMyContributions(contributorId, filters = {}) {
   try {
-    let query = supabase
-      .from('contributions')
-      .select('*')
-      .eq('contributor_id', contributorId);
+    let query = supabase.from('contributions').select('*').eq('contributor_id', contributorId);
 
     // Filtres optionnels
     if (filters.status) {
@@ -275,7 +275,8 @@ export async function getPendingContributions(filters = {}) {
   try {
     let query = supabase
       .from('contributions')
-      .select(`
+      .select(
+        `
         *,
         contributor:contributor_id (
           id,
@@ -283,7 +284,8 @@ export async function getPendingContributions(filters = {}) {
           first_name,
           last_name
         )
-      `)
+      `
+      )
       .eq('status', 'pending');
 
     // Filtres optionnels
@@ -307,16 +309,12 @@ export async function getPendingContributions(filters = {}) {
  * Admin : Approuver une contribution
  * Possibilité de modifier le contenu avant publication
  */
-export async function approveContribution(
-  contributionId,
-  reviewerId,
-  modifications = null
-) {
+export async function approveContribution(contributionId, reviewerId, modifications = null) {
   try {
     const updateData = {
       status: 'approved',
       reviewed_by: reviewerId,
-      reviewed_at: new Date().toISOString()
+      reviewed_at: new Date().toISOString(),
     };
 
     // Si l'admin a modifié le contenu
@@ -360,7 +358,7 @@ export async function rejectContribution(contributionId, reviewerId, reason) {
         status: 'rejected',
         reviewed_by: reviewerId,
         reviewed_at: new Date().toISOString(),
-        rejection_reason: reason
+        rejection_reason: reason,
       })
       .eq('id', contributionId)
       .select()
@@ -386,14 +384,10 @@ export async function publishContributionAsTask(contribution) {
       is_community_content: true,
       original_contributor: contribution.contributor_id,
       created_by: contribution.reviewed_by, // L'admin qui a validé
-      is_visible: true
+      is_visible: true,
     };
 
-    const { data, error } = await supabase
-      .from('tasks')
-      .insert([taskData])
-      .select()
-      .single();
+    const { data, error } = await supabase.from('tasks').insert([taskData]).select().single();
 
     if (error) throw error;
 
@@ -413,7 +407,11 @@ export async function publishContributionAsTask(contribution) {
 /**
  * Supprimer une contribution (version, task ou image)
  */
-export async function deleteContribution(contributionId, contributionType = 'version', userId = null) {
+export async function deleteContribution(
+  contributionId,
+  contributionType = 'version',
+  userId = null
+) {
   try {
     let error;
 
@@ -425,11 +423,8 @@ export async function deleteContribution(contributionId, contributionType = 'ver
       }
     } else if (contributionType === 'draft') {
       // Supprimer la tâche complète (brouillon)
-      const { error: taskError } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('id', contributionId);
-      
+      const { error: taskError } = await supabase.from('tasks').delete().eq('id', contributionId);
+
       error = taskError;
     } else {
       // Pour une version spécifique, d'abord récupérer le task_id
@@ -448,7 +443,7 @@ export async function deleteContribution(contributionId, contributionType = 'ver
         .from('versions')
         .delete()
         .eq('id', contributionId);
-      
+
       if (versionError) throw versionError;
 
       // Vérifier s'il reste des versions pour cette tâche
@@ -460,11 +455,8 @@ export async function deleteContribution(contributionId, contributionType = 'ver
 
         // Si plus aucune version, supprimer la tâche
         if (!remainingVersions || remainingVersions.length === 0) {
-          const { error: taskError } = await supabase
-            .from('tasks')
-            .delete()
-            .eq('id', taskId);
-          
+          const { error: taskError } = await supabase.from('tasks').delete().eq('id', taskId);
+
           if (taskError) throw taskError;
         }
       }
@@ -488,12 +480,9 @@ export async function deleteContribution(contributionId, contributionType = 'ver
 export async function getContributorStats(userId) {
   try {
     // Get all task IDs for this contributor
-    const { data: userTasks } = await supabase
-      .from('tasks')
-      .select('id')
-      .eq('owner_id', userId);
+    const { data: userTasks } = await supabase.from('tasks').select('id').eq('owner_id', userId);
 
-    const taskIds = userTasks?.map(t => t.id) || [];
+    const taskIds = userTasks?.map((t) => t.id) || [];
 
     // Count ALL versions (submitted) for this contributor's tasks
     const { data: allVersions } = await supabase
@@ -502,9 +491,11 @@ export async function getContributorStats(userId) {
       .in('task_id', taskIds);
 
     // Count versions by status
-    const approvedVersions = allVersions?.filter(v => v.creation_status === 'validated').length || 0;
-    const pendingVersions = allVersions?.filter(v => v.creation_status === 'pending').length || 0;
-    const rejectedVersions = allVersions?.filter(v => v.creation_status === 'rejected').length || 0;
+    const approvedVersions =
+      allVersions?.filter((v) => v.creation_status === 'validated').length || 0;
+    const pendingVersions = allVersions?.filter((v) => v.creation_status === 'pending').length || 0;
+    const rejectedVersions =
+      allVersions?.filter((v) => v.creation_status === 'rejected').length || 0;
     // Total = validated + pending (ignore rejected/drafts)
     const totalVersions = approvedVersions + pendingVersions;
 
@@ -547,19 +538,19 @@ export async function getContributorStats(userId) {
         total: totalVersions,
         approved: approvedVersions,
         pending: pendingVersions,
-        rejected: rejectedVersions
+        rejected: rejectedVersions,
       },
       // Images du contributeur
       images: {
         total: totalImages || 0,
         approved: approvedImages || 0,
         pending: pendingImages || 0,
-        rejected: rejectedImages || 0
+        rejected: rejectedImages || 0,
       },
       // Totaux globaux pour contexte
       global: {
         total_exercises: allTasks || 0,
-        total_images: allImages || 0
+        total_images: allImages || 0,
       },
       // Compatibilité avec ancien code (total = validated + pending only)
       total_contributions: totalVersions + (totalImages || 0),
@@ -567,7 +558,7 @@ export async function getContributorStats(userId) {
       pending_contributions: pendingVersions + (pendingImages || 0),
       rejected_contributions: rejectedVersions + (rejectedImages || 0),
       images_uploaded: totalImages || 0,
-      images_approved: approvedImages || 0
+      images_approved: approvedImages || 0,
     };
 
     return { success: true, data };
@@ -583,7 +574,7 @@ export async function getContributorStats(userId) {
 export async function refreshContributorStats(userId) {
   try {
     const { data, error } = await supabase.rpc('update_contributor_stats', {
-      p_user_id: userId
+      p_user_id: userId,
     });
 
     if (error) throw error;
@@ -601,7 +592,8 @@ export async function getTopContributors(limit = 10, orderBy = 'approved_contrib
   try {
     const { data, error } = await supabase
       .from('contributor_stats')
-      .select(`
+      .select(
+        `
         *,
         user:user_id (
           id,
@@ -609,7 +601,8 @@ export async function getTopContributors(limit = 10, orderBy = 'approved_contrib
           first_name,
           last_name
         )
-      `)
+      `
+      )
       .order(orderBy, { ascending: false })
       .limit(limit);
 

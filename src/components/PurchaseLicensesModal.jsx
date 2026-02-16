@@ -25,7 +25,7 @@ export default function PurchaseLicensesModal({ trainerId, onSuccess }) {
       toast({
         title: 'Erreur',
         description: 'Impossible de charger les forfaits',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -37,7 +37,7 @@ export default function PurchaseLicensesModal({ trainerId, onSuccess }) {
       toast({
         title: 'Erreur',
         description: 'ID formateur manquant',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
@@ -47,7 +47,7 @@ export default function PurchaseLicensesModal({ trainerId, onSuccess }) {
       // Créer l'achat en base (statut pending)
       const purchase = await createLicensePurchase({
         packageId,
-        trainerId
+        trainerId,
       });
 
       // Rediriger vers Stripe Checkout
@@ -60,8 +60,8 @@ export default function PurchaseLicensesModal({ trainerId, onSuccess }) {
           packageId,
           trainerId,
           successUrl: `${window.location.origin}/compte-formateur?tab=licenses&success=true`,
-          cancelUrl: window.location.href
-        })
+          cancelUrl: window.location.href,
+        }),
       });
 
       if (!response.ok) {
@@ -78,11 +78,11 @@ export default function PurchaseLicensesModal({ trainerId, onSuccess }) {
         throw new Error(result.error.message);
       }
     } catch (err) {
-      console.error('Erreur lors de l\'achat:', err);
+      console.error("Erreur lors de l'achat:", err);
       toast({
         title: 'Erreur',
         description: err.message || 'Erreur lors du traitement du paiement',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setIsProcessing(false);
@@ -116,7 +116,7 @@ export default function PurchaseLicensesModal({ trainerId, onSuccess }) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {packages.map(pkg => (
+            {packages.map((pkg) => (
               <div
                 key={pkg.id}
                 className={`relative border-2 rounded-lg p-4 cursor-pointer transition-all ${
@@ -136,9 +136,7 @@ export default function PurchaseLicensesModal({ trainerId, onSuccess }) {
                 <p className="text-sm text-gray-600 mt-1">{pkg.description}</p>
 
                 <div className="mt-4 flex items-baseline gap-2">
-                  <span className="text-3xl font-bold">
-                    {(pkg.price_cents / 100).toFixed(2)}
-                  </span>
+                  <span className="text-3xl font-bold">{(pkg.price_cents / 100).toFixed(2)}</span>
                   <span className="text-gray-600">€</span>
                 </div>
 

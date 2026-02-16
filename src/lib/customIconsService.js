@@ -13,10 +13,7 @@ import { logger } from '@/lib/logger';
 export const initializeCustomIconsTable = async () => {
   try {
     // Vérifier si la table existe déjà
-    const { error } = await supabase
-      .from('custom_icon_collections')
-      .select('id')
-      .limit(1);
+    const { error } = await supabase.from('custom_icon_collections').select('id').limit(1);
 
     if (error?.code === 'PGRST116') {
       // La table n'existe pas, créer la structure (via migration)
@@ -92,10 +89,7 @@ export const getCollection = async (collectionId) => {
  */
 export const removeIconFromCollection = async (iconId) => {
   try {
-    const { error } = await supabase
-      .from('custom_icon_collections')
-      .delete()
-      .eq('id', iconId);
+    const { error } = await supabase.from('custom_icon_collections').delete().eq('id', iconId);
 
     if (error) {
       logger.error('Erreur suppression icône:', error);
@@ -183,14 +177,14 @@ export const importCollection = async (file, collectionId) => {
     const icons = JSON.parse(text);
 
     if (!Array.isArray(icons)) {
-      throw new Error('Le fichier doit contenir un tableau d\'icônes');
+      throw new Error("Le fichier doit contenir un tableau d'icônes");
     }
 
     // Insérer les icônes dans la collection
     const { data, error } = await supabase
       .from('custom_icon_collections')
       .insert(
-        icons.map(icon => ({
+        icons.map((icon) => ({
           collection_id: collectionId,
           library_id: icon.libraryId,
           icon_name: icon.iconName,

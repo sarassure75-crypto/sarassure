@@ -1,13 +1,17 @@
 /**
  * EXEMPLE D'INTÉGRATION DE TRADUCTION DANS EXERCISEPAGE
- * 
+ *
  * Ce fichier montre comment intégrer la traduction automatique
  * des consignes d'exercices en utilisant le système de traduction
  * et du lexique spécialisé en vocabulaire smartphone.
  */
 
 import React, { useState, useEffect } from 'react';
-import { InstructionTranslator, LanguageSwitcher, TranslatableText } from '@/components/TranslationComponents';
+import {
+  InstructionTranslator,
+  LanguageSwitcher,
+  TranslatableText,
+} from '@/components/TranslationComponents';
 import { translateInstruction, getGlossaryTranslations } from '@/data/translation';
 
 /**
@@ -34,7 +38,7 @@ export function Step1_AddLanguageState() {
       }
     }, []);
   `;
-  
+
   return <pre>{code}</pre>;
 }
 
@@ -59,7 +63,7 @@ export function Step2_LoadGlossaryTranslations() {
       loadGlossaryTerms();
     }, [currentLanguage]);
   `;
-  
+
   return <pre>{code}</pre>;
 }
 
@@ -93,7 +97,7 @@ export function Step3_TranslateInstructions() {
       translateInstr();
     }, [currentStep?.instruction, currentLanguage, glossaryTerms]);
   `;
-  
+
   return <pre>{code}</pre>;
 }
 
@@ -109,7 +113,7 @@ export function Step4_PassLanguageToToolbar() {
       onLanguageChange={handleLanguageChange}
     />
   `;
-  
+
   return <pre>{code}</pre>;
 }
 
@@ -123,7 +127,7 @@ export function Step5_DisplayTranslatedText() {
       {translatedInstruction || 'Aucune instruction'}
     </p>
   `;
-  
+
   return <pre>{code}</pre>;
 }
 
@@ -136,9 +140,10 @@ export function AlternativeApproachWithComponent() {
     <div className="space-y-4 p-4 bg-blue-50 rounded">
       <h3 className="font-bold text-lg">Approche Simplifiée avec InstructionTranslator</h3>
       <p className="text-sm text-gray-700">
-        Vous pouvez utiliser directement le composant InstructionTranslator qui gère tout l'état internement:
+        Vous pouvez utiliser directement le composant InstructionTranslator qui gère tout l'état
+        internement:
       </p>
-      
+
       <code>{`
 <InstructionTranslator 
   instruction={currentStep.instruction}
@@ -196,7 +201,7 @@ const ExerciseHeader = ({
   );
 };
   `;
-  
+
   return <pre>{code}</pre>;
 }
 
@@ -207,10 +212,13 @@ export function APIConfiguration() {
   return (
     <div className="space-y-4 p-4 bg-amber-50 rounded">
       <h3 className="font-bold text-lg">Configuration requise</h3>
-      
+
       <div className="space-y-2 text-sm">
-        <p>Pour une meilleure qualité de traduction, configurez les clés API dans votre fichier <code>.env.local</code>:</p>
-        
+        <p>
+          Pour une meilleure qualité de traduction, configurez les clés API dans votre fichier{' '}
+          <code>.env.local</code>:
+        </p>
+
         <code className="block bg-white p-2 rounded border border-gray-300">
           {`# DeepL API (recommandé pour la qualité)
 VITE_DEEPL_API_KEY=your_deepl_key_here
@@ -220,8 +228,10 @@ VITE_GOOGLE_TRANSLATE_API_KEY=your_google_key_here
 
 # LibreTranslate (gratuit, pas de clé nécessaire)`}
         </code>
-        
-        <p>Sans clé API, le système utilisera LibreTranslate (service public gratuit) comme fallback.</p>
+
+        <p>
+          Sans clé API, le système utilisera LibreTranslate (service public gratuit) comme fallback.
+        </p>
       </div>
     </div>
   );
@@ -240,12 +250,12 @@ export function AvailableLanguages() {
     { code: 'pt', name: 'Português (Portugais)' },
     { code: 'nl', name: 'Nederlands (Néerlandais)' },
   ];
-  
+
   return (
     <div className="space-y-2 p-4 bg-green-50 rounded">
       <h3 className="font-bold">Langues supportées:</h3>
       <ul className="text-sm space-y-1">
-        {languages.map(lang => (
+        {languages.map((lang) => (
           <li key={lang.code}>
             <strong>{lang.name}</strong> (code: <code>{lang.code}</code>)
           </li>
@@ -257,10 +267,10 @@ export function AvailableLanguages() {
 
 /**
  * VOCABULAIRE SMARTPHONE PRÉSERVÉ
- * 
+ *
  * Le système de traduction automatique respecte le lexique défini.
  * Exemples de termes préservés en traduction:
- * 
+ *
  * FR → EN (Exemple de termes du lexique):
  * - "Scroll" → "Scroll" (même en anglais)
  * - "Paramètres" → "Settings"
@@ -271,25 +281,33 @@ export function AvailableLanguages() {
 export function ExampleTranslations() {
   const examples = [
     {
-      french: "Scroll vers le bas pour voir plus de contenu. Accédez aux Paramètres en cliquant sur l'Icône correspondante.",
-      english: "Scroll down to see more content. Access the Settings by clicking on the corresponding Icon.",
-      preserved: ['Scroll', 'Paramètres', 'Icônes']
+      french:
+        "Scroll vers le bas pour voir plus de contenu. Accédez aux Paramètres en cliquant sur l'Icône correspondante.",
+      english:
+        'Scroll down to see more content. Access the Settings by clicking on the corresponding Icon.',
+      preserved: ['Scroll', 'Paramètres', 'Icônes'],
     },
     {
       french: "Appuyez sur le Bouton retour pour revenir à l'Accueil de l'application.",
       english: "Press the Back button to return to the application's Home.",
-      preserved: ['Bouton retour', 'Accueil']
-    }
+      preserved: ['Bouton retour', 'Accueil'],
+    },
   ];
-  
+
   return (
     <div className="space-y-4 p-4 bg-purple-50 rounded">
       <h3 className="font-bold">Exemples de traductions préservant le vocabulaire:</h3>
       {examples.map((example, idx) => (
         <div key={idx} className="space-y-1 text-sm">
-          <p><strong>Français:</strong> {example.french}</p>
-          <p><strong>English:</strong> {example.english}</p>
-          <p><strong>Termes préservés:</strong> {example.preserved.join(', ')}</p>
+          <p>
+            <strong>Français:</strong> {example.french}
+          </p>
+          <p>
+            <strong>English:</strong> {example.english}
+          </p>
+          <p>
+            <strong>Termes préservés:</strong> {example.preserved.join(', ')}
+          </p>
         </div>
       ))}
     </div>
@@ -308,7 +326,7 @@ export default function TranslationIntegrationDemo() {
   return (
     <div className="space-y-6 p-6 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold">Intégration Traduction - Guide Complet</h1>
-      
+
       <div className="space-y-4">
         <h2 className="text-2xl font-bold">Étapes d'intégration</h2>
         <Step1_AddLanguageState />
@@ -326,7 +344,7 @@ export default function TranslationIntegrationDemo() {
 
       <div className="space-y-4 p-4 bg-blue-50 rounded">
         <h3 className="font-bold text-lg">Démonstration en direct</h3>
-        <InstructionTranslator 
+        <InstructionTranslator
           instruction={instruction}
           currentLanguage={currentLanguage}
           onLanguageChange={setCurrentLanguage}

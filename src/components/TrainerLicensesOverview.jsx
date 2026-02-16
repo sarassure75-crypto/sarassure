@@ -35,15 +35,15 @@ export default function TrainerLicensesOverview({ trainerId }) {
 
       // Transformer les données
       const licensesMap = {};
-      licensesData.forEach(license => {
+      licensesData.forEach((license) => {
         const categoryId = license.category_id;
         const categoryName = license.category?.name || `Catégorie ${categoryId}`;
-        
+
         licensesMap[categoryId] = {
           name: categoryName,
           is_active: license.is_active,
           expires_at: license.expires_at,
-          created_at: license.created_at
+          created_at: license.created_at,
         };
       });
 
@@ -54,7 +54,7 @@ export default function TrainerLicensesOverview({ trainerId }) {
       toast({
         title: 'Erreur',
         description: error.message || 'Impossible de charger les données',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       setLicenses({});
       setLearnerLicenses([]);
@@ -65,8 +65,8 @@ export default function TrainerLicensesOverview({ trainerId }) {
 
   // Compter les licences attribuées par catégorie
   const attributedLicenses = {};
-  learnerLicenses.forEach(learner => {
-    learner.categories?.forEach(cat => {
+  learnerLicenses.forEach((learner) => {
+    learner.categories?.forEach((cat) => {
       attributedLicenses[cat.categoryId] = (attributedLicenses[cat.categoryId] || 0) + 1;
     });
   });
@@ -91,30 +91,29 @@ export default function TrainerLicensesOverview({ trainerId }) {
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Vous n'avez pas encore de licences. Rendez-vous dans l'onglet "Acheter des licences" pour en acquérir.
+                Vous n'avez pas encore de licences. Rendez-vous dans l'onglet "Acheter des licences"
+                pour en acquérir.
               </AlertDescription>
             </Alert>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {Object.entries(licenses).map(([categoryId, licenseInfo]) => {
-                const isExpired = licenseInfo.expires_at && new Date(licenseInfo.expires_at) < new Date();
+                const isExpired =
+                  licenseInfo.expires_at && new Date(licenseInfo.expires_at) < new Date();
                 const isActive = licenseInfo.is_active && !isExpired;
-                
+
                 return (
                   <div
                     key={categoryId}
                     className={`p-4 border rounded-lg space-y-3 ${
-                      isActive 
-                        ? 'bg-gradient-to-br from-green-50 to-green-100 border-green-200' 
+                      isActive
+                        ? 'bg-gradient-to-br from-green-50 to-green-100 border-green-200'
                         : 'bg-gradient-to-br from-red-50 to-red-100 border-red-200'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <h3 className="font-semibold text-sm">{licenseInfo.name}</h3>
-                      <Badge
-                        className={isActive ? 'bg-green-600' : 'bg-red-600'}
-                        variant="default"
-                      >
+                      <Badge className={isActive ? 'bg-green-600' : 'bg-red-600'} variant="default">
                         {isActive ? 'Active' : isExpired ? 'Expirée' : 'Inactive'}
                       </Badge>
                     </div>
@@ -122,11 +121,9 @@ export default function TrainerLicensesOverview({ trainerId }) {
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center justify-between">
                         <span className="text-muted-foreground">Statut</span>
-                        <span className="font-medium">
-                          {isActive ? '✓ Active' : '✗ Inactive'}
-                        </span>
+                        <span className="font-medium">{isActive ? '✓ Active' : '✗ Inactive'}</span>
                       </div>
-                      
+
                       {licenseInfo.expires_at && (
                         <div className="flex items-center justify-between">
                           <span className="text-muted-foreground flex items-center gap-1">
@@ -138,7 +135,7 @@ export default function TrainerLicensesOverview({ trainerId }) {
                           </span>
                         </div>
                       )}
-                      
+
                       <div className="flex items-center justify-between">
                         <span className="text-muted-foreground">Créée le</span>
                         <span className="font-medium">
@@ -169,13 +166,15 @@ export default function TrainerLicensesOverview({ trainerId }) {
           <CardContent>
             <ScrollArea className="h-[400px]">
               <div className="space-y-3 pr-4">
-                {learnerLicenses.map(learner => (
+                {learnerLicenses.map((learner) => (
                   <div
                     key={learner.id}
                     className="p-4 border rounded-lg space-y-2 hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center justify-between">
-                      <h4 className="font-semibold">{learner.first_name || 'Apprenant sans nom'}</h4>
+                      <h4 className="font-semibold">
+                        {learner.first_name || 'Apprenant sans nom'}
+                      </h4>
                       <Badge variant="outline" className="text-xs">
                         {learner.learner_code}
                       </Badge>
@@ -184,10 +183,7 @@ export default function TrainerLicensesOverview({ trainerId }) {
                     {learner.categories && learner.categories.length > 0 ? (
                       <div className="flex flex-wrap gap-1">
                         {learner.categories.map((cat, idx) => (
-                          <Badge
-                            key={idx}
-                            className="text-xs bg-green-600/80"
-                          >
+                          <Badge key={idx} className="text-xs bg-green-600/80">
                             {cat.categoryName}
                           </Badge>
                         ))}

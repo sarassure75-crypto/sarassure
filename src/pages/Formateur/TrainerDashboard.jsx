@@ -22,7 +22,7 @@ export default function TrainerDashboard() {
   const loadStats = async () => {
     try {
       setLoading(true);
-      
+
       // Total learners linked to this trainer
       const { count: learners } = await supabase
         .from('profiles')
@@ -98,9 +98,7 @@ export default function TrainerDashboard() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-12">
-          <h1 className="text-4xl font-bold text-gray-900">
-            Dashboard Formateur
-          </h1>
+          <h1 className="text-4xl font-bold text-gray-900">Dashboard Formateur</h1>
           <p className="text-gray-600 mt-2">Gérez vos apprenants et vos licences</p>
         </div>
 
@@ -139,7 +137,11 @@ export default function TrainerDashboard() {
             const Icon = item.icon;
             return (
               <Link key={item.route} to={item.route}>
-                <Card className={`border-2 hover:shadow-lg transition-all h-full cursor-pointer ${item.bgColor || 'border-gray-200'}`}>
+                <Card
+                  className={`border-2 hover:shadow-lg transition-all h-full cursor-pointer ${
+                    item.bgColor || 'border-gray-200'
+                  }`}
+                >
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div>
@@ -147,15 +149,11 @@ export default function TrainerDashboard() {
                           <Icon className={`h-5 w-5 ${item.color}`} />
                           {item.title}
                         </CardTitle>
-                        <CardDescription className="mt-1">
-                          {item.description}
-                        </CardDescription>
+                        <CardDescription className="mt-1">{item.description}</CardDescription>
                       </div>
                       {item.stat !== undefined && (
                         <div className="text-right">
-                          <div className={`text-2xl font-bold ${item.color}`}>
-                            {item.stat}
-                          </div>
+                          <div className={`text-2xl font-bold ${item.color}`}>{item.stat}</div>
                         </div>
                       )}
                     </div>

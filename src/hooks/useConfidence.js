@@ -51,7 +51,7 @@ export function useConfidence() {
             user_id: userId,
             version_id: versionId,
             confidence_before: confidenceLevel,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           },
           { onConflict: 'user_id, version_id' }
         )
@@ -86,7 +86,7 @@ export function useConfidence() {
             user_id: userId,
             version_id: versionId,
             confidence_after: confidenceLevel,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           },
           { onConflict: 'user_id, version_id' }
         )
@@ -117,7 +117,8 @@ export function useConfidence() {
 
       const { data, error: fetchError } = await supabase
         .from('user_exercise_confidence')
-        .select(`
+        .select(
+          `
           id,
           version_id,
           confidence_before,
@@ -125,14 +126,15 @@ export function useConfidence() {
           created_at,
           updated_at,
           versions(id, name, task_id, tasks(id, title))
-        `)
+        `
+        )
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
 
       // Mapper les données et calculer la progression
-      const history = data.map(item => ({
+      const history = data.map((item) => ({
         id: item.id,
         versionId: item.version_id,
         versionName: item.versions?.name,
@@ -140,11 +142,12 @@ export function useConfidence() {
         taskTitle: item.versions?.tasks?.title,
         confidenceBefore: item.confidence_before,
         confidenceAfter: item.confidence_after,
-        progress: item.confidence_after && item.confidence_before 
-          ? item.confidence_after - item.confidence_before 
-          : null,
+        progress:
+          item.confidence_after && item.confidence_before
+            ? item.confidence_after - item.confidence_before
+            : null,
         createdAt: item.created_at,
-        updatedAt: item.updated_at
+        updatedAt: item.updated_at,
       }));
 
       return history;
@@ -168,38 +171,39 @@ export function useConfidence() {
         averageProgression: 0,
         improvementCount: 0,
         stableCount: 0,
-        declineCount: 0
+        declineCount: 0,
       };
     }
 
-    const completedExercises = history.filter(h => h.confidenceBefore && h.confidenceAfter);
+    const completedExercises = history.filter((h) => h.confidenceBefore && h.confidenceAfter);
     const totalExercises = completedExercises.length;
-    
+
     if (totalExercises === 0) {
       return {
         totalExercises: 0,
         averageProgression: 0,
         improvementCount: 0,
         stableCount: 0,
-        declineCount: 0
+        declineCount: 0,
       };
     }
 
-    const progressions = completedExercises.map(h => h.progress).filter(p => p !== null);
-    const averageProgression = progressions.length > 0
-      ? (progressions.reduce((a, b) => a + b, 0) / progressions.length).toFixed(2)
-      : 0;
+    const progressions = completedExercises.map((h) => h.progress).filter((p) => p !== null);
+    const averageProgression =
+      progressions.length > 0
+        ? (progressions.reduce((a, b) => a + b, 0) / progressions.length).toFixed(2)
+        : 0;
 
-    const improvementCount = completedExercises.filter(h => h.progress > 0).length;
-    const stableCount = completedExercises.filter(h => h.progress === 0).length;
-    const declineCount = completedExercises.filter(h => h.progress < 0).length;
+    const improvementCount = completedExercises.filter((h) => h.progress > 0).length;
+    const stableCount = completedExercises.filter((h) => h.progress === 0).length;
+    const declineCount = completedExercises.filter((h) => h.progress < 0).length;
 
     return {
       totalExercises,
       averageProgression: parseFloat(averageProgression),
       improvementCount,
       stableCount,
-      declineCount
+      declineCount,
     };
   }, []);
 
@@ -210,6 +214,6 @@ export function useConfidence() {
     recordConfidenceBefore,
     recordConfidenceAfter,
     fetchConfidenceHistory,
-    calculateConfidenceStats
+    calculateConfidenceStats,
   };
 }

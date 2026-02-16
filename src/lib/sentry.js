@@ -1,7 +1,7 @@
 /**
  * Initialiser Sentry pour monitoring des erreurs
  * Usage: importer ce module une fois dans main.jsx
- * 
+ *
  * Installation: npm install @sentry/react
  */
 import { logger } from '@/lib/logger';

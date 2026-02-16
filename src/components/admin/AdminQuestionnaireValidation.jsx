@@ -5,13 +5,7 @@ import { useAdminCounters } from '../../hooks/useAdminCounters';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import QuestionnaireValidationEditor from '@/components/exercise/QuestionnaireValidationEditor';
-import { 
-  Check, 
-  X, 
-  Eye,
-  Trash2,
-  ListChecks
-} from 'lucide-react';
+import { Check, X, Eye, Trash2, ListChecks } from 'lucide-react';
 
 export default function AdminQuestionnaireValidation() {
   const { currentUser } = useAuth();
@@ -43,7 +37,8 @@ export default function AdminQuestionnaireValidation() {
     try {
       const { data, error } = await supabase
         .from('versions')
-        .select(`
+        .select(
+          `
           *,
           task:task_id (
             id,
@@ -60,7 +55,8 @@ export default function AdminQuestionnaireValidation() {
             step_order,
             expected_input
           )
-        `)
+        `
+        )
         .eq('creation_status', 'pending')
         .order('created_at', { ascending: false });
 
@@ -68,35 +64,37 @@ export default function AdminQuestionnaireValidation() {
 
       // Filtrer uniquement les questionnaires (pas les exercices)
       // Exclure les versions sans tâche associée et vérifier task_type='questionnaire'
-      const questionnaireVersions = (data || []).filter(v => 
-        v.task !== null && v.task.task_type === 'questionnaire'
+      const questionnaireVersions = (data || []).filter(
+        (v) => v.task !== null && v.task.task_type === 'questionnaire'
       );
 
       // Récupérer les profils des contributeurs
-      const ownerIds = [...new Set(questionnaireVersions.map(v => v.task?.owner_id).filter(Boolean))];
-      
+      const ownerIds = [
+        ...new Set(questionnaireVersions.map((v) => v.task?.owner_id).filter(Boolean)),
+      ];
+
       let profiles = {};
       if (ownerIds.length > 0) {
         const { data: profilesData } = await supabase
           .from('profiles')
           .select('id, first_name, last_name, email, role')
           .in('id', ownerIds);
-        
+
         if (profilesData) {
-          profilesData.forEach(p => {
+          profilesData.forEach((p) => {
             profiles[p.id] = p;
           });
         }
       }
 
       // Enrichir les données
-      const mappedData = questionnaireVersions.map(version => {
+      const mappedData = questionnaireVersions.map((version) => {
         const ownerProfile = profiles[version.task?.owner_id] || {};
-        
+
         return {
           ...version,
           ownerProfile,
-          questionCount: version.steps?.length || 0
+          questionCount: version.steps?.length || 0,
         };
       });
 
@@ -113,28 +111,28 @@ export default function AdminQuestionnaireValidation() {
     try {
       const { error } = await supabase
         .from('versions')
-        .update({ 
+        .update({
           creation_status: 'validated',
           reviewer_id: currentUser.id,
-          reviewed_at: new Date().toISOString()
+          reviewed_at: new Date().toISOString(),
         })
         .eq('id', versionId);
 
       if (error) throw error;
 
-      setQuestionnaires(questionnaires.filter(q => q.id !== versionId));
-      
+      setQuestionnaires(questionnaires.filter((q) => q.id !== versionId));
+
       // Ajouter des points au contributeur
-      const version = questionnaires.find(q => q.id === versionId);
+      const version = questionnaires.find((q) => q.id === versionId);
       if (version?.task?.owner_id) {
-        await supabase
-          .from('contributor_points')
-          .insert([{
+        await supabase.from('contributor_points').insert([
+          {
             user_id: version.task.owner_id,
             points: 5,
             reason: 'Questionnaire approuvé',
-            task_id: version.task.id
-          }]);
+            task_id: version.task.id,
+          },
+        ]);
       }
 
       alert('QCM approuvé et 5 points attribués!');
@@ -153,22 +151,22 @@ export default function AdminQuestionnaireValidation() {
 
     setValidatingId(versionId);
     try {
-      const version = questionnaires.find(q => q.id === versionId);
-      
+      const version = questionnaires.find((q) => q.id === versionId);
+
       const { error } = await supabase
         .from('versions')
-        .update({ 
+        .update({
           creation_status: 'draft',
-          admin_comments: adminComments
+          admin_comments: adminComments,
         })
         .eq('id', versionId);
 
       if (error) throw error;
 
-      setQuestionnaires(questionnaires.filter(q => q.id !== versionId));
+      setQuestionnaires(questionnaires.filter((q) => q.id !== versionId));
       setAdminComments('');
       setShowCommentsModal(false);
-      
+
       alert('QCM rejeté. Commentaires envoyés au contributeur.');
     } catch (error) {
       alert('Erreur: ' + error.message);
@@ -182,20 +180,14 @@ export default function AdminQuestionnaireValidation() {
 
     try {
       // Supprimer les steps
-      await supabase
-        .from('steps')
-        .delete()
-        .eq('version_id', versionId);
+      await supabase.from('steps').delete().eq('version_id', versionId);
 
       // Supprimer la version
-      const { error } = await supabase
-        .from('versions')
-        .delete()
-        .eq('id', versionId);
+      const { error } = await supabase.from('versions').delete().eq('id', versionId);
 
       if (error) throw error;
 
-      setQuestionnaires(questionnaires.filter(q => q.id !== versionId));
+      setQuestionnaires(questionnaires.filter((q) => q.id !== versionId));
       alert('QCM supprimé');
     } catch (error) {
       alert('Erreur: ' + error.message);
@@ -210,20 +202,20 @@ export default function AdminQuestionnaireValidation() {
         .from('tasks')
         .update({
           title: editedTitle,
-          description: editedDescription
+          description: editedDescription,
         })
         .eq('id', selectedQuestionnaire.task.id);
 
       if (error) throw error;
 
       // Mettre à jour l'état local
-      setSelectedQuestionnaire(prev => ({
+      setSelectedQuestionnaire((prev) => ({
         ...prev,
         task: {
           ...prev.task,
           title: editedTitle,
-          description: editedDescription
-        }
+          description: editedDescription,
+        },
       }));
 
       setEditingMetadata(false);
@@ -251,11 +243,7 @@ export default function AdminQuestionnaireValidation() {
   if (selectedQuestionnaire && selectedQuestionnaire.task) {
     return (
       <div>
-        <Button 
-          variant="outline" 
-          onClick={() => setSelectedQuestionnaire(null)}
-          className="mb-4"
-        >
+        <Button variant="outline" onClick={() => setSelectedQuestionnaire(null)} className="mb-4">
           ← Retour à la liste
         </Button>
 
@@ -265,9 +253,7 @@ export default function AdminQuestionnaireValidation() {
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <CardTitle>{selectedQuestionnaire.task?.title || 'Questionnaire'}</CardTitle>
-                  <CardDescription>
-                    {selectedQuestionnaire.task?.description}
-                  </CardDescription>
+                  <CardDescription>{selectedQuestionnaire.task?.description}</CardDescription>
                 </div>
                 <Button
                   variant="outline"
@@ -299,16 +285,10 @@ export default function AdminQuestionnaireValidation() {
                   />
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    onClick={saveMetadataChanges}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
+                  <Button onClick={saveMetadataChanges} className="bg-green-600 hover:bg-green-700">
                     ✓ Enregistrer
                   </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setEditingMetadata(false)}
-                  >
+                  <Button variant="outline" onClick={() => setEditingMetadata(false)}>
                     ✕ Annuler
                   </Button>
                 </div>
@@ -319,7 +299,8 @@ export default function AdminQuestionnaireValidation() {
             {/* Infos contributeur */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <p className="text-sm font-medium text-blue-900">
-                Contributeur: {selectedQuestionnaire.ownerProfile?.first_name} {selectedQuestionnaire.ownerProfile?.last_name}
+                Contributeur: {selectedQuestionnaire.ownerProfile?.first_name}{' '}
+                {selectedQuestionnaire.ownerProfile?.last_name}
               </p>
               <p className="text-xs text-blue-700">{selectedQuestionnaire.ownerProfile?.email}</p>
             </div>
@@ -337,7 +318,9 @@ export default function AdminQuestionnaireValidation() {
               <div className="bg-gray-50 p-3 rounded">
                 <p className="text-xs text-gray-600">Date</p>
                 <p className="font-semibold text-sm">
-                  {selectedQuestionnaire.task?.created_at ? new Date(selectedQuestionnaire.task.created_at).toLocaleDateString('fr-FR') : '-'}
+                  {selectedQuestionnaire.task?.created_at
+                    ? new Date(selectedQuestionnaire.task.created_at).toLocaleDateString('fr-FR')
+                    : '-'}
                 </p>
               </div>
             </div>
@@ -345,7 +328,7 @@ export default function AdminQuestionnaireValidation() {
             {/* Questions */}
             <div className="mt-6">
               <h3 className="text-lg font-bold mb-4">Questions du QCM</h3>
-              <QuestionnaireValidationEditor 
+              <QuestionnaireValidationEditor
                 steps={selectedQuestionnaire.steps || []}
                 versionId={selectedQuestionnaire.id}
                 onUpdate={(stepId, updatedData) => {
@@ -429,56 +412,64 @@ export default function AdminQuestionnaireValidation() {
   return (
     <div>
       <div className="space-y-2">
-        {questionnaires.map(questionnaire => {
+        {questionnaires.map((questionnaire) => {
           // Vérifier que la tâche existe
           if (!questionnaire.task) return null;
-          
+
           return (
-          <Card key={questionnaire.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg">{questionnaire.task?.title}</h3>
-                  <p className="text-sm text-gray-600 mb-2">{questionnaire.task?.description}</p>
-                  <div className="flex gap-4 text-xs text-gray-500">
-                    <span>📁 {questionnaire.task?.category}</span>
-                    <span>❓ {questionnaire.questionCount} questions</span>
-                    <span>👤 {questionnaire.ownerProfile?.first_name} {questionnaire.ownerProfile?.last_name}</span>
-                    <span>📅 {questionnaire.task?.created_at ? new Date(questionnaire.task.created_at).toLocaleDateString('fr-FR') : '-'}</span>
+            <Card key={questionnaire.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h3 className="font-bold text-lg">{questionnaire.task?.title}</h3>
+                    <p className="text-sm text-gray-600 mb-2">{questionnaire.task?.description}</p>
+                    <div className="flex gap-4 text-xs text-gray-500">
+                      <span>📁 {questionnaire.task?.category}</span>
+                      <span>❓ {questionnaire.questionCount} questions</span>
+                      <span>
+                        👤 {questionnaire.ownerProfile?.first_name}{' '}
+                        {questionnaire.ownerProfile?.last_name}
+                      </span>
+                      <span>
+                        📅{' '}
+                        {questionnaire.task?.created_at
+                          ? new Date(questionnaire.task.created_at).toLocaleDateString('fr-FR')
+                          : '-'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 flex-shrink-0">
+                    <Button
+                      onClick={() => setSelectedQuestionnaire(questionnaire)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Voir
+                    </Button>
+                    <Button
+                      onClick={() => handleApprove(questionnaire.id)}
+                      disabled={validatingId === questionnaire.id}
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <Check className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setSelectedQuestionnaire(questionnaire);
+                        setShowCommentsModal(true);
+                      }}
+                      variant="destructive"
+                      size="sm"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
-                <div className="flex gap-2 flex-shrink-0">
-                  <Button
-                    onClick={() => setSelectedQuestionnaire(questionnaire)}
-                    variant="outline"
-                    size="sm"
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    Voir
-                  </Button>
-                  <Button
-                    onClick={() => handleApprove(questionnaire.id)}
-                    disabled={validatingId === questionnaire.id}
-                    size="sm"
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <Check className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setSelectedQuestionnaire(questionnaire);
-                      setShowCommentsModal(true);
-                    }}
-                    variant="destructive"
-                    size="sm"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
+              </CardContent>
+            </Card>
+          );
         })}
       </div>
     </div>

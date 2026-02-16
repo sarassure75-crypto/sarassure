@@ -2,9 +2,21 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { 
-  Users, Award, BookOpen, Heart, ArrowRight, Smartphone, Download, 
-  TrendingUp, CheckCircle, DollarSign, Sparkles, Zap, Target, Lightbulb
+import {
+  Users,
+  Award,
+  BookOpen,
+  Heart,
+  ArrowRight,
+  Smartphone,
+  Download,
+  TrendingUp,
+  CheckCircle,
+  DollarSign,
+  Sparkles,
+  Zap,
+  Target,
+  Lightbulb,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -15,60 +27,60 @@ const AppPresentationPage = () => {
   const categories = {
     learner: {
       icon: Smartphone,
-      title: "Apprenant",
+      title: 'Apprenant',
       description: "Apprendre l'autonomie numérique",
-      color: "from-blue-600 to-blue-700",
+      color: 'from-blue-600 to-blue-700',
       benefits: [
-        "Exercices interactifs pas à pas",
-        "Guidance progressive et bienveillante",
-        "Suivi de votre progression",
+        'Exercices interactifs pas à pas',
+        'Guidance progressive et bienveillante',
+        'Suivi de votre progression',
         "Pas besoin d'email",
-        "Interface simple et intuitive"
+        'Interface simple et intuitive',
       ],
-      usecase: "Vous souhaitez maîtriser les outils numériques de façon progressive et sécurisée."
+      usecase: 'Vous souhaitez maîtriser les outils numériques de façon progressive et sécurisée.',
     },
     family: {
       icon: Heart,
-      title: "Proche (Famille/Ami)",
+      title: 'Proche (Famille/Ami)',
       description: "Aider quelqu'un à progresser",
-      color: "from-pink-600 to-pink-700",
+      color: 'from-pink-600 to-pink-700',
       benefits: [
         "Créer un compte pour quelqu'un",
-        "Suivre sa progression",
+        'Suivre sa progression',
         "Lui donner un code d'accès",
-        "Accès aux exercices disponibles",
-        "Support simple et efficace"
+        'Accès aux exercices disponibles',
+        'Support simple et efficace',
       ],
-      usecase: "Vous aidez une personne à apprendre l'informatique et voulez suivre ses progrès."
+      usecase: "Vous aidez une personne à apprendre l'informatique et voulez suivre ses progrès.",
     },
     organization: {
       icon: Users,
-      title: "Association/Entreprise",
-      description: "Former un groupe de bénéficiaires",
-      color: "from-green-600 to-green-700",
+      title: 'Association/Entreprise',
+      description: 'Former un groupe de bénéficiaires',
+      color: 'from-green-600 to-green-700',
       benefits: [
-        "Créer plusieurs comptes apprenant",
+        'Créer plusieurs comptes apprenant',
         "Gérer un groupe d'utilisateurs",
-        "Tableau de suivi collectif",
-        "Organiser des sessions de formation",
-        "Rapports de progression détaillés"
+        'Tableau de suivi collectif',
+        'Organiser des sessions de formation',
+        'Rapports de progression détaillés',
       ],
-      usecase: "Vous animez des formations ou ateliers numériques pour un groupe."
+      usecase: 'Vous animez des formations ou ateliers numériques pour un groupe.',
     },
     contributor: {
       icon: Award,
-      title: "Contributeur",
-      description: "Créer du contenu et gagner",
-      color: "from-green-600 to-green-700",
+      title: 'Contributeur',
+      description: 'Créer du contenu et gagner',
+      color: 'from-green-600 to-green-700',
       benefits: [
-        "Créer des exercices pédagogiques",
-        "Partager vos contenus de qualité",
-        "Générer des revenus",
-        "Système de points transparent",
-        "Distribution de revenus équitable"
+        'Créer des exercices pédagogiques',
+        'Partager vos contenus de qualité',
+        'Générer des revenus',
+        'Système de points transparent',
+        'Distribution de revenus équitable',
       ],
-      usecase: "Vous avez de l'expérience en pédagogie et voulez monétiser votre savoir-faire."
-    }
+      usecase: "Vous avez de l'expérience en pédagogie et voulez monétiser votre savoir-faire.",
+    },
   };
 
   const handleCategoryChange = (category) => {
@@ -83,7 +95,7 @@ const AppPresentationPage = () => {
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-transparent to-green-500/20 opacity-30"></div>
-        
+
         <div className="relative container mx-auto px-4 py-16 md:py-24">
           <div className="text-center mb-12">
             <motion.div
@@ -95,8 +107,8 @@ const AppPresentationPage = () => {
                 L'autonomie à portée de main.
               </h1>
               <p className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto mb-8">
-                SARASSURE est une application conçue pour guider les utilisateurs pas à pas, 
-                en utilisant un langage simple et des pictogrammes.
+                SARASSURE est une application conçue pour guider les utilisateurs pas à pas, en
+                utilisant un langage simple et des pictogrammes.
               </p>
               <div className="flex items-center justify-center gap-2 text-slate-400 mb-6">
                 <Sparkles className="w-5 h-5 text-yellow-400" />
@@ -139,7 +151,9 @@ const AppPresentationPage = () => {
             className="max-w-4xl mx-auto"
           >
             <Card className="bg-slate-800/50 border-slate-700 backdrop-blur">
-              <CardHeader className={`bg-gradient-to-r ${currentCategory.color} text-white rounded-t-lg`}>
+              <CardHeader
+                className={`bg-gradient-to-r ${currentCategory.color} text-white rounded-t-lg`}
+              >
                 <div className="flex items-center gap-3 mb-3">
                   <CurrentIcon className="w-8 h-8" />
                   <div>
@@ -167,12 +181,17 @@ const AppPresentationPage = () => {
                         transition={{ delay: index * 0.1 }}
                         className="flex items-start gap-3 text-slate-300"
                       >
-                        <CheckCircle className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
-                          activeCategory === 'learner' ? 'text-blue-400' :
-                          activeCategory === 'family' ? 'text-pink-400' :
-                          activeCategory === 'organization' ? 'text-green-400' :
-                          'text-green-400'
-                        }`} />
+                        <CheckCircle
+                          className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
+                            activeCategory === 'learner'
+                              ? 'text-blue-400'
+                              : activeCategory === 'family'
+                              ? 'text-pink-400'
+                              : activeCategory === 'organization'
+                              ? 'text-green-400'
+                              : 'text-green-400'
+                          }`}
+                        />
                         <span>{benefit}</span>
                       </motion.li>
                     ))}
@@ -277,15 +296,16 @@ const AppPresentationPage = () => {
               <div className="max-w-3xl">
                 <div className="flex items-center gap-3 mb-4">
                   <DollarSign className="w-8 h-8" />
-                  <span className="text-sm font-semibold uppercase tracking-wider">Système de Rémunération</span>
+                  <span className="text-sm font-semibold uppercase tracking-wider">
+                    Système de Rémunération
+                  </span>
                 </div>
-                
-                <h2 className="text-3xl md:text-4xl font-bold mb-6">
-                  Créez, Partagez, Gagnez
-                </h2>
-                
+
+                <h2 className="text-3xl md:text-4xl font-bold mb-6">Créez, Partagez, Gagnez</h2>
+
                 <p className="text-lg text-green-100 mb-8">
-                  Rejoignez notre communauté de contributeurs et monétisez vos contenus pédagogiques grâce à un système transparent et équitable.
+                  Rejoignez notre communauté de contributeurs et monétisez vos contenus pédagogiques
+                  grâce à un système transparent et équitable.
                 </p>
 
                 {/* System Details */}
@@ -296,7 +316,8 @@ const AppPresentationPage = () => {
                       <h3 className="font-semibold">Système de Points</h3>
                     </div>
                     <p className="text-green-100 text-sm">
-                      Gagnez des points pour chaque contribution (images, exercices). Plus vous contribuez, plus vous gagnez de points.
+                      Gagnez des points pour chaque contribution (images, exercices). Plus vous
+                      contribuez, plus vous gagnez de points.
                     </p>
                   </div>
 
@@ -306,7 +327,8 @@ const AppPresentationPage = () => {
                       <h3 className="font-semibold">Paliers de Distribution</h3>
                     </div>
                     <p className="text-green-100 text-sm">
-                      À chaque palier de 1000€ de CA, 20% des revenus sont distribués proportionnellement aux contributeurs.
+                      À chaque palier de 1000€ de CA, 20% des revenus sont distribués
+                      proportionnellement aux contributeurs.
                     </p>
                   </div>
 
@@ -316,7 +338,8 @@ const AppPresentationPage = () => {
                       <h3 className="font-semibold">Pas de Pénalités</h3>
                     </div>
                     <p className="text-green-100 text-sm">
-                      Votre solde de points ne peut qu'augmenter. Nous croyons à l'encouragement plutôt qu'à la punition.
+                      Votre solde de points ne peut qu'augmenter. Nous croyons à l'encouragement
+                      plutôt qu'à la punition.
                     </p>
                   </div>
 
@@ -326,7 +349,8 @@ const AppPresentationPage = () => {
                       <h3 className="font-semibold">Modèle Solidaire</h3>
                     </div>
                     <p className="text-green-100 text-sm">
-                      Économie solidaire où le succès de la plateforme bénéficie à tous les contributeurs équitablement.
+                      Économie solidaire où le succès de la plateforme bénéficie à tous les
+                      contributeurs équitablement.
                     </p>
                   </div>
                 </div>
@@ -372,24 +396,24 @@ const AppPresentationPage = () => {
         <h2 className="text-3xl md:text-4xl font-bold text-white text-center mb-12">
           Pourquoi SARASSURE ?
         </h2>
-        
+
         <div className="grid md:grid-cols-3 gap-8">
           {[
             {
               icon: Smartphone,
-              title: "Simple et Intuitif",
-              description: "Interface épurée, langage clair, pictogrammes explicites"
+              title: 'Simple et Intuitif',
+              description: 'Interface épurée, langage clair, pictogrammes explicites',
             },
             {
               icon: BookOpen,
-              title: "Pédagogie Bienveillante",
-              description: "Pas à pas progressif, sans jugement, adapté à tous"
+              title: 'Pédagogie Bienveillante',
+              description: 'Pas à pas progressif, sans jugement, adapté à tous',
             },
             {
               icon: TrendingUp,
-              title: "Suivi en Temps Réel",
-              description: "Progression tracée, analyses détaillées, motivation constante"
-            }
+              title: 'Suivi en Temps Réel',
+              description: 'Progression tracée, analyses détaillées, motivation constante',
+            },
           ].map((feature, index) => {
             const Icon = feature.icon;
             return (
@@ -412,11 +436,10 @@ const AppPresentationPage = () => {
       {/* CTA Section */}
       <div className="relative container mx-auto px-4 py-16 md:py-24">
         <div className="bg-gradient-to-r from-green-600 to-blue-600 rounded-2xl p-8 md:p-16 text-center text-white">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Prêt à commencer ?
-          </h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">Prêt à commencer ?</h2>
           <p className="text-xl text-green-100 mb-8 max-w-2xl mx-auto">
-            Choisissez votre rôle et découvrez comment SARASSURE peut transformer votre apprentissage ou vos formations.
+            Choisissez votre rôle et découvrez comment SARASSURE peut transformer votre
+            apprentissage ou vos formations.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button

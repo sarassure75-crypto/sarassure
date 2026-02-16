@@ -13,7 +13,7 @@ export default function AdminLearnerReviews({ currentUser }) {
   const [stats, setStats] = useState({
     totalReviews: 0,
     averageRating: 0,
-    ratingDistribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
+    ratingDistribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
   });
 
   useEffect(() => {
@@ -25,7 +25,8 @@ export default function AdminLearnerReviews({ currentUser }) {
       setIsLoading(true);
       let query = supabase
         .from('learner_reviews')
-        .select(`
+        .select(
+          `
           id,
           rating,
           comment,
@@ -33,7 +34,8 @@ export default function AdminLearnerReviews({ currentUser }) {
           learner:learner_id(id, email, first_name),
           task:task_id(id, title),
           trainer:trainer_id(id, email, first_name)
-        `)
+        `
+        )
         .order('created_at', { ascending: false });
 
       // Formateurs voient seulement leurs avis
@@ -60,7 +62,7 @@ export default function AdminLearnerReviews({ currentUser }) {
     const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
     let totalRating = 0;
 
-    reviewsData.forEach(review => {
+    reviewsData.forEach((review) => {
       if (review.rating) {
         distribution[review.rating]++;
         totalRating += review.rating;
@@ -72,7 +74,7 @@ export default function AdminLearnerReviews({ currentUser }) {
     setStats({
       totalReviews: reviewsData.length,
       averageRating: average,
-      ratingDistribution: distribution
+      ratingDistribution: distribution,
     });
   };
 
@@ -80,16 +82,17 @@ export default function AdminLearnerReviews({ currentUser }) {
     let filtered = reviewsData;
 
     if (search.trim()) {
-      filtered = filtered.filter(review =>
-        review.learner?.first_name?.toLowerCase().includes(search.toLowerCase()) ||
-        review.learner?.email?.toLowerCase().includes(search.toLowerCase()) ||
-        review.task?.title?.toLowerCase().includes(search.toLowerCase()) ||
-        review.comment?.toLowerCase().includes(search.toLowerCase())
+      filtered = filtered.filter(
+        (review) =>
+          review.learner?.first_name?.toLowerCase().includes(search.toLowerCase()) ||
+          review.learner?.email?.toLowerCase().includes(search.toLowerCase()) ||
+          review.task?.title?.toLowerCase().includes(search.toLowerCase()) ||
+          review.comment?.toLowerCase().includes(search.toLowerCase())
       );
     }
 
     if (rating !== 'all') {
-      filtered = filtered.filter(review => review.rating === parseInt(rating));
+      filtered = filtered.filter((review) => review.rating === parseInt(rating));
     }
 
     setFilteredReviews(filtered);
@@ -108,16 +111,16 @@ export default function AdminLearnerReviews({ currentUser }) {
   const downloadReviews = () => {
     const csv = [
       ['Apprenant', 'Email', 'Tâche', 'Note', 'Commentaire', 'Date'],
-      ...filteredReviews.map(review => [
+      ...filteredReviews.map((review) => [
         review.learner?.first_name || 'N/A',
         review.learner?.email || 'N/A',
         review.task?.title || 'N/A',
         review.rating || 'N/A',
         review.comment || '',
-        new Date(review.created_at).toLocaleDateString('fr-FR')
-      ])
+        new Date(review.created_at).toLocaleDateString('fr-FR'),
+      ]),
     ]
-      .map(row => row.map(cell => `"${cell}"`).join(','))
+      .map((row) => row.map((cell) => `"${cell}"`).join(','))
       .join('\n');
 
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -132,10 +135,12 @@ export default function AdminLearnerReviews({ currentUser }) {
     const sizeClass = size === 'lg' ? 'h-6 w-6' : 'h-4 w-4';
     return (
       <div className="flex gap-1">
-        {[1, 2, 3, 4, 5].map(star => (
+        {[1, 2, 3, 4, 5].map((star) => (
           <Star
             key={star}
-            className={`${sizeClass} ${star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+            className={`${sizeClass} ${
+              star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+            }`}
           />
         ))}
       </div>
@@ -172,18 +177,23 @@ export default function AdminLearnerReviews({ currentUser }) {
         <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg border border-green-200">
           <h3 className="text-sm font-medium text-green-900 mb-3">Distribution</h3>
           <div className="space-y-1 text-xs">
-            {[5, 4, 3, 2, 1].map(star => (
+            {[5, 4, 3, 2, 1].map((star) => (
               <div key={star} className="flex items-center gap-2">
                 <span className="w-4 text-green-700 font-bold">{star}★</span>
                 <div className="flex-1 h-2 bg-green-200 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-green-600"
                     style={{
-                      width: stats.totalReviews > 0 ? `${(stats.ratingDistribution[star] / stats.totalReviews) * 100}%` : '0%'
+                      width:
+                        stats.totalReviews > 0
+                          ? `${(stats.ratingDistribution[star] / stats.totalReviews) * 100}%`
+                          : '0%',
                     }}
                   />
                 </div>
-                <span className="w-6 text-right text-green-700 font-bold">{stats.ratingDistribution[star]}</span>
+                <span className="w-6 text-right text-green-700 font-bold">
+                  {stats.ratingDistribution[star]}
+                </span>
               </div>
             ))}
           </div>
@@ -230,8 +240,11 @@ export default function AdminLearnerReviews({ currentUser }) {
             Aucun avis à afficher
           </div>
         ) : (
-          filteredReviews.map(review => (
-            <div key={review.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+          filteredReviews.map((review) => (
+            <div
+              key={review.id}
+              className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+            >
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <p className="font-semibold text-gray-900">
@@ -247,7 +260,7 @@ export default function AdminLearnerReviews({ currentUser }) {
                     {new Date(review.created_at).toLocaleDateString('fr-FR', {
                       year: 'numeric',
                       month: 'long',
-                      day: 'numeric'
+                      day: 'numeric',
                     })}
                   </p>
                 </div>

@@ -22,14 +22,16 @@ const LearnerNotesViewer = ({ open, onClose, taskId, userId }) => {
     try {
       const { data, error } = await supabase
         .from('learner_notes')
-        .select(`
+        .select(
+          `
           id,
           note_text,
           created_at,
           versions:version_id(name),
           steps:step_id(instruction),
           learner_note_images(image_url)
-        `)
+        `
+        )
         .eq('user_id', userId)
         .eq('task_id', taskId)
         .order('created_at', { ascending: false });
@@ -50,10 +52,7 @@ const LearnerNotesViewer = ({ open, onClose, taskId, userId }) => {
 
   const handleDeleteNote = async (noteId) => {
     try {
-      const { error } = await supabase
-        .from('learner_notes')
-        .delete()
-        .eq('id', noteId);
+      const { error } = await supabase.from('learner_notes').delete().eq('id', noteId);
 
       if (error) throw error;
 

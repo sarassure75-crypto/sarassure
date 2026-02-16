@@ -1,22 +1,22 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import { searchImages } from "../data/imagesMetadata";
-import { getImageSubcategories, DEFAULT_SUBCATEGORIES } from "../data/images";
-import { actionTypes } from "../data/tasks";
-import { linkExerciseToRequest } from "../data/exerciseRequests";
-import CGUWarningBanner from "../components/CGUWarningBanner";
-import { sanitizeHTML } from "@/lib/validation";
-import { 
-  Save, 
-  Send, 
-  X, 
-  Plus, 
-  Trash2, 
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { searchImages } from '../data/imagesMetadata';
+import { getImageSubcategories, DEFAULT_SUBCATEGORIES } from '../data/images';
+import { actionTypes } from '../data/tasks';
+import { linkExerciseToRequest } from '../data/exerciseRequests';
+import CGUWarningBanner from '../components/CGUWarningBanner';
+import { sanitizeHTML } from '@/lib/validation';
+import {
+  Save,
+  Send,
+  X,
+  Plus,
+  Trash2,
   Edit,
   AlertTriangle,
   CheckCircle,
-  Loader2
+  Loader2,
 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/lib/supabaseClient';
@@ -34,16 +34,16 @@ export default function NewContribution() {
   const [category, setCategory] = useState('');
   const [subcategory, setSubcategory] = useState('');
   const [difficulty, setDifficulty] = useState('facile');
-  
+
   // Liaison avec une demande d'exercice
   const [linkedRequestCode, setLinkedRequestCode] = useState('');
   const [hasRequestLink, setHasRequestLink] = useState(false);
-  
+
   // États des versions
   const [versions, setVersions] = useState([]);
   const [editingVersionId, setEditingVersionId] = useState(null);
   const [editingVersion, setEditingVersion] = useState(null);
-  
+
   // États UI
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState([]);
@@ -54,7 +54,7 @@ export default function NewContribution() {
   const [draftId, setDraftId] = useState(null);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showCGUBanner, setShowCGUBanner] = useState(true);
-  
+
   // État pour la gestion des corrections
   const [isEditingCorrection, setIsEditingCorrection] = useState(false);
   const [originalSubmissionId, setOriginalSubmissionId] = useState(null);
@@ -70,11 +70,11 @@ export default function NewContribution() {
   // Auto-sauvegarder les brouillons toutes les 30 secondes
   useEffect(() => {
     if (!title.trim() && versions.length === 0) return; // Ne pas auto-sauvegarder si vide
-    
+
     const autoSaveTimer = setInterval(() => {
       saveDraftToLocalStorage();
     }, 30000); // 30 secondes
-    
+
     return () => clearInterval(autoSaveTimer);
   }, [title, description, category, subcategory, difficulty, versions]);
 
@@ -100,25 +100,25 @@ export default function NewContribution() {
         difficulty,
         versions,
         savedAt: new Date().toISOString(),
-        userId: currentUser?.id
+        userId: currentUser?.id,
       };
 
       // Sauvegarder dans localStorage
       const drafts = JSON.parse(localStorage.getItem('contributionDrafts') || '[]');
-      const existingIndex = drafts.findIndex(d => d.id === draftData.id);
-      
+      const existingIndex = drafts.findIndex((d) => d.id === draftData.id);
+
       if (existingIndex >= 0) {
         drafts[existingIndex] = draftData;
       } else {
         drafts.push(draftData);
       }
-      
+
       localStorage.setItem('contributionDrafts', JSON.stringify(drafts));
-      
+
       if (!draftId) {
         setDraftId(draftData.id);
       }
-      
+
       setDraftSaved(true);
       setTimeout(() => setDraftSaved(false), 3000); // Afficher le message 3 secondes
     } catch (err) {
@@ -132,12 +132,12 @@ export default function NewContribution() {
       const draftIdParam = urlParams.get('draft');
       const editParam = urlParams.get('edit'); // Task ID pour édition
       const correctionParam = urlParams.get('correction'); // Version ID pour correction
-      
+
       // Cas 1: Charger un brouillon depuis localStorage
       if (draftIdParam) {
         const drafts = JSON.parse(localStorage.getItem('contributionDrafts') || '[]');
-        const draft = drafts.find(d => d.id === draftIdParam);
-        
+        const draft = drafts.find((d) => d.id === draftIdParam);
+
         if (draft) {
           setTitle(draft.title);
           setDescription(draft.description);
@@ -148,12 +148,13 @@ export default function NewContribution() {
           setDraftId(draft.id);
         }
       }
-      
+
       // Cas 2: Charger une version à corriger depuis la base de données
       else if (correctionParam) {
         const { data: versionData, error: versionError } = await supabase
           .from('versions')
-          .select(`
+          .select(
+            `
             *,
             task:task_id (
               id,
@@ -177,7 +178,8 @@ export default function NewContribution() {
                 name
               )
             )
-          `)
+          `
+          )
           .eq('id', correctionParam)
           .eq('creation_status', 'needs_changes')
           .single();
@@ -198,7 +200,7 @@ export default function NewContribution() {
           setOriginalSubmissionId(versionData.original_submission_id || versionData.id);
           setAdminComments(versionData.admin_comments || '');
           setModificationCount(versionData.modification_count || 0);
-          
+
           // Construire la version pour l'édition
           const editVersion = {
             id: versionData.id,
@@ -207,30 +209,34 @@ export default function NewContribution() {
             icon_name: versionData.icon_name,
             pictogram_app_image_id: versionData.pictogram_app_image_id,
             video_url: versionData.video_url,
-            steps: versionData.steps?.map(step => ({
-              id: step.id,
-              instruction: step.instruction,
-              action_type: step.action_type,
-              target_area: step.target_area,
-              text_input_area: step.text_input_area,
-              start_area: step.start_area,
-              expected_input: step.expected_input,
-              app_image_id: step.app_image_id,
-              image_url: step.app_images?.file_path ? 
-                supabase.storage.from('images').getPublicUrl(step.app_images.file_path).data?.publicUrl : null
-            })).sort((a, b) => (a.step_order || 0) - (b.step_order || 0)) || []
+            steps:
+              versionData.steps
+                ?.map((step) => ({
+                  id: step.id,
+                  instruction: step.instruction,
+                  action_type: step.action_type,
+                  target_area: step.target_area,
+                  text_input_area: step.text_input_area,
+                  start_area: step.start_area,
+                  expected_input: step.expected_input,
+                  app_image_id: step.app_image_id,
+                  image_url: step.app_images?.file_path
+                    ? supabase.storage.from('images').getPublicUrl(step.app_images.file_path).data
+                        ?.publicUrl
+                    : null,
+                }))
+                .sort((a, b) => (a.step_order || 0) - (b.step_order || 0)) || [],
           };
-          
+
           setVersions([editVersion]);
         }
       }
-      
+
       // Cas 3: Édition normale d'un exercice existant (editParam)
       else if (editParam) {
         // Logique existante d'édition...
         // À implémenter si nécessaire
       }
-      
     } catch (err) {
       console.error('Erreur chargement:', err);
     }
@@ -247,7 +253,7 @@ export default function NewContribution() {
     if (window.confirm('Êtes-vous sûr ? Le brouillon sera supprimé définitivement.')) {
       if (draftId) {
         const drafts = JSON.parse(localStorage.getItem('contributionDrafts') || '[]');
-        const filtered = drafts.filter(d => d.id !== draftId);
+        const filtered = drafts.filter((d) => d.id !== draftId);
         localStorage.setItem('contributionDrafts', JSON.stringify(filtered));
       }
       setTitle('');
@@ -268,7 +274,7 @@ export default function NewContribution() {
     if (!description.trim()) errors.push('La description est requise');
     if (!category) errors.push('La catégorie est requise');
     if (versions.length === 0) errors.push('Au moins une version est requise');
-    
+
     setValidationErrors(errors);
     return errors.length === 0;
   };
@@ -283,7 +289,7 @@ export default function NewContribution() {
       video_url: '',
       creation_status: 'to_create',
       steps: [],
-      isNew: true
+      isNew: true,
     };
     setEditingVersionId(newVersion.id);
     setEditingVersion(newVersion);
@@ -292,7 +298,7 @@ export default function NewContribution() {
   // Sauvegarder une version
   const handleSaveVersion = (updatedVersion) => {
     if (editingVersion && editingVersionId) {
-      const index = versions.findIndex(v => v.id === editingVersionId);
+      const index = versions.findIndex((v) => v.id === editingVersionId);
       if (index >= 0) {
         const newVersions = [...versions];
         newVersions[index] = updatedVersion;
@@ -310,14 +316,14 @@ export default function NewContribution() {
   // Supprimer une version
   const handleDeleteVersion = () => {
     if (deleteAlert.versionId) {
-      setVersions(versions.filter(v => v.id !== deleteAlert.versionId));
+      setVersions(versions.filter((v) => v.id !== deleteAlert.versionId));
     }
     setDeleteAlert({ isOpen: false, versionId: null });
   };
 
   // Éditer une version
   const handleEditVersion = (versionId) => {
-    const version = versions.find(v => v.id === versionId);
+    const version = versions.find((v) => v.id === versionId);
     if (version) {
       setEditingVersionId(versionId);
       setEditingVersion({ ...version });
@@ -337,7 +343,7 @@ export default function NewContribution() {
       if (isEditingCorrection && versions.length > 0) {
         return await handleCorrectionResubmission();
       }
-      
+
       // Cas normal: Nouvelle contribution
       return await handleNewSubmission();
     } catch (error) {
@@ -353,20 +359,22 @@ export default function NewContribution() {
     // Créer la tâche (exercice) dans la table tasks avec task_type = 'normal'
     const { data: task, error: taskError } = await supabase
       .from('tasks')
-      .insert([{
-        title,
-        description,
-        category,
-        icon_name: 'help-circle',
-        owner_id: currentUser.id,
-        is_public: false,
-        task_type: 'normal',  // ✅ Ajouter le type de tâche
-        creation_status: {
-          status: 'pending',
-          difficulty,
-          created_at: new Date().toISOString()
-        }
-      }])
+      .insert([
+        {
+          title,
+          description,
+          category,
+          icon_name: 'help-circle',
+          owner_id: currentUser.id,
+          is_public: false,
+          task_type: 'normal', // ✅ Ajouter le type de tâche
+          creation_status: {
+            status: 'pending',
+            difficulty,
+            created_at: new Date().toISOString(),
+          },
+        },
+      ])
       .select()
       .single();
 
@@ -392,22 +400,21 @@ export default function NewContribution() {
         icon_name: v.icon_name,
         pictogram_app_image_id: v.pictogram_app_image_id,
         creation_status: 'pending',
-        version_int: idx + 1
+        version_int: idx + 1,
       }));
 
       // Essayer d'utiliser la RPC function si disponible, sinon fallback à insert direct
       let versionsResult = [];
-      
+
       for (const versionData of versionsData) {
         try {
           // Essayer la RPC function d'abord
-          const { data: rpcData, error: rpcError } = await supabase
-            .rpc('create_version', {
-              p_task_id: versionData.task_id,
-              p_description: versionData.name || null,
-              p_video_url: null
-            });
-          
+          const { data: rpcData, error: rpcError } = await supabase.rpc('create_version', {
+            p_task_id: versionData.task_id,
+            p_description: versionData.name || null,
+            p_video_url: null,
+          });
+
           if (!rpcError && rpcData && rpcData.length > 0) {
             versionsResult.push(rpcData[0]);
           } else {
@@ -417,7 +424,7 @@ export default function NewContribution() {
               .insert(versionData)
               .select()
               .single();
-            
+
             if (fallbackError) throw fallbackError;
             versionsResult.push(fallbackData);
           }
@@ -428,7 +435,7 @@ export default function NewContribution() {
             .insert(versionData)
             .select()
             .single();
-          
+
           if (fallbackError) throw fallbackError;
           versionsResult.push(fallbackData);
         }
@@ -438,11 +445,11 @@ export default function NewContribution() {
       for (let i = 0; i < versions.length; i++) {
         const versionData = versionsResult[i];
         const versionSteps = versions[i].steps || [];
-        
+
         if (versionSteps.length > 0) {
           const stepsData = versionSteps.map((step, stepIdx) => {
             // Déterminer la clé de zone basée sur le type d'action
-            const zoneKey = ['text_input', 'number_input'].includes(step.action_type) 
+            const zoneKey = ['text_input', 'number_input'].includes(step.action_type)
               ? 'text_input_area'
               : step.action_type?.startsWith('swipe') || step.action_type === 'scroll'
               ? 'start_area'
@@ -456,28 +463,29 @@ export default function NewContribution() {
               app_image_id: step.image_id,
               [zoneKey]: step[zoneKey] || step.area || null,
               step_order: stepIdx,
-              created_at: new Date().toISOString()
+              created_at: new Date().toISOString(),
             };
           });
 
           // Essayer la RPC function pour créer les étapes
           let stepsCreated = [];
-          
+
           for (const stepData of stepsData) {
             try {
-              const { data: rpcData, error: rpcError } = await supabase
-                .rpc('create_step', {
-                  p_version_id: stepData.version_id,
-                  p_step_order: stepData.step_order,
-                  p_step_type: stepData.action_type,
-                  p_content_text: stepData.instruction || null,
-                  p_areas: {
-                    app_image_id: stepData.app_image_id,
-                    [stepData.action_type?.startsWith('swipe') || stepData.action_type === 'scroll' ? 'start_area' : 'target_area']: 
-                      stepData.target_area || stepData.start_area || stepData.text_input_area || null
-                  }
-                });
-              
+              const { data: rpcData, error: rpcError } = await supabase.rpc('create_step', {
+                p_version_id: stepData.version_id,
+                p_step_order: stepData.step_order,
+                p_step_type: stepData.action_type,
+                p_content_text: stepData.instruction || null,
+                p_areas: {
+                  app_image_id: stepData.app_image_id,
+                  [stepData.action_type?.startsWith('swipe') || stepData.action_type === 'scroll'
+                    ? 'start_area'
+                    : 'target_area']:
+                    stepData.target_area || stepData.start_area || stepData.text_input_area || null,
+                },
+              });
+
               if (!rpcError && rpcData && rpcData.length > 0) {
                 stepsCreated.push(rpcData[0]);
               } else {
@@ -486,7 +494,7 @@ export default function NewContribution() {
                   .from('steps')
                   .insert(stepData)
                   .select();
-                
+
                 if (fallbackError) throw fallbackError;
                 stepsCreated = stepsCreated.concat(fallbackData);
               }
@@ -496,7 +504,7 @@ export default function NewContribution() {
                 .from('steps')
                 .insert(stepData)
                 .select();
-              
+
               if (fallbackError) throw fallbackError;
               stepsCreated = stepsCreated.concat(fallbackData);
             }
@@ -512,18 +520,18 @@ export default function NewContribution() {
   // Resoumission après correction
   const handleCorrectionResubmission = async () => {
     const version = versions[0]; // Une seule version en mode correction
-    
+
     if (!version || !version.id) {
       throw new Error('Version introuvable pour la correction');
     }
-    
+
     // Préparer les données avec vérification des UUIDs
     const updateData = {
       name: version.name || 'Version corrigée',
       icon_name: version.icon_name || null,
       creation_status: 'pending', // Remet en attente de validation
       modification_count: (modificationCount || 0) + 1,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     };
 
     // Ajouter pictogram_app_image_id seulement s'il est valide
@@ -535,7 +543,7 @@ export default function NewContribution() {
     if (originalSubmissionId && originalSubmissionId !== 'undefined') {
       updateData.original_submission_id = originalSubmissionId;
     }
-    
+
     // Mettre à jour la version existante
     const { error: versionError } = await supabase
       .from('versions')
@@ -549,14 +557,14 @@ export default function NewContribution() {
     if (!taskId || taskId === 'undefined') {
       throw new Error('ID de la tâche introuvable');
     }
-    
+
     const { error: taskError } = await supabase
       .from('tasks')
       .update({
         title,
         description,
         category,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', taskId);
 
@@ -573,7 +581,7 @@ export default function NewContribution() {
     // Recréer les étapes mises à jour
     if (version.steps && version.steps.length > 0) {
       const stepsData = version.steps.map((step, stepIdx) => {
-        const zoneKey = ['text_input', 'number_input'].includes(step.action_type) 
+        const zoneKey = ['text_input', 'number_input'].includes(step.action_type)
           ? 'text_input_area'
           : step.action_type?.startsWith('swipe') || step.action_type === 'scroll'
           ? 'start_area'
@@ -585,26 +593,24 @@ export default function NewContribution() {
           instruction: step.instruction || '',
           action_type: step.action_type || 'tap',
           step_order: stepIdx,
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
         };
-        
+
         // Ajouter app_image_id seulement s'il est valide
         if (step.app_image_id && step.app_image_id !== 'undefined') {
           stepData.app_image_id = step.app_image_id;
         }
-        
+
         // Ajouter la zone d'action
         const zoneData = step[zoneKey] || step.area;
         if (zoneData) {
           stepData[zoneKey] = zoneData;
         }
-        
+
         return stepData;
       });
 
-      const { error: stepsError } = await supabase
-        .from('steps')
-        .insert(stepsData);
+      const { error: stepsError } = await supabase.from('steps').insert(stepsData);
 
       if (stepsError) throw stepsError;
     }
@@ -633,7 +639,7 @@ export default function NewContribution() {
     <div className="max-w-6xl mx-auto p-4 py-8">
       {/* CGU Warning Banner */}
       {showCGUBanner && (
-        <CGUWarningBanner 
+        <CGUWarningBanner
           onClose={() => setShowCGUBanner(false)}
           onReadMore={() => navigate('/contributeur/cgu')}
         />
@@ -643,7 +649,7 @@ export default function NewContribution() {
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Nouvelle Contribution</h1>
         <p className="text-gray-600 mt-1">Créez un exercice pour enrichir la plateforme</p>
-        
+
         {/* Status brouillon */}
         {draftSaved && (
           <div className="mt-3 flex items-center gap-2 text-sm text-green-700 bg-green-50 p-2 rounded-lg w-fit">
@@ -651,7 +657,7 @@ export default function NewContribution() {
             <span>Brouillon sauvegardé automatiquement</span>
           </div>
         )}
-        
+
         {draftId && (
           <div className="mt-3 text-sm text-gray-600 flex items-center gap-2">
             <span>💾 Brouillon #{draftId.slice(0, 8)}..</span>
@@ -669,21 +675,19 @@ export default function NewContribution() {
                 🔧 Mode correction - Exercice à réviser
               </h3>
               <p className="text-sm text-orange-800 mb-3">
-                Cet exercice a été renvoyé par l'administrateur avec des commentaires. 
-                Apportez les corrections demandées puis resoumettez.
+                Cet exercice a été renvoyé par l'administrateur avec des commentaires. Apportez les
+                corrections demandées puis resoumettez.
               </p>
-              
+
               {adminComments && (
                 <div className="bg-orange-100 border border-orange-300 rounded p-3 mt-3">
                   <p className="text-sm font-medium text-orange-900 mb-1">
                     Commentaires de l'administrateur :
                   </p>
-                  <p className="text-sm text-orange-800 whitespace-pre-wrap">
-                    {adminComments}
-                  </p>
+                  <p className="text-sm text-orange-800 whitespace-pre-wrap">{adminComments}</p>
                 </div>
               )}
-              
+
               {modificationCount > 0 && (
                 <p className="text-xs text-orange-600 mt-2">
                   Nombre de modifications : {modificationCount}
@@ -717,7 +721,9 @@ export default function NewContribution() {
           <AlertTriangle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
           <div className="text-sm text-yellow-800">
             <p className="font-semibold mb-1">⚠️ Interdiction stricte de données personnelles</p>
-            <p>Utilisez uniquement les contacts fictifs fournis et les fonds d'écran recommandés.</p>
+            <p>
+              Utilisez uniquement les contacts fictifs fournis et les fonds d'écran recommandés.
+            </p>
           </div>
         </div>
       </div>
@@ -728,7 +734,7 @@ export default function NewContribution() {
           {/* Informations générales */}
           <div>
             <h2 className="text-xl font-semibold mb-4">Informations générales</h2>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -753,11 +759,14 @@ export default function NewContribution() {
                     onChange={(e) => setHasRequestLink(e.target.checked)}
                     className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                   />
-                  <label htmlFor="hasRequestLink" className="text-sm font-medium text-gray-900 cursor-pointer">
+                  <label
+                    htmlFor="hasRequestLink"
+                    className="text-sm font-medium text-gray-900 cursor-pointer"
+                  >
                     Cet exercice correspond à une demande de la liste
                   </label>
                 </div>
-                
+
                 {hasRequestLink && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -823,9 +832,7 @@ export default function NewContribution() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Difficulté
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Difficulté</label>
                   <select
                     value={difficulty}
                     onChange={(e) => setDifficulty(e.target.value)}
@@ -911,7 +918,7 @@ export default function NewContribution() {
           >
             Annuler
           </button>
-          
+
           {draftId && (
             <button
               onClick={handleDiscardDraft}
@@ -1006,15 +1013,15 @@ function VersionForm({ version, images, onSave, onCancel, onDelete }) {
       action_type: 'tap',
       image_id: null,
       step_order: (formVersion.steps || []).length,
-      isNew: true
+      isNew: true,
     };
     setEditingStep(newStep);
   };
 
   const handleSaveStep = (updatedStep) => {
     const steps = formVersion.steps || [];
-    const index = steps.findIndex(s => s.id === updatedStep.id);
-    
+    const index = steps.findIndex((s) => s.id === updatedStep.id);
+
     let newSteps;
     if (index >= 0) {
       newSteps = [...steps];
@@ -1022,7 +1029,7 @@ function VersionForm({ version, images, onSave, onCancel, onDelete }) {
     } else {
       newSteps = [...steps, updatedStep];
     }
-    
+
     setFormVersion({ ...formVersion, steps: newSteps });
     setEditingStep(null);
   };
@@ -1030,7 +1037,7 @@ function VersionForm({ version, images, onSave, onCancel, onDelete }) {
   const handleDeleteStep = (stepId) => {
     setFormVersion({
       ...formVersion,
-      steps: (formVersion.steps || []).filter(s => s.id !== stepId)
+      steps: (formVersion.steps || []).filter((s) => s.id !== stepId),
     });
   };
 
@@ -1063,7 +1070,7 @@ function VersionForm({ version, images, onSave, onCancel, onDelete }) {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
         <div className="p-6">
           <h2 className="text-xl font-semibold mb-4">Éditer la Version</h2>
-          
+
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1092,26 +1099,26 @@ function VersionForm({ version, images, onSave, onCancel, onDelete }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Pictogramme
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Pictogramme</label>
                 <select
                   value={formVersion.pictogram_app_image_id || ''}
                   onChange={(val) => handleVersionChange('pictogram_app_image_id', val || null)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">Aucun</option>
-                  {images.filter(img => img.source === 'admin').map(img => (
-                    <option key={img.id} value={img.id}>{img.name || img.title}</option>
-                  ))}
+                  {images
+                    .filter((img) => img.source === 'admin')
+                    .map((img) => (
+                      <option key={img.id} value={img.id}>
+                        {img.name || img.title}
+                      </option>
+                    ))}
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                URL Vidéo
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">URL Vidéo</label>
               <input
                 type="text"
                 value={formVersion.video_url || ''}
@@ -1207,7 +1214,7 @@ function StepForm({ step, images, onSave, onCancel, onDelete }) {
   const [formStep, setFormStep] = useState(step);
   const [selectedImage, setSelectedImage] = useState(null);
   const [editorImageDimensions, setEditorImageDimensions] = useState({ width: 0, height: 0 });
-  
+
   // Filters for images
   const [subcategoryFilter, setSubcategoryFilter] = useState('all');
   const [androidVersionFilter, setAndroidVersionFilter] = useState('all');
@@ -1231,7 +1238,7 @@ function StepForm({ step, images, onSave, onCancel, onDelete }) {
   }, [categoryFilter]);
 
   // Filter images by category, subcategory, and Android version
-  const filteredImages = images.filter(img => {
+  const filteredImages = images.filter((img) => {
     if (categoryFilter !== 'all' && img.category !== categoryFilter) {
       return false;
     }
@@ -1247,9 +1254,9 @@ function StepForm({ step, images, onSave, onCancel, onDelete }) {
   // Get unique Android versions from images
   const availableAndroidVersions = useMemo(() => {
     const versions = images
-      .filter(img => categoryFilter === 'all' || img.category === categoryFilter)
-      .map(img => img.android_version)
-      .filter(v => v && v !== null && v !== '');
+      .filter((img) => categoryFilter === 'all' || img.category === categoryFilter)
+      .map((img) => img.android_version)
+      .filter((v) => v && v !== null && v !== '');
     return ['all', ...new Set(versions)].sort((a, b) => {
       if (a === 'all') return -1;
       if (b === 'all') return 1;
@@ -1263,7 +1270,7 @@ function StepForm({ step, images, onSave, onCancel, onDelete }) {
   // Charger l'image sélectionnée au montage
   useEffect(() => {
     if (formStep.image_id) {
-      const img = images.find(i => i.id === formStep.image_id);
+      const img = images.find((i) => i.id === formStep.image_id);
       setSelectedImage(img);
     }
   }, [formStep.image_id, images]);
@@ -1275,7 +1282,7 @@ function StepForm({ step, images, onSave, onCancel, onDelete }) {
   const handleImageChange = (imageId) => {
     setFormStep({ ...formStep, image_id: imageId || null });
     if (imageId) {
-      const img = images.find(i => i.id === imageId);
+      const img = images.find((i) => i.id === imageId);
       setSelectedImage(img);
     } else {
       setSelectedImage(null);
@@ -1284,15 +1291,15 @@ function StepForm({ step, images, onSave, onCancel, onDelete }) {
 
   const handleAreaChange = (area) => {
     // Déterminer la clé de zone en fonction du type d'action (même logique que dans handleSubmit)
-    const zoneKey = ['text_input', 'number_input'].includes(formStep.action_type) 
+    const zoneKey = ['text_input', 'number_input'].includes(formStep.action_type)
       ? 'text_input_area'
       : formStep.action_type?.startsWith('swipe') || formStep.action_type === 'scroll'
       ? 'start_area'
       : 'target_area';
-    
-    setFormStep({ 
-      ...formStep, 
-      [zoneKey]: area 
+
+    setFormStep({
+      ...formStep,
+      [zoneKey]: area,
     });
   };
 
@@ -1301,7 +1308,7 @@ function StepForm({ step, images, onSave, onCancel, onDelete }) {
   };
 
   const getZoneKey = () => {
-    return ['text_input', 'number_input'].includes(formStep.action_type) 
+    return ['text_input', 'number_input'].includes(formStep.action_type)
       ? 'text_input_area'
       : formStep.action_type?.startsWith('swipe') || formStep.action_type === 'scroll'
       ? 'start_area'
@@ -1319,13 +1326,10 @@ function StepForm({ step, images, onSave, onCancel, onDelete }) {
 
       {/* Contenu principal en deux colonnes */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
-        
         {/* COLONNE GAUCHE: Formulaire */}
         <div className="lg:col-span-1 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Instruction *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Instruction *</label>
             <textarea
               value={formStep.instruction}
               onChange={(e) => setFormStep({ ...formStep, instruction: e.target.value })}
@@ -1336,16 +1340,14 @@ function StepForm({ step, images, onSave, onCancel, onDelete }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Type d'action *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Type d'action *</label>
             <select
               value={formStep.action_type || ''}
               onChange={(e) => handleActionTypeChange(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             >
               <option value="">Sélectionner un type</option>
-              {actionTypes.map(type => (
+              {actionTypes.map((type) => (
                 <option key={type.id} value={type.id}>
                   {type.label}
                 </option>
@@ -1356,9 +1358,7 @@ function StepForm({ step, images, onSave, onCancel, onDelete }) {
           {/* Champ pour saisie de texte */}
           {formStep.action_type === 'text_input' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Texte à saisir
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Texte à saisir</label>
               <input
                 type="text"
                 value={formStep.text_value || ''}
@@ -1383,87 +1383,89 @@ function StepForm({ step, images, onSave, onCancel, onDelete }) {
                 placeholder="Ex: 123456789"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               />
-              <p className="text-xs text-gray-500 mt-1">Le numéro exact à saisir sur le clavier numérique</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Le numéro exact à saisir sur le clavier numérique
+              </p>
             </div>
           )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Filtres pour les images
-              </label>
-              
-              {/* Category filter */}
-              <div className="mb-2">
-                <select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                >
-                  <option value="all">Toutes catégories</option>
-                  <option value="Capture d'écran">Capture d'écran</option>
-                  <option value="Fond d'écran">Fond d'écran</option>
-                  <option value="Icône">Icône</option>
-                  <option value="Autre">Autre</option>
-                </select>
-              </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Filtres pour les images
+            </label>
 
-              {/* Subcategory filter buttons */}
-              {availableSubcategories.length > 0 && (
-                <div className="mb-2">
-                  <div className="text-xs text-gray-600 mb-1">Sous-cat:</div>
-                  <div className="flex flex-wrap gap-1">
+            {/* Category filter */}
+            <div className="mb-2">
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                <option value="all">Toutes catégories</option>
+                <option value="Capture d'écran">Capture d'écran</option>
+                <option value="Fond d'écran">Fond d'écran</option>
+                <option value="Icône">Icône</option>
+                <option value="Autre">Autre</option>
+              </select>
+            </div>
+
+            {/* Subcategory filter buttons */}
+            {availableSubcategories.length > 0 && (
+              <div className="mb-2">
+                <div className="text-xs text-gray-600 mb-1">Sous-cat:</div>
+                <div className="flex flex-wrap gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setSubcategoryFilter('all')}
+                    className={`px-2 py-1 rounded text-xs ${
+                      subcategoryFilter === 'all'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Toutes
+                  </button>
+                  {availableSubcategories.map((subcat) => (
                     <button
                       type="button"
-                      onClick={() => setSubcategoryFilter('all')}
+                      key={subcat}
+                      onClick={() => setSubcategoryFilter(subcat)}
                       className={`px-2 py-1 rounded text-xs ${
-                        subcategoryFilter === 'all'
+                        subcategoryFilter === subcat
                           ? 'bg-blue-600 text-white'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
-                      Toutes
+                      {subcat}
                     </button>
-                    {availableSubcategories.map(subcat => (
-                      <button
-                        type="button"
-                        key={subcat}
-                        onClick={() => setSubcategoryFilter(subcat)}
-                        className={`px-2 py-1 rounded text-xs ${
-                          subcategoryFilter === subcat
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        {subcat}
-                      </button>
-                    ))}
-                  </div>
+                  ))}
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Android version filter buttons */}
-              {availableAndroidVersions.length > 0 && (
-                <div className="mb-2">
-                  <div className="text-xs text-gray-600 mb-1">Android:</div>
-                  <div className="flex flex-wrap gap-1">
-                    {availableAndroidVersions.map(version => (
-                      <button
-                        type="button"
-                        key={version}
-                        onClick={() => setAndroidVersionFilter(version)}
-                        className={`px-2 py-1 rounded text-xs ${
-                          androidVersionFilter === version
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        {version === 'all' ? 'Toutes' : version}
-                      </button>
-                    ))}
-                  </div>
+            {/* Android version filter buttons */}
+            {availableAndroidVersions.length > 0 && (
+              <div className="mb-2">
+                <div className="text-xs text-gray-600 mb-1">Android:</div>
+                <div className="flex flex-wrap gap-1">
+                  {availableAndroidVersions.map((version) => (
+                    <button
+                      type="button"
+                      key={version}
+                      onClick={() => setAndroidVersionFilter(version)}
+                      className={`px-2 py-1 rounded text-xs ${
+                        androidVersionFilter === version
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {version === 'all' ? 'Toutes' : version}
+                    </button>
+                  ))}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1475,7 +1477,7 @@ function StepForm({ step, images, onSave, onCancel, onDelete }) {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             >
               <option value="">Sélectionner une image</option>
-              {filteredImages.map(img => (
+              {filteredImages.map((img) => (
                 <option key={img.id} value={img.id}>
                   {img.title || img.name}
                 </option>
@@ -1490,14 +1492,13 @@ function StepForm({ step, images, onSave, onCancel, onDelete }) {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
               <p className="font-medium mb-1">💡 Zone d'action</p>
               <p className="text-xs">
-                {['tap', 'double_tap', 'long_press'].includes(formStep.action_type) && 
+                {['tap', 'double_tap', 'long_press'].includes(formStep.action_type) &&
                   'Tracez le bouton à cliquer'}
-                {['swipe_left', 'swipe_right', 'swipe_up', 'swipe_down', 'scroll'].includes(formStep.action_type) && 
-                  'Tracez la direction'}
-                {formStep.action_type === 'drag_and_drop' && 
-                  'Tracez le glisser'}
-                {['text_input', 'number_input'].includes(formStep.action_type) && 
-                  'Tracez le champ'}
+                {['swipe_left', 'swipe_right', 'swipe_up', 'swipe_down', 'scroll'].includes(
+                  formStep.action_type
+                ) && 'Tracez la direction'}
+                {formStep.action_type === 'drag_and_drop' && 'Tracez le glisser'}
+                {['text_input', 'number_input'].includes(formStep.action_type) && 'Tracez le champ'}
               </p>
             </div>
           )}
@@ -1506,7 +1507,8 @@ function StepForm({ step, images, onSave, onCancel, onDelete }) {
             <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800">
               <p className="font-medium mb-1">🎉 Bravo</p>
               <p className="text-xs">
-                Cette étape affichera uniquement la capture d'écran de félicitations sans zone d'action à cliquer.
+                Cette étape affichera uniquement la capture d'écran de félicitations sans zone
+                d'action à cliquer.
               </p>
             </div>
           )}
@@ -1516,7 +1518,10 @@ function StepForm({ step, images, onSave, onCancel, onDelete }) {
         <div className="lg:col-span-2">
           {selectedImage && formStep.action_type && formStep.action_type !== 'bravo' ? (
             <div className="space-y-4">
-              <div className="border border-gray-300 rounded-lg bg-gray-100 overflow-auto" style={{ maxHeight: '600px' }}>
+              <div
+                className="border border-gray-300 rounded-lg bg-gray-100 overflow-auto"
+                style={{ maxHeight: '600px' }}
+              >
                 <StepAreaEditor
                   imageUrl={selectedImage.public_url}
                   area={currentArea}
@@ -1530,11 +1535,7 @@ function StepForm({ step, images, onSave, onCancel, onDelete }) {
             </div>
           ) : selectedImage && formStep.action_type === 'bravo' ? (
             <div className="border border-gray-300 rounded-lg bg-gray-50 overflow-hidden">
-              <img 
-                src={selectedImage.public_url} 
-                alt="Capture finale" 
-                className="w-full h-auto"
-              />
+              <img src={selectedImage.public_url} alt="Capture finale" className="w-full h-auto" />
               <div className="p-4 text-center bg-green-50">
                 <p className="text-sm text-green-800">
                   🎉 Capture d'écran de félicitations (aucune zone d'action requise)
@@ -1545,10 +1546,12 @@ function StepForm({ step, images, onSave, onCancel, onDelete }) {
             <div className="border border-dashed border-gray-300 rounded-lg p-8 bg-gray-50 flex items-center justify-center min-h-96">
               <div className="text-center">
                 <p className="text-gray-500 text-sm mb-2">
-                  {!selectedImage ? '👆 Sélectionnez une image' : '⚙️ Sélectionnez un type d\'action'}
+                  {!selectedImage
+                    ? '👆 Sélectionnez une image'
+                    : "⚙️ Sélectionnez un type d'action"}
                 </p>
                 <p className="text-xs text-gray-400">
-                  {!selectedImage ? 'pour voir l\'aperçu' : 'pour pouvoir éditer la zone'}
+                  {!selectedImage ? "pour voir l'aperçu" : 'pour pouvoir éditer la zone'}
                 </p>
               </div>
             </div>

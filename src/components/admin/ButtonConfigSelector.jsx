@@ -1,5 +1,11 @@
 import React from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { getButtonConfigsList, DEFAULT_BUTTON_CONFIG } from '@/data/phoneButtonConfigs';
 
@@ -20,7 +26,7 @@ const ButtonConfigSelector = ({ value = DEFAULT_BUTTON_CONFIG, onChange, disable
           <SelectValue placeholder="Sélectionnez un modèle" />
         </SelectTrigger>
         <SelectContent>
-          {configs.map(config => (
+          {configs.map((config) => (
             <SelectItem key={config.id} value={config.id}>
               <div className="flex flex-col">
                 <span className="font-semibold">{config.name}</span>

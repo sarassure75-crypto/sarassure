@@ -67,7 +67,18 @@ export const getEnabledLibraries = () => {
  * Permet une meilleure organisation
  */
 export const ICON_CATEGORIES = {
-  lucide: ['Statut', 'Contact', 'Actions', 'Navigation', 'Utilisateurs', 'Fichiers', 'Média', 'Outils', 'Évaluation', 'Divers'],
+  lucide: [
+    'Statut',
+    'Contact',
+    'Actions',
+    'Navigation',
+    'Utilisateurs',
+    'Fichiers',
+    'Média',
+    'Outils',
+    'Évaluation',
+    'Divers',
+  ],
   fa6: ['Interface', 'Médias', 'Affaires', 'Médecine', 'Objets', 'Symboles', 'Marques'],
   bs: ['Interface', 'Graphiques', 'Lettres', 'Notation', 'Météo'],
   md: ['Interface', 'Navigation', 'Actions', 'Édition', 'Fichiers', 'Formulaires'],

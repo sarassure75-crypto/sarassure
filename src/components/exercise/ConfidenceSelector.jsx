@@ -6,27 +6,22 @@ import { cn } from '@/lib/utils';
  * ConfidenceSelector - Composant pour sélectionner un niveau de confiance avec smileys
  * Affichable en mode "affichage" ou "édition"
  */
-export default function ConfidenceSelector({ 
-  value, 
-  onChange, 
-  editable = false,
-  size = 'md' 
-}) {
+export default function ConfidenceSelector({ value, onChange, editable = false, size = 'md' }) {
   const confidenceLevels = [
     { value: 1, emoji: '😟', label: 'Pas confiant' },
     { value: 2, emoji: '🙂', label: 'Un peu' },
-    { value: 3, emoji: '😄', label: 'Confiant' }
+    { value: 3, emoji: '😄', label: 'Confiant' },
   ];
 
   const sizeClasses = {
     sm: 'text-lg',
     md: 'text-2xl',
-    lg: 'text-4xl'
+    lg: 'text-4xl',
   };
 
   if (!editable && value) {
     // Mode affichage seul
-    const level = confidenceLevels.find(l => l.value === value);
+    const level = confidenceLevels.find((l) => l.value === value);
     return (
       <div className="flex items-center gap-2">
         <span className={sizeClasses[size]}>{level?.emoji}</span>
@@ -50,7 +45,7 @@ export default function ConfidenceSelector({
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
           className={cn(
-            "p-2 rounded-lg border-2 transition-all",
+            'p-2 rounded-lg border-2 transition-all',
             value === level.value
               ? 'border-green-500 bg-green-50 ring-2 ring-green-300'
               : 'border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50'

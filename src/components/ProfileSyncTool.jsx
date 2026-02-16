@@ -22,14 +22,14 @@ export default function ProfileSyncTool() {
     try {
       await refetchUser();
       toast({
-        title: "✅ Profil synchronisé",
-        description: "Les données ont été rechargées",
+        title: '✅ Profil synchronisé',
+        description: 'Les données ont été rechargées',
       });
     } catch (error) {
       toast({
-        title: "❌ Erreur",
+        title: '❌ Erreur',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setSyncing(false);
@@ -39,18 +39,20 @@ export default function ProfileSyncTool() {
   const handleCreateProfile = async () => {
     if (!currentUser) {
       toast({
-        title: "❌ Erreur",
-        description: "Aucun utilisateur connecté",
-        variant: "destructive",
+        title: '❌ Erreur',
+        description: 'Aucun utilisateur connecté',
+        variant: 'destructive',
       });
       return;
     }
 
     setCreating(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) throw new Error("Utilisateur non trouvé");
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) throw new Error('Utilisateur non trouvé');
 
       // Déterminer le rôle basé sur l'email
       let role = USER_ROLES.LEARNER;
@@ -72,20 +74,21 @@ export default function ProfileSyncTool() {
       console.log('Creating profile with role:', role);
 
       // Créer ou mettre à jour le profil
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
+      const { error } = await supabase.from('profiles').upsert(
+        {
           id: user.id,
           email: user.email,
           role: role,
           first_name: firstName,
           last_name: lastName,
-        }, { onConflict: 'id' });
+        },
+        { onConflict: 'id' }
+      );
 
       if (error) throw error;
 
       toast({
-        title: "✅ Profil créé",
+        title: '✅ Profil créé',
         description: `Profil ${role} créé avec succès`,
       });
 
@@ -94,9 +97,9 @@ export default function ProfileSyncTool() {
     } catch (error) {
       console.error('Error creating profile:', error);
       toast({
-        title: "❌ Erreur",
+        title: '❌ Erreur',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setCreating(false);
@@ -108,8 +111,10 @@ export default function ProfileSyncTool() {
 
     setFixing(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Utilisateur non trouvé");
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error('Utilisateur non trouvé');
 
       // Déterminer le bon rôle
       let correctRole = USER_ROLES.LEARNER;
@@ -127,7 +132,7 @@ export default function ProfileSyncTool() {
       if (error) throw error;
 
       toast({
-        title: "✅ Rôle corrigé",
+        title: '✅ Rôle corrigé',
         description: `Rôle mis à jour: ${correctRole}`,
       });
 
@@ -135,9 +140,9 @@ export default function ProfileSyncTool() {
     } catch (error) {
       console.error('Error fixing role:', error);
       toast({
-        title: "❌ Erreur",
+        title: '❌ Erreur',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setFixing(false);
@@ -145,7 +150,8 @@ export default function ProfileSyncTool() {
   };
 
   const needsProfile = currentUser && currentUser.role === 'authenticated';
-  const wrongRole = currentUser && currentUser.role && !Object.values(USER_ROLES).includes(currentUser.role);
+  const wrongRole =
+    currentUser && currentUser.role && !Object.values(USER_ROLES).includes(currentUser.role);
 
   return (
     <div className="fixed bottom-20 left-4 z-[9999] max-w-xs">
@@ -167,7 +173,7 @@ export default function ProfileSyncTool() {
             <RefreshCw className={`w-3 h-3 mr-2 ${syncing ? 'animate-spin' : ''}`} />
             Sync Profile
           </Button>
-          
+
           {needsProfile && (
             <Button
               size="sm"
@@ -192,16 +198,12 @@ export default function ProfileSyncTool() {
               Fix Role
             </Button>
           )}
-          
+
           {needsProfile && (
-            <p className="text-xs text-yellow-300 mt-2">
-              ⚠️ Profil manquant dans la DB
-            </p>
+            <p className="text-xs text-yellow-300 mt-2">⚠️ Profil manquant dans la DB</p>
           )}
           {wrongRole && (
-            <p className="text-xs text-orange-300 mt-2">
-              ⚠️ Rôle incorrect: {currentUser.role}
-            </p>
+            <p className="text-xs text-orange-300 mt-2">⚠️ Rôle incorrect: {currentUser.role}</p>
           )}
         </CardContent>
       </Card>

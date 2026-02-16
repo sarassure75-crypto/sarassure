@@ -13,7 +13,7 @@ export const isPhysicalButtonAction = (actionType) => {
     'button_volume_down',
     'button_power_volume_down',
     'button_power_volume_up',
-    'button_volume_up_down'
+    'button_volume_up_down',
   ];
   return buttonActions.includes(actionType);
 };
@@ -25,7 +25,7 @@ export const isComboButtonAction = (actionType) => {
   const comboActions = [
     'button_power_volume_down',
     'button_power_volume_up',
-    'button_volume_up_down'
+    'button_volume_up_down',
   ];
   return comboActions.includes(actionType);
 };
@@ -37,9 +37,9 @@ export const isComboButtonAction = (actionType) => {
  */
 export const getRequiredButtons = (actionType) => {
   const mapping = {
-    'button_power_volume_down': ['power', 'volumeDown'],
-    'button_power_volume_up': ['power', 'volumeUp'],
-    'button_volume_up_down': ['volumeUp', 'volumeDown']
+    button_power_volume_down: ['power', 'volumeDown'],
+    button_power_volume_up: ['power', 'volumeUp'],
+    button_volume_up_down: ['volumeUp', 'volumeDown'],
   };
   return mapping[actionType] || [];
 };
@@ -51,9 +51,9 @@ export const getRequiredButtons = (actionType) => {
  */
 export const getButtonLabel = (buttonId) => {
   const labels = {
-    'power': 'Power',
-    'volumeUp': 'Volume+',
-    'volumeDown': 'Volume-'
+    power: 'Power',
+    volumeUp: 'Volume+',
+    volumeDown: 'Volume-',
   };
   return labels[buttonId] || buttonId;
 };
@@ -65,9 +65,9 @@ export const getButtonLabel = (buttonId) => {
  */
 export const getComboInstructionText = (actionType) => {
   const instructions = {
-    'button_power_volume_down': 'Appuyez simultanément sur Power + Volume-',
-    'button_power_volume_up': 'Appuyez simultanément sur Power + Volume+',
-    'button_volume_up_down': 'Appuyez simultanément sur Volume+ + Volume-'
+    button_power_volume_down: 'Appuyez simultanément sur Power + Volume-',
+    button_power_volume_up: 'Appuyez simultanément sur Power + Volume+',
+    button_volume_up_down: 'Appuyez simultanément sur Volume+ + Volume-',
   };
   return instructions[actionType] || '';
 };
@@ -76,7 +76,7 @@ export const getComboInstructionText = (actionType) => {
  * Mapping des actions de boutons vers les types Supabase
  */
 export const buttonActionMapping = {
-  'power': 'button_power',
-  'volumeUp': 'button_volume_up',
-  'volumeDown': 'button_volume_down'
+  power: 'button_power',
+  volumeUp: 'button_volume_up',
+  volumeDown: 'button_volume_down',
 };

@@ -34,7 +34,7 @@ export default function AdminExerciseStepEditor({ steps = [], onStepsUpdate }) {
     try {
       // Préparer les données des zones à sauvegarder
       const updateData = {};
-      
+
       // Déterminer quelle zone mettre à jour selon le type d'action
       if (editingStep.target_area_data) {
         updateData.target_area = JSON.stringify(editingStep.target_area_data);
@@ -46,23 +46,20 @@ export default function AdminExerciseStepEditor({ steps = [], onStepsUpdate }) {
         updateData.start_area = JSON.stringify(editingStep.start_area_data);
       }
 
-      const { error } = await supabase
-        .from('steps')
-        .update(updateData)
-        .eq('id', editingStep.id);
+      const { error } = await supabase.from('steps').update(updateData).eq('id', editingStep.id);
 
       if (error) throw error;
 
       // Mettre à jour les steps localement
       const updatedSteps = [...steps];
-      const stepIndex = updatedSteps.findIndex(s => s.id === editingStep.id);
+      const stepIndex = updatedSteps.findIndex((s) => s.id === editingStep.id);
       if (stepIndex >= 0) {
         updatedSteps[stepIndex] = {
           ...updatedSteps[stepIndex],
           ...updateData,
           target_area_data: editingStep.target_area_data,
           text_input_area_data: editingStep.text_input_area_data,
-          start_area_data: editingStep.start_area_data
+          start_area_data: editingStep.start_area_data,
         };
       }
 
@@ -71,15 +68,14 @@ export default function AdminExerciseStepEditor({ steps = [], onStepsUpdate }) {
 
       toast({
         title: "✅ Zone d'action sauvegardée",
-        description: "Les modifications ont été enregistrées avec succès."
+        description: 'Les modifications ont été enregistrées avec succès.',
       });
-
     } catch (error) {
       console.error('Erreur sauvegarde:', error);
       toast({
-        title: "❌ Erreur de sauvegarde",
+        title: '❌ Erreur de sauvegarde',
         description: error.message,
-        variant: "destructive"
+        variant: 'destructive',
       });
     } finally {
       setSaving(false);
@@ -103,7 +99,7 @@ export default function AdminExerciseStepEditor({ steps = [], onStepsUpdate }) {
 
     setEditingStep({
       ...editingStep,
-      [`${areaType}_data`]: newAreaData
+      [`${areaType}_data`]: newAreaData,
     });
   };
 
@@ -124,12 +120,17 @@ export default function AdminExerciseStepEditor({ steps = [], onStepsUpdate }) {
 
   // Initialiser les données des zones si pas déjà fait
   useEffect(() => {
-    if (editingStep && !editingStep.target_area_data && !editingStep.text_input_area_data && !editingStep.start_area_data) {
+    if (
+      editingStep &&
+      !editingStep.target_area_data &&
+      !editingStep.text_input_area_data &&
+      !editingStep.start_area_data
+    ) {
       setEditingStep({
         ...editingStep,
         target_area_data: parseAreaData(editingStep.target_area),
         text_input_area_data: parseAreaData(editingStep.text_input_area),
-        start_area_data: parseAreaData(editingStep.start_area)
+        start_area_data: parseAreaData(editingStep.start_area),
       });
     }
   }, [editingStep]);
@@ -201,13 +202,9 @@ export default function AdminExerciseStepEditor({ steps = [], onStepsUpdate }) {
                 Action: <span className="font-medium">{currentStep.action_type}</span>
               </p>
             </div>
-            
+
             {!editingStep && (
-              <Button
-                onClick={() => startEditingStep(currentStep)}
-                variant="outline"
-                size="sm"
-              >
+              <Button onClick={() => startEditingStep(currentStep)} variant="outline" size="sm">
                 <Edit className="w-4 h-4 mr-1" />
                 Éditer zones
               </Button>
@@ -229,26 +226,35 @@ export default function AdminExerciseStepEditor({ steps = [], onStepsUpdate }) {
               </div>
 
               {/* Éditeur pour chaque type de zone */}
-              {['target_area', 'text_input_area', 'start_area'].map(areaType => {
+              {['target_area', 'text_input_area', 'start_area'].map((areaType) => {
                 const areaData = editingStep[`${areaType}_data`];
-                const shouldShow = (areaType === 'target_area' && ['tap', 'double_tap', 'long_press'].includes(editingStep.action_type)) ||
-                                 (areaType === 'text_input_area' && ['text_input', 'number_input'].includes(editingStep.action_type)) ||
-                                 (areaType === 'start_area' && ['swipe_left', 'swipe_right', 'swipe_up', 'swipe_down', 'scroll', 'drag_and_drop'].includes(editingStep.action_type));
+                const shouldShow =
+                  (areaType === 'target_area' &&
+                    ['tap', 'double_tap', 'long_press'].includes(editingStep.action_type)) ||
+                  (areaType === 'text_input_area' &&
+                    ['text_input', 'number_input'].includes(editingStep.action_type)) ||
+                  (areaType === 'start_area' &&
+                    [
+                      'swipe_left',
+                      'swipe_right',
+                      'swipe_up',
+                      'swipe_down',
+                      'scroll',
+                      'drag_and_drop',
+                    ].includes(editingStep.action_type));
 
                 if (!shouldShow) return null;
 
                 const areaLabels = {
                   target_area: 'Zone cible (tap/clic)',
                   text_input_area: 'Zone de saisie (texte)',
-                  start_area: 'Zone de démarrage (swipe/scroll)'
+                  start_area: 'Zone de démarrage (swipe/scroll)',
                 };
 
                 return (
                   <div key={areaType} className="border border-gray-200 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-3">
-                      {areaLabels[areaType]}
-                    </h4>
-                    
+                    <h4 className="font-medium text-gray-900 mb-3">{areaLabels[areaType]}</h4>
+
                     {editingStep.image_url ? (
                       <StepAreaEditor
                         imageUrl={editingStep.image_url}
@@ -257,7 +263,9 @@ export default function AdminExerciseStepEditor({ steps = [], onStepsUpdate }) {
                       />
                     ) : (
                       <div className="bg-gray-100 p-4 rounded-lg">
-                        <p className="text-gray-500 text-sm">Image non disponible pour cette étape</p>
+                        <p className="text-gray-500 text-sm">
+                          Image non disponible pour cette étape
+                        </p>
                       </div>
                     )}
                   </div>
@@ -266,11 +274,7 @@ export default function AdminExerciseStepEditor({ steps = [], onStepsUpdate }) {
 
               {/* Actions de l'éditeur */}
               <div className="flex gap-3 pt-4 border-t">
-                <Button
-                  onClick={saveStepChanges}
-                  disabled={saving}
-                  className="flex-1"
-                >
+                <Button onClick={saveStepChanges} disabled={saving} className="flex-1">
                   {saving ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
@@ -283,12 +287,8 @@ export default function AdminExerciseStepEditor({ steps = [], onStepsUpdate }) {
                     </>
                   )}
                 </Button>
-                
-                <Button
-                  onClick={cancelEditing}
-                  variant="outline"
-                  disabled={saving}
-                >
+
+                <Button onClick={cancelEditing} variant="outline" disabled={saving}>
                   Annuler
                 </Button>
               </div>
@@ -303,20 +303,35 @@ export default function AdminExerciseStepEditor({ steps = [], onStepsUpdate }) {
                     alt={`Étape ${currentStepIndex + 1}`}
                     className="w-full h-auto rounded-lg border border-gray-200 block"
                   />
-                  
+
                   {/* Afficher les zones existantes */}
                   {[
-                    { data: parseAreaData(currentStep.target_area), color: 'rgba(239, 68, 68, 0.3)', borderColor: '#ef4444', label: 'Cible' },
-                    { data: parseAreaData(currentStep.text_input_area), color: 'rgba(59, 130, 246, 0.3)', borderColor: '#3b82f6', label: 'Saisie' },
-                    { data: parseAreaData(currentStep.start_area), color: 'rgba(34, 197, 94, 0.3)', borderColor: '#22c55e', label: 'Départ' }
+                    {
+                      data: parseAreaData(currentStep.target_area),
+                      color: 'rgba(239, 68, 68, 0.3)',
+                      borderColor: '#ef4444',
+                      label: 'Cible',
+                    },
+                    {
+                      data: parseAreaData(currentStep.text_input_area),
+                      color: 'rgba(59, 130, 246, 0.3)',
+                      borderColor: '#3b82f6',
+                      label: 'Saisie',
+                    },
+                    {
+                      data: parseAreaData(currentStep.start_area),
+                      color: 'rgba(34, 197, 94, 0.3)',
+                      borderColor: '#22c55e',
+                      label: 'Départ',
+                    },
                   ].map((zone, idx) => {
                     if (!zone.data) return null;
-                    
+
                     const x = zone.data.x_percent ?? zone.data.x ?? 0;
                     const y = zone.data.y_percent ?? zone.data.y ?? 0;
                     const w = zone.data.width_percent ?? zone.data.width ?? 10;
                     const h = zone.data.height_percent ?? zone.data.height ?? 10;
-                    
+
                     return (
                       <div
                         key={idx}
@@ -326,20 +341,31 @@ export default function AdminExerciseStepEditor({ steps = [], onStepsUpdate }) {
                           top: `${y}%`,
                           width: `${w}%`,
                           height: `${h}%`,
-                          backgroundColor: zone.data.color ? zone.data.color.replace('rgb', 'rgba').replace(')', `, ${zone.data.opacity || 0.3})`) : zone.color,
+                          backgroundColor: zone.data.color
+                            ? zone.data.color
+                                .replace('rgb', 'rgba')
+                                .replace(')', `, ${zone.data.opacity || 0.3})`)
+                            : zone.color,
                           borderColor: zone.data.color || zone.borderColor,
-                          borderRadius: zone.data.shape === 'ellipse' ? '50%' : '4px'
+                          borderRadius: zone.data.shape === 'ellipse' ? '50%' : '4px',
                         }}
                       >
-                        <div className="absolute -top-6 left-0 bg-white/90 px-2 py-0.5 rounded text-xs font-medium" style={{ borderColor: zone.borderColor }}>
+                        <div
+                          className="absolute -top-6 left-0 bg-white/90 px-2 py-0.5 rounded text-xs font-medium"
+                          style={{ borderColor: zone.borderColor }}
+                        >
                           {zone.label}
                         </div>
                       </div>
                     );
                   })}
-                  
+
                   {/* Message si aucune zone */}
-                  {!(currentStep.target_area || currentStep.text_input_area || currentStep.start_area) && (
+                  {!(
+                    currentStep.target_area ||
+                    currentStep.text_input_area ||
+                    currentStep.start_area
+                  ) && (
                     <div className="absolute top-2 left-2 bg-amber-100 border border-amber-300 rounded px-3 py-1 text-xs text-amber-800">
                       ℹ️ Aucune zone d'action définie
                     </div>

@@ -7,7 +7,18 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { AlertTriangle, ChevronLeft, CheckCircle, XCircle, Home, Volume2, Type, Globe, ListChecks, Lightbulb } from 'lucide-react';
+import {
+  AlertTriangle,
+  ChevronLeft,
+  CheckCircle,
+  XCircle,
+  Home,
+  Volume2,
+  Type,
+  Globe,
+  ListChecks,
+  Lightbulb,
+} from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import * as FontAwesome6 from 'react-icons/fa6';
 import * as BootstrapIcons from 'react-icons/bs';
@@ -21,7 +32,7 @@ import { logger } from '@/lib/logger';
 import {
   getAvailableLanguages,
   getQuestionnaireQuestionTranslations,
-  getQuestionnaireChoiceTranslations
+  getQuestionnaireChoiceTranslations,
 } from '@/data/translation';
 
 // Helper function to render icons from different libraries
@@ -29,17 +40,17 @@ const toPascalCase = (str) => {
   if (!str) return null;
   return str
     .split(/[\s-]+/)
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join('');
 };
 
 const getIconComponent = (iconData) => {
   if (!iconData) return ListChecks;
-  
-  // Si iconData est juste un string 
+
+  // Si iconData est juste un string
   if (typeof iconData === 'string') {
     let library, name;
-    
+
     // Format 1: "library:name" (avec deux-points)
     if (iconData.includes(':')) {
       [library, name] = iconData.split(':');
@@ -49,14 +60,16 @@ const getIconComponent = (iconData) => {
       const parts = iconData.split('-');
       library = parts[0];
       name = parts.slice(1).join('-');
-      
-      console.log(`[Icon Debug] String format: "${iconData}" → library="${library}", name="${name}"`);
+
+      console.log(
+        `[Icon Debug] String format: "${iconData}" → library="${library}", name="${name}"`
+      );
     } else {
       // Fallback: Lucide avec PascalCase
       const pascalIcon = toPascalCase(iconData);
       return LucideIcons[pascalIcon] || ListChecks;
     }
-    
+
     const libraries = {
       lucide: LucideIcons,
       fa6: FontAwesome6,
@@ -77,7 +90,7 @@ const getIconComponent = (iconData) => {
     console.log(`[Icon Debug] ❌ Icon not found: ${library}.${name}`);
     return ListChecks;
   }
-  
+
   // Si iconData est un objet avec library et name
   if (iconData.library && iconData.name) {
     const libraries = {
@@ -91,11 +104,13 @@ const getIconComponent = (iconData) => {
       ai: AntIcons,
     };
     const lib = libraries[iconData.library];
-    console.log(`[Icon Debug] Object format: library="${iconData.library}", name="${iconData.name}"`);
+    console.log(
+      `[Icon Debug] Object format: library="${iconData.library}", name="${iconData.name}"`
+    );
     console.log(`[Icon Debug] Resolved library to:`, lib ? 'FOUND' : 'NOT FOUND');
     return lib && lib[iconData.name] ? lib[iconData.name] : ListChecks;
   }
-  
+
   return ListChecks;
 };
 
@@ -133,25 +148,28 @@ const QuestionnairePlayerPage = () => {
 
   // ============ LANGUAGE MANAGEMENT (APRÈS currentUser) ============
   // Wrapper pour sauvegarder la langue (dans le profil ET localStorage)
-  const setCurrentLanguage = useCallback(async (lang) => {
-    setCurrentLanguageState(lang);
-    try {
-      localStorage.setItem('preferredLanguage', lang);
-      // Sauvegarder dans le profil utilisateur SEULEMENT si ce n'est pas le français (FR est la langue par défaut)
-      if (currentUser?.id && lang !== 'fr') {
-        const { error } = await supabase
-          .from('profiles')
-          .update({ preferred_translation_language: lang })
-          .eq('id', currentUser.id);
-        
-        if (error) {
-          console.error('Error saving language to profile:', error);
+  const setCurrentLanguage = useCallback(
+    async (lang) => {
+      setCurrentLanguageState(lang);
+      try {
+        localStorage.setItem('preferredLanguage', lang);
+        // Sauvegarder dans le profil utilisateur SEULEMENT si ce n'est pas le français (FR est la langue par défaut)
+        if (currentUser?.id && lang !== 'fr') {
+          const { error } = await supabase
+            .from('profiles')
+            .update({ preferred_translation_language: lang })
+            .eq('id', currentUser.id);
+
+          if (error) {
+            console.error('Error saving language to profile:', error);
+          }
         }
+      } catch (error) {
+        console.error('Error saving language preference:', error);
       }
-    } catch (error) {
-      console.error('Error saving language preference:', error);
-    }
-  }, [currentUser?.id]);
+    },
+    [currentUser?.id]
+  );
 
   // Charger la langue préférée du profil au démarrage
   useEffect(() => {
@@ -163,13 +181,13 @@ const QuestionnairePlayerPage = () => {
             .select('preferred_translation_language')
             .eq('id', currentUser.id)
             .single();
-          
+
           if (data?.preferred_translation_language) {
             // Sauvegarder la vraie langue préférée du profil
             const prefLang = data.preferred_translation_language;
             setPreferredLanguageFromProfile(prefLang);
             localStorage.setItem('preferredLanguage', prefLang);
-            
+
             // Si la langue préférée n'est pas FR, la charger comme langue actuelle
             if (prefLang !== 'fr') {
               setCurrentLanguageState(prefLang);
@@ -235,7 +253,7 @@ const QuestionnairePlayerPage = () => {
       logger.log(`🌍 Chargement des traductions pour ${languageCode}...`);
       const [qTrans, cTrans] = await Promise.all([
         getQuestionnaireQuestionTranslations(languageCode),
-        getQuestionnaireChoiceTranslations(languageCode)
+        getQuestionnaireChoiceTranslations(languageCode),
       ]);
 
       logger.log(`📚 Questions translations trouvées: ${qTrans.length}`, qTrans);
@@ -243,14 +261,14 @@ const QuestionnairePlayerPage = () => {
 
       // Créer des maps pour accès rapide
       const qTransMap = {};
-      qTrans.forEach(t => {
+      qTrans.forEach((t) => {
         qTransMap[t.question_id] = t.translated_instruction;
       });
       setQuestionTranslations(qTransMap);
       logger.log('📍 Question translations map:', qTransMap);
 
       const cTransMap = {};
-      cTrans.forEach(t => {
+      cTrans.forEach((t) => {
         cTransMap[t.choice_id] = t.translated_choice_text;
       });
       setChoiceTranslations(cTransMap);
@@ -280,7 +298,7 @@ const QuestionnairePlayerPage = () => {
 
       // Vérifier que c'est un questionnaire
       if (taskData.task_type !== 'questionnaire') {
-        setError('Cette tâche n\'est pas un questionnaire');
+        setError("Cette tâche n'est pas un questionnaire");
         return;
       }
 
@@ -302,9 +320,9 @@ const QuestionnairePlayerPage = () => {
       if (versionsData && versionsData.length > 0) {
         const firstVersion = versionsData[0];
         if (firstVersion.steps && firstVersion.steps.length > 0) {
-          const formattedQuestions = firstVersion.steps.map(step => {
+          const formattedQuestions = firstVersion.steps.map((step) => {
             let expectedInput = step.expected_input || {};
-            
+
             // Parse le JSON si c'est une string
             if (typeof expectedInput === 'string') {
               try {
@@ -315,21 +333,24 @@ const QuestionnairePlayerPage = () => {
               }
             }
 
-            const formattedChoices = (expectedInput.choices || []).map(c => {
+            const formattedChoices = (expectedInput.choices || []).map((c) => {
               // Vérifier si imageId est une icône (ancien système) ou une vraie image
-              const isIconId = c.imageId && (
-                c.imageId.startsWith('fa6-') || 
-                c.imageId.startsWith('fa-') || 
-                c.imageId.startsWith('bs-') || 
-                c.imageId.startsWith('md-') || 
-                c.imageId.startsWith('fi-') || 
-                c.imageId.startsWith('hi2-') || 
-                c.imageId.startsWith('ai-') || 
-                c.imageId.startsWith('lucide-') ||
-                c.imageId.includes(':')
-              );
+              const isIconId =
+                c.imageId &&
+                (c.imageId.startsWith('fa6-') ||
+                  c.imageId.startsWith('fa-') ||
+                  c.imageId.startsWith('bs-') ||
+                  c.imageId.startsWith('md-') ||
+                  c.imageId.startsWith('fi-') ||
+                  c.imageId.startsWith('hi2-') ||
+                  c.imageId.startsWith('ai-') ||
+                  c.imageId.startsWith('lucide-') ||
+                  c.imageId.includes(':'));
 
-              console.log(`[Choice] text="${c.text}", imageId="${c.imageId}", isIconId=${isIconId}, c.icon=`, c.icon);
+              console.log(
+                `[Choice] text="${c.text}", imageId="${c.imageId}", isIconId=${isIconId}, c.icon=`,
+                c.icon
+              );
 
               return {
                 id: c.id,
@@ -337,8 +358,8 @@ const QuestionnairePlayerPage = () => {
                 // Si c'est une icône (ancien système), la mettre dans icon
                 icon: c.icon || (isIconId ? c.imageId : null),
                 // Vraies images Supabase seulement
-                image: (!isIconId && c.imageId) ? { id: c.imageId, name: c.imageName } : null,
-                isCorrect: c.isCorrect || false
+                image: !isIconId && c.imageId ? { id: c.imageId, name: c.imageName } : null,
+                isCorrect: c.isCorrect || false,
               };
             });
 
@@ -347,9 +368,11 @@ const QuestionnairePlayerPage = () => {
               instruction: step.instruction,
               hint: expectedInput.hint || '',
               type: expectedInput.questionType || 'mixed',
-              image: expectedInput.imageId ? { id: expectedInput.imageId, name: expectedInput.imageName } : null,
+              image: expectedInput.imageId
+                ? { id: expectedInput.imageId, name: expectedInput.imageName }
+                : null,
               choices: formattedChoices,
-              correctAnswers: expectedInput.correctAnswers || []
+              correctAnswers: expectedInput.correctAnswers || [],
             };
           });
 
@@ -361,20 +384,22 @@ const QuestionnairePlayerPage = () => {
 
       // FALLBACK: Ancienne table questionnaire_questions (système legacy)
       console.log('⚠️ Pas de versions/steps trouvées, essai système legacy...');
-      
+
       const { data: questionsData, error: questionsError } = await supabase
         .from('questionnaire_questions')
-        .select(`
+        .select(
+          `
           *,
           app_images:image_id (id, name, file_path),
           questionnaire_choices (
             *,
             app_images:image_id (id, name, file_path)
           )
-        `)
+        `
+        )
         .eq('task_id', taskId)
         .order('question_order');
-      
+
       logger.log('🔍 Raw questionsData from DB (LEGACY):', questionsData);
 
       if (questionsError) throw questionsError;
@@ -385,34 +410,43 @@ const QuestionnairePlayerPage = () => {
       }
 
       // Formater les questions avec les réponses
-      const formattedQuestions = questionsData.map(q => {
-        const formattedChoices = (q.questionnaire_choices || []).sort((a, b) => a.choice_order - b.choice_order).map(c => ({
-          id: c.id,
-          text: c.text,
-          image: c.app_images ? {
-            id: c.app_images.id,
-            name: c.app_images.name,
-            filePath: c.app_images.file_path
-          } : null,
-          isCorrect: c.is_correct
-        }));
-        
-        logger.log(`📝 Question "${q.instruction}" - Choices:`, formattedChoices.map(c => ({ id: c.id, text: c.text })));
-        
+      const formattedQuestions = questionsData.map((q) => {
+        const formattedChoices = (q.questionnaire_choices || [])
+          .sort((a, b) => a.choice_order - b.choice_order)
+          .map((c) => ({
+            id: c.id,
+            text: c.text,
+            image: c.app_images
+              ? {
+                  id: c.app_images.id,
+                  name: c.app_images.name,
+                  filePath: c.app_images.file_path,
+                }
+              : null,
+            isCorrect: c.is_correct,
+          }));
+
+        logger.log(
+          `📝 Question "${q.instruction}" - Choices:`,
+          formattedChoices.map((c) => ({ id: c.id, text: c.text }))
+        );
+
         return {
           id: q.id,
           instruction: q.instruction,
           hint: q.hint || q.help_text || '',
           type: q.question_type,
-          image: q.app_images ? {
-            id: q.app_images.id,
-            name: q.app_images.name,
-            filePath: q.app_images.file_path
-          } : null,
-          choices: formattedChoices
+          image: q.app_images
+            ? {
+                id: q.app_images.id,
+                name: q.app_images.name,
+                filePath: q.app_images.file_path,
+              }
+            : null,
+          choices: formattedChoices,
         };
       });
-      
+
       logger.log('✅ Formatted questions (LEGACY):', formattedQuestions);
 
       setQuestions(formattedQuestions);
@@ -425,19 +459,19 @@ const QuestionnairePlayerPage = () => {
   };
 
   const handleSelectAnswer = (questionId, choiceId) => {
-    setUserAnswers(prev => {
+    setUserAnswers((prev) => {
       const current = prev[questionId] || [];
       if (current.includes(choiceId)) {
         // Retirer le choix si déjà sélectionné
         return {
           ...prev,
-          [questionId]: current.filter(id => id !== choiceId)
+          [questionId]: current.filter((id) => id !== choiceId),
         };
       } else {
         // Ajouter le choix
         return {
           ...prev,
-          [questionId]: [...current, choiceId]
+          [questionId]: [...current, choiceId],
         };
       }
     });
@@ -467,27 +501,27 @@ const QuestionnairePlayerPage = () => {
       utterance.rate = 1;
       utterance.pitch = 1.2;
       utterance.volume = 1;
-      
+
       // Chercher une voix féminine de la langue appropriée
       const voices = window.speechSynthesis.getVoices();
       const langPrefix = currentLanguage === 'fr' ? 'fr' : 'en';
-      const femaleVoice = voices.find(voice => 
-        voice.lang.startsWith(langPrefix) && voice.name.toLowerCase().includes('female')
-      ) || voices.find(voice => 
-        voice.lang.startsWith(langPrefix)
-      );
-      
+      const femaleVoice =
+        voices.find(
+          (voice) =>
+            voice.lang.startsWith(langPrefix) && voice.name.toLowerCase().includes('female')
+        ) || voices.find((voice) => voice.lang.startsWith(langPrefix));
+
       if (femaleVoice) {
         utterance.voice = femaleVoice;
       }
-      
-      window.speechSynthesis.cancel(); 
+
+      window.speechSynthesis.cancel();
       window.speechSynthesis.speak(utterance);
     } else {
       toast({
-        title: "Audio non disponible",
+        title: 'Audio non disponible',
         description: "La lecture audio n'est pas supportée par votre navigateur.",
-        variant: "destructive"
+        variant: 'destructive',
       });
     }
   };
@@ -504,21 +538,24 @@ const QuestionnairePlayerPage = () => {
     const translated = choiceTranslations[choice.id];
     const result = currentLanguage !== 'fr' && translated ? translated : choice.text;
     if (!result) {
-      logger.warn(`⚠️ Choice ${choice.id} has no text! translated=${translated}, choice.text=${choice.text}, currentLanguage=${currentLanguage}`);
+      logger.warn(
+        `⚠️ Choice ${choice.id} has no text! translated=${translated}, choice.text=${choice.text}, currentLanguage=${currentLanguage}`
+      );
     }
     return result;
   };
 
   const calculateScore = () => {
     let correctCount = 0;
-    questions.forEach(question => {
+    questions.forEach((question) => {
       const selectedChoiceIds = userAnswers[question.id] || [];
       const correctAnswerIds = question.correctAnswers || [];
-      
+
       // Vérifier si toutes les réponses sélectionnées sont correctes ET qu'aucune n'est oubliée
-      const isCorrect = selectedChoiceIds.length === correctAnswerIds.length &&
-        selectedChoiceIds.every(id => correctAnswerIds.includes(id));
-      
+      const isCorrect =
+        selectedChoiceIds.length === correctAnswerIds.length &&
+        selectedChoiceIds.every((id) => correctAnswerIds.includes(id));
+
       if (isCorrect) {
         correctCount++;
       }
@@ -541,7 +578,7 @@ const QuestionnairePlayerPage = () => {
       const correctAnswersCount = questions.reduce((count, question) => {
         const selectedChoiceId = userAnswers[question.id];
         if (selectedChoiceId) {
-          const selectedChoice = question.choices.find(c => c.id === selectedChoiceId);
+          const selectedChoice = question.choices.find((c) => c.id === selectedChoiceId);
           return selectedChoice?.isCorrect ? count + 1 : count;
         }
         return count;
@@ -568,14 +605,14 @@ const QuestionnairePlayerPage = () => {
         // Mettre à jour la tentative existante
         const existingAttempt = existingAttempts[0];
         logger.log('Mise à jour tentative existante:', existingAttempt.id);
-        
+
         const { error } = await supabase
           .from('questionnaire_attempts')
           .update({
             percentage: percentage,
             status: 'completed',
             attempted_at: new Date().toISOString(),
-            best_percentage: Math.max(existingAttempt.best_percentage || 0, percentage)
+            best_percentage: Math.max(existingAttempt.best_percentage || 0, percentage),
           })
           .eq('id', existingAttempt.id);
 
@@ -595,7 +632,7 @@ const QuestionnairePlayerPage = () => {
             percentage: percentage,
             status: 'completed',
             attempted_at: new Date().toISOString(),
-            best_percentage: percentage
+            best_percentage: percentage,
           })
           .select();
 
@@ -608,7 +645,7 @@ const QuestionnairePlayerPage = () => {
 
       toast({
         title: 'Questionnaire sauvegardé',
-        description: `Votre score: ${percentage}%`
+        description: `Votre score: ${percentage}%`,
       });
     } catch (err) {
       console.error('Erreur sauvegarde tentative:', err);
@@ -654,114 +691,118 @@ const QuestionnairePlayerPage = () => {
           <div className="bg-blue-600 text-white px-3 py-2 text-center">
             <h1 className="text-base md:text-xl font-bold truncate">{task.title}</h1>
           </div>
-          
+
           {/* Barre d'outils */}
           <div className="flex gap-2 p-2">
-          {/* Bouton Accueil */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/taches')}
-            title="Retour à la liste des exercices"
-            className="flex items-center gap-2 hover:bg-gray-100"
-          >
-            <Home className="h-4 w-4" />
-            <span className="hidden sm:inline">Accueil</span>
-          </Button>
-
-          {/* Bouton Lecture Audio */}
-          {currentQuestion?.instruction && (
+            {/* Bouton Accueil */}
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => playAudio(getQuestionText(currentQuestion))}
-              title="Lire l'instruction audio"
+              onClick={() => navigate('/taches')}
+              title="Retour à la liste des exercices"
               className="flex items-center gap-2 hover:bg-gray-100"
             >
-              <Volume2 className="h-4 w-4" />
-              <span className="hidden sm:inline">Écouter</span>
-            </Button>
-          )}
-
-          {/* Sélecteur de langue - Switch simple FR/Langue préférée */}
-          {preferredLanguageFromProfile !== 'fr' && (
-            <Button
-              variant={currentLanguage === 'fr' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setCurrentLanguage(currentLanguage === 'fr' ? preferredLanguageFromProfile : 'fr')}
-              title={`Basculer entre Français et ${preferredLanguageFromProfile.toUpperCase()}`}
-              className="flex items-center gap-2"
-            >
-              <Globe className="h-4 w-4" />
-              <span className="text-sm font-medium">{currentLanguage.toUpperCase()}</span>
-            </Button>
-          )}
-
-          {/* Bouton Indices */}
-          <Button
-            variant={showHints ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setShowHints(!showHints)}
-            title="Afficher/masquer les indices"
-            className="flex items-center gap-2 hover:bg-gray-100"
-          >
-            <Lightbulb className="h-4 w-4" />
-            <span className="hidden sm:inline">Indices</span>
-          </Button>
-
-          {/* Bouton Taille de Texte */}
-          <div className="relative ml-auto">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowTextZoomMenu(!showTextZoomMenu)}
-              title={`Taille du texte (${Math.round(textZoom * 100)}%)`}
-              className="flex items-center gap-2 hover:bg-gray-100"
-            >
-              <Type className="h-4 w-4" />
-              <span className="hidden sm:inline">Texte</span>
+              <Home className="h-4 w-4" />
+              <span className="hidden sm:inline">Accueil</span>
             </Button>
 
-            {/* Menu déroulant zoom texte */}
-            {showTextZoomMenu && (
-              <div 
-                className="absolute bg-white border-2 border-gray-300 rounded-lg shadow-xl z-50 min-w-[160px] top-full mt-2 right-0"
-                onMouseLeave={() => setShowTextZoomMenu(false)}
+            {/* Bouton Lecture Audio */}
+            {currentQuestion?.instruction && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => playAudio(getQuestionText(currentQuestion))}
+                title="Lire l'instruction audio"
+                className="flex items-center gap-2 hover:bg-gray-100"
               >
-                <div className="p-2">
-                  <p className="text-xs font-semibold text-gray-600 mb-2 px-2">Taille du texte:</p>
-                  {[1, 1.25, 1.5, 2].map((zoom) => (
-                    <button
-                      key={zoom}
-                      onClick={() => {
-                        setTextZoom(zoom);
-                        setShowTextZoomMenu(false);
-                      }}
-                      className={cn(
-                        "w-full text-left px-3 py-2 text-sm rounded hover:bg-blue-50 transition-colors",
-                        textZoom === zoom && "bg-blue-100 font-semibold text-blue-800"
-                      )}
-                    >
-                      {Math.round(zoom * 100)}%
-                    </button>
-                  ))}
-                </div>
-              </div>
+                <Volume2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Écouter</span>
+              </Button>
             )}
+
+            {/* Sélecteur de langue - Switch simple FR/Langue préférée */}
+            {preferredLanguageFromProfile !== 'fr' && (
+              <Button
+                variant={currentLanguage === 'fr' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() =>
+                  setCurrentLanguage(currentLanguage === 'fr' ? preferredLanguageFromProfile : 'fr')
+                }
+                title={`Basculer entre Français et ${preferredLanguageFromProfile.toUpperCase()}`}
+                className="flex items-center gap-2"
+              >
+                <Globe className="h-4 w-4" />
+                <span className="text-sm font-medium">{currentLanguage.toUpperCase()}</span>
+              </Button>
+            )}
+
+            {/* Bouton Indices */}
+            <Button
+              variant={showHints ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setShowHints(!showHints)}
+              title="Afficher/masquer les indices"
+              className="flex items-center gap-2 hover:bg-gray-100"
+            >
+              <Lightbulb className="h-4 w-4" />
+              <span className="hidden sm:inline">Indices</span>
+            </Button>
+
+            {/* Bouton Taille de Texte */}
+            <div className="relative ml-auto">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowTextZoomMenu(!showTextZoomMenu)}
+                title={`Taille du texte (${Math.round(textZoom * 100)}%)`}
+                className="flex items-center gap-2 hover:bg-gray-100"
+              >
+                <Type className="h-4 w-4" />
+                <span className="hidden sm:inline">Texte</span>
+              </Button>
+
+              {/* Menu déroulant zoom texte */}
+              {showTextZoomMenu && (
+                <div
+                  className="absolute bg-white border-2 border-gray-300 rounded-lg shadow-xl z-50 min-w-[160px] top-full mt-2 right-0"
+                  onMouseLeave={() => setShowTextZoomMenu(false)}
+                >
+                  <div className="p-2">
+                    <p className="text-xs font-semibold text-gray-600 mb-2 px-2">
+                      Taille du texte:
+                    </p>
+                    {[1, 1.25, 1.5, 2].map((zoom) => (
+                      <button
+                        key={zoom}
+                        onClick={() => {
+                          setTextZoom(zoom);
+                          setShowTextZoomMenu(false);
+                        }}
+                        className={cn(
+                          'w-full text-left px-3 py-2 text-sm rounded hover:bg-blue-50 transition-colors',
+                          textZoom === zoom && 'bg-blue-100 font-semibold text-blue-800'
+                        )}
+                      >
+                        {Math.round(zoom * 100)}%
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Progress Bar compacte */}
+          <div className="px-2 pb-2">
+            <div className="flex justify-between mb-1">
+              <span className="text-xs font-medium text-gray-700">
+                Question {currentQuestionIndex + 1}/{questions.length}
+              </span>
+              <span className="text-xs font-medium text-blue-600">{Math.round(progress)}%</span>
+            </div>
+            <Progress value={progress} className="h-1.5 bg-blue-100" />
           </div>
         </div>
-        
-        {/* Progress Bar compacte */}
-        <div className="px-2 pb-2">
-          <div className="flex justify-between mb-1">
-            <span className="text-xs font-medium text-gray-700">
-              Question {currentQuestionIndex + 1}/{questions.length}
-            </span>
-            <span className="text-xs font-medium text-blue-600">{Math.round(progress)}%</span>
-          </div>
-          <Progress value={progress} className="h-1.5 bg-blue-100" />
-        </div>
-      </div>
 
         <AnimatePresence mode="wait">
           {!showCompletionScreen ? (
@@ -775,32 +816,46 @@ const QuestionnairePlayerPage = () => {
               {/* Question Card */}
               <Card className="border-2 border-blue-500 shadow-lg mb-3">
                 <CardHeader className="bg-blue-50 border-b-2 border-blue-500 p-3">
-                  <CardTitle className="text-blue-700 text-sm md:text-base" style={{ fontSize: `${100 * textZoom}%` }}>
+                  <CardTitle
+                    className="text-blue-700 text-sm md:text-base"
+                    style={{ fontSize: `${100 * textZoom}%` }}
+                  >
                     {getQuestionText(currentQuestion)}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 md:p-4 space-y-3">
                   {/* Question Image - Conteneur dédié */}
-                  {currentQuestion.image?.filePath && (() => {
-                    const imageUrl = getImageUrl(currentQuestion.image.filePath);
-                    console.log('🖼️ Question image URL:', { filePath: currentQuestion.image.filePath, url: imageUrl });
-                    return imageUrl && (
-                      <div className="w-full bg-gradient-to-br from-blue-50 to-gray-50 border-2 border-blue-200 rounded-xl p-4">
-                        <p className="text-xs font-semibold text-blue-600 mb-2 uppercase tracking-wide">Image de la question</p>
-                        <div className="flex justify-center items-center min-h-40 bg-white rounded-lg overflow-hidden">
-                          <img
-                            src={imageUrl}
-                            alt={currentQuestion.image.name}
-                            className="max-w-full max-h-56 object-contain"
-                            onError={(e) => {
-                              console.warn(`Failed to load image: ${currentQuestion.image.filePath}`);
-                              e.target.parentElement.innerHTML = '<div class="text-gray-400 text-sm">Image non disponible</div>';
-                            }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })()}
+                  {currentQuestion.image?.filePath &&
+                    (() => {
+                      const imageUrl = getImageUrl(currentQuestion.image.filePath);
+                      console.log('🖼️ Question image URL:', {
+                        filePath: currentQuestion.image.filePath,
+                        url: imageUrl,
+                      });
+                      return (
+                        imageUrl && (
+                          <div className="w-full bg-gradient-to-br from-blue-50 to-gray-50 border-2 border-blue-200 rounded-xl p-4">
+                            <p className="text-xs font-semibold text-blue-600 mb-2 uppercase tracking-wide">
+                              Image de la question
+                            </p>
+                            <div className="flex justify-center items-center min-h-40 bg-white rounded-lg overflow-hidden">
+                              <img
+                                src={imageUrl}
+                                alt={currentQuestion.image.name}
+                                className="max-w-full max-h-56 object-contain"
+                                onError={(e) => {
+                                  console.warn(
+                                    `Failed to load image: ${currentQuestion.image.filePath}`
+                                  );
+                                  e.target.parentElement.innerHTML =
+                                    '<div class="text-gray-400 text-sm">Image non disponible</div>';
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )
+                      );
+                    })()}
 
                   {/* Indice pour la question */}
                   {showHints && currentQuestion.hint && (
@@ -814,71 +869,84 @@ const QuestionnairePlayerPage = () => {
 
                   {/* Choices - Conteneur */}
                   <div>
-                    <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Sélectionnez votre réponse</p>
+                    <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
+                      Sélectionnez votre réponse
+                    </p>
                     <div className="space-y-2">
                       {currentQuestion.choices && currentQuestion.choices.length > 0 ? (
-                        currentQuestion.choices.map(choice => {
+                        currentQuestion.choices.map((choice) => {
                           const choiceText = getChoiceText(choice);
-                          logger.log(`🎯 Rendering choice ${choice.id}: text="${choiceText}", icon=${choice.icon?.id}, image=${choice.image?.id}`);
+                          logger.log(
+                            `🎯 Rendering choice ${choice.id}: text="${choiceText}", icon=${choice.icon?.id}, image=${choice.image?.id}`
+                          );
                           return (
-                        <motion.button
-                          key={choice.id}
-                          type="button"
-                          whileHover={{ scale: 1.01 }}
-                          whileTap={{ scale: 0.99 }}
-                          onClick={() => handleSelectAnswer(currentQuestion.id, choice.id)}
-                          className={`w-full p-2 rounded-lg border-2 transition-all text-left ${
-                            selectedAnswers.includes(choice.id)
-                              ? 'border-blue-500 bg-blue-50'
-                              : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/50'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <div
-                              className={`w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center mt-1 ${
+                            <motion.button
+                              key={choice.id}
+                              type="button"
+                              whileHover={{ scale: 1.01 }}
+                              whileTap={{ scale: 0.99 }}
+                              onClick={() => handleSelectAnswer(currentQuestion.id, choice.id)}
+                              className={`w-full p-2 rounded-lg border-2 transition-all text-left ${
                                 selectedAnswers.includes(choice.id)
-                                  ? 'border-blue-500 bg-blue-500'
-                                  : 'border-gray-300'
+                                  ? 'border-blue-500 bg-blue-50'
+                                  : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/50'
                               }`}
                             >
-                              {selectedAnswers.includes(choice.id) && (
-                                <CheckCircle className="w-3 h-3 text-white" />
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <span className="font-medium text-gray-800" style={{ fontSize: `${100 * textZoom}%` }}>
-                                {choiceText}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          {/* Afficher l'icône si présente */}
-                          {choice.icon && (() => {
-                            return (
-                              <div className="mt-2 ml-8 bg-white border border-gray-200 rounded-lg p-3 flex justify-center items-center h-24">
-                                {renderIconComponent(choice.icon)}
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className={`w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center mt-1 ${
+                                    selectedAnswers.includes(choice.id)
+                                      ? 'border-blue-500 bg-blue-500'
+                                      : 'border-gray-300'
+                                  }`}
+                                >
+                                  {selectedAnswers.includes(choice.id) && (
+                                    <CheckCircle className="w-3 h-3 text-white" />
+                                  )}
+                                </div>
+                                <div className="flex-1">
+                                  <span
+                                    className="font-medium text-gray-800"
+                                    style={{ fontSize: `${100 * textZoom}%` }}
+                                  >
+                                    {choiceText}
+                                  </span>
+                                </div>
                               </div>
-                            );
-                          })()}
-                          
-                          {/* Afficher l'image si présente */}
-                          {choice.image?.filePath && (() => {
-                            const imageUrl = getImageUrl(choice.image.filePath);
-                            return imageUrl && (
-                              <div className="mt-2 ml-8 bg-white border border-gray-200 rounded-lg p-2 overflow-hidden">
-                                <img
-                                  src={imageUrl}
-                                  alt={choice.image.name}
-                                  className="max-w-full h-auto max-h-32 object-contain mx-auto"
-                                  onError={(e) => {
-                                    console.warn(`Failed to load choice image: ${choice.image.filePath}`);
-                                    e.target.style.display = 'none';
-                                  }}
-                                />
-                              </div>
-                            );
-                          })()}
-                        </motion.button>
+
+                              {/* Afficher l'icône si présente */}
+                              {choice.icon &&
+                                (() => {
+                                  return (
+                                    <div className="mt-2 ml-8 bg-white border border-gray-200 rounded-lg p-3 flex justify-center items-center h-24">
+                                      {renderIconComponent(choice.icon)}
+                                    </div>
+                                  );
+                                })()}
+
+                              {/* Afficher l'image si présente */}
+                              {choice.image?.filePath &&
+                                (() => {
+                                  const imageUrl = getImageUrl(choice.image.filePath);
+                                  return (
+                                    imageUrl && (
+                                      <div className="mt-2 ml-8 bg-white border border-gray-200 rounded-lg p-2 overflow-hidden">
+                                        <img
+                                          src={imageUrl}
+                                          alt={choice.image.name}
+                                          className="max-w-full h-auto max-h-32 object-contain mx-auto"
+                                          onError={(e) => {
+                                            console.warn(
+                                              `Failed to load choice image: ${choice.image.filePath}`
+                                            );
+                                            e.target.style.display = 'none';
+                                          }}
+                                        />
+                                      </div>
+                                    )
+                                  );
+                                })()}
+                            </motion.button>
                           );
                         })
                       ) : (
@@ -951,18 +1019,29 @@ const QuestionnairePlayerPage = () => {
                 {questions.map((question, qIdx) => {
                   const userAnswerIds = userAnswers[question.id] || [];
                   const correctAnswerIds = question.correctAnswers || [];
-                  const isQuestionCorrect = userAnswerIds.length === correctAnswerIds.length &&
-                    userAnswerIds.every(id => correctAnswerIds.includes(id));
+                  const isQuestionCorrect =
+                    userAnswerIds.length === correctAnswerIds.length &&
+                    userAnswerIds.every((id) => correctAnswerIds.includes(id));
 
                   return (
-                    <Card 
-                      key={question.id} 
-                      className={`border-2 ${isQuestionCorrect ? 'border-green-400 bg-green-50' : 'border-orange-400 bg-orange-50'}`}
+                    <Card
+                      key={question.id}
+                      className={`border-2 ${
+                        isQuestionCorrect
+                          ? 'border-green-400 bg-green-50'
+                          : 'border-orange-400 bg-orange-50'
+                      }`}
                     >
-                      <CardHeader className={`${isQuestionCorrect ? 'bg-green-100' : 'bg-orange-100'}`}>
+                      <CardHeader
+                        className={`${isQuestionCorrect ? 'bg-green-100' : 'bg-orange-100'}`}
+                      >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <CardTitle className={`text-lg ${isQuestionCorrect ? 'text-green-900' : 'text-orange-900'}`}>
+                            <CardTitle
+                              className={`text-lg ${
+                                isQuestionCorrect ? 'text-green-900' : 'text-orange-900'
+                              }`}
+                            >
                               Question {qIdx + 1}: {getQuestionText(question)}
                             </CardTitle>
                           </div>
@@ -995,8 +1074,8 @@ const QuestionnairePlayerPage = () => {
                                 isCorrect
                                   ? 'border-green-500 bg-green-50'
                                   : isSelected && !isCorrect
-                                    ? 'border-red-500 bg-red-50'
-                                    : 'border-gray-300 bg-white'
+                                  ? 'border-red-500 bg-red-50'
+                                  : 'border-gray-300 bg-white'
                               }`}
                             >
                               <div className="flex items-start gap-3">
@@ -1030,18 +1109,21 @@ const QuestionnairePlayerPage = () => {
                                   )}
 
                                   {/* Image si présente */}
-                                  {choice.image?.filePath && (() => {
-                                    const imageUrl = getImageUrl(choice.image.filePath);
-                                    return imageUrl && (
-                                      <div className="mb-2 flex justify-center">
-                                        <img
-                                          src={imageUrl}
-                                          alt={choice.image.name}
-                                          className="w-20 h-20 rounded object-contain"
-                                        />
-                                      </div>
-                                    );
-                                  })()}
+                                  {choice.image?.filePath &&
+                                    (() => {
+                                      const imageUrl = getImageUrl(choice.image.filePath);
+                                      return (
+                                        imageUrl && (
+                                          <div className="mb-2 flex justify-center">
+                                            <img
+                                              src={imageUrl}
+                                              alt={choice.image.name}
+                                              className="w-20 h-20 rounded object-contain"
+                                            />
+                                          </div>
+                                        )
+                                      );
+                                    })()}
 
                                   {/* Légende */}
                                   <div className="mt-2 flex gap-2 text-xs font-semibold">

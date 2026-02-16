@@ -19,34 +19,29 @@ export const MAX_IMAGE_SIZE = 1 * 1024 * 1024; // 1 MB
  * Upload une image vers Supabase Storage avec métadonnées
  * Note: L'image doit être redimensionnée AVANT l'upload (limite 1 Mo)
  */
-export async function uploadImageWithMetadata(
-  file,
-  metadata,
-  userId,
-  bucketName = 'images'
-) {
+export async function uploadImageWithMetadata(file, metadata, userId, bucketName = 'images') {
   try {
     // Vérification taille
     if (file.size > MAX_IMAGE_SIZE) {
       throw new Error(
-        `L'image dépasse la taille maximale de ${MAX_IMAGE_SIZE / 1024 / 1024} Mo. Veuillez la redimensionner.`
+        `L'image dépasse la taille maximale de ${
+          MAX_IMAGE_SIZE / 1024 / 1024
+        } Mo. Veuillez la redimensionner.`
       );
     }
 
     // 1. Upload vers Supabase Storage
     const fileExt = file.name.split('.').pop();
-    const fileName = `${userId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const fileName = `${userId}/${Date.now()}_${Math.random()
+      .toString(36)
+      .substring(7)}.${fileExt}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from(bucketName)
-      .upload(fileName, file);
+    const { error: uploadError } = await supabase.storage.from(bucketName).upload(fileName, file);
 
     if (uploadError) throw uploadError;
 
     // 2. Récupérer l'URL publique
-    const { data: urlData } = supabase.storage
-      .from(bucketName)
-      .getPublicUrl(fileName);
+    const { data: urlData } = supabase.storage.from(bucketName).getPublicUrl(fileName);
 
     // 3. Créer les métadonnées en base
     const { data: metaData, error: metaError } = await supabase
@@ -65,8 +60,8 @@ export async function uploadImageWithMetadata(
           height: metadata.height || null,
           file_size: file.size,
           mime_type: file.type,
-          moderation_status: 'pending'
-        }
+          moderation_status: 'pending',
+        },
       ])
       .select()
       .single();
@@ -114,9 +109,7 @@ export async function searchImages(filters = {}) {
 
     // Charger depuis app_images (admin) EN PREMIER
     try {
-      let adminQuery = supabase
-        .from('app_images')
-        .select('*');
+      let adminQuery = supabase.from('app_images').select('*');
 
       // Les images admin devraient être approuvées (colonne moderation_status n'existe peut-être pas encore)
       if (filters.category) {
@@ -139,7 +132,7 @@ export async function searchImages(filters = {}) {
 
       if (!adminError && adminImages) {
         allImages = allImages.concat(
-          adminImages.map(img => ({
+          adminImages.map((img) => ({
             ...img,
             id: img.id,
             title: img.name || img.file_path,
@@ -148,7 +141,7 @@ export async function searchImages(filters = {}) {
             source: 'admin',
             category: img.category || 'Autre',
             uploaded_by: { id: 'admin', first_name: 'Admin', last_name: '', email: 'admin' },
-            moderation_status: img.moderation_status || 'approved'
+            moderation_status: img.moderation_status || 'approved',
           }))
         );
       }
@@ -158,9 +151,7 @@ export async function searchImages(filters = {}) {
 
     // Essayer de charger depuis images_metadata (contributeurs)
     try {
-      let contributorQuery = supabase
-        .from('images_metadata')
-        .select(`
+      let contributorQuery = supabase.from('images_metadata').select(`
           *,
           uploader:uploaded_by (
             id,
@@ -217,17 +208,20 @@ export async function searchImages(filters = {}) {
         contributorQuery = contributorQuery.limit(Math.floor(filters.limit / 2));
       }
       if (filters.offset) {
-        contributorQuery = contributorQuery.range(filters.offset, filters.offset + (filters.limit || 20) - 1);
+        contributorQuery = contributorQuery.range(
+          filters.offset,
+          filters.offset + (filters.limit || 20) - 1
+        );
       }
 
       const { data: contributorImages, error: contribError } = await contributorQuery;
 
       if (!contribError && contributorImages) {
         allImages = allImages.concat(
-          contributorImages.map(img => ({
+          contributorImages.map((img) => ({
             ...img,
             source: 'contributor',
-            public_url: img.public_url || img.file_path
+            public_url: img.public_url || img.file_path,
           }))
         );
       }
@@ -249,7 +243,8 @@ export async function getImageById(imageId) {
   try {
     const { data, error } = await supabase
       .from('images_metadata')
-      .select(`
+      .select(
+        `
         *,
         uploader:uploaded_by (
           id,
@@ -257,7 +252,8 @@ export async function getImageById(imageId) {
           last_name,
           email
         )
-      `)
+      `
+      )
       .eq('id', imageId)
       .single();
 
@@ -274,10 +270,7 @@ export async function getImageById(imageId) {
  */
 export async function getMyImages(userId, filters = {}) {
   try {
-    let query = supabase
-      .from('images_metadata')
-      .select('*')
-      .eq('uploaded_by', userId);
+    let query = supabase.from('images_metadata').select('*').eq('uploaded_by', userId);
 
     // Filtre par statut
     if (filters.moderationStatus) {
@@ -307,7 +300,8 @@ export async function getPendingImages(limit = 50) {
   try {
     const { data, error } = await supabase
       .from('images_metadata')
-      .select(`
+      .select(
+        `
         *,
         uploader:uploaded_by (
           id,
@@ -315,7 +309,8 @@ export async function getPendingImages(limit = 50) {
           last_name,
           email
         )
-      `)
+      `
+      )
       .eq('moderation_status', 'pending')
       .order('uploaded_at', { ascending: true })
       .limit(limit);
@@ -338,7 +333,7 @@ export async function approveImage(imageId, moderatorId) {
       .update({
         moderation_status: 'approved',
         moderated_by: moderatorId,
-        moderated_at: new Date().toISOString()
+        moderated_at: new Date().toISOString(),
       })
       .eq('id', imageId)
       .select()
@@ -363,7 +358,7 @@ export async function rejectImage(imageId, moderatorId, reason = '') {
         moderation_status: 'rejected',
         moderated_by: moderatorId,
         moderated_at: new Date().toISOString(),
-        rejection_reason: reason
+        rejection_reason: reason,
       })
       .eq('id', imageId)
       .select()
@@ -387,7 +382,7 @@ export async function bulkApproveImages(imageIds, moderatorId) {
       .update({
         moderation_status: 'approved',
         moderated_by: moderatorId,
-        moderated_at: new Date().toISOString()
+        moderated_at: new Date().toISOString(),
       })
       .in('id', imageIds)
       .select();
@@ -411,7 +406,7 @@ export async function bulkRejectImages(imageIds, moderatorId, reason = '') {
         moderation_status: 'rejected',
         moderated_by: moderatorId,
         moderated_at: new Date().toISOString(),
-        rejection_reason: reason
+        rejection_reason: reason,
       })
       .in('id', imageIds)
       .select();
@@ -436,7 +431,7 @@ export async function incrementImageUsage(imageId, taskId) {
   try {
     const { data, error } = await supabase.rpc('increment_image_usage', {
       p_image_id: imageId,
-      p_task_id: taskId
+      p_task_id: taskId,
     });
 
     if (error) throw error;
@@ -498,9 +493,7 @@ export async function deleteImage(imageId, _userId) {
     if (fetchError) throw fetchError;
 
     if (image.usage_count > 0) {
-      throw new Error(
-        'Cette image est utilisée dans des exercices et ne peut pas être supprimée.'
-      );
+      throw new Error('Cette image est utilisée dans des exercices et ne peut pas être supprimée.');
     }
 
     // 2. Supprimer de Supabase Storage
@@ -617,8 +610,8 @@ export async function getImageLibraryStats() {
         total: totalData.count || 0,
         approved: approvedData.count || 0,
         pending: pendingData.count || 0,
-        rejected: rejectedData.count || 0
-      }
+        rejected: rejectedData.count || 0,
+      },
     };
   } catch (error) {
     console.error('Error fetching image library stats:', error);

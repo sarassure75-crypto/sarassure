@@ -33,30 +33,30 @@ export function useAdminPoints() {
 
       // Create a map of points by contributor ID
       const pointsMap = {};
-      (pointsData || []).forEach(row => {
+      (pointsData || []).forEach((row) => {
         pointsMap[row.contributor_id] = {
           total_points: row.total_points,
-          last_updated: row.last_updated
+          last_updated: row.last_updated,
         };
       });
 
       // Merge profiles with points data
       const contributorsWithPoints = (profilesData || [])
-        .filter(profile => profile.role === 'contributor')
-        .map(profile => ({
+        .filter((profile) => profile.role === 'contributor')
+        .map((profile) => ({
           id: profile.id,
           username: profile.username,
           role: profile.role,
           total_points: pointsMap[profile.id]?.total_points || 0,
           last_updated: pointsMap[profile.id]?.last_updated || profile.created_at,
-          created_at: profile.created_at
+          created_at: profile.created_at,
         }))
         .sort((a, b) => (b.total_points || 0) - (a.total_points || 0));
 
       setContributors(contributorsWithPoints);
 
       // Calculate admin points (all points from admin user)
-      const adminProfile = profilesData?.find(p => p.role === 'admin');
+      const adminProfile = profilesData?.find((p) => p.role === 'admin');
       if (adminProfile && pointsMap[adminProfile.id]) {
         setAdminPoints(pointsMap[adminProfile.id].total_points);
       }
@@ -85,21 +85,21 @@ export function useAdminPoints() {
         .from('contributor_points')
         .update({
           total_points: newTotal,
-          last_updated: new Date().toISOString()
+          last_updated: new Date().toISOString(),
         })
         .eq('contributor_id', contributorId);
 
       if (updateError) throw updateError;
 
       // Record in history
-      const { error: historyError } = await supabase
-        .from('contributor_points_history')
-        .insert([{
+      const { error: historyError } = await supabase.from('contributor_points_history').insert([
+        {
           contributor_id: contributorId,
           points_change: pointsChange,
           contribution_type: 'manual_adjustment',
-          description: description
-        }]);
+          description: description,
+        },
+      ]);
 
       if (historyError) throw historyError;
 
@@ -122,7 +122,7 @@ export function useAdminPoints() {
     loading,
     error,
     refresh: fetchContributors,
-    updateContributorPoints
+    updateContributorPoints,
   };
 }
 

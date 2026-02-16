@@ -4,8 +4,18 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
-import { getCategoriesWithLicenseStatus, activateLicense, deactivateLicense } from '@/data/licenses';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  getCategoriesWithLicenseStatus,
+  activateLicense,
+  deactivateLicense,
+} from '@/data/licenses';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Shield, Clock, Infinity } from 'lucide-react';
 
 export default function AdminLicenseManager({ trainers }) {
@@ -28,16 +38,18 @@ export default function AdminLicenseManager({ trainers }) {
       if (data.length === 0) {
         toast({
           title: 'Attention',
-          description: 'Aucune catégorie trouvée. Vérifier que la migration SQL a été exécutée et les catégories ajoutées en base.',
-          variant: 'destructive'
+          description:
+            'Aucune catégorie trouvée. Vérifier que la migration SQL a été exécutée et les catégories ajoutées en base.',
+          variant: 'destructive',
         });
       }
     } catch (error) {
       console.error('Erreur détaillée:', error);
       toast({
         title: 'Erreur',
-        description: error.message || 'Impossible de charger les catégories. Vérifier la base de données.',
-        variant: 'destructive'
+        description:
+          error.message || 'Impossible de charger les catégories. Vérifier la base de données.',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -50,13 +62,13 @@ export default function AdminLicenseManager({ trainers }) {
         await deactivateLicense(selectedTrainer, categoryId);
         toast({
           title: 'Licence désactivée',
-          description: 'La licence a été retirée avec succès'
+          description: 'La licence a été retirée avec succès',
         });
       } else {
         await activateLicense(selectedTrainer, categoryId, null); // null = à vie
         toast({
           title: 'Licence activée',
-          description: 'La licence a été accordée avec succès'
+          description: 'La licence a été accordée avec succès',
         });
       }
       await loadCategories();
@@ -64,12 +76,12 @@ export default function AdminLicenseManager({ trainers }) {
       toast({
         title: 'Erreur',
         description: 'Impossible de modifier la licence',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
 
-  const trainer = trainers.find(t => t.id === selectedTrainer);
+  const trainer = trainers.find((t) => t.id === selectedTrainer);
 
   return (
     <Card>
@@ -91,7 +103,7 @@ export default function AdminLicenseManager({ trainers }) {
               <SelectValue placeholder="Choisir un formateur..." />
             </SelectTrigger>
             <SelectContent>
-              {trainers.map(trainer => (
+              {trainers.map((trainer) => (
                 <SelectItem key={trainer.id} value={trainer.id}>
                   {trainer.first_name} ({trainer.pseudo}) - Code: {trainer.trainer_code}
                 </SelectItem>
@@ -112,16 +124,14 @@ export default function AdminLicenseManager({ trainers }) {
                     <p className="text-sm font-medium">
                       Formateur: {trainer.first_name} ({trainer.pseudo})
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      Code: {trainer.trainer_code}
-                    </p>
+                    <p className="text-xs text-muted-foreground">Code: {trainer.trainer_code}</p>
                   </div>
                 )}
-                
+
                 <div className="space-y-2">
-                  {categories.map(category => {
+                  {categories.map((category) => {
                     const isTactile = category.name?.toLowerCase() === 'tactile';
-                    
+
                     return (
                       <div
                         key={category.id}
@@ -159,7 +169,7 @@ export default function AdminLicenseManager({ trainers }) {
                             </p>
                           ) : null}
                         </div>
-                        
+
                         <div className="flex items-center gap-3">
                           {isTactile ? (
                             <Badge variant="outline" className="text-xs">
@@ -168,7 +178,9 @@ export default function AdminLicenseManager({ trainers }) {
                           ) : (
                             <Switch
                               checked={category.hasLicense}
-                              onCheckedChange={() => handleToggleLicense(category.id, category.hasLicense)}
+                              onCheckedChange={() =>
+                                handleToggleLicense(category.id, category.hasLicense)
+                              }
                             />
                           )}
                         </div>

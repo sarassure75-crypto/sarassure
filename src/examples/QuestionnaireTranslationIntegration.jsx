@@ -1,6 +1,6 @@
 /**
  * INTÉGRATION DE TRADUCTION DANS QUESTIONNAIRE
- * 
+ *
  * Ce fichier montre comment ajouter la traduction multilingue
  * aux pages de questionnaire (QCM) et à leurs questions
  */
@@ -427,16 +427,25 @@ export function QuestionnaireTranslationIntegration() {
         <h2 className="text-2xl font-bold">💡 Bonnes pratiques</h2>
         <ul className="space-y-3 text-sm">
           <li>
-            <strong>Cache des traductions:</strong> Éviter de re-traduire la même question en changeant de langue et revenant
-            <code className="block bg-white p-2 rounded mt-1">const [translationCache, setTranslationCache] = useState({});</code>
+            <strong>Cache des traductions:</strong> Éviter de re-traduire la même question en
+            changeant de langue et revenant
+            <code className="block bg-white p-2 rounded mt-1">
+              const [translationCache, setTranslationCache] = useState({});
+            </code>
           </li>
           <li>
-            <strong>Traduction progressive:</strong> Traduire une question à la fois pour meilleure performance
-            <code className="block bg-white p-2 rounded mt-1">// Traduire seulement la question affichée, pas toutes</code>
+            <strong>Traduction progressive:</strong> Traduire une question à la fois pour meilleure
+            performance
+            <code className="block bg-white p-2 rounded mt-1">
+              // Traduire seulement la question affichée, pas toutes
+            </code>
           </li>
           <li>
-            <strong>Synchronisation du vocabulaire:</strong> Assurer que glossaire est chargé avant traduction
-            <code className="block bg-white p-2 rounded mt-1">// Attendre glossaryTerms avant de traduire</code>
+            <strong>Synchronisation du vocabulaire:</strong> Assurer que glossaire est chargé avant
+            traduction
+            <code className="block bg-white p-2 rounded mt-1">
+              // Attendre glossaryTerms avant de traduire
+            </code>
           </li>
         </ul>
       </section>

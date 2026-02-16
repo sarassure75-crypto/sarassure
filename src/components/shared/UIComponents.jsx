@@ -9,17 +9,15 @@ export function PersonalDataWarning({ onViewResources }) {
         <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" />
         <div className="text-sm text-yellow-800">
           <p className="font-semibold mb-1">⚠️ Interdiction stricte de données personnelles</p>
-          <p className="mb-2">
-            Utilisez uniquement les ressources fournies par la plateforme :
-          </p>
+          <p className="mb-2">Utilisez uniquement les ressources fournies par la plateforme :</p>
           <div className="flex flex-wrap gap-2">
-            <button 
+            <button
               onClick={() => onViewResources?.('contacts')}
               className="px-3 py-1 bg-yellow-200 hover:bg-yellow-300 text-yellow-900 rounded font-medium transition-colors"
             >
               📇 Contacts fictifs
             </button>
-            <button 
+            <button
               onClick={() => onViewResources?.('wallpapers')}
               className="px-3 py-1 bg-yellow-200 hover:bg-yellow-300 text-yellow-900 rounded font-medium transition-colors"
             >
@@ -40,7 +38,7 @@ export function StatCard({ title, value, icon: Icon, color = 'blue', subtitle })
     yellow: 'bg-yellow-50 border-yellow-200 text-yellow-700',
     red: 'bg-red-50 border-red-200 text-red-700',
     purple: 'bg-purple-50 border-purple-200 text-purple-700',
-    gray: 'bg-gray-50 border-gray-200 text-gray-700'
+    gray: 'bg-gray-50 border-gray-200 text-gray-700',
   };
 
   return (
@@ -118,12 +116,7 @@ export function DropZone({ onDrop, onFileSelect, accept = 'image/*', maxSizeMB =
           <p className="text-sm text-gray-500 mb-4">ou</p>
           <label className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg cursor-pointer inline-block transition-colors">
             Sélectionner un fichier
-            <input
-              type="file"
-              accept={accept}
-              onChange={handleFileInput}
-              className="hidden"
-            />
+            <input type="file" accept={accept} onChange={handleFileInput} className="hidden" />
           </label>
           <p className="text-xs text-gray-500 mt-4">Maximum {maxSizeMB}MB</p>
         </>
@@ -137,13 +130,15 @@ export function LoadingSpinner({ size = 'md', text = 'Chargement...' }) {
   const sizes = {
     sm: 'h-6 w-6',
     md: 'h-12 w-12',
-    lg: 'h-16 w-16'
+    lg: 'h-16 w-16',
   };
 
   return (
     <div className="flex items-center justify-center py-8">
       <div className="text-center">
-        <div className={`animate-spin rounded-full border-b-2 border-blue-600 mx-auto ${sizes[size]}`}></div>
+        <div
+          className={`animate-spin rounded-full border-b-2 border-blue-600 mx-auto ${sizes[size]}`}
+        ></div>
         {text && <p className="mt-4 text-gray-600">{text}</p>}
       </div>
     </div>
@@ -176,18 +171,16 @@ export function ProgressBar({ progress, color = 'blue', showLabel = true }) {
     green: 'bg-green-600',
     yellow: 'bg-yellow-600',
     red: 'bg-red-600',
-    purple: 'bg-purple-600'
+    purple: 'bg-purple-600',
   };
 
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-1">
-        {showLabel && (
-          <span className="text-sm font-medium text-gray-700">{progress}%</span>
-        )}
+        {showLabel && <span className="text-sm font-medium text-gray-700">{progress}%</span>}
       </div>
       <div className="w-full bg-gray-200 rounded-full h-2.5">
-        <div 
+        <div
           className={`h-2.5 rounded-full transition-all duration-300 ${colors[color]}`}
           style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
         ></div>

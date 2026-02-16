@@ -1,22 +1,34 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Award, TrendingUp } from 'lucide-react';
 
 /**
  * ConfidenceAfterModal - Modal pour demander le niveau de confiance APRÈS l'exercice
- * 
+ *
  * Affiche 3 smileys et compare avec avant
  * Affiche message motivant basé sur progression
  */
-export default function ConfidenceAfterModal({ isOpen, onClose, onSubmit, taskTitle, confidenceBefore }) {
+export default function ConfidenceAfterModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  taskTitle,
+  confidenceBefore,
+}) {
   const [selectedConfidence, setSelectedConfidence] = useState(null);
 
   const confidenceLevels = [
-    { value: 1, emoji: '😟', label: 'Pas confiant', description: 'C\'est difficile' },
-    { value: 2, emoji: '🙂', label: 'Un peu confiant', description: 'C\'est mieux' },
-    { value: 3, emoji: '😄', label: 'Confiant', description: 'Je maîtrise!' }
+    { value: 1, emoji: '😟', label: 'Pas confiant', description: "C'est difficile" },
+    { value: 2, emoji: '🙂', label: 'Un peu confiant', description: "C'est mieux" },
+    { value: 3, emoji: '😄', label: 'Confiant', description: 'Je maîtrise!' },
   ];
 
   const getProgressMessage = () => {
@@ -28,26 +40,26 @@ export default function ConfidenceAfterModal({ isOpen, onClose, onSubmit, taskTi
         return {
           title: '🌟 Wow! Progression énorme!',
           message: 'Tu as gagné énormément en confiance. Bravo, tu as progressé!',
-          color: 'text-green-600'
+          color: 'text-green-600',
         };
       } else if (diff === 1) {
         return {
           title: '✨ Super! Tu as progressé!',
           message: 'Tu es devenu(e) plus confiant(e). Continue comme ça!',
-          color: 'text-green-600'
+          color: 'text-green-600',
         };
       }
     } else if (selectedConfidence === confidenceBefore) {
       return {
         title: '👍 Bien!',
         message: 'Tu as gardé ton niveau de confiance. Tu maîtrises cet exercice!',
-        color: 'text-blue-600'
+        color: 'text-blue-600',
       };
     } else {
       return {
-        title: '💪 C\'est normal!',
-        message: 'L\'apprentissage, c\'est progressif. Tu vas progresser rapidement!',
-        color: 'text-amber-600'
+        title: "💪 C'est normal!",
+        message: "L'apprentissage, c'est progressif. Tu vas progresser rapidement!",
+        color: 'text-amber-600',
       };
     }
   };
@@ -82,9 +94,10 @@ export default function ConfidenceAfterModal({ isOpen, onClose, onSubmit, taskTi
               whileTap={{ scale: 0.95 }}
               className={`
                 flex flex-col items-center justify-center p-4 rounded-lg border-2 transition-all
-                ${selectedConfidence === level.value
-                  ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-300'
-                  : 'border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50'
+                ${
+                  selectedConfidence === level.value
+                    ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-300'
+                    : 'border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50'
                 }
               `}
             >
@@ -101,14 +114,14 @@ export default function ConfidenceAfterModal({ isOpen, onClose, onSubmit, taskTi
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className={`p-4 rounded-lg bg-gray-50 border-l-4 ${
-              progressMessage.color === 'text-green-600' ? 'border-green-400' :
-              progressMessage.color === 'text-blue-600' ? 'border-blue-400' :
-              'border-amber-400'
+              progressMessage.color === 'text-green-600'
+                ? 'border-green-400'
+                : progressMessage.color === 'text-blue-600'
+                ? 'border-blue-400'
+                : 'border-amber-400'
             }`}
           >
-            <p className={`font-bold mb-1 ${progressMessage.color}`}>
-              {progressMessage.title}
-            </p>
+            <p className={`font-bold mb-1 ${progressMessage.color}`}>{progressMessage.title}</p>
             <p className="text-sm text-gray-700">{progressMessage.message}</p>
           </motion.div>
         )}
@@ -127,7 +140,8 @@ export default function ConfidenceAfterModal({ isOpen, onClose, onSubmit, taskTi
         {/* Stats rapides */}
         <div className="text-xs text-center text-gray-600 mt-4">
           <p className="flex items-center justify-center gap-1">
-            <TrendingUp className="w-3 h-3" /> Tu progresses! C'est comme ça qu'on devient compétent!
+            <TrendingUp className="w-3 h-3" /> Tu progresses! C'est comme ça qu'on devient
+            compétent!
           </p>
         </div>
       </DialogContent>

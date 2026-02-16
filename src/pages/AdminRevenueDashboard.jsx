@@ -1,20 +1,20 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import { useAdminRevenue } from "../hooks/useAdminRevenue";
-import { useAdminCounters } from "../hooks/useAdminCounters";
-import AdminTabNavigation from "../components/admin/AdminTabNavigation";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { useAdminRevenue } from '../hooks/useAdminRevenue';
+import { useAdminCounters } from '../hooks/useAdminCounters';
+import AdminTabNavigation from '../components/admin/AdminTabNavigation';
 // import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { 
-  FileText, 
-  Image, 
+import {
+  FileText,
+  Image,
   TrendingUp,
   Award,
   DollarSign,
   Trophy,
   Eye,
   Upload,
-  Home
+  Home,
 } from 'lucide-react';
 
 export default function AdminRevenueDashboard() {
@@ -37,7 +37,7 @@ export default function AdminRevenueDashboard() {
       <div className="bg-white rounded-lg border shadow-sm mb-6">
         <div className="flex flex-col space-y-1.5 p-6">
           <h3 className="flex items-center text-3xl font-semibold leading-none tracking-tight">
-            <Home className="mr-3 h-8 w-8 text-primary"/>
+            <Home className="mr-3 h-8 w-8 text-primary" />
             Administration - Revenus
           </h3>
           <p className="text-sm text-muted-foreground">
@@ -58,9 +58,7 @@ export default function AdminRevenueDashboard() {
             <FileText className="w-5 h-5 text-blue-600" />
           </div>
           <p className="text-3xl font-bold text-gray-900">{stats?.exercises?.total || 0}</p>
-          <p className="text-xs text-gray-500 mt-2">
-            Créées par l'administration
-          </p>
+          <p className="text-xs text-gray-500 mt-2">Créées par l'administration</p>
         </div>
 
         {/* Total Images admin */}
@@ -70,9 +68,7 @@ export default function AdminRevenueDashboard() {
             <Image className="w-5 h-5 text-purple-600" />
           </div>
           <p className="text-3xl font-bold text-gray-900">{stats?.images?.total || 0}</p>
-          <p className="text-xs text-gray-500 mt-2">
-            Créées par l'administration
-          </p>
+          <p className="text-xs text-gray-500 mt-2">Créées par l'administration</p>
         </div>
 
         {/* Total Contributions (exercices + images) */}
@@ -84,9 +80,7 @@ export default function AdminRevenueDashboard() {
           <p className="text-3xl font-bold text-gray-900">
             {(stats?.exercises?.total || 0) + (stats?.images?.total || 0)}
           </p>
-          <p className="text-xs text-gray-500 mt-2">
-            Créées par l'administration
-          </p>
+          <p className="text-xs text-gray-500 mt-2">Créées par l'administration</p>
         </div>
 
         {/* Contexte global */}
@@ -95,11 +89,10 @@ export default function AdminRevenueDashboard() {
             <h3 className="text-gray-600 text-sm font-medium">Sur la plateforme</h3>
             <TrendingUp className="w-5 h-5 text-orange-600" />
           </div>
-          <p className="text-3xl font-bold text-gray-900">
-            {stats?.global?.total_content || 0}
-          </p>
+          <p className="text-3xl font-bold text-gray-900">{stats?.global?.total_content || 0}</p>
           <p className="text-xs text-gray-500 mt-2">
-            {stats?.global?.total_exercises || 0} exercices • {stats?.global?.total_images || 0} images
+            {stats?.global?.total_exercises || 0} exercices • {stats?.global?.total_images || 0}{' '}
+            images
           </p>
         </div>
 
@@ -110,9 +103,7 @@ export default function AdminRevenueDashboard() {
             <Upload className="w-5 h-5 text-blue-600" />
           </div>
           <p className="text-3xl font-bold text-blue-900">{stats?.contributors?.count || 0}</p>
-          <p className="text-xs text-blue-700 mt-2">
-            Actifs sur la plateforme
-          </p>
+          <p className="text-xs text-blue-700 mt-2">Actifs sur la plateforme</p>
         </div>
 
         {/* Versions contributeurs */}
@@ -122,9 +113,7 @@ export default function AdminRevenueDashboard() {
             <FileText className="w-5 h-5 text-purple-600" />
           </div>
           <p className="text-3xl font-bold text-purple-900">{stats?.contributors?.versions || 0}</p>
-          <p className="text-xs text-purple-700 mt-2">
-            Versions validées
-          </p>
+          <p className="text-xs text-purple-700 mt-2">Versions validées</p>
         </div>
 
         {/* Images contributeurs */}
@@ -134,9 +123,7 @@ export default function AdminRevenueDashboard() {
             <Image className="w-5 h-5 text-green-600" />
           </div>
           <p className="text-3xl font-bold text-green-900">{stats?.contributors?.images || 0}</p>
-          <p className="text-xs text-green-700 mt-2">
-            Images créées par contributeurs
-          </p>
+          <p className="text-xs text-green-700 mt-2">Images créées par contributeurs</p>
         </div>
       </div>
 
@@ -144,7 +131,7 @@ export default function AdminRevenueDashboard() {
       {revenue && (
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">💰 Revenus Plateforme</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             {/* Licences vendues */}
             <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
@@ -184,7 +171,9 @@ export default function AdminRevenueDashboard() {
                 Palier {revenue.milestone_count || 0}
               </p>
               <p className="text-xs text-amber-600 mt-2">
-                {(revenue.milestone_count || 0) > 0 ? `${revenue.milestone_count} × €1000` : 'Aucun palier atteint'}
+                {(revenue.milestone_count || 0) > 0
+                  ? `${revenue.milestone_count} × €1000`
+                  : 'Aucun palier atteint'}
               </p>
             </div>
           </div>
@@ -199,7 +188,7 @@ export default function AdminRevenueDashboard() {
               </div>
               <div className="mb-4">
                 <p className="text-4xl font-bold text-blue-900">
-                  €{(((revenue.total_revenue_cents || 0) * 0.80) / 100).toFixed(2)}
+                  €{(((revenue.total_revenue_cents || 0) * 0.8) / 100).toFixed(2)}
                 </p>
                 <p className="text-sm text-blue-700 mt-2">
                   Sur €{((revenue.total_revenue_cents || 0) / 100).toFixed(2)} de ventes totales
@@ -207,7 +196,8 @@ export default function AdminRevenueDashboard() {
               </div>
               <div className="bg-blue-100 rounded-lg p-3">
                 <p className="text-xs text-blue-800">
-                  💡 La plateforme conserve 80% des revenus pour la maintenance, l'hébergement et le développement. 20% sont reversés aux contributeurs.
+                  💡 La plateforme conserve 80% des revenus pour la maintenance, l'hébergement et le
+                  développement. 20% sont reversés aux contributeurs.
                 </p>
               </div>
             </div>
@@ -223,12 +213,16 @@ export default function AdminRevenueDashboard() {
                   <div
                     className="bg-purple-600 h-4 rounded-full transition-all duration-500 flex items-center justify-end pr-2"
                     style={{
-                      width: `${Math.min((((revenue.total_revenue_cents || 0) % 100000) / 100000) * 100, 100)}%`
+                      width: `${Math.min(
+                        (((revenue.total_revenue_cents || 0) % 100000) / 100000) * 100,
+                        100
+                      )}%`,
                     }}
                   >
                     {(((revenue.total_revenue_cents || 0) % 100000) / 100000) * 100 > 10 && (
                       <span className="text-xs font-bold text-white">
-                        {Math.round((((revenue.total_revenue_cents || 0) % 100000) / 100000) * 100)}%
+                        {Math.round((((revenue.total_revenue_cents || 0) % 100000) / 100000) * 100)}
+                        %
                       </span>
                     )}
                   </div>
@@ -238,15 +232,19 @@ export default function AdminRevenueDashboard() {
                     €{(((revenue.total_revenue_cents || 0) % 100000) / 100).toFixed(2)}
                   </span>
                   <span className="text-purple-600">
-                    Restant: €{((((revenue.milestone_count || 0) + 1) * 100000 - (revenue.total_revenue_cents || 0)) / 100).toFixed(2)}
+                    Restant: €
+                    {(
+                      (((revenue.milestone_count || 0) + 1) * 100000 -
+                        (revenue.total_revenue_cents || 0)) /
+                      100
+                    ).toFixed(2)}
                   </span>
                 </div>
               </div>
               <p className="text-xs text-purple-600">
-                {(revenue.milestone_count || 0) === 0 
-                  ? "🎯 Atteignez €1000 pour débloquer le premier palier!"
-                  : `🚀 Continuez pour atteindre le palier ${(revenue.milestone_count || 0) + 1}!`
-                }
+                {(revenue.milestone_count || 0) === 0
+                  ? '🎯 Atteignez €1000 pour débloquer le premier palier!'
+                  : `🚀 Continuez pour atteindre le palier ${(revenue.milestone_count || 0) + 1}!`}
               </p>
             </div>
           </div>
@@ -258,14 +256,14 @@ export default function AdminRevenueDashboard() {
         <div className="flex items-start space-x-4">
           <Award className="w-8 h-8 text-blue-600 flex-shrink-0 mt-1" />
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Gestion de la plateforme
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Gestion de la plateforme</h3>
             <p className="text-gray-700">
-              En tant qu'administrateur, vous gérez {(stats?.exercises?.total || 0) + (stats?.images?.total || 0)} contributions.
-              La plateforme génère €{((revenue?.total_revenue_cents || 0) / 100).toFixed(2)} de revenus dont 
-              €{(((revenue?.total_revenue_cents || 0) * 0.80) / 100).toFixed(2)} pour la plateforme et 
-              €{(((revenue?.total_revenue_cents || 0) * 0.20) / 100).toFixed(2)} reversés aux contributeurs.
+              En tant qu'administrateur, vous gérez{' '}
+              {(stats?.exercises?.total || 0) + (stats?.images?.total || 0)} contributions. La
+              plateforme génère €{((revenue?.total_revenue_cents || 0) / 100).toFixed(2)} de revenus
+              dont €{(((revenue?.total_revenue_cents || 0) * 0.8) / 100).toFixed(2)} pour la
+              plateforme et €{(((revenue?.total_revenue_cents || 0) * 0.2) / 100).toFixed(2)}{' '}
+              reversés aux contributeurs.
             </p>
           </div>
         </div>

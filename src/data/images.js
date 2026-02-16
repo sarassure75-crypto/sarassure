@@ -41,44 +41,46 @@ export const fetchImages = async (forceRefresh = false) => {
     return imagesPromise;
   }
 
-  logger.log('🔄 [images.js] Fetching fresh images from Supabase... (forceRefresh:', forceRefresh, ')');
+  logger.log(
+    '🔄 [images.js] Fetching fresh images from Supabase... (forceRefresh:',
+    forceRefresh,
+    ')'
+  );
   imagesPromise = (async () => {
-    let query = supabase
-      .from('app_images')
-      .select('*');
-      
+    let query = supabase.from('app_images').select('*');
+
     if (forceRefresh) {
       query = query.neq('id', '00000000-0000-0000-0000-000000000000');
     }
 
     const { data, error } = await query.order('name');
-    
+
     if (error) {
       logger.error('Error fetching images:', error);
-      imagesPromise = null; 
+      imagesPromise = null;
       throw error;
     }
-    
+
     const { data: files, error: filesError } = await supabase.storage.from('images').list('public');
     if (filesError) {
       logger.error('Error listing storage files:', filesError);
       // continue without metadata if storage fails
     }
-    const filesMap = new Map(files?.map(f => [f.name, f]));
+    const filesMap = new Map(files?.map((f) => [f.name, f]));
 
-    const imagesWithUrls = data.map(image => {
+    const imagesWithUrls = data.map((image) => {
       const fileName = image.file_path.replace('public/', '');
       const fileMetadata = filesMap.get(fileName)?.metadata;
       return {
         ...image,
         publicUrl: getImageUrl(image.file_path),
-        metadata: { ...image.metadata, ...fileMetadata }
-      }
+        metadata: { ...image.metadata, ...fileMetadata },
+      };
     });
 
-    imagesCache = new Map(imagesWithUrls.map(img => [img.id, img]));
+    imagesCache = new Map(imagesWithUrls.map((img) => [img.id, img]));
     logger.log('✅ [images.js] Fetched', imagesCache.size, 'images from Supabase');
-    imagesPromise = null; 
+    imagesPromise = null;
     return imagesCache;
   })();
 
@@ -93,15 +95,14 @@ export const getImageCategories = async (forceRefresh = false) => {
     return categoriesPromise;
   }
   categoriesPromise = (async () => {
-    const { data, error } = await supabase
-      .rpc('get_distinct_image_categories');
+    const { data, error } = await supabase.rpc('get_distinct_image_categories');
 
     if (error) {
       logger.error('Error fetching image categories:', error);
       categoriesPromise = null;
       return ['all', 'default'];
     }
-    const cats = data.map(item => item.category);
+    const cats = data.map((item) => item.category);
     const customCats = getCustomCategories();
     categoriesCache = ['all', ...new Set([...cats.filter(Boolean), ...customCats])];
     categoriesPromise = null;
@@ -129,13 +130,12 @@ const invalidateSubcategoriesCache = (category = null) => {
   }
 };
 
-
 export const addImage = async (imageData) => {
   const dataWithSubcategory = {
     ...imageData,
-    subcategory: imageData.subcategory || 'général'
+    subcategory: imageData.subcategory || 'général',
   };
-  
+
   const { data, error } = await supabase
     .from('app_images')
     .insert([dataWithSubcategory])
@@ -148,7 +148,7 @@ export const addImage = async (imageData) => {
   }
   invalidateCache();
   if (!categoriesCache?.includes(imageData.category)) {
-      invalidateCategoriesCache();
+    invalidateCategoriesCache();
   }
   invalidateSubcategoriesCache(imageData.category);
   return data;
@@ -161,9 +161,9 @@ export const updateImage = async (id, updates) => {
     .eq('id', id)
     .select()
     .single();
-  
-    if (error) {
-      logger.error('Error updating image data:', error);
+
+  if (error) {
+    logger.error('Error updating image data:', error);
     throw error;
   }
   invalidateCache();
@@ -178,7 +178,11 @@ export const deleteImage = async (id, filePath) => {
   if (filePath) {
     const sanitize = (s) => {
       try {
-        return s.normalize('NFKD').replace(/\p{Diacritic}/gu, '').replace(/[^a-zA-Z0-9._/-]/g, '-').replace(/-+/g, '-');
+        return s
+          .normalize('NFKD')
+          .replace(/\p{Diacritic}/gu, '')
+          .replace(/[^a-zA-Z0-9._/-]/g, '-')
+          .replace(/-+/g, '-');
       } catch (e) {
         return s.replace(/[^a-zA-Z0-9._/-]/g, '-');
       }
@@ -190,7 +194,8 @@ export const deleteImage = async (id, filePath) => {
     if (!filePath.startsWith('public/')) candidates.push(`public/${filePath}`);
     // sanitized variant
     candidates.push(sanitize(filePath));
-    if (filePath.startsWith('public/')) candidates.push(`public/${sanitize(filePath.replace(/^public\//, ''))}`);
+    if (filePath.startsWith('public/'))
+      candidates.push(`public/${sanitize(filePath.replace(/^public\//, ''))}`);
 
     let removed = false;
     for (const p of [...new Set(candidates)]) {
@@ -202,7 +207,10 @@ export const deleteImage = async (id, filePath) => {
           break;
         }
         // If the error indicates the key is invalid or not found, continue to next candidate
-        if (fileError && (fileError.statusCode === '404' || /Invalid key/i.test(fileError.message || ''))) {
+        if (
+          fileError &&
+          (fileError.statusCode === '404' || /Invalid key/i.test(fileError.message || ''))
+        ) {
           logger.warn('Storage remove attempt failed for', p, fileError.message || fileError);
           continue;
         }
@@ -213,7 +221,9 @@ export const deleteImage = async (id, filePath) => {
       }
     }
     if (!removed) {
-      logger.warn('Could not remove image file from storage for any candidate path. Proceeding to DB delete.');
+      logger.warn(
+        'Could not remove image file from storage for any candidate path. Proceeding to DB delete.'
+      );
     }
   }
 
@@ -222,8 +232,11 @@ export const deleteImage = async (id, filePath) => {
   // when content-negotiation headers are not acceptable. Instead,
   // perform a plain delete and check the returned error/status.
   logger.log('🗑️ [images.js] Attempting to delete image from DB with id:', id);
-  const { data: deletedData, error: dbError } = await supabase.from('app_images').delete().eq('id', id);
-  
+  const { data: deletedData, error: dbError } = await supabase
+    .from('app_images')
+    .delete()
+    .eq('id', id);
+
   if (dbError) {
     // If the error indicates no rows were found, log and return gracefully
     if (dbError.code === 'PGRST116' || /contains 0 rows/i.test(dbError.message || '')) {
@@ -234,85 +247,98 @@ export const deleteImage = async (id, filePath) => {
       invalidateSubcategoriesCache();
       return;
     }
-    logger.error('❌ [images.js] Error deleting image from database:', { code: dbError.code, message: dbError.message, dbError });
+    logger.error('❌ [images.js] Error deleting image from database:', {
+      code: dbError.code,
+      message: dbError.message,
+      dbError,
+    });
     throw dbError;
   }
-  
-  logger.log('✅ [images.js] Database deletion successful for id:', id, '| deletedData:', deletedData);
+
+  logger.log(
+    '✅ [images.js] Database deletion successful for id:',
+    id,
+    '| deletedData:',
+    deletedData
+  );
   invalidateCache();
   invalidateCategoriesCache();
   invalidateSubcategoriesCache();
 };
 
 export const addImageCategory = async (categoryName) => {
-    const customCats = getCustomCategories();
-    if (!customCats.includes(categoryName)) {
-        customCats.push(categoryName);
-        saveCustomCategories(customCats);
-    }
-    invalidateCategoriesCache();
-    return { success: true, message: "Catégorie ajoutée avec succès." };
+  const customCats = getCustomCategories();
+  if (!customCats.includes(categoryName)) {
+    customCats.push(categoryName);
+    saveCustomCategories(customCats);
+  }
+  invalidateCategoriesCache();
+  return { success: true, message: 'Catégorie ajoutée avec succès.' };
 };
 
 export const deleteImageCategory = async (categoryName) => {
-    const { data: imagesInCategory, error: fetchError } = await supabase
-        .from('app_images')
-        .select('id')
-        .eq('category', categoryName);
+  const { data: imagesInCategory, error: fetchError } = await supabase
+    .from('app_images')
+    .select('id')
+    .eq('category', categoryName);
 
-    if (fetchError) throw fetchError;
+  if (fetchError) throw fetchError;
 
-    if (imagesInCategory.length > 0) {
-        throw new Error("Impossible de supprimer : des images utilisent encore cette catégorie.");
-    }
-    
-    // Remove from custom categories
-    const customCats = getCustomCategories();
-    const filtered = customCats.filter(cat => cat !== categoryName);
-    saveCustomCategories(filtered);
-    
-    invalidateCategoriesCache();
-    return { success: true };
+  if (imagesInCategory.length > 0) {
+    throw new Error('Impossible de supprimer : des images utilisent encore cette catégorie.');
+  }
+
+  // Remove from custom categories
+  const customCats = getCustomCategories();
+  const filtered = customCats.filter((cat) => cat !== categoryName);
+  saveCustomCategories(filtered);
+
+  invalidateCategoriesCache();
+  return { success: true };
 };
 
-
 export const getImageById = async (id) => {
-    if (!id) return null;
-    const { data, error } = await supabase.from('app_images').select('*').eq('id', id).single();
-    if (error) {
-      if (error.code === 'PGRST116') return null;
-      console.error("Error fetching image by id:", error);
-      throw error;
-    }
-    return data;
+  if (!id) return null;
+  const { data, error } = await supabase.from('app_images').select('*').eq('id', id).single();
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    console.error('Error fetching image by id:', error);
+    throw error;
+  }
+  return data;
 };
 
 export const getImageByName = async (name) => {
-    const { data, error } = await supabase.from('app_images').select('id, file_path').eq('name', name).single();
-    if (error) {
-      if (error.code === 'PGRST116') return null;
-      console.error("Error fetching image by name:", error);
-      throw error;
-    }
-    return data;
+  const { data, error } = await supabase
+    .from('app_images')
+    .select('id, file_path')
+    .eq('name', name)
+    .single();
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    console.error('Error fetching image by name:', error);
+    throw error;
+  }
+  return data;
 };
 
 export const getImageSubcategories = async (category = null, forceRefresh = false) => {
   const cacheKey = category || 'all';
-  
+
   if (subcategoriesCache[cacheKey] && !forceRefresh) {
     return subcategoriesCache[cacheKey];
   }
-  
+
   if (subcategoriesPromise[cacheKey] && !forceRefresh) {
     return subcategoriesPromise[cacheKey];
   }
-  
+
   subcategoriesPromise[cacheKey] = (async () => {
     try {
-      const { data, error } = await supabase
-        .rpc('get_distinct_image_subcategories', { category_filter: category });
-      
+      const { data, error } = await supabase.rpc('get_distinct_image_subcategories', {
+        category_filter: category,
+      });
+
       if (error) {
         console.error('Error fetching image subcategories:', error);
         // Return defaults if RPC fails
@@ -320,8 +346,8 @@ export const getImageSubcategories = async (category = null, forceRefresh = fals
         delete subcategoriesPromise[cacheKey];
         return DEFAULT_SUBCATEGORIES;
       }
-      
-      const subcats = data.map(item => item.subcategory).filter(Boolean);
+
+      const subcats = data.map((item) => item.subcategory).filter(Boolean);
       // Ensure defaults are always present
       const merged = [...new Set([...DEFAULT_SUBCATEGORIES, ...subcats])];
       subcategoriesCache[cacheKey] = merged;
@@ -334,6 +360,6 @@ export const getImageSubcategories = async (category = null, forceRefresh = fals
       return DEFAULT_SUBCATEGORIES;
     }
   })();
-  
+
   return subcategoriesPromise[cacheKey];
 };

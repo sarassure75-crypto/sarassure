@@ -19,7 +19,7 @@ import {
   updateQuestionnaireChoiceTranslation,
   deleteQuestionnaireQuestionTranslation,
   deleteQuestionnaireChoiceTranslation,
-  autoTranslateQuestionnaire
+  autoTranslateQuestionnaire,
 } from '@/data/translation';
 import { Loader2, Edit2, Trash2, Plus, Check, X, Save, Wand2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -49,14 +49,14 @@ export function AdminQuestionnaireTranslationManager() {
   const [showAddQuestionForm, setShowAddQuestionForm] = useState(false);
   const [newQuestionTranslation, setNewQuestionTranslation] = useState({
     question_id: '',
-    translated_instruction: ''
+    translated_instruction: '',
   });
 
   const [showAddChoiceForm, setShowAddChoiceForm] = useState(false);
   const [newChoiceTranslation, setNewChoiceTranslation] = useState({
     choice_id: '',
     translated_choice_text: '',
-    translated_feedback: ''
+    translated_feedback: '',
   });
 
   // État pour l'auto-traduction
@@ -70,7 +70,7 @@ export function AdminQuestionnaireTranslationManager() {
       try {
         const langs = await getAvailableLanguages();
         setLanguages(langs);
-        
+
         if (langs.length > 0) {
           setSelectedLanguage(langs[0].language_code);
         }
@@ -90,9 +90,9 @@ export function AdminQuestionnaireTranslationManager() {
       } catch (error) {
         console.error('Error loading data:', error);
         toast({
-          title: "Erreur",
-          description: "Impossible de charger les données",
-          variant: "destructive"
+          title: 'Erreur',
+          description: 'Impossible de charger les données',
+          variant: 'destructive',
         });
       } finally {
         setLoading(false);
@@ -114,7 +114,8 @@ export function AdminQuestionnaireTranslationManager() {
     try {
       const { data: questionsData } = await supabase
         .from('questionnaire_questions')
-        .select(`
+        .select(
+          `
           id,
           instruction,
           question_order,
@@ -126,7 +127,8 @@ export function AdminQuestionnaireTranslationManager() {
             is_correct,
             feedback
           )
-        `)
+        `
+        )
         .eq('task_id', selectedQuestionnaire)
         .order('question_order');
 
@@ -134,9 +136,9 @@ export function AdminQuestionnaireTranslationManager() {
     } catch (error) {
       console.error('Error fetching questions:', error);
       toast({
-        title: "Erreur",
-        description: "Impossible de charger les questions",
-        variant: "destructive"
+        title: 'Erreur',
+        description: 'Impossible de charger les questions',
+        variant: 'destructive',
       });
     }
   };
@@ -154,18 +156,18 @@ export function AdminQuestionnaireTranslationManager() {
   };
 
   const getQuestionTranslation = (questionId) => {
-    return questionTranslations.find(t => t.question_id === questionId);
+    return questionTranslations.find((t) => t.question_id === questionId);
   };
 
   const getChoiceTranslation = (choiceId) => {
-    return choiceTranslations.find(t => t.choice_id === choiceId);
+    return choiceTranslations.find((t) => t.choice_id === choiceId);
   };
 
   // Gérer l'édition d'une traduction de question
   const handleEditQuestion = (questionId, translation) => {
     setEditingQuestionId(questionId);
     setEditingQuestionData({
-      translated_instruction: translation?.translated_instruction || ''
+      translated_instruction: translation?.translated_instruction || '',
     });
   };
 
@@ -176,7 +178,7 @@ export function AdminQuestionnaireTranslationManager() {
         // Mise à jour
         await updateQuestionnaireQuestionTranslation(translationId, editingQuestionData);
         setQuestionTranslations(
-          questionTranslations.map(t =>
+          questionTranslations.map((t) =>
             t.id === translationId ? { ...t, ...editingQuestionData } : t
           )
         );
@@ -192,16 +194,16 @@ export function AdminQuestionnaireTranslationManager() {
 
       setEditingQuestionId(null);
       toast({
-        title: "Succès",
-        description: "Question mise à jour",
-        variant: "default"
+        title: 'Succès',
+        description: 'Question mise à jour',
+        variant: 'default',
       });
     } catch (error) {
       console.error('Error saving question translation:', error);
       toast({
-        title: "Erreur",
-        description: "Impossible de sauvegarder",
-        variant: "destructive"
+        title: 'Erreur',
+        description: 'Impossible de sauvegarder',
+        variant: 'destructive',
       });
     } finally {
       setSaving(false);
@@ -213,7 +215,7 @@ export function AdminQuestionnaireTranslationManager() {
     setEditingChoiceId(choiceId);
     setEditingChoiceData({
       translated_choice_text: translation?.translated_choice_text || '',
-      translated_feedback: translation?.translated_feedback || ''
+      translated_feedback: translation?.translated_feedback || '',
     });
   };
 
@@ -224,7 +226,7 @@ export function AdminQuestionnaireTranslationManager() {
         // Mise à jour
         await updateQuestionnaireChoiceTranslation(translationId, editingChoiceData);
         setChoiceTranslations(
-          choiceTranslations.map(t =>
+          choiceTranslations.map((t) =>
             t.id === translationId ? { ...t, ...editingChoiceData } : t
           )
         );
@@ -241,16 +243,16 @@ export function AdminQuestionnaireTranslationManager() {
 
       setEditingChoiceId(null);
       toast({
-        title: "Succès",
-        description: "Réponse mise à jour",
-        variant: "default"
+        title: 'Succès',
+        description: 'Réponse mise à jour',
+        variant: 'default',
       });
     } catch (error) {
       console.error('Error saving choice translation:', error);
       toast({
-        title: "Erreur",
-        description: "Impossible de sauvegarder",
-        variant: "destructive"
+        title: 'Erreur',
+        description: 'Impossible de sauvegarder',
+        variant: 'destructive',
       });
     } finally {
       setSaving(false);
@@ -263,18 +265,18 @@ export function AdminQuestionnaireTranslationManager() {
 
     try {
       await deleteQuestionnaireQuestionTranslation(translationId);
-      setQuestionTranslations(questionTranslations.filter(t => t.id !== translationId));
+      setQuestionTranslations(questionTranslations.filter((t) => t.id !== translationId));
       toast({
-        title: "Succès",
-        description: "Traduction supprimée",
-        variant: "default"
+        title: 'Succès',
+        description: 'Traduction supprimée',
+        variant: 'default',
       });
     } catch (error) {
       console.error('Error deleting translation:', error);
       toast({
-        title: "Erreur",
-        description: "Impossible de supprimer",
-        variant: "destructive"
+        title: 'Erreur',
+        description: 'Impossible de supprimer',
+        variant: 'destructive',
       });
     }
   };
@@ -284,18 +286,18 @@ export function AdminQuestionnaireTranslationManager() {
 
     try {
       await deleteQuestionnaireChoiceTranslation(translationId);
-      setChoiceTranslations(choiceTranslations.filter(t => t.id !== translationId));
+      setChoiceTranslations(choiceTranslations.filter((t) => t.id !== translationId));
       toast({
-        title: "Succès",
-        description: "Traduction supprimée",
-        variant: "default"
+        title: 'Succès',
+        description: 'Traduction supprimée',
+        variant: 'default',
       });
     } catch (error) {
       console.error('Error deleting translation:', error);
       toast({
-        title: "Erreur",
-        description: "Impossible de supprimer",
-        variant: "destructive"
+        title: 'Erreur',
+        description: 'Impossible de supprimer',
+        variant: 'destructive',
       });
     }
   };
@@ -303,9 +305,9 @@ export function AdminQuestionnaireTranslationManager() {
   const handleAutoTranslate = async () => {
     if (!selectedQuestionnaire || !selectedLanguage || selectedLanguage === 'fr') {
       toast({
-        title: "Erreur",
-        description: "Sélectionnez un questionnaire et une langue",
-        variant: "destructive"
+        title: 'Erreur',
+        description: 'Sélectionnez un questionnaire et une langue',
+        variant: 'destructive',
       });
       return;
     }
@@ -315,28 +317,24 @@ export function AdminQuestionnaireTranslationManager() {
     setAutoTranslationProgress({ current: 0, total: 0, message: 'Démarrage...' });
 
     try {
-      await autoTranslateQuestionnaire(
-        selectedQuestionnaire,
-        selectedLanguage,
-        (progress) => {
-          setAutoTranslationProgress(progress);
-        }
-      );
+      await autoTranslateQuestionnaire(selectedQuestionnaire, selectedLanguage, (progress) => {
+        setAutoTranslationProgress(progress);
+      });
 
       // Recharger les traductions
       await fetchTranslations();
-      
+
       toast({
-        title: "Succès",
-        description: "Traduction automatique terminée",
-        variant: "default"
+        title: 'Succès',
+        description: 'Traduction automatique terminée',
+        variant: 'default',
       });
     } catch (error) {
       console.error('Error in auto-translation:', error);
       toast({
-        title: "Erreur",
-        description: error.message || "Erreur lors de la traduction automatique",
-        variant: "destructive"
+        title: 'Erreur',
+        description: error.message || 'Erreur lors de la traduction automatique',
+        variant: 'destructive',
       });
     } finally {
       setIsAutoTranslating(false);
@@ -356,7 +354,9 @@ export function AdminQuestionnaireTranslationManager() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Traductions des QCM</h1>
-        <p className="text-gray-600">Gérez les traductions des questions et réponses des questionnaires</p>
+        <p className="text-gray-600">
+          Gérez les traductions des questions et réponses des questionnaires
+        </p>
       </div>
 
       {/* Sélection du questionnaire et de la langue */}
@@ -367,16 +367,14 @@ export function AdminQuestionnaireTranslationManager() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Questionnaire
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Questionnaire</label>
               <select
                 value={selectedQuestionnaire || ''}
                 onChange={(e) => setSelectedQuestionnaire(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Sélectionner un questionnaire</option>
-                {questionnaires.map(q => (
+                {questionnaires.map((q) => (
                   <option key={q.id} value={q.id}>
                     {q.title || 'Sans titre'}
                   </option>
@@ -385,15 +383,13 @@ export function AdminQuestionnaireTranslationManager() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Langue
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Langue</label>
               <select
                 value={selectedLanguage}
                 onChange={(e) => setSelectedLanguage(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                {languages.map(lang => (
+                {languages.map((lang) => (
                   <option key={lang.language_code} value={lang.language_code}>
                     {lang.language_name} ({lang.language_code.toUpperCase()})
                   </option>
@@ -429,7 +425,9 @@ export function AdminQuestionnaireTranslationManager() {
                 <div
                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                   style={{
-                    width: `${(autoTranslationProgress.current / autoTranslationProgress.total) * 100}%`
+                    width: `${
+                      (autoTranslationProgress.current / autoTranslationProgress.total) * 100
+                    }%`,
                   }}
                 />
               </div>
@@ -452,9 +450,7 @@ export function AdminQuestionnaireTranslationManager() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-gray-700">
-                Êtes-vous sûr ? Cette action va :
-              </p>
+              <p className="text-gray-700">Êtes-vous sûr ? Cette action va :</p>
               <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
                 <li>Traduire automatiquement toutes les questions et réponses</li>
                 <li>Remplacer les traductions existantes</li>
@@ -491,11 +487,13 @@ export function AdminQuestionnaireTranslationManager() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {questions.map(question => (
+          {questions.map((question) => (
             <Card key={question.id} className="overflow-hidden">
               <CardHeader
                 className="cursor-pointer bg-blue-50 hover:bg-blue-100 transition-colors"
-                onClick={() => setExpandedQuestion(expandedQuestion === question.id ? null : question.id)}
+                onClick={() =>
+                  setExpandedQuestion(expandedQuestion === question.id ? null : question.id)
+                }
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -519,10 +517,12 @@ export function AdminQuestionnaireTranslationManager() {
                       <div className="space-y-3">
                         <textarea
                           value={editingQuestionData.translated_instruction}
-                          onChange={(e) => setEditingQuestionData({
-                            ...editingQuestionData,
-                            translated_instruction: e.target.value
-                          })}
+                          onChange={(e) =>
+                            setEditingQuestionData({
+                              ...editingQuestionData,
+                              translated_instruction: e.target.value,
+                            })
+                          }
                           rows={3}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           placeholder="Entrez la traduction..."
@@ -531,13 +531,19 @@ export function AdminQuestionnaireTranslationManager() {
                           <Button
                             size="sm"
                             className="bg-green-600 hover:bg-green-700"
-                            onClick={() => handleSaveQuestionEdit(
-                              question.id,
-                              getQuestionTranslation(question.id)?.id
-                            )}
+                            onClick={() =>
+                              handleSaveQuestionEdit(
+                                question.id,
+                                getQuestionTranslation(question.id)?.id
+                              )
+                            }
                             disabled={saving}
                           >
-                            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                            {saving ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Save className="h-4 w-4" />
+                            )}
                             Sauvegarder
                           </Button>
                           <Button
@@ -553,24 +559,29 @@ export function AdminQuestionnaireTranslationManager() {
                     ) : (
                       <div>
                         <div className="p-3 bg-white rounded border border-gray-200 mb-3">
-                          <p className="text-sm text-gray-700"><strong>Original:</strong> {question.instruction}</p>
+                          <p className="text-sm text-gray-700">
+                            <strong>Original:</strong> {question.instruction}
+                          </p>
                         </div>
 
                         {getQuestionTranslation(question.id) ? (
                           <div>
                             <div className="p-3 bg-green-50 rounded border border-green-200 mb-3">
                               <p className="text-sm text-green-700">
-                                <strong>Traduction:</strong> {getQuestionTranslation(question.id).translated_instruction}
+                                <strong>Traduction:</strong>{' '}
+                                {getQuestionTranslation(question.id).translated_instruction}
                               </p>
                             </div>
                             <div className="flex gap-2">
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleEditQuestion(
-                                  question.id,
-                                  getQuestionTranslation(question.id)
-                                )}
+                                onClick={() =>
+                                  handleEditQuestion(
+                                    question.id,
+                                    getQuestionTranslation(question.id)
+                                  )
+                                }
                               >
                                 <Edit2 className="h-4 w-4" />
                                 Modifier
@@ -578,9 +589,11 @@ export function AdminQuestionnaireTranslationManager() {
                               <Button
                                 size="sm"
                                 variant="destructive"
-                                onClick={() => handleDeleteQuestionTranslation(
-                                  getQuestionTranslation(question.id).id
-                                )}
+                                onClick={() =>
+                                  handleDeleteQuestionTranslation(
+                                    getQuestionTranslation(question.id).id
+                                  )
+                                }
                               >
                                 <Trash2 className="h-4 w-4" />
                                 Supprimer
@@ -590,10 +603,7 @@ export function AdminQuestionnaireTranslationManager() {
                         ) : (
                           <div className="text-center p-3 bg-yellow-50 rounded border border-yellow-200">
                             <p className="text-sm text-yellow-700 mb-2">Aucune traduction</p>
-                            <Button
-                              size="sm"
-                              onClick={() => handleEditQuestion(question.id, null)}
-                            >
+                            <Button size="sm" onClick={() => handleEditQuestion(question.id, null)}>
                               <Plus className="h-4 w-4" />
                               Ajouter une traduction
                             </Button>
@@ -608,26 +618,33 @@ export function AdminQuestionnaireTranslationManager() {
                     <h3 className="font-bold text-purple-700 mb-3">✅ Réponses</h3>
 
                     <div className="space-y-3">
-                      {question.questionnaire_choices?.map(choice => (
-                        <div key={choice.id} className="p-3 bg-white rounded border border-gray-200">
+                      {question.questionnaire_choices?.map((choice) => (
+                        <div
+                          key={choice.id}
+                          className="p-3 bg-white rounded border border-gray-200"
+                        >
                           {editingChoiceId === choice.id ? (
                             <div className="space-y-2">
                               <textarea
                                 value={editingChoiceData.translated_choice_text}
-                                onChange={(e) => setEditingChoiceData({
-                                  ...editingChoiceData,
-                                  translated_choice_text: e.target.value
-                                })}
+                                onChange={(e) =>
+                                  setEditingChoiceData({
+                                    ...editingChoiceData,
+                                    translated_choice_text: e.target.value,
+                                  })
+                                }
                                 rows={2}
                                 placeholder="Texte de la réponse traduite..."
                                 className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500"
                               />
                               <textarea
                                 value={editingChoiceData.translated_feedback}
-                                onChange={(e) => setEditingChoiceData({
-                                  ...editingChoiceData,
-                                  translated_feedback: e.target.value
-                                })}
+                                onChange={(e) =>
+                                  setEditingChoiceData({
+                                    ...editingChoiceData,
+                                    translated_feedback: e.target.value,
+                                  })
+                                }
                                 rows={2}
                                 placeholder="Retour traduit (optionnel)..."
                                 className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500"
@@ -636,13 +653,19 @@ export function AdminQuestionnaireTranslationManager() {
                                 <Button
                                   size="sm"
                                   className="bg-green-600 hover:bg-green-700"
-                                  onClick={() => handleSaveChoiceEdit(
-                                    choice.id,
-                                    getChoiceTranslation(choice.id)?.id
-                                  )}
+                                  onClick={() =>
+                                    handleSaveChoiceEdit(
+                                      choice.id,
+                                      getChoiceTranslation(choice.id)?.id
+                                    )
+                                  }
                                   disabled={saving}
                                 >
-                                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                  {saving ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Save className="h-4 w-4" />
+                                  )}
                                   Sauvegarder
                                 </Button>
                                 <Button
@@ -659,12 +682,14 @@ export function AdminQuestionnaireTranslationManager() {
                             <div>
                               <div className="flex items-start justify-between mb-2">
                                 <div className="flex items-center gap-2">
-                                  <span className={cn(
-                                    "px-2 py-1 text-xs rounded font-bold",
-                                    choice.is_correct
-                                      ? "bg-green-100 text-green-800"
-                                      : "bg-red-100 text-red-800"
-                                  )}>
+                                  <span
+                                    className={cn(
+                                      'px-2 py-1 text-xs rounded font-bold',
+                                      choice.is_correct
+                                        ? 'bg-green-100 text-green-800'
+                                        : 'bg-red-100 text-red-800'
+                                    )}
+                                  >
                                     {choice.is_correct ? '✓ Correcte' : '✗ Incorrecte'}
                                   </span>
                                 </div>
@@ -677,21 +702,22 @@ export function AdminQuestionnaireTranslationManager() {
                               {getChoiceTranslation(choice.id) ? (
                                 <div>
                                   <p className="text-sm text-purple-700 mb-2">
-                                    <strong>Traduction:</strong> {getChoiceTranslation(choice.id).translated_choice_text}
+                                    <strong>Traduction:</strong>{' '}
+                                    {getChoiceTranslation(choice.id).translated_choice_text}
                                   </p>
                                   {getChoiceTranslation(choice.id).translated_feedback && (
                                     <p className="text-sm text-gray-600 italic mb-2">
-                                      <strong>Retour:</strong> {getChoiceTranslation(choice.id).translated_feedback}
+                                      <strong>Retour:</strong>{' '}
+                                      {getChoiceTranslation(choice.id).translated_feedback}
                                     </p>
                                   )}
                                   <div className="flex gap-2">
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      onClick={() => handleEditChoice(
-                                        choice.id,
-                                        getChoiceTranslation(choice.id)
-                                      )}
+                                      onClick={() =>
+                                        handleEditChoice(choice.id, getChoiceTranslation(choice.id))
+                                      }
                                     >
                                       <Edit2 className="h-4 w-4" />
                                       Modifier
@@ -699,9 +725,11 @@ export function AdminQuestionnaireTranslationManager() {
                                     <Button
                                       size="sm"
                                       variant="destructive"
-                                      onClick={() => handleDeleteChoiceTranslation(
-                                        getChoiceTranslation(choice.id).id
-                                      )}
+                                      onClick={() =>
+                                        handleDeleteChoiceTranslation(
+                                          getChoiceTranslation(choice.id).id
+                                        )
+                                      }
                                     >
                                       <Trash2 className="h-4 w-4" />
                                       Supprimer
@@ -709,10 +737,7 @@ export function AdminQuestionnaireTranslationManager() {
                                   </div>
                                 </div>
                               ) : (
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleEditChoice(choice.id, null)}
-                                >
+                                <Button size="sm" onClick={() => handleEditChoice(choice.id, null)}>
                                   <Plus className="h-4 w-4" />
                                   Ajouter traduction
                                 </Button>

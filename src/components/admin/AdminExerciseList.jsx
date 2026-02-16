@@ -13,13 +13,24 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 
-const AdminExerciseList = ({ exercises, onAdd, onEdit, onDelete, onDuplicate, onSelect, selectedExerciseId, isLoading }) => {
+const AdminExerciseList = ({
+  exercises,
+  onAdd,
+  onEdit,
+  onDelete,
+  onDuplicate,
+  onSelect,
+  selectedExerciseId,
+  isLoading,
+}) => {
   const [deleteAlert, setDeleteAlert] = useState({ isOpen: false, exerciseId: null });
 
   const getStatusInfo = (statusId) => {
-    return creationStatuses.find(s => s.id === statusId) || { label: 'Inconnu', color: 'bg-gray-400' };
+    return (
+      creationStatuses.find((s) => s.id === statusId) || { label: 'Inconnu', color: 'bg-gray-400' }
+    );
   };
 
   const handleDeleteClick = (exerciseId) => {
@@ -47,50 +58,67 @@ const AdminExerciseList = ({ exercises, onAdd, onEdit, onDelete, onDuplicate, on
       <CardContent>
         {exercises && exercises.length > 0 ? (
           <ul className="space-y-3">
-            {exercises.map(exercise => {
+            {exercises.map((exercise) => {
               const statusInfo = getStatusInfo(exercise.creation_status);
               const isSelected = exercise.id === selectedExerciseId;
               return (
                 <li
                   key={exercise.id}
-                  className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${isSelected ? 'bg-primary/10 ring-2 ring-primary' : 'bg-muted/50 hover:bg-muted'}`}
+                  className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                    isSelected ? 'bg-primary/10 ring-2 ring-primary' : 'bg-muted/50 hover:bg-muted'
+                  }`}
                   onClick={() => onSelect(exercise.id)}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <p className="font-semibold">{exercise.name || 'Nouvelle Version'}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className={`${statusInfo.color} text-white`}>{statusInfo.label}</Badge>
+                        <Badge variant="outline" className={`${statusInfo.color} text-white`}>
+                          {statusInfo.label}
+                        </Badge>
                         <span className="text-xs text-muted-foreground">
                           {exercise.steps ? `${exercise.steps.length} étape(s)` : '0 étape'}
                         </span>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={(e) => { e.stopPropagation(); onEdit(exercise.id); }}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEdit(exercise.id);
+                        }}
                         aria-label="Éditer l'exercice"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={(e) => { e.stopPropagation(); onDuplicate(exercise.id); }}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDuplicate(exercise.id);
+                        }}
                         aria-label="Dupliquer l'exercice"
                       >
                         <Copy className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="text-destructive hover:text-destructive" 
-                        onClick={(e) => { e.stopPropagation(); handleDeleteClick(exercise.id); }}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteClick(exercise.id);
+                        }}
                         aria-label="Supprimer l'exercice"
                       >
-                        {isLoading && deleteAlert.exerciseId === exercise.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                        {isLoading && deleteAlert.exerciseId === exercise.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -106,17 +134,26 @@ const AdminExerciseList = ({ exercises, onAdd, onEdit, onDelete, onDuplicate, on
         )}
       </CardContent>
 
-      <AlertDialog open={deleteAlert.isOpen} onOpenChange={(isOpen) => setDeleteAlert({ ...deleteAlert, isOpen })}>
+      <AlertDialog
+        open={deleteAlert.isOpen}
+        onOpenChange={(isOpen) => setDeleteAlert({ ...deleteAlert, isOpen })}
+      >
         <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action est irréversible. La version et toutes ses étapes seront définitivement supprimées.
+              Cette action est irréversible. La version et toutes ses étapes seront définitivement
+              supprimées.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeleteAlert({ isOpen: false, exerciseId: null })}>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">
+            <AlertDialogCancel onClick={() => setDeleteAlert({ isOpen: false, exerciseId: null })}>
+              Annuler
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive hover:bg-destructive/90"
+            >
               Supprimer
             </AlertDialogAction>
           </AlertDialogFooter>

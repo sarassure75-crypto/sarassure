@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Zap, TrendingUp, AlertTriangle, CheckCircle, Edit2, Save, X } from 'lucide-react';
 
 export default function AdminPointsManager() {
-  const { contributors, adminPoints, loading, error, refresh, updateContributorPoints } = useAdminPoints();
+  const { contributors, adminPoints, loading, error, refresh, updateContributorPoints } =
+    useAdminPoints();
   const [editingId, setEditingId] = useState(null);
   const [editPoints, setEditPoints] = useState('');
   const [editReason, setEditReason] = useState('');
@@ -76,7 +77,9 @@ export default function AdminPointsManager() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Points Contributeurs</p>
-                <p className="text-3xl font-bold text-violet-600">{totalContributorPoints.toFixed(1)}</p>
+                <p className="text-3xl font-bold text-violet-600">
+                  {totalContributorPoints.toFixed(1)}
+                </p>
               </div>
               <Zap className="w-8 h-8 text-violet-400" />
             </div>
@@ -104,8 +107,14 @@ export default function AdminPointsManager() {
             <p className="text-sm font-medium text-slate-600">Points Totaux du Système</p>
             <p className="text-4xl font-bold text-slate-900">{totalSystemPoints.toFixed(1)}</p>
             <div className="text-xs text-slate-600 mt-3 space-y-1">
-              <p>📊 Contribution Points: {totalContributorPoints.toFixed(1)} ({((totalContributorPoints / totalSystemPoints) * 100).toFixed(2)}%)</p>
-              <p>👨‍💼 Admin Points: {adminPoints.toFixed(1)} ({((adminPoints / totalSystemPoints) * 100).toFixed(2)}%)</p>
+              <p>
+                📊 Contribution Points: {totalContributorPoints.toFixed(1)} (
+                {((totalContributorPoints / totalSystemPoints) * 100).toFixed(2)}%)
+              </p>
+              <p>
+                👨‍💼 Admin Points: {adminPoints.toFixed(1)} (
+                {((adminPoints / totalSystemPoints) * 100).toFixed(2)}%)
+              </p>
             </div>
           </div>
         </CardContent>
@@ -113,7 +122,13 @@ export default function AdminPointsManager() {
 
       {/* Message */}
       {message && (
-        <div className={`p-4 rounded-lg ${message.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
+        <div
+          className={`p-4 rounded-lg ${
+            message.type === 'success'
+              ? 'bg-green-50 text-green-800 border border-green-200'
+              : 'bg-red-50 text-red-800 border border-red-200'
+          }`}
+        >
           {message.text}
         </div>
       )}
@@ -140,9 +155,13 @@ export default function AdminPointsManager() {
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
                   <th className="text-left px-4 py-3 font-semibold text-gray-700">Contributeur</th>
-                  <th className="text-center px-4 py-3 font-semibold text-gray-700">Points Totaux</th>
+                  <th className="text-center px-4 py-3 font-semibold text-gray-700">
+                    Points Totaux
+                  </th>
                   <th className="text-center px-4 py-3 font-semibold text-gray-700">% du Total</th>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-700">Dernière Mise à Jour</th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-700">
+                    Dernière Mise à Jour
+                  </th>
                   <th className="text-center px-4 py-3 font-semibold text-gray-700">Actions</th>
                 </tr>
               </thead>
@@ -171,18 +190,23 @@ export default function AdminPointsManager() {
                             className="w-32 px-2 py-1 border border-gray-300 rounded text-center"
                           />
                         ) : (
-                          <span className="font-bold text-violet-600">{(contributor.total_points || 0).toFixed(1)}</span>
+                          <span className="font-bold text-violet-600">
+                            {(contributor.total_points || 0).toFixed(1)}
+                          </span>
                         )}
                       </td>
                       <td className="text-center px-4 py-3 text-gray-600">
-                        {totalContributorPoints > 0 ? (
-                          ((contributor.total_points || 0) / totalContributorPoints * 100).toFixed(2) + '%'
-                        ) : (
-                          '0%'
-                        )}
+                        {totalContributorPoints > 0
+                          ? (
+                              ((contributor.total_points || 0) / totalContributorPoints) *
+                              100
+                            ).toFixed(2) + '%'
+                          : '0%'}
                       </td>
                       <td className="text-left px-4 py-3 text-xs text-gray-500">
-                        {contributor.last_updated ? new Date(contributor.last_updated).toLocaleDateString('fr-FR') : 'N/A'}
+                        {contributor.last_updated
+                          ? new Date(contributor.last_updated).toLocaleDateString('fr-FR')
+                          : 'N/A'}
                       </td>
                       <td className="text-center px-4 py-3">
                         {editingId === contributor.id ? (
@@ -201,11 +225,7 @@ export default function AdminPointsManager() {
                             >
                               <Save className="w-4 h-4" />
                             </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setEditingId(null)}
-                            >
+                            <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>
                               <X className="w-4 h-4" />
                             </Button>
                           </div>
@@ -237,11 +257,26 @@ export default function AdminPointsManager() {
               Notes sur la Gestion des Points
             </h4>
             <ul className="text-sm text-blue-800 space-y-2 ml-6 list-disc">
-              <li><strong>Points Contributeurs :</strong> Peuvent être augmentés (bonus) ou diminués (pénalités) manuellement</li>
-              <li><strong>Points Admin :</strong> Sont comptés dans le total du système mais <strong>ne peuvent PAS avoir de pénalités</strong></li>
-              <li><strong>Bonus/Pénalités Automatiques :</strong> Les points sont automatiquement ajoutés/retirés par le système lors de validations/rejets</li>
-              <li><strong>Ajustements Manuels :</strong> Utilisez ce formulaire pour corriger les points qui n'auraient pas été appliqués correctement</li>
-              <li><strong>Historique :</strong> Tous les changements sont enregistrés dans <code>contributor_points_history</code></li>
+              <li>
+                <strong>Points Contributeurs :</strong> Peuvent être augmentés (bonus) ou diminués
+                (pénalités) manuellement
+              </li>
+              <li>
+                <strong>Points Admin :</strong> Sont comptés dans le total du système mais{' '}
+                <strong>ne peuvent PAS avoir de pénalités</strong>
+              </li>
+              <li>
+                <strong>Bonus/Pénalités Automatiques :</strong> Les points sont automatiquement
+                ajoutés/retirés par le système lors de validations/rejets
+              </li>
+              <li>
+                <strong>Ajustements Manuels :</strong> Utilisez ce formulaire pour corriger les
+                points qui n'auraient pas été appliqués correctement
+              </li>
+              <li>
+                <strong>Historique :</strong> Tous les changements sont enregistrés dans{' '}
+                <code>contributor_points_history</code>
+              </li>
             </ul>
           </div>
         </CardContent>

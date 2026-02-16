@@ -24,7 +24,10 @@ export const getContributorRevenue = async (contributorId) => {
       // Handle both missing data (PGRST116) and view not found (406)
       if (error.code === 'PGRST116' || error.code === 'PGRST301' || error.status === 406) {
         // No data found or view doesn't exist, return empty structure
-        console.warn('Contributor revenue summary not available, returning empty structure:', error.message);
+        console.warn(
+          'Contributor revenue summary not available, returning empty structure:',
+          error.message
+        );
         return {
           exercise_sales_count: 0,
           exercise_revenue_cents: 0,
@@ -32,21 +35,23 @@ export const getContributorRevenue = async (contributorId) => {
           image_revenue_cents: 0,
           total_revenue_cents: 0,
           total_sales_count: 0,
-          milestone_count: 0
+          milestone_count: 0,
         };
       }
       throw error;
     }
 
-    return data || {
-      exercise_sales_count: 0,
-      exercise_revenue_cents: 0,
-      image_sales_count: 0,
-      image_revenue_cents: 0,
-      total_revenue_cents: 0,
-      total_sales_count: 0,
-      milestone_count: 0
-    };
+    return (
+      data || {
+        exercise_sales_count: 0,
+        exercise_revenue_cents: 0,
+        image_sales_count: 0,
+        image_revenue_cents: 0,
+        total_revenue_cents: 0,
+        total_sales_count: 0,
+        milestone_count: 0,
+      }
+    );
   } catch (err) {
     console.error('Error fetching contributor revenue:', err);
     // Return empty structure on error to prevent page crash
@@ -57,7 +62,7 @@ export const getContributorRevenue = async (contributorId) => {
       image_revenue_cents: 0,
       total_revenue_cents: 0,
       total_sales_count: 0,
-      milestone_count: 0
+      milestone_count: 0,
     };
   }
 };
@@ -77,18 +82,20 @@ export const recordExerciseSale = async ({
   versionId,
   contributorId,
   buyerId,
-  priceCents = 1000
+  priceCents = 1000,
 }) => {
   try {
     const { data, error } = await supabase
       .from('contributor_exercise_sales')
-      .insert([{
-        exercise_id: exerciseId,
-        version_id: versionId,
-        contributor_id: contributorId,
-        buyer_id: buyerId,
-        price_cents: priceCents
-      }])
+      .insert([
+        {
+          exercise_id: exerciseId,
+          version_id: versionId,
+          contributor_id: contributorId,
+          buyer_id: buyerId,
+          price_cents: priceCents,
+        },
+      ])
       .select()
       .single();
 
@@ -109,21 +116,18 @@ export const recordExerciseSale = async ({
  * @param {number} saleData.priceCents - Price in cents (default: 500 = €5)
  * @returns {Promise<Object>} Created sale record
  */
-export const recordImageSale = async ({
-  imageId,
-  contributorId,
-  buyerId,
-  priceCents = 500
-}) => {
+export const recordImageSale = async ({ imageId, contributorId, buyerId, priceCents = 500 }) => {
   try {
     const { data, error } = await supabase
       .from('contributor_image_sales')
-      .insert([{
-        image_id: imageId,
-        contributor_id: contributorId,
-        buyer_id: buyerId,
-        price_cents: priceCents
-      }])
+      .insert([
+        {
+          image_id: imageId,
+          contributor_id: contributorId,
+          buyer_id: buyerId,
+          price_cents: priceCents,
+        },
+      ])
       .select()
       .single();
 
@@ -145,12 +149,14 @@ export const getContributorExerciseSales = async (contributorId, limit = 100) =>
   try {
     const { data, error } = await supabase
       .from('contributor_exercise_sales')
-      .select(`
+      .select(
+        `
         *,
         task:tasks(title),
         version:versions(name),
         buyer:profiles(first_name, last_name, email)
-      `)
+      `
+      )
       .eq('contributor_id', contributorId)
       .order('purchase_date', { ascending: false })
       .limit(limit);
@@ -173,11 +179,13 @@ export const getContributorImageSales = async (contributorId, limit = 100) => {
   try {
     const { data, error } = await supabase
       .from('contributor_image_sales')
-      .select(`
+      .select(
+        `
         *,
         image:images_metadata(title, name),
         buyer:profiles(first_name, last_name, email)
-      `)
+      `
+      )
       .eq('contributor_id', contributorId)
       .order('purchase_date', { ascending: false })
       .limit(limit);
@@ -210,7 +218,7 @@ export const calculateMilestoneProgress = (totalRevenueCents) => {
     totalRevenueCents,
     milestoneCents,
     currentMilestoneEuro: currentMilestone * 1000,
-    nextMilestoneEuro: nextMilestone * 1000
+    nextMilestoneEuro: nextMilestone * 1000,
   };
 };
 
@@ -222,7 +230,7 @@ export const calculateMilestoneProgress = (totalRevenueCents) => {
 export const formatRevenue = (cents) => {
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
-    currency: 'EUR'
+    currency: 'EUR',
   }).format(cents / 100);
 };
 
@@ -277,7 +285,7 @@ export const getPlatformRevenueStats = async () => {
       image_revenue_cents: imageRevenue,
       image_count: imageStats?.length || 0,
       total_revenue_cents: totalRevenue,
-      total_sales: (exerciseStats?.length || 0) + (imageStats?.length || 0)
+      total_sales: (exerciseStats?.length || 0) + (imageStats?.length || 0),
     };
   } catch (err) {
     console.error('Error fetching platform revenue stats:', err);
@@ -294,5 +302,5 @@ export default {
   calculateMilestoneProgress,
   formatRevenue,
   getTopContributorsByRevenue,
-  getPlatformRevenueStats
+  getPlatformRevenueStats,
 };

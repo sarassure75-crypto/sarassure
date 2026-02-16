@@ -3,7 +3,20 @@ import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Home, BookOpen, User, LogOut, Shield, UserCog, MessageSquare as MessageSquareQuestion, BarChart3, Bug, Download, Share } from 'lucide-react';
+import {
+  Menu,
+  Home,
+  BookOpen,
+  User,
+  LogOut,
+  Shield,
+  UserCog,
+  MessageSquare as MessageSquareQuestion,
+  BarChart3,
+  Bug,
+  Download,
+  Share,
+} from 'lucide-react';
 import { USER_ROLES } from '@/data/users';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import AppBanner from '@/components/AppBanner';
@@ -25,7 +38,7 @@ const PwaInstallCard = () => {
     const isIOSDevice = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
     const isMac = /Macintosh/.test(userAgent) && 'ontouchend' in document;
     setIsIos(isIOSDevice || isMac);
-    
+
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setIsAppInstalled(true);
     }
@@ -46,19 +59,19 @@ const PwaInstallCard = () => {
 
   if (isAppInstalled) {
     return (
-        <Card className="bg-muted/50">
-            <CardHeader className="p-4">
-                <CardTitle className="flex items-center text-lg">
-                    <Download className="mr-2 h-5 w-5 text-green-500" />
-                    Application Installée
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-                <CardDescription>
-                    Vous utilisez déjà la version installée de l'application.
-                </CardDescription>
-            </CardContent>
-        </Card>
+      <Card className="bg-muted/50">
+        <CardHeader className="p-4">
+          <CardTitle className="flex items-center text-lg">
+            <Download className="mr-2 h-5 w-5 text-green-500" />
+            Application Installée
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
+          <CardDescription>
+            Vous utilisez déjà la version installée de l'application.
+          </CardDescription>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -79,9 +92,12 @@ const PwaInstallCard = () => {
             Installer l'application
           </Button>
         ) : isIos ? (
-             <div className="text-sm text-muted-foreground bg-slate-100 p-3 rounded-lg mt-4">
-              <p>Sur iPhone/iPad: Appuyez sur <Share className="inline-block h-4 w-4 mx-1" /> puis "Sur l'écran d'accueil".</p>
-            </div>
+          <div className="text-sm text-muted-foreground bg-slate-100 p-3 rounded-lg mt-4">
+            <p>
+              Sur iPhone/iPad: Appuyez sur <Share className="inline-block h-4 w-4 mx-1" /> puis "Sur
+              l'écran d'accueil".
+            </p>
+          </div>
         ) : (
           <p className="text-sm text-muted-foreground mt-4">
             L'installation n'est pas disponible sur ce navigateur.
@@ -91,7 +107,6 @@ const PwaInstallCard = () => {
     </Card>
   );
 };
-
 
 const Layout = ({ pwaMode = false }) => {
   return (

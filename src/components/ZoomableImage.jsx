@@ -16,18 +16,19 @@ import { Icon as IconifyIcon } from '@iconify/react';
 // Helper to get icon component from icon string
 const getIconComponent = (iconString) => {
   if (!iconString) return null;
-  
+
   // Support pour les icônes Iconify colorées (logos, skill-icons, devicon)
-  if (iconString.includes(':') && (
-    iconString.startsWith('logos:') || 
-    iconString.startsWith('skill-icons:') || 
-    iconString.startsWith('devicon:')
-  )) {
+  if (
+    iconString.includes(':') &&
+    (iconString.startsWith('logos:') ||
+      iconString.startsWith('skill-icons:') ||
+      iconString.startsWith('devicon:'))
+  ) {
     return (props) => <IconifyIcon icon={iconString} {...props} />;
   }
-  
+
   const [library, name] = iconString.split(':');
-  
+
   // Import icon libraries
   const libraries = {
     lucide: LucideIcons,
@@ -38,78 +39,111 @@ const getIconComponent = (iconString) => {
     hi2: HeroiconsIcons,
     ai: AntIcons,
   };
-  
+
   const lib = libraries[library];
   return lib ? lib[name] : null;
 };
 
-const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInteraction, imageContainerClassName, isMobileLayout, isZoomActive: initialZoom = false, hideActionZone = false, keyboardAutoShow = false, expectedInput = '' }) => {
+const ZoomableImage = ({
+  imageId,
+  alt,
+  targetArea,
+  actionType,
+  startArea,
+  onInteraction,
+  imageContainerClassName,
+  isMobileLayout,
+  isZoomActive: initialZoom = false,
+  hideActionZone = false,
+  keyboardAutoShow = false,
+  expectedInput = '',
+}) => {
   const [isZoomed, setIsZoomed] = useState(initialZoom);
   const containerRef = useRef(null);
   const imageRef = useRef(null);
   const longPressTimeout = useRef(null);
-  
+
   // Loupe qui suit le curseur
   const [magnifierPos, setMagnifierPos] = useState({ x: 0, y: 0 });
   const [showMagnifier, setShowMagnifier] = useState(false);
   const [mainImageRect, setMainImageRect] = useState(null);
   const [mainImageSrc, setMainImageSrc] = useState(null);
-  
+
   // Offset de l'image dans le conteneur
   const [imageOffset, setImageOffset] = useState({ x: 0, y: 0, width: 0, height: 0 });
-  
+
   // Select appropriate zone based on action type
-  const actionArea = ['tap', 'double_tap', 'long_press', 'swipe_left', 'swipe_right', 'swipe_up', 'swipe_down', 'scroll', 'drag_and_drop', 'bravo'].includes(actionType) ? startArea : targetArea;
-  
+  const actionArea = [
+    'tap',
+    'double_tap',
+    'long_press',
+    'swipe_left',
+    'swipe_right',
+    'swipe_up',
+    'swipe_down',
+    'scroll',
+    'drag_and_drop',
+    'bravo',
+  ].includes(actionType)
+    ? startArea
+    : targetArea;
+
   const [showTextInput, setShowTextInput] = useState(false);
   const [textInputValue, setTextInputValue] = useState('');
   const textInputRef = useRef(null);
   const [attemptCount, setAttemptCount] = useState(0);
   const [showHint, setShowHint] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const interactionState = useRef({ isDown: false, startTime: 0, hasMoved: false, lastTapTime: 0, lastTapX: 0, lastTapY: 0 });
-  
+  const interactionState = useRef({
+    isDown: false,
+    startTime: 0,
+    hasMoved: false,
+    lastTapTime: 0,
+    lastTapX: 0,
+    lastTapY: 0,
+  });
+
   useEffect(() => {
     setIsZoomed(initialZoom);
   }, [initialZoom]);
-  
+
   // Gestionnaire du mouvement de la loupe - simple et direct
   const handleMouseMove = (e) => {
     if (!isZoomed || !containerRef.current) return;
-    
+
     const rect = containerRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    
+
     // Vérifier que le pointeur est dans les limites du container
     if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
       setMagnifierPos({ x, y });
       setShowMagnifier(true);
     }
   };
-  
+
   const handleTouchMove = (e) => {
     if (!isZoomed || !containerRef.current || e.touches.length === 0) return;
-    
+
     const rect = containerRef.current.getBoundingClientRect();
     const x = e.touches[0].clientX - rect.left;
     const y = e.touches[0].clientY - rect.top;
-    
+
     // Vérifier que le pointeur est dans les limites du container
     if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
       setMagnifierPos({ x, y });
       setShowMagnifier(true);
     }
   };
-  
+
   const handleMouseLeave = () => {
     setShowMagnifier(false);
   };
-  
+
   const handleTouchEnd = () => {
     setShowMagnifier(false);
   };
-  
+
   // Affichage automatique du clavier pour number_input ou text_input avec keyboard_auto_show
   useEffect(() => {
     if (actionType === 'number_input') {
@@ -118,7 +152,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
       setShowTextInput(true);
     }
   }, [actionType, keyboardAutoShow]);
-  
+
   useEffect(() => {
     if (showTextInput && textInputRef.current) {
       textInputRef.current.focus();
@@ -129,20 +163,20 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
     if (!containerRef.current || !imageRef.current) return;
     const containerRect = containerRef.current.getBoundingClientRect();
     const img = imageRef.current;
-    
+
     // ✅ Calculer les dimensions RÉELLES de l'image visible (sans les marges de object-fit: contain)
     const naturalWidth = img.naturalWidth;
     const naturalHeight = img.naturalHeight;
     const containerWidth = containerRect.width;
     const containerHeight = containerRect.height;
-    
+
     // Ratio de l'image originale
     const imageRatio = naturalWidth / naturalHeight;
     // Ratio du conteneur
     const containerRatio = containerWidth / containerHeight;
-    
+
     let actualWidth, actualHeight, offsetX, offsetY;
-    
+
     if (imageRatio > containerRatio) {
       // Image plus large : limitée par la largeur
       actualWidth = containerWidth;
@@ -156,7 +190,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
       offsetX = (containerWidth - actualWidth) / 2;
       offsetY = 0;
     }
-    
+
     setImageOffset({
       x: offsetX,
       y: offsetY,
@@ -182,7 +216,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
     window.addEventListener('resize', handleResize);
     // Also recalculate on scroll in case container scrolls
     window.addEventListener('scroll', handleResize, true);
-    
+
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('scroll', handleResize, true);
@@ -191,7 +225,12 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
 
   if (!imageId) {
     return (
-      <div className={cn("w-full h-full bg-muted flex items-center justify-center text-muted-foreground", imageContainerClassName)}>
+      <div
+        className={cn(
+          'w-full h-full bg-muted flex items-center justify-center text-muted-foreground',
+          imageContainerClassName
+        )}
+      >
         <p>Aucune image pour cette étape.</p>
       </div>
     );
@@ -200,7 +239,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
   const handleWrongAction = () => {
     const newCount = attemptCount + 1;
     setAttemptCount(newCount);
-    
+
     // Afficher le message d'aide seulement APRES 3 tentatives (pas avant)
     if (newCount >= 3) {
       setShowHint(true);
@@ -213,17 +252,17 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
   };
 
   const handlePointerDown = (event) => {
-    interactionState.current = { 
-      isDown: true, 
-      startTime: Date.now(), 
-      hasMoved: false, 
-      startX: event.clientX, 
+    interactionState.current = {
+      isDown: true,
+      startTime: Date.now(),
+      hasMoved: false,
+      startX: event.clientX,
       startY: event.clientY,
       lastTapTime: interactionState.current.lastTapTime,
       lastTapX: interactionState.current.lastTapX,
-      lastTapY: interactionState.current.lastTapY
+      lastTapY: interactionState.current.lastTapY,
     };
-    
+
     if (actionType === 'long_press') {
       longPressTimeout.current = setTimeout(() => {
         if (interactionState.current.isDown && !interactionState.current.hasMoved) {
@@ -239,10 +278,10 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
       const dx = event.clientX - (interactionState.current.startX || event.clientX);
       const dy = event.clientY - (interactionState.current.startY || event.clientY);
       const distance = Math.sqrt(dx * dx + dy * dy);
-      
+
       interactionState.current.currentX = event.clientX;
       interactionState.current.currentY = event.clientY;
-      
+
       if (distance > 10) {
         interactionState.current.hasMoved = true;
         if (longPressTimeout.current) {
@@ -255,9 +294,9 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
   const isPointerInZone = (event) => {
     // Pour bravo, pas de vérification de zone - n'importe quel tap sur l'image valide
     if (actionType === 'bravo') return true;
-    
+
     if (!actionArea || !imageOffset.width) return false;
-    
+
     // Use pre-calculated imageOffset for consistency with rendered position
     const imgW = imageOffset.width;
     const imgH = imageOffset.height;
@@ -265,21 +304,20 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
     const yPercent = actionArea.y_percent ?? actionArea.y ?? 0;
     const wPercent = actionArea.width_percent ?? actionArea.width ?? 0;
     const hPercent = actionArea.height_percent ?? actionArea.height ?? 0;
-    
+
     const zoneLft = imageOffset.x + (xPercent * imgW) / 100;
     const zoneTop = imageOffset.y + (yPercent * imgH) / 100;
     const zoneRgt = zoneLft + (wPercent * imgW) / 100;
     const zoneBot = zoneTop + (hPercent * imgH) / 100;
-    
+
     // Calculate pointer position relative to container, not viewport
     const containerRect = containerRef.current?.getBoundingClientRect();
     if (!containerRect) return false;
-    
+
     const pointerX = event.clientX - containerRect.left;
     const pointerY = event.clientY - containerRect.top;
-    
-    return pointerX >= zoneLft && pointerX <= zoneRgt &&
-           pointerY >= zoneTop && pointerY <= zoneBot;
+
+    return pointerX >= zoneLft && pointerX <= zoneRgt && pointerY >= zoneTop && pointerY <= zoneBot;
   };
 
   const handlePointerUp = (event) => {
@@ -287,28 +325,32 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
       clearTimeout(longPressTimeout.current);
     }
     interactionState.current.isDown = false;
-    
-    const dx = (interactionState.current.currentX || event.clientX) - (interactionState.current.startX || event.clientX);
-    const dy = (interactionState.current.currentY || event.clientY) - (interactionState.current.startY || event.clientY);
+
+    const dx =
+      (interactionState.current.currentX || event.clientX) -
+      (interactionState.current.startX || event.clientX);
+    const dy =
+      (interactionState.current.currentY || event.clientY) -
+      (interactionState.current.startY || event.clientY);
     const distance = Math.sqrt(dx * dx + dy * dy);
-    
+
     // Vérifier si le geste a commencé dans la zone
     const startInZone = isPointerInZone({
       clientX: interactionState.current.startX,
-      clientY: interactionState.current.startY
+      clientY: interactionState.current.startY,
     });
-    
+
     // Si le geste n'a pas commencé dans la zone, rejeter
     if (!startInZone) {
       handleWrongAction();
       return;
     }
-    
+
     // Detect swipe/scroll (>50px movement)
     if (distance > 50) {
       const absX = Math.abs(dx);
       const absY = Math.abs(dy);
-      
+
       if (absX > absY) {
         // Horizontal swipe
         if (actionType === 'swipe_left' && dx < -50) {
@@ -342,13 +384,13 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
           return;
         }
       }
-      
+
       if (['swipe_left', 'swipe_right', 'swipe_up', 'swipe_down', 'scroll'].includes(actionType)) {
         handleWrongAction();
         return;
       }
     }
-    
+
     // Handle tap/double_tap
     if (distance < 10) {
       const elapsed = Date.now() - interactionState.current.startTime;
@@ -356,9 +398,10 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
       if (actionType === 'double_tap') {
         // Double-tap: détecter 2 taps rapides (<300ms) dans la même zone
         const now = Date.now();
-        const isSecondTap = now - interactionState.current.lastTapTime < 300 &&
-                            Math.abs(event.clientX - interactionState.current.lastTapX) < 50 &&
-                            Math.abs(event.clientY - interactionState.current.lastTapY) < 50;
+        const isSecondTap =
+          now - interactionState.current.lastTapTime < 300 &&
+          Math.abs(event.clientX - interactionState.current.lastTapX) < 50 &&
+          Math.abs(event.clientY - interactionState.current.lastTapY) < 50;
         if (isSecondTap) {
           // Double-tap valide!
           setAttemptCount(0);
@@ -411,17 +454,18 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
   const handleTextInputChange = (e) => {
     const value = e.target.value;
     setTextInputValue(value);
-    
+
     // Validation automatique si c'est correct
     if (value.trim().length > 0) {
-      const expectedValue = actionArea?.expected_input || 
-                           actionArea?.expected_text || 
-                           actionArea?.expected_value || 
-                           actionArea?.value;
-      
+      const expectedValue =
+        actionArea?.expected_input ||
+        actionArea?.expected_text ||
+        actionArea?.expected_value ||
+        actionArea?.value;
+
       const expected = expectedValue?.trim();
       const isCorrect = value.toLowerCase() === expected?.toLowerCase();
-      
+
       if (isCorrect) {
         // Validation réussie - fermer le clavier et confirmer
         setTimeout(() => {
@@ -436,19 +480,19 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
 
   const getActionLabel = () => {
     const labels = {
-      'tap': 'un simple tap',
-      'double_tap': 'un double tap (2 fois rapidement)',
-      'long_press': 'un appui long (>700ms)',
-      'swipe_left': 'un glissement vers la gauche',
-      'swipe_right': 'un glissement vers la droite',
-      'swipe_up': 'un glissement vers le haut',
-      'swipe_down': 'un glissement vers le bas',
-      'scroll': 'un scroll (haut ou bas)',
-      'drag_and_drop': 'un maintien et déplacement',
-      'text_input': 'une saisie de texte',
-      'number_input': 'une saisie de nombre',
+      tap: 'un simple tap',
+      double_tap: 'un double tap (2 fois rapidement)',
+      long_press: 'un appui long (>700ms)',
+      swipe_left: 'un glissement vers la gauche',
+      swipe_right: 'un glissement vers la droite',
+      swipe_up: 'un glissement vers le haut',
+      swipe_down: 'un glissement vers le bas',
+      scroll: 'un scroll (haut ou bas)',
+      drag_and_drop: 'un maintien et déplacement',
+      text_input: 'une saisie de texte',
+      number_input: 'une saisie de nombre',
     };
-    return labels[actionType] || 'l\'action attendue';
+    return labels[actionType] || "l'action attendue";
   };
 
   const getAreaStyle = (area) => {
@@ -480,21 +524,21 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
     // Récupérer les paramètres de bordure depuis les données
     // Utiliser la couleur de la zone pour la bordure
     const borderColor = area.color || 'rgba(59, 130, 246, 0.5)'; // Bleu par défaut
-    
+
     // Si show_border est explicitement false, pas de bordure
     if (area.show_border === false) return {};
-    
+
     // Réduire la visibilité de la bordure si la zone est masquée
     const borderWidth = hideActionZone ? '1px' : '2px';
     const borderOpacity = hideActionZone ? 0.1 : 1;
-    
+
     let finalBorderColor = borderColor;
     if (hideActionZone && borderColor.includes('rgba')) {
       finalBorderColor = borderColor.replace(/([\d.]+)\)$/, `${borderOpacity})`);
     } else if (hideActionZone && borderColor.includes('rgb(')) {
       finalBorderColor = borderColor.replace('rgb', 'rgba').replace(')', `, ${borderOpacity})`);
     }
-    
+
     return {
       border: `${borderWidth} dashed ${finalBorderColor}`,
     };
@@ -503,8 +547,8 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
   const getAreaBackgroundStyle = (area) => {
     // Récupérer les paramètres de couleur depuis les données admin
     const bgColor = area.color || 'rgba(59, 130, 246, 0.3)'; // Bleu par défaut
-    const bgOpacity = hideActionZone ? 0.02 : (area.opacity !== undefined ? area.opacity : 0.3);
-    
+    const bgOpacity = hideActionZone ? 0.02 : area.opacity !== undefined ? area.opacity : 0.3;
+
     // Convertir rgba/rgb en format avec opacité personnalisée
     if (bgColor.includes('rgba')) {
       // Format: rgba(r, g, b, a) - remplacer l'alpha
@@ -525,7 +569,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
         };
       }
     }
-    
+
     // Fallback pour les couleurs hex
     if (bgColor.startsWith('#')) {
       const hex = bgColor.replace('#', '');
@@ -536,7 +580,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
         backgroundColor: `rgba(${r}, ${g}, ${b}, ${bgOpacity})`,
       };
     }
-    
+
     return {
       backgroundColor: bgColor,
     };
@@ -555,49 +599,49 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
         // Clignotement de transparence pour tap/double_tap
         return {
           opacity: [0.5, 1, 0.5],
-          transition: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' }
+          transition: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' },
         };
       case 'long_press':
         // Clignotement plus lent pour appui long
         return {
           opacity: [0.4, 0.9, 0.4],
-          transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' }
+          transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
         };
       case 'swipe_left':
         return {
           opacity: [0.5, 1, 0.5],
           x: [10, -20, 10],
-          transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' }
+          transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
         };
       case 'swipe_right':
         return {
           opacity: [0.5, 1, 0.5],
           x: [-10, 20, -10],
-          transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' }
+          transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
         };
       case 'swipe_up':
         return {
           opacity: [0.5, 1, 0.5],
           y: [10, -20, 10],
-          transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' }
+          transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
         };
       case 'swipe_down':
         return {
           opacity: [0.5, 1, 0.5],
           y: [-10, 20, -10],
-          transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' }
+          transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
         };
       case 'scroll':
         return {
           opacity: [0.5, 1, 0.5],
           y: [-10, 20, -10],
-          transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' }
+          transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
         };
       case 'drag_and_drop':
         return {
           opacity: [0.5, 1, 0.5],
           scale: [1, 1.05, 1],
-          transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' }
+          transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
         };
       case 'text_input':
       case 'number_input':
@@ -605,20 +649,23 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
         return {
           opacity: [0.3, 1, 0.3],
           borderWidth: [1, 3, 1],
-          transition: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' }
+          transition: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' },
         };
       default:
         return {
           opacity: [0.5, 1, 0.5],
-          transition: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' }
+          transition: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' },
         };
     }
   };
 
   return (
-    <div 
-      ref={containerRef} 
-      className={cn("relative overflow-hidden w-full h-full flex justify-start items-start", imageContainerClassName)} 
+    <div
+      ref={containerRef}
+      className={cn(
+        'relative overflow-hidden w-full h-full flex justify-start items-start',
+        imageContainerClassName
+      )}
       onContextMenu={handleContextMenu}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
@@ -630,10 +677,10 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
     >
       {/* Wrapper pour l'image et les zones - position relative pour ancrer les zones, aligné en haut à droite */}
       <div className="relative" style={{ lineHeight: 0 }}>
-        <ImageFromSupabase 
+        <ImageFromSupabase
           ref={imageRef}
-          imageId={imageId} 
-          alt={alt} 
+          imageId={imageId}
+          alt={alt}
           className="w-full h-full object-contain"
           style={{ display: 'block' }}
           onLoad={() => {
@@ -650,78 +697,77 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
             }
           }}
         />
-      
-      {/* Zones d'action positionnées par rapport à l'image */}
-      
-      {actionArea && (
-        <motion.div
-          data-action-zone
-          style={{ 
-            ...getAreaStyle(actionArea), 
-            ...getAreaBorderStyle(actionArea),
-            ...getAreaBackgroundStyle(actionArea),
-            touchAction: 'none', 
-            WebkitUserSelect: 'none', 
-            WebkitTouchCallout: 'none',
-            pointerEvents: 'auto'
-          }}
-          className={cn(
-            "z-10 flex items-center justify-center",
-            actionType === 'drag_and_drop' && "cursor-grab",
-            actionType !== 'drag_and_drop' && "cursor-pointer"
-          )}
-          animate={hideActionZone ? { opacity: 1 } : getAnimationVariants()}
-          whileHover={hideActionZone ? {} : { scale: 1.02 }}
-          onContextMenu={handleContextMenu}
-          onDragStart={() => setIsDragging(true)}
-          onDragEnd={handleDragEnd}
-          drag={actionType === 'drag_and_drop'}
-          dragConstraints={containerRef}
-          dragElastic={0.1}
-        >
-          {/* Afficher l'icône si présente */}
-          {actionArea.icon_name && (
-            (() => {
-              const IconComponent = getIconComponent(actionArea.icon_name);
-              return IconComponent ? (
-                <IconComponent 
-                  className="text-white drop-shadow-lg" 
-                  style={{ fontSize: '3rem', pointerEvents: 'none' }} 
-                />
-              ) : null;
-            })()
-          )}
-        </motion.div>
-      )}
 
-      {showTextInput && targetArea && (
-        (() => {
-          const area = { ...targetArea };
-          return (
-            <div
-              style={getAreaStyle(area)}
-              className="z-20 flex items-center justify-center p-2 bg-white/95 rounded border-2 border-blue-500"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Input
-                ref={textInputRef}
-                type={actionType === 'number_input' ? 'number' : 'text'}
-                inputMode={actionType === 'number_input' ? 'numeric' : 'text'}
-                value={textInputValue}
-                onChange={handleTextInputChange}
-                onBlur={() => {
-                  setShowTextInput(false);
-                  setTextInputValue('');
-                }}
-                className="w-full text-center text-lg p-3 rounded border-2 border-blue-500 bg-white"
-                placeholder={actionType === 'number_input' ? '0' : 'Tapez ici...'}
-                autoComplete="off"
-                autoFocus
-              />
-            </div>
-          );
-        })()
-      )}
+        {/* Zones d'action positionnées par rapport à l'image */}
+
+        {actionArea && (
+          <motion.div
+            data-action-zone
+            style={{
+              ...getAreaStyle(actionArea),
+              ...getAreaBorderStyle(actionArea),
+              ...getAreaBackgroundStyle(actionArea),
+              touchAction: 'none',
+              WebkitUserSelect: 'none',
+              WebkitTouchCallout: 'none',
+              pointerEvents: 'auto',
+            }}
+            className={cn(
+              'z-10 flex items-center justify-center',
+              actionType === 'drag_and_drop' && 'cursor-grab',
+              actionType !== 'drag_and_drop' && 'cursor-pointer'
+            )}
+            animate={hideActionZone ? { opacity: 1 } : getAnimationVariants()}
+            whileHover={hideActionZone ? {} : { scale: 1.02 }}
+            onContextMenu={handleContextMenu}
+            onDragStart={() => setIsDragging(true)}
+            onDragEnd={handleDragEnd}
+            drag={actionType === 'drag_and_drop'}
+            dragConstraints={containerRef}
+            dragElastic={0.1}
+          >
+            {/* Afficher l'icône si présente */}
+            {actionArea.icon_name &&
+              (() => {
+                const IconComponent = getIconComponent(actionArea.icon_name);
+                return IconComponent ? (
+                  <IconComponent
+                    className="text-white drop-shadow-lg"
+                    style={{ fontSize: '3rem', pointerEvents: 'none' }}
+                  />
+                ) : null;
+              })()}
+          </motion.div>
+        )}
+
+        {showTextInput &&
+          targetArea &&
+          (() => {
+            const area = { ...targetArea };
+            return (
+              <div
+                style={getAreaStyle(area)}
+                className="z-20 flex items-center justify-center p-2 bg-white/95 rounded border-2 border-blue-500"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Input
+                  ref={textInputRef}
+                  type={actionType === 'number_input' ? 'number' : 'text'}
+                  inputMode={actionType === 'number_input' ? 'numeric' : 'text'}
+                  value={textInputValue}
+                  onChange={handleTextInputChange}
+                  onBlur={() => {
+                    setShowTextInput(false);
+                    setTextInputValue('');
+                  }}
+                  className="w-full text-center text-lg p-3 rounded border-2 border-blue-500 bg-white"
+                  placeholder={actionType === 'number_input' ? '0' : 'Tapez ici...'}
+                  autoComplete="off"
+                  autoFocus
+                />
+              </div>
+            );
+          })()}
       </div>
 
       <AnimatePresence>
@@ -732,16 +778,15 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
             exit={{ opacity: 0, y: -20 }}
             className="absolute top-4 left-4 right-4 z-30 pointer-events-none"
           >
-            <div className="bg-red-100 border-2 border-red-500 rounded-lg p-3 text-center shadow-lg pointer-events-auto cursor-pointer" onClick={() => setShowHint(false)}>
-              <p className="text-red-900 font-bold mb-1 text-sm">
-                Ce n'est pas le bon geste!
-              </p>
+            <div
+              className="bg-red-100 border-2 border-red-500 rounded-lg p-3 text-center shadow-lg pointer-events-auto cursor-pointer"
+              onClick={() => setShowHint(false)}
+            >
+              <p className="text-red-900 font-bold mb-1 text-sm">Ce n'est pas le bon geste!</p>
               <p className="text-red-800 text-xs mb-1">
                 Vous devez effectuer: <strong>{getActionLabel()}</strong>
               </p>
-              <p className="text-red-700 text-xs">
-                Essayez à nouveau...
-              </p>
+              <p className="text-red-700 text-xs">Essayez à nouveau...</p>
             </div>
           </motion.div>
         )}
@@ -761,7 +806,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
             borderRadius: '50%',
             boxShadow: '0 0 10px rgba(0,0,0,0.3)',
             overflow: 'hidden',
-            backgroundColor: 'rgba(255, 255, 255, 0.05)'
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
           }}
         >
           {/* Background-based magnifier: use the main image src and scale/position the background */}
@@ -772,7 +817,7 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
               backgroundImage: `url(${mainImageSrc})`,
               backgroundRepeat: 'no-repeat',
               backgroundSize: `${mainImageRect.width * 2}px ${mainImageRect.height * 2}px`,
-              backgroundPosition: `${60 - magnifierPos.x * 2}px ${60 - magnifierPos.y * 2}px`
+              backgroundPosition: `${60 - magnifierPos.x * 2}px ${60 - magnifierPos.y * 2}px`,
             }}
           />
         </div>
@@ -781,9 +826,13 @@ const ZoomableImage = ({ imageId, alt, targetArea, actionType, startArea, onInte
       <button
         onClick={() => setIsZoomed(!isZoomed)}
         className="absolute bottom-2 right-2 z-20 p-2 bg-background/50 backdrop-blur-sm rounded-full text-foreground hover:bg-background/80"
-        title={isZoomed ? "Désactiver la loupe" : "Activer la loupe"}
+        title={isZoomed ? 'Désactiver la loupe' : 'Activer la loupe'}
       >
-        {isZoomed ? <X size={isMobileLayout ? 16 : 20} /> : <Search size={isMobileLayout ? 16 : 20} />}
+        {isZoomed ? (
+          <X size={isMobileLayout ? 16 : 20} />
+        ) : (
+          <Search size={isMobileLayout ? 16 : 20} />
+        )}
       </button>
     </div>
   );

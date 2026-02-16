@@ -13,7 +13,7 @@ import {
   getAllTags,
   getAllCategories,
   getImageLibraryStats,
-  countPendingImages
+  countPendingImages,
 } from '../data/imagesMetadata';
 
 /**
@@ -56,7 +56,7 @@ export function useImageLibrary(filters = {}, autoFetch = true) {
     refresh: fetchImages,
     search: (newFilters) => {
       return searchImages(newFilters);
-    }
+    },
   };
 }
 
@@ -96,7 +96,7 @@ export function useMyImages(userId, filters = {}) {
     images,
     loading,
     error,
-    refresh: fetchMyImages
+    refresh: fetchMyImages,
   };
 }
 
@@ -137,7 +137,7 @@ export function usePendingImages(limit = 50) {
     count,
     loading,
     error,
-    refresh: fetchPendingImages
+    refresh: fetchPendingImages,
   };
 }
 
@@ -182,7 +182,7 @@ export function useImageUpload() {
     upload,
     uploading,
     progress,
-    error
+    error,
   };
 }
 
@@ -294,7 +294,7 @@ export function useImageActions() {
     reject,
     bulkApprove,
     bulkReject,
-    remove
+    remove,
   };
 }
 
@@ -332,7 +332,7 @@ export function useImageTags() {
     tags,
     loading,
     error,
-    refresh: fetchTags
+    refresh: fetchTags,
   };
 }
 
@@ -370,7 +370,7 @@ export function useImageCategories() {
     categories,
     loading,
     error,
-    refresh: fetchCategories
+    refresh: fetchCategories,
   };
 }
 
@@ -385,7 +385,7 @@ export function useImageLibraryStats() {
     total: 0,
     approved: 0,
     pending: 0,
-    rejected: 0
+    rejected: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -413,7 +413,7 @@ export function useImageLibraryStats() {
     stats,
     loading,
     error,
-    refresh: fetchStats
+    refresh: fetchStats,
   };
 }
 
@@ -447,6 +447,6 @@ export function usePendingImagesCount() {
   return {
     count,
     loading,
-    refresh: fetchCount
+    refresh: fetchCount,
   };
 }

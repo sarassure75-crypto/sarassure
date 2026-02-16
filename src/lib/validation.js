@@ -21,19 +21,19 @@ export const validateQuestion = (question) => {
 
   // Au moins une réponse correcte
   // Support both camelCase (isCorrect) and snake_case (is_correct)
-  const hasCorrectAnswer = question.choices?.some(c => c.is_correct || c.isCorrect);
+  const hasCorrectAnswer = question.choices?.some((c) => c.is_correct || c.isCorrect);
   if (!hasCorrectAnswer) {
     errors.push('Au moins une réponse correcte est requise');
   }
 
   // All questions now use mixed mode: each response must have IMAGE OR ICON OR TEXT
   // Icons are stored in imageId/image_id with prefixes like fa-, md-, bs-, etc.
-  const allHaveAtLeastOne = question.choices?.every(c => {
+  const allHaveAtLeastOne = question.choices?.every((c) => {
     const hasImage = c.image_id || c.imageId;
     const hasText = c.text?.trim();
     return hasImage || hasText;
   });
-  
+
   if (!allHaveAtLeastOne) {
     errors.push('Chaque réponse doit avoir au moins une image, une icône OU du texte');
   }
@@ -82,26 +82,31 @@ export const validateExerciseStep = (step) => {
   const errors = [];
 
   if (!step.instruction?.trim()) {
-    errors.push('L\'instruction est obligatoire');
+    errors.push("L'instruction est obligatoire");
   }
 
   if (!step.image_id) {
-    errors.push('Une capture d\'écran est obligatoire');
+    errors.push("Une capture d'écran est obligatoire");
   }
 
   if (!step.action_type) {
-    errors.push('Le type d\'action est obligatoire');
+    errors.push("Le type d'action est obligatoire");
   }
 
   // Actions nécessitant une zone cible
   const actionsNeedingTarget = [
-    'tap', 'long_press', 'swipe_left', 'swipe_right', 
-    'swipe_up', 'swipe_down', 'drag_and_drop'
+    'tap',
+    'long_press',
+    'swipe_left',
+    'swipe_right',
+    'swipe_up',
+    'swipe_down',
+    'drag_and_drop',
   ];
 
   if (actionsNeedingTarget.includes(step.action_type)) {
     if (!step.target_area || !step.target_area.x_percent || !step.target_area.y_percent) {
-      errors.push('Une zone d\'action est requise pour ce type d\'action');
+      errors.push("Une zone d'action est requise pour ce type d'action");
     }
   }
 
@@ -109,7 +114,7 @@ export const validateExerciseStep = (step) => {
   const inputActions = ['text_input', 'number_input'];
   if (inputActions.includes(step.action_type)) {
     if (!step.target_area) {
-      errors.push('Une zone de saisie est requise pour ce type d\'action');
+      errors.push("Une zone de saisie est requise pour ce type d'action");
     }
   }
 

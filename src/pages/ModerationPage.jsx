@@ -1,17 +1,17 @@
-import React, { useState } from "react";
-import { usePendingContributions, usePendingCount } from "../hooks/useContributions";
-import { usePendingImagesCount } from "../hooks/useImageLibrary";
-import ContributionReviewCard from "../components/admin/ContributionReviewCard";
-import ImageModerationGrid from "../components/admin/ImageModerationGrid";
-import { 
-  Clock, 
-  Image as ImageIcon, 
-  FileText, 
+import React, { useState } from 'react';
+import { usePendingContributions, usePendingCount } from '../hooks/useContributions';
+import { usePendingImagesCount } from '../hooks/useImageLibrary';
+import ContributionReviewCard from '../components/admin/ContributionReviewCard';
+import ImageModerationGrid from '../components/admin/ImageModerationGrid';
+import {
+  Clock,
+  Image as ImageIcon,
+  FileText,
   Users,
   CheckCircle,
   XCircle,
   AlertTriangle,
-  Filter
+  Filter,
 } from 'lucide-react';
 
 export default function ModerationPage() {
@@ -19,12 +19,16 @@ export default function ModerationPage() {
   const [filterType, setFilterType] = useState('all'); // 'all', 'exercise', 'screenshot'
 
   // Hooks
-  const { contributions, loading: loadingContributions, refresh: refreshContributions } = usePendingContributions();
+  const {
+    contributions,
+    loading: loadingContributions,
+    refresh: refreshContributions,
+  } = usePendingContributions();
   const { count: pendingContributionsCount } = usePendingCount();
   const { count: pendingImagesCount } = usePendingImagesCount();
 
   // Filtrer les contributions
-  const filteredContributions = contributions?.filter(contrib => {
+  const filteredContributions = contributions?.filter((contrib) => {
     if (filterType === 'all') return true;
     return contrib.type === filterType;
   });
@@ -136,7 +140,8 @@ export default function ModerationPage() {
               </select>
 
               <div className="text-sm text-gray-600">
-                {filteredContributions?.length || 0} contribution{(filteredContributions?.length || 0) > 1 ? 's' : ''}
+                {filteredContributions?.length || 0} contribution
+                {(filteredContributions?.length || 0) > 1 ? 's' : ''}
               </div>
             </div>
 
@@ -183,11 +188,23 @@ export default function ModerationPage() {
           <div>
             <h3 className="font-semibold text-blue-900 mb-2">Critères de validation</h3>
             <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
-              <li><strong>Données personnelles :</strong> Aucune information identifiable (nom réel, téléphone, email, photo)</li>
-              <li><strong>Qualité pédagogique :</strong> Instructions claires, progression logique</li>
-              <li><strong>Images :</strong> Captures d'écran nettes, fonds d'écran appropriés uniquement</li>
-              <li><strong>Contenu :</strong> Pas de contenu offensant, violent ou inapproprié</li>
-              <li><strong>Originalité :</strong> Pas de duplication d'exercices existants</li>
+              <li>
+                <strong>Données personnelles :</strong> Aucune information identifiable (nom réel,
+                téléphone, email, photo)
+              </li>
+              <li>
+                <strong>Qualité pédagogique :</strong> Instructions claires, progression logique
+              </li>
+              <li>
+                <strong>Images :</strong> Captures d'écran nettes, fonds d'écran appropriés
+                uniquement
+              </li>
+              <li>
+                <strong>Contenu :</strong> Pas de contenu offensant, violent ou inapproprié
+              </li>
+              <li>
+                <strong>Originalité :</strong> Pas de duplication d'exercices existants
+              </li>
             </ul>
           </div>
         </div>

@@ -7,13 +7,13 @@ import { X } from 'lucide-react';
  * GlossaryPopover
  * Affiche une définition de terme du lexique au clic
  */
-export const GlossaryPopover = ({ 
-  term, 
-  definition, 
+export const GlossaryPopover = ({
+  term,
+  definition,
   example = null,
   relatedTerms = [],
   isOpen,
-  onClose
+  onClose,
 }) => {
   const [relatedTermsData, setRelatedTermsData] = useState([]);
   const [loadingRelated, setLoadingRelated] = useState(false);
@@ -22,10 +22,10 @@ export const GlossaryPopover = ({
     if (isOpen && relatedTerms && relatedTerms.length > 0) {
       setLoadingRelated(true);
       getRelatedTerms(relatedTerms)
-        .then(data => {
+        .then((data) => {
           setRelatedTermsData(data);
         })
-        .catch(err => {
+        .catch((err) => {
           console.error('Error loading related terms:', err);
         })
         .finally(() => {
@@ -39,13 +39,10 @@ export const GlossaryPopover = ({
   return (
     <>
       {/* Overlay semi-transparent */}
-      <div 
-        className="fixed inset-0 bg-black/30 z-40"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} />
 
       {/* Popover */}
-      <div 
+      <div
         className="fixed bg-white rounded-lg shadow-2xl z-50 max-w-md p-6 border-2 border-blue-400 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 max-h-[80vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
@@ -103,13 +100,13 @@ export const GlossaryPopover = ({
  * GlossaryWord
  * Mot du lexique avec action au clic pour afficher la définition
  */
-export const GlossaryWord = ({ 
-  term, 
-  definition, 
+export const GlossaryWord = ({
+  term,
+  definition,
   example = null,
   relatedTerms = [],
   children,
-  className = ''
+  className = '',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -153,13 +150,29 @@ export const GlossaryWord = ({
 const normalizeWord = (word) => {
   // Retirer suffixes courants: -er, -ment, -tion, -ement, etc.
   let normalized = word.toLowerCase();
-  
+
   // Suffixes français à retirer pour la normalisation
   const suffixes = [
-    'ement', 'ment', 'tion', 'sion', 'er', 'é', 'ée', 'és', 'ées',
-    'al', 'aux', 'ite', 'itude', 'ance', 'ence', 'ure', 'age', 'ire'
+    'ement',
+    'ment',
+    'tion',
+    'sion',
+    'er',
+    'é',
+    'ée',
+    'és',
+    'ées',
+    'al',
+    'aux',
+    'ite',
+    'itude',
+    'ance',
+    'ence',
+    'ure',
+    'age',
+    'ire',
   ];
-  
+
   for (const suffix of suffixes) {
     if (normalized.endsWith(suffix) && normalized.length > suffix.length + 2) {
       const potential = normalized.slice(0, -suffix.length);
@@ -169,7 +182,7 @@ const normalizeWord = (word) => {
       }
     }
   }
-  
+
   return { base: normalized, original: word };
 };
 
@@ -178,22 +191,20 @@ const normalizeWord = (word) => {
  */
 const findMatchingTerm = (word, glossaryTerms) => {
   const wordLower = word.toLowerCase();
-  
+
   // 1. Recherche exacte par terme principal
-  const exactMatch = glossaryTerms.find(
-    t => t.term.toLowerCase() === wordLower
-  );
+  const exactMatch = glossaryTerms.find((t) => t.term.toLowerCase() === wordLower);
   if (exactMatch) return exactMatch;
-  
+
   // 2. Recherche par variante dans la colonne variants
   for (const term of glossaryTerms) {
     if (term.variants && Array.isArray(term.variants)) {
-      if (term.variants.some(v => v && v.toLowerCase() === wordLower)) {
+      if (term.variants.some((v) => v && v.toLowerCase() === wordLower)) {
         return term;
       }
     }
   }
-  
+
   // 3. Recherche par normalisation de suffixes
   const wordNorm = normalizeWord(word);
   for (const glossaryTerm of glossaryTerms) {
@@ -202,7 +213,7 @@ const findMatchingTerm = (word, glossaryTerms) => {
       return glossaryTerm;
     }
   }
-  
+
   return null;
 };
 
@@ -211,11 +222,7 @@ const findMatchingTerm = (word, glossaryTerms) => {
  * Composant qui remplace automatiquement les termes du lexique par des mots cliquables
  * Charge automatiquement les termes si non fournis
  */
-export const HighlightGlossaryTerms = ({ 
-  text, 
-  glossaryTerms = null,
-  className = ''
-}) => {
+export const HighlightGlossaryTerms = ({ text, glossaryTerms = null, className = '' }) => {
   const [terms, setTerms] = useState(glossaryTerms || []);
   const [loading, setLoading] = useState(!glossaryTerms);
 
@@ -233,7 +240,7 @@ export const HighlightGlossaryTerms = ({
           setLoading(false);
         }
       };
-      
+
       loadTerms();
     }
   }, [glossaryTerms]);
@@ -255,16 +262,16 @@ export const HighlightGlossaryTerms = ({
 
   // Créer une regex qui correspond à tous les termes ET les variantes
   const allPatterns = [];
-  
+
   // Ajouter les termes principaux
-  sortedTerms.forEach(t => {
+  sortedTerms.forEach((t) => {
     allPatterns.push(t.term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
   });
-  
+
   // Ajouter les variantes stockées dans glossary_variants
-  sortedTerms.forEach(t => {
+  sortedTerms.forEach((t) => {
     if (t.variants && Array.isArray(t.variants)) {
-      t.variants.forEach(v => {
+      t.variants.forEach((v) => {
         if (v) {
           allPatterns.push(v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
         }
@@ -291,7 +298,7 @@ export const HighlightGlossaryTerms = ({
     <span className={className}>
       {parts.map((part, idx) => {
         if (!part) return null;
-        
+
         // Chercher un terme exact ou une variante
         const glossaryTerm = findMatchingTerm(part, sortedTerms);
 

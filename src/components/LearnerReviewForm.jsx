@@ -62,7 +62,7 @@ export default function LearnerReviewForm({ taskId, trainerId, onSubmitSuccess }
           .update({
             rating,
             comment,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           })
           .eq('learner_id', authData.session.user.id)
           .eq('task_id', taskId)
@@ -71,15 +71,13 @@ export default function LearnerReviewForm({ taskId, trainerId, onSubmitSuccess }
         if (updateError) throw updateError;
       } else {
         // Insertion
-        const { error: insertError } = await supabase
-          .from('learner_reviews')
-          .insert({
-            learner_id: authData.session.user.id,
-            task_id: taskId,
-            trainer_id: trainerId,
-            rating,
-            comment
-          });
+        const { error: insertError } = await supabase.from('learner_reviews').insert({
+          learner_id: authData.session.user.id,
+          task_id: taskId,
+          trainer_id: trainerId,
+          rating,
+          comment,
+        });
 
         if (insertError) throw insertError;
         setHasReview(true);
@@ -96,14 +94,17 @@ export default function LearnerReviewForm({ taskId, trainerId, onSubmitSuccess }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg border border-gray-200 space-y-4">
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white p-6 rounded-lg border border-gray-200 space-y-4"
+    >
       <h3 className="font-semibold text-lg">Donner votre avis</h3>
 
       {/* Sélection de la note */}
       <div>
         <label className="block text-sm font-medium mb-2">Votre note</label>
         <div className="flex gap-2">
-          {[1, 2, 3, 4, 5].map(star => (
+          {[1, 2, 3, 4, 5].map((star) => (
             <button
               key={star}
               type="button"
@@ -139,11 +140,7 @@ export default function LearnerReviewForm({ taskId, trainerId, onSubmitSuccess }
       {success && <div className="text-green-600 text-sm">✓ Avis enregistré avec succès</div>}
 
       {/* Bouton */}
-      <Button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full"
-      >
+      <Button type="submit" disabled={isSubmitting} className="w-full">
         {isSubmitting ? 'Envoi...' : hasReview ? 'Mettre à jour mon avis' : 'Donner mon avis'}
       </Button>
     </form>

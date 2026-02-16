@@ -1,11 +1,11 @@
 /**
  * QuestionnaireTranslationExample.jsx
- * 
+ *
  * Exemple montrant comment utiliser le système de traduction pour les QCM
- * 
+ *
  * @example
  * import { QuestionnaireTranslationExample } from '@/examples/QuestionnaireTranslationExample'
- * 
+ *
  * export default function App() {
  *   return <QuestionnaireTranslationExample />
  * }
@@ -29,7 +29,7 @@ export function Step1_ImportTranslationFunctions() {
       </CardHeader>
       <CardContent>
         <pre className="bg-gray-900 text-green-400 p-4 rounded text-sm overflow-x-auto">
-{`import {
+          {`import {
   getQuestionnaireQuestionTranslations,
   getQuestionnaireChoiceTranslations,
   createQuestionnaireQuestionTranslation,
@@ -54,7 +54,7 @@ export function Step2_FetchTranslations() {
       </CardHeader>
       <CardContent className="space-y-4">
         <pre className="bg-gray-900 text-green-400 p-4 rounded text-sm overflow-x-auto">
-{`// Récupérer toutes les traductions de questions pour l'anglais
+          {`// Récupérer toutes les traductions de questions pour l'anglais
 const questionTranslations = await getQuestionnaireQuestionTranslations('en');
 console.log(questionTranslations);
 // Résultat:
@@ -101,7 +101,7 @@ export function Step3_GetTranslatedQuestion() {
       </CardHeader>
       <CardContent className="space-y-4">
         <pre className="bg-gray-900 text-green-400 p-4 rounded text-sm overflow-x-auto">
-{`// Récupérer une question avec TOUTES ses traductions et réponses
+          {`// Récupérer une question avec TOUTES ses traductions et réponses
 const translatedQuestion = await getTranslatedQuestion(
   'question-id-uuid',
   'en' // langue
@@ -150,7 +150,7 @@ export function Step4_CreateQuestionTranslation() {
       </CardHeader>
       <CardContent className="space-y-4">
         <pre className="bg-gray-900 text-green-400 p-4 rounded text-sm overflow-x-auto">
-{`// Créer une traduction pour une question
+          {`// Créer une traduction pour une question
 const newTranslation = await createQuestionnaireQuestionTranslation(
   'question-id-uuid', // ID de la question
   'en',               // langue cible
@@ -184,7 +184,7 @@ export function Step5_CreateChoiceTranslation() {
       </CardHeader>
       <CardContent className="space-y-4">
         <pre className="bg-gray-900 text-green-400 p-4 rounded text-sm overflow-x-auto">
-{`// Créer une traduction pour une réponse
+          {`// Créer une traduction pour une réponse
 const newTranslation = await createQuestionnaireChoiceTranslation(
   'choice-id-uuid',           // ID de la réponse
   'en',                       // langue cible
@@ -220,7 +220,7 @@ export function Step6_UseInComponent() {
       </CardHeader>
       <CardContent className="space-y-4">
         <pre className="bg-gray-900 text-green-400 p-4 rounded text-sm overflow-x-auto">
-{`// Exemple dans QuestionnairePlayer.jsx
+          {`// Exemple dans QuestionnairePlayer.jsx
 
 const [currentLanguage, setCurrentLanguage] = useState('fr');
 const [questionTranslations, setQuestionTranslations] = useState({});
@@ -292,7 +292,7 @@ export function Step7_GetTranslationStats() {
       </CardHeader>
       <CardContent className="space-y-4">
         <pre className="bg-gray-900 text-green-400 p-4 rounded text-sm overflow-x-auto">
-{`// Récupérer les statistiques de traduction des QCM
+          {`// Récupérer les statistiques de traduction des QCM
 const stats = await getQuestionnaireTranslationStats();
 
 console.log(stats);
@@ -331,7 +331,7 @@ export function Pattern_WithCaching() {
       </CardHeader>
       <CardContent className="space-y-4">
         <pre className="bg-gray-900 text-green-400 p-4 rounded text-sm overflow-x-auto">
-{`// Meilleure pratique : mettre en cache les traductions
+          {`// Meilleure pratique : mettre en cache les traductions
 const translationCache = new Map();
 
 const getOrFetchTranslations = async (languageCode) => {
@@ -373,7 +373,7 @@ export function Pattern_WithFallback() {
       </CardHeader>
       <CardContent className="space-y-4">
         <pre className="bg-gray-900 text-green-400 p-4 rounded text-sm overflow-x-auto">
-{`// Composant réutilisable pour afficher un texte traduit
+          {`// Composant réutilisable pour afficher un texte traduit
 export function TranslatedText({ textId, originalText, language, translationMap }) {
   const translatedText = translationMap?.[textId];
 
@@ -434,7 +434,9 @@ export function QuestionnaireTranslationExample() {
           <p>✅ Toujours vérifier si une traduction existe avant l'affichage</p>
           <p>✅ Utiliser le caching pour les performances</p>
           <p>✅ Les traductions sont optionnelles (fallback au texte original)</p>
-          <p>✅ Les administrateurs gèrent les traductions via AdminQuestionnaireTranslationManager</p>
+          <p>
+            ✅ Les administrateurs gèrent les traductions via AdminQuestionnaireTranslationManager
+          </p>
         </CardContent>
       </Card>
     </div>

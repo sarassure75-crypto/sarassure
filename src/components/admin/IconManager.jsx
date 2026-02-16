@@ -154,9 +154,7 @@ const IconManager = ({ onSelectIcon }) => {
   const filteredIcons = useMemo(() => {
     const allIcons = getLibraryIcons();
     if (!searchTerm) return allIcons;
-    return allIcons.filter(icon =>
-      icon.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    return allIcons.filter((icon) => icon.name.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [selectedLibrary, searchTerm]);
 
   // Copier la référence de l'icône
@@ -182,7 +180,8 @@ const IconManager = ({ onSelectIcon }) => {
         <CardHeader>
           <CardTitle>🎨 Gestionnaire d'Icônes</CardTitle>
           <CardDescription>
-            Explorez et sélectionnez des icônes parmi plusieurs bibliothèques pour enrichir votre collection
+            Explorez et sélectionnez des icônes parmi plusieurs bibliothèques pour enrichir votre
+            collection
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -226,7 +225,9 @@ const IconManager = ({ onSelectIcon }) => {
                   <div className="font-semibold text-sm">{lib.name}</div>
                   <div className="text-xs text-gray-600">{lib.description}</div>
                   <div className="text-xs text-gray-500 mt-1">
-                    {lib.id === 'lucide' ? '65+ icônes' : filteredIcons.length + ' icônes disponibles'}
+                    {lib.id === 'lucide'
+                      ? '65+ icônes'
+                      : filteredIcons.length + ' icônes disponibles'}
                   </div>
                 </button>
               ))}
@@ -236,19 +237,27 @@ const IconManager = ({ onSelectIcon }) => {
           {/* Barre de recherche */}
           <div>
             <label className="text-sm font-semibold mb-2 block">
-              🔍 Rechercher {selectedLibrary === 'logos' ? 'dans les Logos Colorés' : `dans ${currentLibrary?.name}`}
+              🔍 Rechercher{' '}
+              {selectedLibrary === 'logos'
+                ? 'dans les Logos Colorés'
+                : `dans ${currentLibrary?.name}`}
             </label>
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
-                placeholder={selectedLibrary === 'logos' ? "Tapez le nom d'une app (ex: whatsapp, gmail, chrome)..." : "Tapez un mot clé (ex: phone, home, star)..."}
+                placeholder={
+                  selectedLibrary === 'logos'
+                    ? "Tapez le nom d'une app (ex: whatsapp, gmail, chrome)..."
+                    : 'Tapez un mot clé (ex: phone, home, star)...'
+                }
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              {filteredIcons.length} icône{filteredIcons.length > 1 ? 's' : ''} trouvée{filteredIcons.length > 1 ? 's' : ''}
+              {filteredIcons.length} icône{filteredIcons.length > 1 ? 's' : ''} trouvée
+              {filteredIcons.length > 1 ? 's' : ''}
             </p>
           </div>
 
@@ -281,7 +290,9 @@ const IconManager = ({ onSelectIcon }) => {
                         {isCopied ? (
                           <Check className="w-5 h-5 text-green-600" />
                         ) : (
-                          <IconComponent className={isColoredIcon ? "w-7 h-7" : "w-6 h-6 text-gray-700"} />
+                          <IconComponent
+                            className={isColoredIcon ? 'w-7 h-7' : 'w-6 h-6 text-gray-700'}
+                          />
                         )}
                       </button>
                       <span className="text-xs text-gray-600 mt-1 text-center truncate w-full px-1">
@@ -307,17 +318,23 @@ const IconManager = ({ onSelectIcon }) => {
             <CardContent className="pt-4">
               <h4 className="font-semibold text-sm mb-2">💡 Comment utiliser ?</h4>
               <ul className="text-xs text-gray-700 space-y-1">
-                <li>1. Sélectionnez une bibliothèque d'icônes (🎨 Logos Colorés pour apps Android)</li>
+                <li>
+                  1. Sélectionnez une bibliothèque d'icônes (🎨 Logos Colorés pour apps Android)
+                </li>
                 <li>2. Recherchez une icône par mot clé</li>
                 <li>3. Cliquez sur une icône pour copier sa référence</li>
-                <li>4. Utilisez la référence dans IconSelector, zones d'action ou questionnaires</li>
+                <li>
+                  4. Utilisez la référence dans IconSelector, zones d'action ou questionnaires
+                </li>
               </ul>
               <div className="mt-3 space-y-2">
                 <p className="text-xs text-gray-600 font-mono bg-white p-2 rounded border border-blue-200">
-                  <span className="font-semibold">Monochromes:</span> <code>library-iconName</code> (ex: <code>fa-Heart</code>)
+                  <span className="font-semibold">Monochromes:</span> <code>library-iconName</code>{' '}
+                  (ex: <code>fa-Heart</code>)
                 </p>
                 <p className="text-xs text-gray-600 font-mono bg-white p-2 rounded border border-orange-200">
-                  <span className="font-semibold">Colorés:</span> <code>logos:app-name</code> (ex: <code>logos:whatsapp-icon</code>)
+                  <span className="font-semibold">Colorés:</span> <code>logos:app-name</code> (ex:{' '}
+                  <code>logos:whatsapp-icon</code>)
                 </p>
               </div>
             </CardContent>
@@ -350,7 +367,9 @@ const IconManager = ({ onSelectIcon }) => {
                 </div>
               </div>
               <p className="text-xs text-gray-500 mt-3">
-                Total disponible : <span className="font-bold text-orange-600">{ICONIFY_LOGOS.length} colorées</span> + <span className="font-bold">7000+ monochromes</span>
+                Total disponible :{' '}
+                <span className="font-bold text-orange-600">{ICONIFY_LOGOS.length} colorées</span> +{' '}
+                <span className="font-bold">7000+ monochromes</span>
               </p>
             </CardContent>
           </Card>

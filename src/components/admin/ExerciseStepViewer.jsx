@@ -66,20 +66,35 @@ export default function ExerciseStepViewer({ steps = [] }) {
                 className="w-full h-full object-fill rounded-lg border border-gray-200 block"
                 style={{ transform: `scale(${zoom})`, transformOrigin: 'center' }}
               />
-              
+
               {/* Zones d'action avec logique robuste de l'éditeur */}
               {[
-                { data: parseAreaData(currentStep.target_area), color: 'rgba(239, 68, 68, 0.3)', borderColor: '#ef4444', label: 'Cible' },
-                { data: parseAreaData(currentStep.text_input_area), color: 'rgba(59, 130, 246, 0.3)', borderColor: '#3b82f6', label: 'Saisie' },
-                { data: parseAreaData(currentStep.start_area), color: 'rgba(34, 197, 94, 0.3)', borderColor: '#22c55e', label: 'Départ' }
+                {
+                  data: parseAreaData(currentStep.target_area),
+                  color: 'rgba(239, 68, 68, 0.3)',
+                  borderColor: '#ef4444',
+                  label: 'Cible',
+                },
+                {
+                  data: parseAreaData(currentStep.text_input_area),
+                  color: 'rgba(59, 130, 246, 0.3)',
+                  borderColor: '#3b82f6',
+                  label: 'Saisie',
+                },
+                {
+                  data: parseAreaData(currentStep.start_area),
+                  color: 'rgba(34, 197, 94, 0.3)',
+                  borderColor: '#22c55e',
+                  label: 'Départ',
+                },
               ].map((zone, zoneIndex) => {
                 if (!zone.data) return null;
-                
+
                 const x = zone.data.x_percent ?? zone.data.x ?? 0;
                 const y = zone.data.y_percent ?? zone.data.y ?? 0;
                 const w = zone.data.width_percent ?? zone.data.width ?? 10;
                 const h = zone.data.height_percent ?? zone.data.height ?? 10;
-                
+
                 return (
                   <div
                     key={zoneIndex}
@@ -89,14 +104,19 @@ export default function ExerciseStepViewer({ steps = [] }) {
                       top: `${y}%`,
                       width: `${w}%`,
                       height: `${h}%`,
-                      backgroundColor: zone.data.color ? 
-                        zone.data.color.replace('rgb', 'rgba').replace(')', `, ${zone.data.opacity || 0.3})`) : 
-                        zone.color,
+                      backgroundColor: zone.data.color
+                        ? zone.data.color
+                            .replace('rgb', 'rgba')
+                            .replace(')', `, ${zone.data.opacity || 0.3})`)
+                        : zone.color,
                       borderColor: zone.data.color || zone.borderColor,
-                      borderRadius: zone.data.shape === 'ellipse' ? '50%' : '4px'
+                      borderRadius: zone.data.shape === 'ellipse' ? '50%' : '4px',
                     }}
                   >
-                    <div className="absolute -top-6 left-0 bg-white/90 px-2 py-0.5 rounded text-xs font-medium" style={{ borderColor: zone.borderColor }}>
+                    <div
+                      className="absolute -top-6 left-0 bg-white/90 px-2 py-0.5 rounded text-xs font-medium"
+                      style={{ borderColor: zone.borderColor }}
+                    >
                       {zone.label}
                     </div>
                   </div>
@@ -104,7 +124,11 @@ export default function ExerciseStepViewer({ steps = [] }) {
               })}
 
               {/* Message si aucune zone */}
-              {!(currentStep.target_area || currentStep.text_input_area || currentStep.start_area) && (
+              {!(
+                currentStep.target_area ||
+                currentStep.text_input_area ||
+                currentStep.start_area
+              ) && (
                 <div className="absolute top-2 left-2 bg-amber-100 border border-amber-300 rounded px-3 py-1 text-xs text-amber-800">
                   ℹ️ Aucune zone d'action définie
                 </div>

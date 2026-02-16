@@ -3,7 +3,13 @@ import { useForm, Controller } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { actionTypes } from '@/data/tasks';
 import { useAdmin } from '@/contexts/AdminContext';
@@ -31,20 +37,21 @@ const IconLibraryMap = {
 
 const getIconComponent = (iconString) => {
   if (!iconString) return null;
-  
+
   // Support pour les icônes Iconify colorées (logos, skill-icons, devicon)
-  if (iconString.includes(':') && (
-    iconString.startsWith('logos:') || 
-    iconString.startsWith('skill-icons:') || 
-    iconString.startsWith('devicon:')
-  )) {
+  if (
+    iconString.includes(':') &&
+    (iconString.startsWith('logos:') ||
+      iconString.startsWith('skill-icons:') ||
+      iconString.startsWith('devicon:'))
+  ) {
     return (props) => <IconifyIcon icon={iconString} {...props} />;
   }
-  
+
   const [library, name] = iconString.split(':');
   const libraryData = IconLibraryMap[library];
   if (!libraryData) return null;
-  
+
   const module = libraryData.module;
   return module[name] || null;
 };
@@ -57,10 +64,17 @@ const parseIconString = (iconString) => {
 
 const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
   // Single unified zone editor - tap, double_tap, long_press, swipe_*, drag_and_drop, text_input, number_input
-  const { register, handleSubmit, control, watch, setValue, formState: { errors, isDirty } } = useForm({
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    formState: { errors, isDirty },
+  } = useForm({
     defaultValues: initialStep,
   });
-  
+
   const { images, isLoading: isAdminLoading } = useAdmin();
   const imageArray = images instanceof Map ? Array.from(images.values()) : [];
 
@@ -71,7 +85,7 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
   const [hasAreaChanged, setHasAreaChanged] = useState(false);
 
   const selectedImageId = watch('app_image_id');
-  const selectedImage = imageArray.find(img => img.id === selectedImageId);
+  const selectedImage = imageArray.find((img) => img.id === selectedImageId);
 
   const watchedIconName = watch('icon_name');
   const IconComponent = getIconComponent(watchedIconName);
@@ -104,8 +118,8 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
   // Get available Android versions from screenshot images
   const availableAndroidVersions = useMemo(() => {
     const versions = imageArray
-      .filter(img => img.category === "Capture d'écran" && img.android_version)
-      .map(img => img.android_version)
+      .filter((img) => img.category === "Capture d'écran" && img.android_version)
+      .map((img) => img.android_version)
       .filter(Boolean);
     return ['all', ...new Set(versions)].sort((a, b) => {
       if (a === 'all') return -1;
@@ -118,23 +132,43 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
   }, [imageArray]);
 
   // Filter images by "Capture d'écran" category, subcategory, and Android version
-  const screenshotImages = imageArray.filter(img => {
+  const screenshotImages = imageArray.filter((img) => {
     const isScreenshot = img.category === "Capture d'écran";
     const matchesSubcategory = subcategoryFilter === 'all' || img.subcategory === subcategoryFilter;
-    const matchesAndroidVersion = androidVersionFilter === 'all' || img.android_version === androidVersionFilter;
+    const matchesAndroidVersion =
+      androidVersionFilter === 'all' || img.android_version === androidVersionFilter;
     return isScreenshot && matchesSubcategory && matchesAndroidVersion;
   });
 
   const handleSave = (data) => {
     let dataToSave = { ...initialStep, ...data };
-    
+
     const selectedActionType = watch('action_type');
-    
+
     // Les boutons physiques ne nécessitent PAS de zone d'action
-    const isPhysicalButton = ['button_power', 'button_volume_up', 'button_volume_down', 'button_power_volume_down', 'button_power_volume_up', 'button_volume_up_down'].includes(selectedActionType);
-    
-    const zoneKey = ['swipe_left', 'swipe_right', 'swipe_up', 'swipe_down', 'scroll', 'drag_and_drop', 'tap', 'double_tap', 'long_press'].includes(selectedActionType) ? 'start_area' : 'target_area';
-    
+    const isPhysicalButton = [
+      'button_power',
+      'button_volume_up',
+      'button_volume_down',
+      'button_power_volume_down',
+      'button_power_volume_up',
+      'button_volume_up_down',
+    ].includes(selectedActionType);
+
+    const zoneKey = [
+      'swipe_left',
+      'swipe_right',
+      'swipe_up',
+      'swipe_down',
+      'scroll',
+      'drag_and_drop',
+      'tap',
+      'double_tap',
+      'long_press',
+    ].includes(selectedActionType)
+      ? 'start_area'
+      : 'target_area';
+
     // ✅ StepAreaEditor already sends data with x_percent, y_percent, etc.
     // We just need to ensure expected_input is added if needed
     // MAIS PAS pour les boutons physiques !
@@ -147,27 +181,34 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
         };
       }
     }
-    
+
     // Ajouter keyboard_auto_show pour les claviers texte
     if (data.action_type === 'text_input' && data.keyboard_auto_show !== undefined) {
       dataToSave.keyboard_auto_show = data.keyboard_auto_show;
     }
-    
+
     onSave(dataToSave);
   };
 
   return (
-    <form onSubmit={handleSubmit(handleSave)} className="space-y-6 p-4 border rounded-lg bg-background mt-4">
-      <h3 className="text-lg font-semibold">{initialStep.isNew ? 'Nouvelle Étape' : `Éditer l'Étape ${initialStep.step_order + 1}`}</h3>
+    <form
+      onSubmit={handleSubmit(handleSave)}
+      className="space-y-6 p-4 border rounded-lg bg-background mt-4"
+    >
+      <h3 className="text-lg font-semibold">
+        {initialStep.isNew ? 'Nouvelle Étape' : `Éditer l'Étape ${initialStep.step_order + 1}`}
+      </h3>
       <div>
         <Label htmlFor="instruction">Instruction</Label>
         <Textarea
           id="instruction"
-          {...register('instruction', { required: 'L\'instruction est requise' })}
+          {...register('instruction', { required: "L'instruction est requise" })}
           className="mt-1"
           placeholder="Ex: Appuyez sur le bouton vert..."
         />
-        {errors.instruction && <p className="text-red-500 text-sm mt-1">{errors.instruction.message}</p>}
+        {errors.instruction && (
+          <p className="text-red-500 text-sm mt-1">{errors.instruction.message}</p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -178,15 +219,30 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
             control={control}
             render={({ field }) => (
               <Select onValueChange={field.onChange} value={field.value || ''}>
-                <SelectTrigger id="action_type" className="mt-1"><SelectValue placeholder="Sélectionner un type d'action" /></SelectTrigger>
-                <SelectContent>{actionTypes.map(type => (<SelectItem key={type.id} value={type.id}>{type.label}</SelectItem>))}</SelectContent>
+                <SelectTrigger id="action_type" className="mt-1">
+                  <SelectValue placeholder="Sélectionner un type d'action" />
+                </SelectTrigger>
+                <SelectContent>
+                  {actionTypes.map((type) => (
+                    <SelectItem key={type.id} value={type.id}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             )}
           />
         </div>
 
         {/* Sélecteur de modèle de téléphone pour les boutons physiques */}
-        {['button_power', 'button_volume_up', 'button_volume_down', 'button_power_volume_down', 'button_power_volume_up', 'button_volume_up_down'].includes(watch('action_type')) && (
+        {[
+          'button_power',
+          'button_volume_up',
+          'button_volume_down',
+          'button_power_volume_down',
+          'button_power_volume_up',
+          'button_volume_up_down',
+        ].includes(watch('action_type')) && (
           <div>
             <ButtonConfigSelector
               value={watch('button_config') || 'samsung'}
@@ -209,7 +265,7 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
               >
                 Toutes
               </Button>
-              {availableSubcategories.map(subcat => (
+              {availableSubcategories.map((subcat) => (
                 <Button
                   key={subcat}
                   type="button"
@@ -226,7 +282,7 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
           {availableAndroidVersions.length > 1 && (
             <div className="flex flex-wrap gap-1 mb-2">
               <span className="text-xs text-muted-foreground self-center mr-1">Android:</span>
-              {availableAndroidVersions.map(version => (
+              {availableAndroidVersions.map((version) => (
                 <Button
                   key={version}
                   type="button"
@@ -244,11 +300,20 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
             name="app_image_id"
             control={control}
             render={({ field }) => (
-              <Select onValueChange={(value) => field.onChange(value === '_none_' ? null : value)} value={field.value || '_none_'}>
-                <SelectTrigger id="app_image_id" className="mt-1"><SelectValue placeholder="Sélectionner une capture" /></SelectTrigger>
+              <Select
+                onValueChange={(value) => field.onChange(value === '_none_' ? null : value)}
+                value={field.value || '_none_'}
+              >
+                <SelectTrigger id="app_image_id" className="mt-1">
+                  <SelectValue placeholder="Sélectionner une capture" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="_none_">Aucune</SelectItem>
-                  {screenshotImages.map(image => (<SelectItem key={image.id} value={image.id}>{image.name}</SelectItem>))}
+                  {screenshotImages.map((image) => (
+                    <SelectItem key={image.id} value={image.id}>
+                      {image.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             )}
@@ -258,91 +323,142 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
 
       {/* Zone éditeur visuel avec drag-drop sur la capture */}
       {/* NE PAS afficher pour les boutons physiques */}
-      {watch('action_type') && watch('action_type') !== 'bravo' && 
-       !['button_power', 'button_volume_up', 'button_volume_down', 'button_power_volume_down', 'button_power_volume_up', 'button_volume_up_down'].includes(watch('action_type')) &&
-       selectedImage && (
-        <div className="border rounded-lg p-4 bg-gray-50 space-y-4">
-          {watch('action_type')?.includes('input') ? (
-            <>
-              {/* Pour les inputs : éditer les DEUX zones séparément */}
-              <div>
-                <Label className="text-base font-semibold mb-2 block text-purple-700">
-                  📝 Zone d'Affichage du Texte (target_area)
+      {watch('action_type') &&
+        watch('action_type') !== 'bravo' &&
+        ![
+          'button_power',
+          'button_volume_up',
+          'button_volume_down',
+          'button_power_volume_down',
+          'button_power_volume_up',
+          'button_volume_up_down',
+        ].includes(watch('action_type')) &&
+        selectedImage && (
+          <div className="border rounded-lg p-4 bg-gray-50 space-y-4">
+            {watch('action_type')?.includes('input') ? (
+              <>
+                {/* Pour les inputs : éditer les DEUX zones séparément */}
+                <div>
+                  <Label className="text-base font-semibold mb-2 block text-purple-700">
+                    📝 Zone d'Affichage du Texte (target_area)
+                  </Label>
+                  <p className="text-sm text-purple-600 mb-3 italic">
+                    Définissez où les caractères saisis apparaîtront (champ de saisie)
+                  </p>
+                  <StepAreaEditor
+                    imageUrl={selectedImage.publicUrl}
+                    area={watch('target_area')}
+                    onAreaChange={(area) => {
+                      setValue('target_area', area);
+                      setHasAreaChanged(true);
+                    }}
+                    onImageLoad={setEditorImageDimensions}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Pour les autres actions : une seule zone */}
+                <Label className="text-base font-semibold mb-4 block">
+                  Configuration de la zone d'action
                 </Label>
-                <p className="text-sm text-purple-600 mb-3 italic">
-                  Définissez où les caractères saisis apparaîtront (champ de saisie)
-                </p>
                 <StepAreaEditor
                   imageUrl={selectedImage.publicUrl}
-                  area={watch('target_area')}
+                  area={
+                    [
+                      'swipe_left',
+                      'swipe_right',
+                      'swipe_up',
+                      'swipe_down',
+                      'scroll',
+                      'drag_and_drop',
+                      'tap',
+                      'double_tap',
+                      'long_press',
+                    ].includes(watch('action_type'))
+                      ? watch('start_area')
+                      : watch('target_area')
+                  }
                   onAreaChange={(area) => {
-                    setValue('target_area', area);
+                    const key = [
+                      'swipe_left',
+                      'swipe_right',
+                      'swipe_up',
+                      'swipe_down',
+                      'scroll',
+                      'drag_and_drop',
+                      'tap',
+                      'double_tap',
+                      'long_press',
+                    ].includes(watch('action_type'))
+                      ? 'start_area'
+                      : 'target_area';
+                    setValue(key, area);
                     setHasAreaChanged(true);
                   }}
                   onImageLoad={setEditorImageDimensions}
                 />
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Pour les autres actions : une seule zone */}
-              <Label className="text-base font-semibold mb-4 block">Configuration de la zone d'action</Label>
-              <StepAreaEditor
-                imageUrl={selectedImage.publicUrl}
-                area={
-                  ['swipe_left', 'swipe_right', 'swipe_up', 'swipe_down', 'scroll', 'drag_and_drop', 'tap', 'double_tap', 'long_press'].includes(watch('action_type'))
-                    ? watch('start_area')
-                    : watch('target_area')
-                }
-                onAreaChange={(area) => {
-                  const key = ['swipe_left', 'swipe_right', 'swipe_up', 'swipe_down', 'scroll', 'drag_and_drop', 'tap', 'double_tap', 'long_press'].includes(watch('action_type'))
-                    ? 'start_area'
-                    : 'target_area';
-                  setValue(key, area);
-                  setHasAreaChanged(true);
-                }}
-                onImageLoad={setEditorImageDimensions}
-              />
-            </>
-          )}
-        </div>
-      )}
+              </>
+            )}
+          </div>
+        )}
 
       {/* Message pour l'option Bravo */}
       {watch('action_type') === 'bravo' && selectedImage && (
         <div className="border rounded-lg p-4 bg-blue-50 border-blue-200">
           <p className="text-sm text-blue-800">
-            🎉 <strong>Étape de félicitations :</strong> Cette étape affichera uniquement la capture d'écran sans zone d'action à cliquer. Parfait pour montrer un message de réussite ou le résultat final.
+            🎉 <strong>Étape de félicitations :</strong> Cette étape affichera uniquement la capture
+            d'écran sans zone d'action à cliquer. Parfait pour montrer un message de réussite ou le
+            résultat final.
           </p>
         </div>
       )}
 
       {/* Message pour les boutons physiques */}
-      {['button_power', 'button_volume_up', 'button_volume_down', 'button_power_volume_down', 'button_power_volume_up', 'button_volume_up_down'].includes(watch('action_type')) && selectedImage && (
-        <div className="border rounded-lg p-4 bg-purple-50 border-purple-200">
-          <p className="text-sm text-purple-800 mb-2">
-            📱 <strong>Bouton physique :</strong> Aucune zone d'action n'est nécessaire !
-          </p>
-          <ul className="text-xs text-purple-700 list-disc list-inside space-y-1">
-            <li>Les boutons (Power, Volume+, Volume-) sont automatiquement positionnés sur les côtés du téléphone</li>
-            <li>Leur position dépend du modèle de téléphone sélectionné</li>
-            <li>L'apprenant cliquera directement sur les boutons visibles</li>
-            {watch('action_type')?.includes('_') && watch('action_type') !== 'button_volume_up' && watch('action_type') !== 'button_volume_down' && (
-              <li className="font-semibold text-purple-900">⚠️ Action combinée : l'apprenant devra cliquer sur 2 boutons simultanément</li>
-            )}
-          </ul>
-        </div>
-      )}
+      {[
+        'button_power',
+        'button_volume_up',
+        'button_volume_down',
+        'button_power_volume_down',
+        'button_power_volume_up',
+        'button_volume_up_down',
+      ].includes(watch('action_type')) &&
+        selectedImage && (
+          <div className="border rounded-lg p-4 bg-purple-50 border-purple-200">
+            <p className="text-sm text-purple-800 mb-2">
+              📱 <strong>Bouton physique :</strong> Aucune zone d'action n'est nécessaire !
+            </p>
+            <ul className="text-xs text-purple-700 list-disc list-inside space-y-1">
+              <li>
+                Les boutons (Power, Volume+, Volume-) sont automatiquement positionnés sur les côtés
+                du téléphone
+              </li>
+              <li>Leur position dépend du modèle de téléphone sélectionné</li>
+              <li>L'apprenant cliquera directement sur les boutons visibles</li>
+              {watch('action_type')?.includes('_') &&
+                watch('action_type') !== 'button_volume_up' &&
+                watch('action_type') !== 'button_volume_down' && (
+                  <li className="font-semibold text-purple-900">
+                    ⚠️ Action combinée : l'apprenant devra cliquer sur 2 boutons simultanément
+                  </li>
+                )}
+            </ul>
+          </div>
+        )}
 
       <div>
         <Label htmlFor="icon_name">Icône</Label>
         <IconSelector
-          selectedIcon={selectedIcon ? {
-            library: selectedIcon.library,
-            name: selectedIcon.name,
-            component: IconComponent,
-            displayName: selectedIcon.name
-          } : null}
+          selectedIcon={
+            selectedIcon
+              ? {
+                  library: selectedIcon.library,
+                  name: selectedIcon.name,
+                  component: IconComponent,
+                  displayName: selectedIcon.name,
+                }
+              : null
+          }
           onSelect={handleIconSelect}
           onRemove={handleIconRemove}
           libraries={['lucide', 'fa6', 'bs', 'md', 'fi', 'hi2', 'ai', 'logos', 'skill', 'devicon']}
@@ -355,14 +471,19 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
         <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
           <div>
             <Label htmlFor="expected_input">Saisie attendue</Label>
-            <Input id="expected_input" {...register('expected_input')} className="mt-1" placeholder="Texte ou numéro attendu" />
+            <Input
+              id="expected_input"
+              {...register('expected_input')}
+              className="mt-1"
+              placeholder="Texte ou numéro attendu"
+            />
           </div>
-          
+
           {watch('action_type') === 'text_input' && (
             <div className="flex items-center space-x-2">
-              <input 
-                type="checkbox" 
-                id="keyboard_auto_show" 
+              <input
+                type="checkbox"
+                id="keyboard_auto_show"
                 {...register('keyboard_auto_show')}
                 className="w-4 h-4"
               />
@@ -371,16 +492,22 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
               </Label>
             </div>
           )}
-          
+
           <div className="text-sm text-blue-800 space-y-2">
             <p className="font-semibold">📱 Configuration des zones :</p>
             <ul className="list-disc list-inside space-y-1 ml-2">
-              <li><strong>Zone d'action (start_area)</strong> : Zone où le clavier apparaîtra en overlay</li>
-              <li><strong>Zone cible (target_area)</strong> : Zone où les caractères saisis s'afficheront</li>
+              <li>
+                <strong>Zone d'action (start_area)</strong> : Zone où le clavier apparaîtra en
+                overlay
+              </li>
+              <li>
+                <strong>Zone cible (target_area)</strong> : Zone où les caractères saisis
+                s'afficheront
+              </li>
             </ul>
             <p className="text-xs mt-2 italic">
-              {watch('action_type') === 'number_input' 
-                ? '⚠️ Le clavier numérique s\'affiche automatiquement' 
+              {watch('action_type') === 'number_input'
+                ? "⚠️ Le clavier numérique s'affiche automatiquement"
                 : '💡 Cochez la case ci-dessus pour un affichage automatique'}
             </p>
           </div>
@@ -388,7 +515,12 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
       )}
 
       <div className="flex justify-between items-center pt-4">
-        <Button type="button" variant="destructive" onClick={() => onDelete(initialStep.id)} disabled={isAdminLoading}>
+        <Button
+          type="button"
+          variant="destructive"
+          onClick={() => onDelete(initialStep.id)}
+          disabled={isAdminLoading}
+        >
           <Trash2 className="mr-2 h-4 w-4" /> Supprimer
         </Button>
         <div className="flex space-x-2">
@@ -396,7 +528,11 @@ const AdminStepForm = ({ step: initialStep, onSave, onDelete, onCancel }) => {
             <XCircle className="mr-2 h-4 w-4" /> Annuler
           </Button>
           <Button type="submit" disabled={isAdminLoading || (!isDirty && !hasAreaChanged)}>
-            {isAdminLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+            {isAdminLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-4 w-4" />
+            )}
             Valider l'Étape
           </Button>
         </div>

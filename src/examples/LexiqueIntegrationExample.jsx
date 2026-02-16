@@ -15,13 +15,14 @@ export function ExerciseInstructionExample() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getAllGlossaryTerms().then(terms => {
+    getAllGlossaryTerms().then((terms) => {
       setGlossaryTerms(terms);
       setLoading(false);
     });
   }, []);
 
-  const instruction = "Pour scroll vers le bas, appuyez sur le Bouton Power ou utilisez les paramètres pour ajuster le Volume.";
+  const instruction =
+    'Pour scroll vers le bas, appuyez sur le Bouton Power ou utilisez les paramètres pour ajuster le Volume.';
 
   return (
     <div className="instruction-panel p-4 bg-blue-50 rounded-lg">
@@ -136,10 +137,7 @@ export function InstructionWithGlossary({ text, className = '' }) {
       {loading ? (
         <span className="text-gray-400">Chargement du lexique...</span>
       ) : (
-        <HighlightGlossaryTerms
-          text={text}
-          glossaryTerms={glossaryTerms}
-        />
+        <HighlightGlossaryTerms text={text} glossaryTerms={glossaryTerms} />
       )}
     </div>
   );
@@ -194,9 +192,9 @@ export function MyExerciseComponent() {
 /**
  * Exemple d'intégration dans ExercisePage
  * Ajouter au composant principal:
- * 
+ *
  * const { glossaryTerms, loading: glossaryLoading } = useGlossary();
- * 
+ *
  * Puis dans le rendu:
  * <HighlightGlossaryTerms
  *   text={currentStep.instruction}

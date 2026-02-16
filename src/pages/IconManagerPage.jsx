@@ -20,7 +20,9 @@ const IconManagerPage = () => {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-2">Accès refusé</h1>
-          <p className="text-gray-600 mb-4">Vous n'avez pas les permissions pour accéder à cette page.</p>
+          <p className="text-gray-600 mb-4">
+            Vous n'avez pas les permissions pour accéder à cette page.
+          </p>
           <Button onClick={() => navigate('/')} variant="outline">
             Retour à l'accueil
           </Button>
@@ -34,12 +36,7 @@ const IconManagerPage = () => {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-6">
-          <Button
-            onClick={() => navigate(-1)}
-            variant="outline"
-            size="sm"
-            className="mb-4"
-          >
+          <Button onClick={() => navigate(-1)} variant="outline" size="sm" className="mb-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Retour
           </Button>

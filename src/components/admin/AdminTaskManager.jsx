@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAdmin } from '@/contexts/AdminContext';
 import { useNavigate } from 'react-router-dom';
@@ -54,7 +53,7 @@ async function saveQuestionnaireQuestionsAsSteps(taskId, questions) {
         .insert({
           task_id: taskId,
           version_number: '1.0',
-          status: 'draft'
+          status: 'draft',
         })
         .select()
         .single();
@@ -72,28 +71,26 @@ async function saveQuestionnaireQuestionsAsSteps(taskId, questions) {
         hint: q.hint || '',
         imageId: q.imageId,
         imageName: q.imageName,
-        choices: q.choices.map(c => ({
+        choices: q.choices.map((c) => ({
           id: c.id,
           imageId: c.imageId,
           imageName: c.imageName,
           iconSvg: c.iconSvg || null,
           text: c.text,
-          isCorrect: q.correctAnswers.includes(c.id)
+          isCorrect: q.correctAnswers.includes(c.id),
         })),
-        correctAnswers: q.correctAnswers
+        correctAnswers: q.correctAnswers,
       };
 
       return {
         version_id: versionId,
         step_order: idx + 1,
         instruction: q.instruction,
-        expected_input: questionData
+        expected_input: questionData,
       };
     });
 
-    const { error: stepsError } = await supabase
-      .from('steps')
-      .insert(stepsToInsert);
+    const { error: stepsError } = await supabase.from('steps').insert(stepsToInsert);
 
     if (stepsError) throw stepsError;
     console.log('Steps créés avec succès:', stepsToInsert.length);
@@ -106,7 +103,17 @@ async function saveQuestionnaireQuestionsAsSteps(taskId, questions) {
 }
 
 const AdminTaskManager = () => {
-  const { tasks, images, categories, fetchAllData, isLoading, error, deleteTask, updateTask, createTask } = useAdmin();
+  const {
+    tasks,
+    images,
+    categories,
+    fetchAllData,
+    isLoading,
+    error,
+    deleteTask,
+    updateTask,
+    createTask,
+  } = useAdmin();
   const [view, setView] = useState('list'); // 'list', 'form'
   const [selectedTask, setSelectedTask] = useState(null);
   const { toast } = useToast();
@@ -114,7 +121,7 @@ const AdminTaskManager = () => {
 
   useEffect(() => {
     if (view === 'list') {
-        fetchAllData();
+      fetchAllData();
     }
   }, [view, fetchAllData]);
 
@@ -154,8 +161,11 @@ const AdminTaskManager = () => {
       if (isNew) {
         // Explicitly use createTask for new tasks
         savedTask = await createTask(dataToSave);
-        toast({ title: "Tâche créée", description: "Vous pouvez maintenant ajouter des versions." });
-        
+        toast({
+          title: 'Tâche créée',
+          description: 'Vous pouvez maintenant ajouter des versions.',
+        });
+
         // Pour les QCM avec questions, créer automatiquement une version et des steps
         if (dataToSave.task_type === 'questionnaire' && questions && questions.length > 0) {
           await saveQuestionnaireQuestionsAsSteps(savedTask.id, questions);
@@ -163,48 +173,61 @@ const AdminTaskManager = () => {
       } else {
         // Use updateTask for existing tasks
         savedTask = await updateTask(taskData.id, dataToSave);
-        
+
         // Pour les QCM avec questions, mettre à jour les steps de la première version
         if (taskData.task_type === 'questionnaire' && questions && questions.length > 0) {
           await saveQuestionnaireQuestionsAsSteps(taskData.id, questions);
         }
-        
-        toast({ title: "Tâche enregistrée", description: "Les modifications ont été sauvegardées." });
+
+        toast({
+          title: 'Tâche enregistrée',
+          description: 'Les modifications ont été sauvegardées.',
+        });
       }
-      
+
       // After saving, refetch all data to get the freshest state
       const updatedData = await fetchAllData(true);
       const updatedTasks = updatedData.tasksData || [];
-      
+
       // Find the saved task in the newly fetched list
-      const foundTask = updatedTasks.find(t => t.id === savedTask.id);
+      const foundTask = updatedTasks.find((t) => t.id === savedTask.id);
 
       if (foundTask) {
         // Update the selected task state with the fresh data and remove the 'isNew' flag
         setSelectedTask({ ...foundTask, isNew: false });
       } else {
         // Fallback in case it's not found (should not happen)
-        setSelectedTask(current => ({ ...current, ...savedTask, isNew: false }));
+        setSelectedTask((current) => ({ ...current, ...savedTask, isNew: false }));
         handleBackToList(); // Or go back to the list
       }
-      
     } catch (err) {
-      console.error("Task saving error:", err);
-      toast({ title: "Erreur", description: err.message || "Impossible d'enregistrer la tâche.", variant: "destructive" });
+      console.error('Task saving error:', err);
+      toast({
+        title: 'Erreur',
+        description: err.message || "Impossible d'enregistrer la tâche.",
+        variant: 'destructive',
+      });
     }
   };
 
   const handleDeleteTask = async (taskId) => {
     try {
       await deleteTask(taskId);
-      toast({ title: "Tâche déplacée dans la corbeille", description: "Vous pouvez la restaurer depuis la corbeille." });
+      toast({
+        title: 'Tâche déplacée dans la corbeille',
+        description: 'Vous pouvez la restaurer depuis la corbeille.',
+      });
       if (selectedTask && selectedTask.id === taskId) {
         handleBackToList();
       } else {
         fetchAllData(true);
       }
     } catch (err) {
-      toast({ title: "Erreur", description: "Impossible de supprimer la tâche.", variant: "destructive" });
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de supprimer la tâche.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -213,7 +236,7 @@ const AdminTaskManager = () => {
       ...task,
       id: uuidv4(),
       title: `${task.title} (Copie)`,
-      isNew: true
+      isNew: true,
     };
     setSelectedTask(duplicatedTask);
     setView('form');
@@ -252,7 +275,12 @@ const AdminTaskManager = () => {
           )}
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="icon" onClick={() => fetchAllData(true)} disabled={isLoading}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => fetchAllData(true)}
+            disabled={isLoading}
+          >
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
         </div>

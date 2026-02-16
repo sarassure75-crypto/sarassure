@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 const ThemeSwitcher = () => {
-  const [dark, setDark] = useState(() =>
-    document.documentElement.classList.contains('dark')
-  );
+  const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'));
 
   useEffect(() => {
     if (dark) {
@@ -24,7 +22,9 @@ const ThemeSwitcher = () => {
   return (
     <button
       aria-label={dark ? 'Activer le mode clair' : 'Activer le mode sombre'}
-      className={`ml-2 px-3 py-2 rounded transition-colors duration-300 ${dark ? 'bg-slate-800 text-yellow-300' : 'bg-yellow-200 text-slate-900'} shadow hover:scale-105`}
+      className={`ml-2 px-3 py-2 rounded transition-colors duration-300 ${
+        dark ? 'bg-slate-800 text-yellow-300' : 'bg-yellow-200 text-slate-900'
+      } shadow hover:scale-105`}
       onClick={() => setDark((d) => !d)}
     >
       {dark ? '🌙 Sombre' : '☀️ Clair'}

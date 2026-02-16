@@ -15,20 +15,15 @@ export const AuthProvider = ({ children }) => {
 
   const fetchProfile = useCallback(async (user) => {
     if (!user) {
-        setCurrentUser(null);
-        return;
+      setCurrentUser(null);
+      return;
     }
     try {
-      const profile = await retryWithBackoff(
-        () => getUserById(user.id),
-        2,
-        300,
-        3000
-      );
+      const profile = await retryWithBackoff(() => getUserById(user.id), 2, 300, 3000);
       const userWithProfile = profile ? { ...user, ...profile } : user;
       setCurrentUser(userWithProfile);
     } catch (error) {
-      console.error("Error fetching profile:", error);
+      console.error('Error fetching profile:', error);
       // Still set user even if profile fetch fails
       setCurrentUser(user);
     }
@@ -37,8 +32,10 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     let isMounted = true;
     let timeoutId;
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('🔐 Auth state change:', event, session?.user?.email);
       if (isMounted) {
         await fetchProfile(session?.user);
@@ -49,14 +46,16 @@ export const AuthProvider = ({ children }) => {
     const checkSession = async () => {
       try {
         console.log('🔍 Checking existing session...');
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         console.log('📊 Session found:', session?.user?.email || 'No session');
         if (isMounted) {
           await fetchProfile(session?.user);
           setLoading(false);
         }
       } catch (error) {
-        console.error("❌ Error checking session:", error);
+        console.error('❌ Error checking session:', error);
         if (isMounted) {
           setLoading(false);
         }
@@ -64,7 +63,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     checkSession();
-    
+
     // Fallback timeout: force loading to false after 8 seconds max
     timeoutId = setTimeout(() => {
       if (isMounted) {
@@ -82,22 +81,24 @@ export const AuthProvider = ({ children }) => {
 
   const loginWithLearnerCode = async (learnerCode) => {
     console.log('🔍 Recherche du code apprenant:', learnerCode);
-    
+
     try {
       // Utiliser la RPC function sécurisée pour récupérer le profil
-      const { data: profileArray, error: profileError } = await supabase
-        .rpc('get_profile_by_learner_code', { input_learner_code: learnerCode });
+      const { data: profileArray, error: profileError } = await supabase.rpc(
+        'get_profile_by_learner_code',
+        { input_learner_code: learnerCode }
+      );
 
       console.log('📊 Résultat recherche profile via RPC:', { profileArray, profileError });
 
       if (profileError) {
         console.error('❌ Erreur RPC:', profileError);
-        throw new Error("Code apprenant invalide.");
+        throw new Error('Code apprenant invalide.');
       }
 
       if (!profileArray || profileArray.length === 0) {
         console.error('❌ Code non trouvé');
-        throw new Error("Code apprenant invalide.");
+        throw new Error('Code apprenant invalide.');
       }
 
       const profile = profileArray[0];
@@ -111,8 +112,8 @@ export const AuthProvider = ({ children }) => {
       console.log('🔐 Résultat connexion:', { data: data?.user?.email, error });
 
       if (error) {
-        console.error("❌ Échec connexion:", error.message);
-        throw new Error("La connexion a échoué. Veuillez vérifier votre code et réessayer.");
+        console.error('❌ Échec connexion:', error.message);
+        throw new Error('La connexion a échoué. Veuillez vérifier votre code et réessayer.');
       }
 
       return data;
@@ -121,9 +122,11 @@ export const AuthProvider = ({ children }) => {
       throw error;
     }
   };
-  
+
   const refetchUser = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (user) {
       await fetchProfile(user);
     }
@@ -142,14 +145,11 @@ export const AuthProvider = ({ children }) => {
     loading,
     login: (email, password) => supabase.auth.signInWithPassword({ email, password }),
     logout,
-    register: (email, password, metadata) => supabase.auth.signUp({ email, password, options: { data: metadata } }),
+    register: (email, password, metadata) =>
+      supabase.auth.signUp({ email, password, options: { data: metadata } }),
     loginWithLearnerCode,
     refetchUser,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
 };

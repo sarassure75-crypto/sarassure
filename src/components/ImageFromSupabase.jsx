@@ -17,27 +17,25 @@ const fetchImageUrl = async (imageId) => {
     return null;
   }
 
-  const { data: urlData } = supabase.storage
-    .from('images')
-    .getPublicUrl(imageData.file_path);
+  const { data: urlData } = supabase.storage.from('images').getPublicUrl(imageData.file_path);
 
   return urlData.publicUrl;
 };
 
 const ImageFromSupabase = forwardRef(({ imageId, alt, className, onLoad, style }, ref) => {
-  const { data: src, isLoading, isError } = useQuery(
-    ['imageUrl', imageId],
-    () => fetchImageUrl(imageId),
-    {
-      enabled: !!imageId,
-      staleTime: Infinity,
-      cacheTime: Infinity,
-    }
-  );
-  
+  const {
+    data: src,
+    isLoading,
+    isError,
+  } = useQuery(['imageUrl', imageId], () => fetchImageUrl(imageId), {
+    enabled: !!imageId,
+    staleTime: Infinity,
+    cacheTime: Infinity,
+  });
+
   if (isLoading) {
     return (
-      <div className={className + " flex items-center justify-center bg-muted/30"}>
+      <div className={className + ' flex items-center justify-center bg-muted/30'}>
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
       </div>
     );
@@ -45,7 +43,7 @@ const ImageFromSupabase = forwardRef(({ imageId, alt, className, onLoad, style }
 
   if (isError || !src) {
     return (
-      <div className={className + " flex items-center justify-center bg-muted/30"}>
+      <div className={className + ' flex items-center justify-center bg-muted/30'}>
         <span className="text-xs text-destructive">Image non disponible</span>
       </div>
     );

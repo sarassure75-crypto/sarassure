@@ -24,7 +24,7 @@ export default function BuyLicensesPage() {
         {/* Contenu */}
         <Card>
           <CardContent className="pt-6">
-            <PurchaseLicensesModal 
+            <PurchaseLicensesModal
               trainerId={currentUser?.id}
               onSuccess={() => {
                 // Vous pouvez ajouter une logique de succès ici

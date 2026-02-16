@@ -1,22 +1,22 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { 
-  useImageLibrary, 
-  useImageUpload, 
+import {
+  useImageLibrary,
+  useImageUpload,
   useImageActions,
-  usePendingImagesCount 
-} from "../hooks/useImageLibrary";
-import { useAuth } from "../contexts/AuthContext";
-import { useContributorStats } from "../hooks/useContributions";
+  usePendingImagesCount,
+} from '../hooks/useImageLibrary';
+import { useAuth } from '../contexts/AuthContext';
+import { useContributorStats } from '../hooks/useContributions';
 import { getImageSubcategories, DEFAULT_SUBCATEGORIES } from '../data/images';
 import { useNavigate } from 'react-router-dom';
 import CGUWarningBanner from '../components/CGUWarningBanner';
-import { createClient } from "@supabase/supabase-js";
-import { 
-  Upload, 
-  Search, 
-  Grid, 
-  List, 
-  X, 
+import { createClient } from '@supabase/supabase-js';
+import {
+  Upload,
+  Search,
+  Grid,
+  List,
+  X,
   Check,
   AlertTriangle,
   Image as ImageIcon,
@@ -26,20 +26,20 @@ import {
   Clock,
   CheckCircle,
   BookOpen,
-  Paintbrush
+  Paintbrush,
 } from 'lucide-react';
 import ImageEditor from '@/components/ImageEditor';
 
 export default function ContributorImageLibrary() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
-  
+
   // Stats hook
   const { stats: contributorStats, loading: statsLoading } = useContributorStats(currentUser?.id);
-  
+
   // CGU Banner
   const [showCGUBanner, setShowCGUBanner] = useState(true);
-  
+
   // Filtres
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -49,7 +49,7 @@ export default function ContributorImageLibrary() {
   const [allExercises, setAllExercises] = useState([]);
   const [adminExercises, setAdminExercises] = useState([]);
   const [exercisesLoading, setExercisesLoading] = useState(false);
-  
+
   // Éditeur d'image
   const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
   const [imageToEdit, setImageToEdit] = useState(null);
@@ -61,7 +61,11 @@ export default function ContributorImageLibrary() {
   const [uploadSubcategory, setUploadSubcategory] = useState('général');
   const [uploadAndroidVersion, setUploadAndroidVersion] = useState('');
   const [uploadTags, setUploadTags] = useState('');
-  const [availableSubcategories, setAvailableSubcategories] = useState(['général', 'parametres', 'first acces']);
+  const [availableSubcategories, setAvailableSubcategories] = useState([
+    'général',
+    'parametres',
+    'first acces',
+  ]);
 
   // Load subcategories for gallery filter when category changes
   const [gallerySubcategories, setGallerySubcategories] = useState([]);
@@ -120,7 +124,7 @@ export default function ContributorImageLibrary() {
 
           // Récupérer les exercices créés par l'admin (pour affichage spécial)
           const adminExercisesData = (allExercisesData || []).filter(
-            ex => ex.created_by === adminProfile.id
+            (ex) => ex.created_by === adminProfile.id
           );
           setAdminExercises(adminExercisesData);
         }
@@ -135,15 +139,19 @@ export default function ContributorImageLibrary() {
   }, []);
 
   // Hooks - Récupérer TOUTES les images approuvées + les images de l'utilisateur
-  const { images: allImages, loading, refresh } = useImageLibrary({
+  const {
+    images: allImages,
+    loading,
+    refresh,
+  } = useImageLibrary({
     // Afficher les images approuvées (de tous les contributeurs + admin)
     moderationStatus: 'approved',
     category: categoryFilter === 'all' ? undefined : categoryFilter,
-    searchTerm: searchTerm || undefined
+    searchTerm: searchTerm || undefined,
   });
 
   // Apply subcategory and Android version filters
-  const images = (allImages || []).filter(img => {
+  const images = (allImages || []).filter((img) => {
     if (subcategoryFilter !== 'all' && img.subcategory !== subcategoryFilter) {
       return false;
     }
@@ -154,11 +162,12 @@ export default function ContributorImageLibrary() {
   });
 
   // Extract unique Android versions from all images for filter
-  const availableAndroidVersions = ['all', ...new Set(
-    (allImages || [])
-      .map(img => img.android_version)
-      .filter(v => v && v !== null && v !== '')
-  )].sort((a, b) => {
+  const availableAndroidVersions = [
+    'all',
+    ...new Set(
+      (allImages || []).map((img) => img.android_version).filter((v) => v && v !== null && v !== '')
+    ),
+  ].sort((a, b) => {
     if (a === 'all') return -1;
     if (b === 'all') return 1;
     return parseInt(b) - parseInt(a);
@@ -214,8 +223,9 @@ export default function ContributorImageLibrary() {
       return;
     }
 
-    if (file.size > 1024 * 1024) { // 1MB
-      alert('⚠️ L\'image dépasse 1MB. Veuillez la compresser avant de l\'uploader.');
+    if (file.size > 1024 * 1024) {
+      // 1MB
+      alert("⚠️ L'image dépasse 1MB. Veuillez la compresser avant de l'uploader.");
       return;
     }
 
@@ -231,7 +241,10 @@ export default function ContributorImageLibrary() {
       return;
     }
 
-    const tagsArray = uploadTags.split(',').map(tag => tag.trim()).filter(Boolean);
+    const tagsArray = uploadTags
+      .split(',')
+      .map((tag) => tag.trim())
+      .filter(Boolean);
 
     const result = await upload(
       uploadFile,
@@ -241,7 +254,7 @@ export default function ContributorImageLibrary() {
         subcategory: uploadSubcategory,
         android_version: uploadAndroidVersion.trim() || null,
         tags: tagsArray,
-        contributor_id: currentUser.id
+        contributor_id: currentUser.id,
       },
       currentUser.id
     );
@@ -297,8 +310,10 @@ export default function ContributorImageLibrary() {
 
     try {
       // Créer un fichier à partir du blob
-      const file = new File([blob], `edited-${imageToEdit.title || 'image'}.png`, { type: 'image/png' });
-      
+      const file = new File([blob], `edited-${imageToEdit.title || 'image'}.png`, {
+        type: 'image/png',
+      });
+
       // Upload comme nouvelle image en utilisant le hook upload
       const result = await upload(
         file,
@@ -308,11 +323,11 @@ export default function ContributorImageLibrary() {
           subcategory: imageToEdit.subcategory || 'général',
           android_version: imageToEdit.android_version || null,
           tags: imageToEdit.tags || [],
-          contributor_id: currentUser.id
+          contributor_id: currentUser.id,
         },
         currentUser.id
       );
-      
+
       if (result.success) {
         setIsImageEditorOpen(false);
         alert('✅ Image modifiée uploadée avec succès');
@@ -321,18 +336,18 @@ export default function ContributorImageLibrary() {
         alert(`❌ Erreur : ${result.error}`);
       }
     } catch (error) {
-      console.error("Error saving edited image:", error);
-      alert('Erreur lors de la sauvegarde de l\'image modifiée');
+      console.error('Error saving edited image:', error);
+      alert("Erreur lors de la sauvegarde de l'image modifiée");
     }
   };
 
   // Formatage date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    return date.toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     });
   };
 
@@ -349,7 +364,9 @@ export default function ContributorImageLibrary() {
 
     const Icon = badge.icon;
     return (
-      <span className={`inline-flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium ${badge.color}`}>
+      <span
+        className={`inline-flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium ${badge.color}`}
+      >
         <Icon className="w-3 h-3" />
         <span>{badge.label}</span>
       </span>
@@ -371,7 +388,7 @@ export default function ContributorImageLibrary() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* CGU Warning Banner */}
       {showCGUBanner && (
-        <CGUWarningBanner 
+        <CGUWarningBanner
           onClose={() => setShowCGUBanner(false)}
           onReadMore={() => navigate('/contributeur/cgu')}
         />
@@ -404,7 +421,7 @@ export default function ContributorImageLibrary() {
             <ImageIcon className="w-8 h-8 text-gray-300" />
           </div>
         </div>
-        
+
         <div className="bg-green-50 rounded-lg p-4 shadow-sm border border-green-200">
           <div className="flex items-center justify-between">
             <div>
@@ -473,13 +490,21 @@ export default function ContributorImageLibrary() {
           <div className="flex items-center justify-end mt-4 space-x-2">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2 rounded ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}`}
+              className={`p-2 rounded ${
+                viewMode === 'grid'
+                  ? 'bg-blue-100 text-blue-600'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
             >
               <Grid className="w-5 h-5" />
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-2 rounded ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}`}
+              className={`p-2 rounded ${
+                viewMode === 'list'
+                  ? 'bg-blue-100 text-blue-600'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
             >
               <List className="w-5 h-5" />
             </button>
@@ -501,7 +526,7 @@ export default function ContributorImageLibrary() {
               >
                 Toutes
               </button>
-              {gallerySubcategories.map(subcat => (
+              {gallerySubcategories.map((subcat) => (
                 <button
                   key={subcat}
                   onClick={() => setSubcategoryFilter(subcat)}
@@ -523,7 +548,7 @@ export default function ContributorImageLibrary() {
           <div className="mt-4 pt-4 border-t border-gray-200">
             <div className="text-sm font-medium text-gray-700 mb-2">Version Android:</div>
             <div className="flex flex-wrap gap-2">
-              {availableAndroidVersions.map(version => (
+              {availableAndroidVersions.map((version) => (
                 <button
                   key={version}
                   onClick={() => setAndroidVersionFilter(version)}
@@ -555,23 +580,25 @@ export default function ContributorImageLibrary() {
           </button>
         </div>
       ) : (
-        <div className={viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-4 gap-4' : 'space-y-4'}>
+        <div
+          className={viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-4 gap-4' : 'space-y-4'}
+        >
           {images.map((image) => (
-            <div 
+            <div
               key={image.id}
               className={`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow ${
                 viewMode === 'list' ? 'flex items-center p-4 space-x-4' : ''
               }`}
             >
               {/* Image */}
-              <div 
+              <div
                 className={`relative group cursor-pointer ${
                   viewMode === 'grid' ? 'aspect-square' : 'w-24 h-24 flex-shrink-0'
                 }`}
                 onClick={() => setSelectedImage(image)}
               >
-                <img 
-                  src={image.public_url} 
+                <img
+                  src={image.public_url}
                   alt={image.title}
                   className="w-full h-full object-cover"
                 />
@@ -643,17 +670,27 @@ export default function ContributorImageLibrary() {
             <p className="text-gray-600">Référencez ces exercices dans vos contributions</p>
           </div>
 
-          <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-4'}>
+          <div
+            className={
+              viewMode === 'grid'
+                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'
+                : 'space-y-4'
+            }
+          >
             {adminExercises.map((exercise) => (
-              <div 
+              <div
                 key={exercise.id}
                 className={`bg-blue-50 rounded-lg shadow-sm border border-blue-200 overflow-hidden hover:shadow-md transition-shadow p-4`}
               >
                 <div className="flex items-start space-x-3 mb-3">
                   <BookOpen className="w-5 h-5 text-blue-600 mt-1 flex-shrink-0" />
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">{exercise.name || 'Exercice sans titre'}</h3>
-                    <p className="text-sm text-gray-600 mt-1">{exercise.description || 'Aucune description'}</p>
+                    <h3 className="font-semibold text-gray-900">
+                      {exercise.name || 'Exercice sans titre'}
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {exercise.description || 'Aucune description'}
+                    </p>
                   </div>
                 </div>
 
@@ -681,7 +718,10 @@ export default function ContributorImageLibrary() {
       {/* Modal Upload */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full overflow-y-auto" style={{ maxHeight: '90vh' }}>
+          <div
+            className="bg-white rounded-lg max-w-2xl w-full overflow-y-auto"
+            style={{ maxHeight: '90vh' }}
+          >
             <div className="p-6 border-b flex items-center justify-between sticky top-0 bg-white">
               <h3 className="text-xl font-semibold">Uploader une image</h3>
               <button
@@ -725,8 +765,8 @@ export default function ContributorImageLibrary() {
               {uploadFile && (
                 <>
                   <div className="relative">
-                    <img 
-                      src={URL.createObjectURL(uploadFile)} 
+                    <img
+                      src={URL.createObjectURL(uploadFile)}
                       alt="Preview"
                       className="w-full h-64 object-contain bg-gray-100 rounded-lg"
                     />
@@ -739,9 +779,7 @@ export default function ContributorImageLibrary() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Titre *
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Titre *</label>
                     <input
                       type="text"
                       value={uploadTitle}
@@ -777,8 +815,10 @@ export default function ContributorImageLibrary() {
                       onChange={(e) => setUploadSubcategory(e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      {availableSubcategories.map(subcat => (
-                        <option key={subcat} value={subcat}>{subcat}</option>
+                      {availableSubcategories.map((subcat) => (
+                        <option key={subcat} value={subcat}>
+                          {subcat}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -814,7 +854,10 @@ export default function ContributorImageLibrary() {
                       <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" />
                       <div className="text-sm text-yellow-800">
                         <p className="font-semibold mb-1">Rappel important</p>
-                        <p>Vérifiez qu'aucune donnée personnelle (nom, téléphone, email réel, photo identifiable) n'apparaît dans l'image.</p>
+                        <p>
+                          Vérifiez qu'aucune donnée personnelle (nom, téléphone, email réel, photo
+                          identifiable) n'apparaît dans l'image.
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -859,7 +902,7 @@ export default function ContributorImageLibrary() {
 
       {/* Modal Prévisualisation */}
       {selectedImage && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"
           onClick={() => setSelectedImage(null)}
         >
@@ -873,8 +916,8 @@ export default function ContributorImageLibrary() {
                 <X className="w-8 h-8" />
               </button>
             </div>
-            <img 
-              src={selectedImage.public_url} 
+            <img
+              src={selectedImage.public_url}
               alt={selectedImage.title}
               className="w-full h-auto rounded-lg"
             />
@@ -892,4 +935,3 @@ export default function ContributorImageLibrary() {
     </div>
   );
 }
-

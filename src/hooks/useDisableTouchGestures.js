@@ -18,13 +18,13 @@ const useDisableTouchGestures = () => {
     let lastTouchTime = 0;
     const handleTouchStart = (e) => {
       const now = Date.now();
-      
+
       // Bloquer double-tap (moins de 300ms entre deux touches)
       if (now - lastTouchTime < 300) {
         e.preventDefault();
       }
       lastTouchTime = now;
-      
+
       // Bloquer swipe-back (toucher au bord gauche)
       if (e.touches && e.touches[0].clientX < 15) {
         e.preventDefault();
@@ -34,11 +34,12 @@ const useDisableTouchGestures = () => {
     const handleTouchMove = (e) => {
       // Si c'est dans la zone d'exercice, empêcher tous les gestes natifs
       const target = e.target;
-      const isInExerciseZone = target.closest('.exercise-container') || 
-                               target.closest('[data-zoomable-image]') ||
-                               target.closest('motion-div') ||
-                               target.closest('[style*="touchAction"]');
-      
+      const isInExerciseZone =
+        target.closest('.exercise-container') ||
+        target.closest('[data-zoomable-image]') ||
+        target.closest('motion-div') ||
+        target.closest('[style*="touchAction"]');
+
       if (isInExerciseZone && e.cancelable) {
         // Laisser le handler custom faire le travail
       }

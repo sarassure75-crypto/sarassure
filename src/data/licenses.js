@@ -8,10 +8,12 @@ import { supabase } from '@/lib/supabaseClient';
 export const getTrainerLicenses = async (trainerId) => {
   const { data, error } = await supabase
     .from('trainer_category_licenses')
-    .select(`
+    .select(
+      `
       *,
       category:task_categories(*)
-    `)
+    `
+    )
     .eq('trainer_id', trainerId)
     .eq('is_active', true);
 
@@ -61,19 +63,22 @@ export const hasLicenseForCategory = async (trainerId, categoryId) => {
 export const activateLicense = async (trainerId, categoryId, expiresAt = null) => {
   const { data, error } = await supabase
     .from('trainer_category_licenses')
-    .upsert({
-      trainer_id: trainerId,
-      category_id: categoryId,
-      is_active: true,
-      expires_at: expiresAt
-    }, {
-      onConflict: 'trainer_id,category_id'
-    })
+    .upsert(
+      {
+        trainer_id: trainerId,
+        category_id: categoryId,
+        is_active: true,
+        expires_at: expiresAt,
+      },
+      {
+        onConflict: 'trainer_id,category_id',
+      }
+    )
     .select()
     .single();
 
   if (error) {
-    console.error('Erreur lors de l\'activation de la licence:', error);
+    console.error("Erreur lors de l'activation de la licence:", error);
     throw error;
   }
 
@@ -127,14 +132,12 @@ export const getCategoriesWithLicenseStatus = async (trainerId) => {
   }
 
   // Fusionner les données
-  const licenseMap = new Map(
-    licenses?.map(l => [l.category_id, l]) || []
-  );
+  const licenseMap = new Map(licenses?.map((l) => [l.category_id, l]) || []);
 
-  return categories.map(cat => ({
+  return categories.map((cat) => ({
     ...cat,
     hasLicense: licenseMap.has(cat.id) && licenseMap.get(cat.id).is_active,
-    expiresAt: licenseMap.get(cat.id)?.expires_at
+    expiresAt: licenseMap.get(cat.id)?.expires_at,
   }));
 };
 
@@ -148,18 +151,21 @@ export const getCategoriesWithLicenseStatus = async (trainerId) => {
 export const assignCategoryToLearner = async (learnerId, categoryId, trainerId = null) => {
   const { data, error } = await supabase
     .from('learner_category_licenses')
-    .upsert({
-      learner_id: learnerId,
-      category_id: categoryId,
-      assigned_by_trainer_id: trainerId
-    }, {
-      onConflict: 'learner_id,category_id'
-    })
+    .upsert(
+      {
+        learner_id: learnerId,
+        category_id: categoryId,
+        assigned_by_trainer_id: trainerId,
+      },
+      {
+        onConflict: 'learner_id,category_id',
+      }
+    )
     .select()
     .single();
 
   if (error) {
-    console.error('Erreur lors de l\'attribution de la catégorie:', error);
+    console.error("Erreur lors de l'attribution de la catégorie:", error);
     throw error;
   }
 
@@ -192,10 +198,12 @@ export const removeCategoryFromLearner = async (learnerId, categoryId) => {
 export const getLearnerLicenses = async (learnerId) => {
   const { data, error } = await supabase
     .from('learner_category_licenses')
-    .select(`
+    .select(
+      `
       *,
       category:task_categories(*)
-    `)
+    `
+    )
     .eq('learner_id', learnerId);
 
   if (error) {
@@ -235,10 +243,10 @@ export const getCategoriesWithLicenseStatusForLearner = async (learnerId) => {
   }
 
   // Fusionner les données
-  const licenseSet = new Set((licenses || []).map(l => l.category_id));
+  const licenseSet = new Set((licenses || []).map((l) => l.category_id));
 
-  return categories.map(cat => ({
+  return categories.map((cat) => ({
     ...cat,
-    hasLicense: licenseSet.has(cat.id)
+    hasLicense: licenseSet.has(cat.id),
   }));
 };

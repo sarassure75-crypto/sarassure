@@ -4,14 +4,14 @@ import { Keyboard, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-const InputAnimator = ({ 
-  actionType, 
+const InputAnimator = ({
+  actionType,
   targetArea,
   onInputChange,
   inputValue,
   imageWidth = 360,
   imageHeight = 640,
-  isMobileLayout = false 
+  isMobileLayout = false,
 }) => {
   // Check condition FIRST - BEFORE hooks
   if (!targetArea || !['number_input', 'text_input'].includes(actionType)) {
@@ -108,7 +108,9 @@ const InputAnimator = ({
           <div className="max-w-md mx-auto">
             {/* Affichage de la saisie */}
             <div className="bg-gray-100 p-2 sm:p-3 rounded-lg mb-3 sm:mb-4 flex items-center justify-between">
-              <span className="text-sm sm:text-base font-mono break-all">{inputValue || '___'}</span>
+              <span className="text-sm sm:text-base font-mono break-all">
+                {inputValue || '___'}
+              </span>
               <Button
                 size="sm"
                 variant="outline"
@@ -177,12 +179,7 @@ const InputAnimator = ({
 
             {/* Boutons d'action */}
             <div className="flex gap-2 mt-3">
-              <Button
-                onClick={handleClear}
-                variant="destructive"
-                size="sm"
-                className="flex-1"
-              >
+              <Button onClick={handleClear} variant="destructive" size="sm" className="flex-1">
                 <Trash2 className="h-4 w-4 mr-1" />
                 Effacer
               </Button>

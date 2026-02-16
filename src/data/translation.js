@@ -11,7 +11,7 @@ const TRANSLATION_CONFIG = {
   // Option 1: Google Translate (nécessite API key)
   google: {
     apiKey: import.meta.env.VITE_GOOGLE_TRANSLATE_API_KEY,
-    baseUrl: 'https://translation.googleapis.com/language/translate/v2'
+    baseUrl: 'https://translation.googleapis.com/language/translate/v2',
   },
   // Option 2: LibreTranslate (open source, gratuit) - avec proxy CORS
   libre: {
@@ -21,13 +21,13 @@ const TRANSLATION_CONFIG = {
   },
   // Option 3: MyMemory (gratuit, pas besoin de clé, support CORS)
   mymemory: {
-    baseUrl: 'https://api.mymemory.translated.net/get'
+    baseUrl: 'https://api.mymemory.translated.net/get',
   },
   // Option 4: DeepL (excellente qualité)
   deepl: {
     apiKey: import.meta.env.VITE_DEEPL_API_KEY,
-    baseUrl: 'https://api-free.deepl.com/v1/translate'
-  }
+    baseUrl: 'https://api-free.deepl.com/v1/translate',
+  },
 };
 
 /**
@@ -56,13 +56,15 @@ export const getGlossaryTranslations = async (languageCode) => {
   try {
     const { data, error } = await supabase
       .from('glossary_translations')
-      .select(`
+      .select(
+        `
         id,
         translated_term,
         translated_definition,
         translated_example,
         glossary:glossary_id(id, term, category)
-      `)
+      `
+      )
       .eq('language_code', languageCode);
 
     if (error) throw error;
@@ -107,12 +109,12 @@ export const translateInstruction = async (text, targetLanguage, glossaryTerms =
     // Étape 3: Remplacer les termes du glossaire par leurs traductions PERSONNALISÉES (prioritaires)
     // Cela assure que les termes du glossaire restent tels que l'admin les a définis
     if (glossaryTranslations && glossaryTranslations.length > 0) {
-      glossaryTranslations.forEach(trans => {
+      glossaryTranslations.forEach((trans) => {
         // Remplacer dans le texte traduit AUSSI (ne pas juste le texte original)
         // Chercher le terme original français
         const frenchTermRegex = new RegExp(`\\b${trans.glossary.term}\\b`, 'gi');
         fullyTranslatedText = fullyTranslatedText.replace(frenchTermRegex, trans.translated_term);
-        
+
         // Aussi chercher la traduction auto du terme français (au cas où elle a été traduite autrement)
         try {
           // Si le traducteur a traduit différemment, on remplace aussi
@@ -153,8 +155,8 @@ export const translateWithGoogle = async (text, targetLanguage) => {
       body: JSON.stringify({
         q: text,
         target: targetLanguage,
-        key: apiKey
-      })
+        key: apiKey,
+      }),
     });
 
     if (!response.ok) {
@@ -181,13 +183,13 @@ export const translateWithDeepL = async (text, targetLanguage) => {
 
     // Mapper les codes de langue
     const deepLLanguageMap = {
-      'fr': 'FR',
-      'en': 'EN-US',
-      'es': 'ES',
-      'de': 'DE',
-      'it': 'IT',
-      'pt': 'PT-BR',
-      'nl': 'NL'
+      fr: 'FR',
+      en: 'EN-US',
+      es: 'ES',
+      de: 'DE',
+      it: 'IT',
+      pt: 'PT-BR',
+      nl: 'NL',
     };
 
     const targetLang = deepLLanguageMap[targetLanguage] || targetLanguage.toUpperCase();
@@ -195,13 +197,13 @@ export const translateWithDeepL = async (text, targetLanguage) => {
     const response = await fetch(TRANSLATION_CONFIG.deepl.baseUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `DeepL-Auth-Key ${apiKey}`,
-        'Content-Type': 'application/json'
+        Authorization: `DeepL-Auth-Key ${apiKey}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         text: [text],
-        target_lang: targetLang
-      })
+        target_lang: targetLang,
+      }),
     });
 
     if (!response.ok) {
@@ -223,28 +225,33 @@ const translateWithMyMemory = async (text, targetLanguage) => {
   try {
     // Mapper les codes langue si nécessaire (MyMemory utilise codes ISO)
     const langMap = {
-      'fr': 'fr', 'en': 'en', 'es': 'es', 'de': 'de', 
-      'it': 'it', 'pt': 'pt', 'nl': 'nl'
+      fr: 'fr',
+      en: 'en',
+      es: 'es',
+      de: 'de',
+      it: 'it',
+      pt: 'pt',
+      nl: 'nl',
     };
     const mappedLang = langMap[targetLanguage] || targetLanguage;
-    
+
     // MyMemory utilise les paramètres de query
     const url = new URL(TRANSLATION_CONFIG.mymemory.baseUrl);
     url.searchParams.append('q', text);
     url.searchParams.append('langpair', `fr|${mappedLang}`);
-    
+
     const response = await fetch(url.toString());
     if (!response.ok) {
       throw new Error(`MyMemory API error: ${response.statusText}`);
     }
 
     const data = await response.json();
-    
+
     // MyMemory retourne dans translatedText
     if (data.responseStatus === 200 && data.responseData?.translatedText) {
       return data.responseData.translatedText;
     }
-    
+
     throw new Error('MyMemory returned no translation');
   } catch (error) {
     logger.error('Error with MyMemory:', error);
@@ -260,13 +267,13 @@ export const translateWithLibreTranslate = async (text, targetLanguage) => {
     const response = await fetch(TRANSLATION_CONFIG.libre.baseUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         q: text,
         source: 'auto',
-        target: targetLanguage
-      })
+        target: targetLanguage,
+      }),
     });
 
     if (!response.ok) {
@@ -343,9 +350,9 @@ export const shouldUseAutoTranslation = async (targetLanguage) => {
 export const mergeTranslations = (original, autoTranslated, glossaryTranslations) => {
   // Priorité au glossaire personnalisé
   let result = autoTranslated;
-  
+
   if (glossaryTranslations && glossaryTranslations.length > 0) {
-    glossaryTranslations.forEach(trans => {
+    glossaryTranslations.forEach((trans) => {
       const regex = new RegExp(`\\b${trans.glossary.term}\\b`, 'gi');
       result = result.replace(regex, trans.translated_term);
     });
@@ -357,17 +364,25 @@ export const mergeTranslations = (original, autoTranslated, glossaryTranslations
 /**
  * Créer une traduction pour un terme du lexique (admin)
  */
-export const createGlossaryTranslation = async (glossaryId, languageCode, translatedTerm, translatedDefinition, translatedExample = null) => {
+export const createGlossaryTranslation = async (
+  glossaryId,
+  languageCode,
+  translatedTerm,
+  translatedDefinition,
+  translatedExample = null
+) => {
   try {
     const { data, error } = await supabase
       .from('glossary_translations')
-      .insert([{
-        glossary_id: glossaryId,
-        language_code: languageCode,
-        translated_term: translatedTerm.trim(),
-        translated_definition: translatedDefinition.trim(),
-        translated_example: translatedExample ? translatedExample.trim() : null
-      }])
+      .insert([
+        {
+          glossary_id: glossaryId,
+          language_code: languageCode,
+          translated_term: translatedTerm.trim(),
+          translated_definition: translatedDefinition.trim(),
+          translated_example: translatedExample ? translatedExample.trim() : null,
+        },
+      ])
       .select()
       .single();
 
@@ -405,10 +420,7 @@ export const updateGlossaryTranslation = async (translationId, updates) => {
  */
 export const deleteGlossaryTranslation = async (translationId) => {
   try {
-    const { error } = await supabase
-      .from('glossary_translations')
-      .delete()
-      .eq('id', translationId);
+    const { error } = await supabase.from('glossary_translations').delete().eq('id', translationId);
 
     if (error) throw error;
     logger.log('Glossary translation deleted');
@@ -432,11 +444,13 @@ export const getTranslationStats = async () => {
       .select('language_code');
 
     const stats = {};
-    (languages || []).forEach(lang => {
-      const count = (translations || []).filter(t => t.language_code === lang.language_code).length;
+    (languages || []).forEach((lang) => {
+      const count = (translations || []).filter(
+        (t) => t.language_code === lang.language_code
+      ).length;
       stats[lang.language_code] = {
         name: lang.language_name,
-        translated: count
+        translated: count,
       };
     });
 
@@ -460,14 +474,16 @@ export const getQuestionnaireQuestionTranslations = async (languageCode) => {
   try {
     const { data, error } = await supabase
       .from('questionnaire_question_translations')
-      .select(`
+      .select(
+        `
         id,
         question_id,
         language_code,
         translated_instruction,
         created_at,
         updated_at
-      `)
+      `
+      )
       .eq('language_code', languageCode);
 
     if (error) throw error;
@@ -485,7 +501,8 @@ export const getQuestionnaireChoiceTranslations = async (languageCode) => {
   try {
     const { data, error } = await supabase
       .from('questionnaire_choice_translations')
-      .select(`
+      .select(
+        `
         id,
         choice_id,
         language_code,
@@ -493,7 +510,8 @@ export const getQuestionnaireChoiceTranslations = async (languageCode) => {
         translated_feedback,
         created_at,
         updated_at
-      `)
+      `
+      )
       .eq('language_code', languageCode);
 
     if (error) throw error;
@@ -507,7 +525,11 @@ export const getQuestionnaireChoiceTranslations = async (languageCode) => {
 /**
  * Créer une traduction pour une question de QCM
  */
-export const createQuestionnaireQuestionTranslation = async (questionId, languageCode, translatedInstruction) => {
+export const createQuestionnaireQuestionTranslation = async (
+  questionId,
+  languageCode,
+  translatedInstruction
+) => {
   try {
     // D'abord, vérifier s'il existe déjà une traduction
     const { data: existing } = await supabase
@@ -521,7 +543,7 @@ export const createQuestionnaireQuestionTranslation = async (questionId, languag
       const { data, error } = await supabase
         .from('questionnaire_question_translations')
         .update({
-          translated_instruction: translatedInstruction.trim()
+          translated_instruction: translatedInstruction.trim(),
         })
         .eq('id', existing[0].id)
         .select()
@@ -534,11 +556,13 @@ export const createQuestionnaireQuestionTranslation = async (questionId, languag
       // Créer une nouvelle traduction
       const { data, error } = await supabase
         .from('questionnaire_question_translations')
-        .insert([{
-          question_id: questionId,
-          language_code: languageCode,
-          translated_instruction: translatedInstruction.trim()
-        }])
+        .insert([
+          {
+            question_id: questionId,
+            language_code: languageCode,
+            translated_instruction: translatedInstruction.trim(),
+          },
+        ])
         .select()
         .single();
 
@@ -555,7 +579,12 @@ export const createQuestionnaireQuestionTranslation = async (questionId, languag
 /**
  * Créer une traduction pour une réponse de QCM
  */
-export const createQuestionnaireChoiceTranslation = async (choiceId, languageCode, translatedChoiceText, translatedFeedback = null) => {
+export const createQuestionnaireChoiceTranslation = async (
+  choiceId,
+  languageCode,
+  translatedChoiceText,
+  translatedFeedback = null
+) => {
   try {
     // D'abord, vérifier s'il existe déjà une traduction
     const { data: existing } = await supabase
@@ -570,7 +599,7 @@ export const createQuestionnaireChoiceTranslation = async (choiceId, languageCod
         .from('questionnaire_choice_translations')
         .update({
           translated_choice_text: translatedChoiceText.trim(),
-          translated_feedback: translatedFeedback ? translatedFeedback.trim() : null
+          translated_feedback: translatedFeedback ? translatedFeedback.trim() : null,
         })
         .eq('id', existing[0].id)
         .select()
@@ -583,12 +612,14 @@ export const createQuestionnaireChoiceTranslation = async (choiceId, languageCod
       // Créer une nouvelle traduction
       const { data, error } = await supabase
         .from('questionnaire_choice_translations')
-        .insert([{
-          choice_id: choiceId,
-          language_code: languageCode,
-          translated_choice_text: translatedChoiceText.trim(),
-          translated_feedback: translatedFeedback ? translatedFeedback.trim() : null
-        }])
+        .insert([
+          {
+            choice_id: choiceId,
+            language_code: languageCode,
+            translated_choice_text: translatedChoiceText.trim(),
+            translated_feedback: translatedFeedback ? translatedFeedback.trim() : null,
+          },
+        ])
         .select()
         .single();
 
@@ -687,7 +718,8 @@ export const getTranslatedQuestion = async (questionId, languageCode, _glossaryT
     if (languageCode === 'fr') {
       const { data, error } = await supabase
         .from('questionnaire_questions')
-        .select(`
+        .select(
+          `
           id,
           instruction,
           question_type,
@@ -700,7 +732,8 @@ export const getTranslatedQuestion = async (questionId, languageCode, _glossaryT
             feedback,
             image_id
           )
-        `)
+        `
+        )
         .eq('id', questionId)
         .single();
 
@@ -710,19 +743,21 @@ export const getTranslatedQuestion = async (questionId, languageCode, _glossaryT
         instruction: data.instruction,
         type: data.question_type,
         imageId: data.image_id,
-        choices: data.questionnaire_choices
+        choices: data.questionnaire_choices,
       };
     }
 
     // Récupérer la question avec ses traductions
     const { data: question, error: qError } = await supabase
       .from('questionnaire_questions')
-      .select(`
+      .select(
+        `
         id,
         instruction,
         question_type,
         image_id
-      `)
+      `
+      )
       .eq('id', questionId)
       .single();
 
@@ -739,21 +774,23 @@ export const getTranslatedQuestion = async (questionId, languageCode, _glossaryT
     // Récupérer les choix
     const { data: choices, error: cError } = await supabase
       .from('questionnaire_choices')
-      .select(`
+      .select(
+        `
         id,
         text,
         choice_order,
         is_correct,
         feedback,
         image_id
-      `)
+      `
+      )
       .eq('question_id', questionId)
       .order('choice_order');
 
     if (cError) throw cError;
 
     // Récupérer les traductions des choix
-    const choiceIds = choices.map(c => c.id);
+    const choiceIds = choices.map((c) => c.id);
     const { data: choiceTranslations } = await supabase
       .from('questionnaire_choice_translations')
       .select('choice_id, translated_choice_text, translated_feedback')
@@ -762,7 +799,7 @@ export const getTranslatedQuestion = async (questionId, languageCode, _glossaryT
 
     // Mapper les traductions de choix
     const translationMap = {};
-    (choiceTranslations || []).forEach(t => {
+    (choiceTranslations || []).forEach((t) => {
       translationMap[t.choice_id] = t;
     });
 
@@ -771,14 +808,14 @@ export const getTranslatedQuestion = async (questionId, languageCode, _glossaryT
       instruction: translations?.translated_instruction || question.instruction,
       type: question.question_type,
       imageId: question.image_id,
-      choices: choices.map(choice => ({
+      choices: choices.map((choice) => ({
         id: choice.id,
         text: translationMap[choice.id]?.translated_choice_text || choice.text,
         order: choice.choice_order,
         isCorrect: choice.is_correct,
         feedback: translationMap[choice.id]?.translated_feedback || choice.feedback,
-        imageId: choice.image_id
-      }))
+        imageId: choice.image_id,
+      })),
     };
   } catch (error) {
     logger.error('Error getting translated question:', error);
@@ -804,13 +841,17 @@ export const getQuestionnaireTranslationStats = async () => {
       .select('language_code');
 
     const stats = {};
-    (languages || []).forEach(lang => {
-      const questionCount = (questionTranslations || []).filter(t => t.language_code === lang.language_code).length;
-      const choiceCount = (choiceTranslations || []).filter(t => t.language_code === lang.language_code).length;
+    (languages || []).forEach((lang) => {
+      const questionCount = (questionTranslations || []).filter(
+        (t) => t.language_code === lang.language_code
+      ).length;
+      const choiceCount = (choiceTranslations || []).filter(
+        (t) => t.language_code === lang.language_code
+      ).length;
       stats[lang.language_code] = {
         name: lang.language_name,
         questions: questionCount,
-        choices: choiceCount
+        choices: choiceCount,
       };
     });
 
@@ -830,7 +871,11 @@ export const getQuestionnaireTranslationStats = async () => {
 /**
  * Traduire automatiquement une question de QCM
  */
-export const autoTranslateQuestionnaireQuestion = async (questionId, instruction, targetLanguage) => {
+export const autoTranslateQuestionnaireQuestion = async (
+  questionId,
+  instruction,
+  targetLanguage
+) => {
   try {
     if (!instruction || instruction.trim().length === 0) {
       logger.warn(`Question ${questionId} has empty instruction`);
@@ -859,7 +904,7 @@ export const autoTranslateQuestionnaireQuestion = async (questionId, instruction
 
     // Remplacer les termes du glossaire par leurs traductions personnalisées
     if (glossaryTranslations && glossaryTranslations.length > 0) {
-      glossaryTranslations.forEach(trans => {
+      glossaryTranslations.forEach((trans) => {
         const regex = new RegExp(`\\b${trans.glossary.term}\\b`, 'gi');
         translatedText = translatedText.replace(regex, trans.translated_term);
       });
@@ -905,7 +950,7 @@ export const autoTranslateQuestionnaireChoice = async (choiceId, choiceText, tar
 
     // Remplacer les termes du glossaire par leurs traductions personnalisées
     if (glossaryTranslations && glossaryTranslations.length > 0) {
-      glossaryTranslations.forEach(trans => {
+      glossaryTranslations.forEach((trans) => {
         const regex = new RegExp(`\\b${trans.glossary.term}\\b`, 'gi');
         translatedText = translatedText.replace(regex, trans.translated_term);
       });
@@ -935,14 +980,16 @@ export const autoTranslateQuestionnaire = async (taskId, languageCode, onProgres
     // Récupérer toutes les questions du questionnaire
     const { data: questionsData, error: questionsError } = await supabase
       .from('questionnaire_questions')
-      .select(`
+      .select(
+        `
         id,
         instruction,
         questionnaire_choices (
           id,
           text
         )
-      `)
+      `
+      )
       .eq('task_id', taskId);
 
     if (questionsError) throw questionsError;
@@ -950,7 +997,10 @@ export const autoTranslateQuestionnaire = async (taskId, languageCode, onProgres
       throw new Error('Aucune question trouvée');
     }
 
-    logger.log(`📊 Questionnaire ${taskId}: ${questionsData.length} questions trouvées`, questionsData);
+    logger.log(
+      `📊 Questionnaire ${taskId}: ${questionsData.length} questions trouvées`,
+      questionsData
+    );
 
     let translatedCount = 0;
     const totalQuestions = questionsData.length;
@@ -959,12 +1009,12 @@ export const autoTranslateQuestionnaire = async (taskId, languageCode, onProgres
     // Compter le nombre total d'éléments (questions + réponses)
     let totalItems = 0;
     const allItems = [];
-    questionsData.forEach(question => {
+    questionsData.forEach((question) => {
       totalItems++; // La question elle-même
       allItems.push({ type: 'question', data: question });
-      
+
       if (question.questionnaire_choices && question.questionnaire_choices.length > 0) {
-        question.questionnaire_choices.forEach(choice => {
+        question.questionnaire_choices.forEach((choice) => {
           totalItems++;
           allItems.push({ type: 'choice', data: choice, questionId: question.id });
         });
@@ -981,7 +1031,7 @@ export const autoTranslateQuestionnaire = async (taskId, languageCode, onProgres
         if (item.type === 'question') {
           const question = item.data;
           logger.log(`🌍 Traduction question ${question.id}: "${question.instruction}"`);
-          
+
           const translatedInstruction = await autoTranslateQuestionnaireQuestion(
             question.id,
             question.instruction,
@@ -996,7 +1046,7 @@ export const autoTranslateQuestionnaire = async (taskId, languageCode, onProgres
             languageCode,
             translatedInstruction
           );
-          
+
           logger.log(`💾 Traduction créée en BDD:`, result);
 
           translatedCount++;
@@ -1004,7 +1054,7 @@ export const autoTranslateQuestionnaire = async (taskId, languageCode, onProgres
         } else if (item.type === 'choice') {
           const choice = item.data;
           logger.log(`🌍 Traduction choix ${choice.id}: "${choice.text}"`);
-          
+
           const translatedChoiceText = await autoTranslateQuestionnaireChoice(
             choice.id,
             choice.text,
@@ -1019,7 +1069,7 @@ export const autoTranslateQuestionnaire = async (taskId, languageCode, onProgres
             languageCode,
             translatedChoiceText
           );
-          
+
           logger.log(`💾 Traduction créée en BDD:`, result);
 
           translatedCount++;
@@ -1030,7 +1080,7 @@ export const autoTranslateQuestionnaire = async (taskId, languageCode, onProgres
           onProgress({
             current: currentItemIndex,
             total: totalItems,
-            message: `${currentItemIndex}/${totalItems} éléments traduits`
+            message: `${currentItemIndex}/${totalItems} éléments traduits`,
           });
         }
       } catch (error) {
@@ -1038,7 +1088,7 @@ export const autoTranslateQuestionnaire = async (taskId, languageCode, onProgres
       }
 
       // Ajouter un délai pour éviter les limites de taux de l'API
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300));
     }
 
     logger.log(`✅ Auto-traduction complétée: ${translatedCount}/${totalItems} éléments traduits`);
@@ -1047,7 +1097,7 @@ export const autoTranslateQuestionnaire = async (taskId, languageCode, onProgres
       success: true,
       message: `${translatedCount}/${totalItems} éléments traduits avec succès`,
       translated: translatedCount,
-      total: totalItems
+      total: totalItems,
     };
   } catch (error) {
     logger.error('Error auto-translating questionnaire:', error);

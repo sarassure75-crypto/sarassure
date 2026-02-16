@@ -36,12 +36,12 @@ class ErrorBoundary extends React.Component {
     const now = Date.now();
     const lastReportTime = window._lastErrorReportTime || 0;
     const timeSinceLastReport = now - lastReportTime;
-    
+
     if (timeSinceLastReport < 5000) {
       console.warn('⚠️ Rate limiting error reports, skipping this one');
       return;
     }
-    
+
     window._lastErrorReportTime = now;
 
     // Envoyer le rapport d'erreur à Supabase
@@ -53,8 +53,8 @@ class ErrorBoundary extends React.Component {
         user_agent: navigator.userAgent,
         page_url: window.location.href,
         report_date: new Date().toISOString(),
-      }).catch(err => {
-        console.error('Impossible d\'envoyer le rapport d\'erreur:', err);
+      }).catch((err) => {
+        console.error("Impossible d'envoyer le rapport d'erreur:", err);
       });
     } catch (err) {
       console.error('Erreur lors de la création du rapport:', err);
@@ -82,8 +82,8 @@ class ErrorBoundary extends React.Component {
                 Oups ! Une erreur est survenue
               </CardTitle>
               <CardDescription className="text-base mt-2">
-                L'application a rencontré un problème inattendu. 
-                Un rapport d'erreur a été automatiquement envoyé à notre équipe.
+                L'application a rencontré un problème inattendu. Un rapport d'erreur a été
+                automatiquement envoyé à notre équipe.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -106,7 +106,7 @@ class ErrorBoundary extends React.Component {
               )}
 
               <div className="flex flex-col sm:flex-row gap-3">
-                <Button 
+                <Button
                   onClick={this.handleReload}
                   className="flex-1 bg-blue-600 hover:bg-blue-700"
                   size="lg"
@@ -114,12 +114,7 @@ class ErrorBoundary extends React.Component {
                   <RefreshCw className="mr-2 h-5 w-5" />
                   Recharger la page
                 </Button>
-                <Button 
-                  onClick={this.handleGoHome}
-                  variant="outline"
-                  className="flex-1"
-                  size="lg"
-                >
+                <Button onClick={this.handleGoHome} variant="outline" className="flex-1" size="lg">
                   <Home className="mr-2 h-5 w-5" />
                   Retour à l'accueil
                 </Button>

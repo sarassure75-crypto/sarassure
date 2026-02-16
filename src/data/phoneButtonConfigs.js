@@ -17,7 +17,7 @@ export const phoneButtonConfigs = {
         position: { side: 'right', top: '35%' },
         color: '#ef4444',
         height: '40px',
-        description: 'Bouton d\'allumage'
+        description: "Bouton d'allumage",
       },
       volumeUp: {
         id: 'volumeUp',
@@ -26,7 +26,7 @@ export const phoneButtonConfigs = {
         position: { side: 'left', top: '25%' },
         color: '#3b82f6',
         height: '40px',
-        description: 'Bouton volume haut'
+        description: 'Bouton volume haut',
       },
       volumeDown: {
         id: 'volumeDown',
@@ -35,9 +35,9 @@ export const phoneButtonConfigs = {
         position: { side: 'left', top: '40%' },
         color: '#06b6d4',
         height: '40px',
-        description: 'Bouton volume bas'
-      }
-    }
+        description: 'Bouton volume bas',
+      },
+    },
   },
 
   // Configuration iPhone style
@@ -53,7 +53,7 @@ export const phoneButtonConfigs = {
         position: { side: 'right', top: '20%' },
         color: '#ef4444',
         height: '50px',
-        description: 'Bouton d\'allumage'
+        description: "Bouton d'allumage",
       },
       volumeUp: {
         id: 'volumeUp',
@@ -62,7 +62,7 @@ export const phoneButtonConfigs = {
         position: { side: 'left', top: '18%' },
         color: '#3b82f6',
         height: '35px',
-        description: 'Bouton volume haut'
+        description: 'Bouton volume haut',
       },
       volumeDown: {
         id: 'volumeDown',
@@ -71,9 +71,9 @@ export const phoneButtonConfigs = {
         position: { side: 'left', top: '28%' },
         color: '#06b6d4',
         height: '35px',
-        description: 'Bouton volume bas'
-      }
-    }
+        description: 'Bouton volume bas',
+      },
+    },
   },
 
   // Configuration Pixel Google
@@ -89,7 +89,7 @@ export const phoneButtonConfigs = {
         position: { side: 'right', top: '22%' },
         color: '#ef4444',
         height: '45px',
-        description: 'Bouton d\'allumage'
+        description: "Bouton d'allumage",
       },
       volumeUp: {
         id: 'volumeUp',
@@ -98,7 +98,7 @@ export const phoneButtonConfigs = {
         position: { side: 'right', top: '35%' },
         color: '#3b82f6',
         height: '38px',
-        description: 'Bouton volume haut'
+        description: 'Bouton volume haut',
       },
       volumeDown: {
         id: 'volumeDown',
@@ -107,9 +107,9 @@ export const phoneButtonConfigs = {
         position: { side: 'right', top: '47%' },
         color: '#06b6d4',
         height: '38px',
-        description: 'Bouton volume bas'
-      }
-    }
+        description: 'Bouton volume bas',
+      },
+    },
   },
 
   // Configuration Xiaomi
@@ -125,7 +125,7 @@ export const phoneButtonConfigs = {
         position: { side: 'right', top: '38%' },
         color: '#ef4444',
         height: '42px',
-        description: 'Bouton d\'allumage'
+        description: "Bouton d'allumage",
       },
       volumeUp: {
         id: 'volumeUp',
@@ -134,7 +134,7 @@ export const phoneButtonConfigs = {
         position: { side: 'right', top: '22%' },
         color: '#3b82f6',
         height: '40px',
-        description: 'Bouton volume haut'
+        description: 'Bouton volume haut',
       },
       volumeDown: {
         id: 'volumeDown',
@@ -143,9 +143,9 @@ export const phoneButtonConfigs = {
         position: { side: 'right', top: '30%' },
         color: '#06b6d4',
         height: '40px',
-        description: 'Bouton volume bas'
-      }
-    }
+        description: 'Bouton volume bas',
+      },
+    },
   },
 
   // Configuration OnePlus
@@ -161,7 +161,7 @@ export const phoneButtonConfigs = {
         position: { side: 'right', top: '40%' },
         color: '#ef4444',
         height: '45px',
-        description: 'Bouton d\'allumage'
+        description: "Bouton d'allumage",
       },
       volumeUp: {
         id: 'volumeUp',
@@ -170,7 +170,7 @@ export const phoneButtonConfigs = {
         position: { side: 'left', top: '28%' },
         color: '#3b82f6',
         height: '42px',
-        description: 'Bouton volume haut'
+        description: 'Bouton volume haut',
       },
       volumeDown: {
         id: 'volumeDown',
@@ -179,9 +179,9 @@ export const phoneButtonConfigs = {
         position: { side: 'left', top: '42%' },
         color: '#06b6d4',
         height: '42px',
-        description: 'Bouton volume bas'
-      }
-    }
+        description: 'Bouton volume bas',
+      },
+    },
   },
 
   // Configuration Huawei
@@ -197,7 +197,7 @@ export const phoneButtonConfigs = {
         position: { side: 'right', top: '42%' },
         color: '#ef4444',
         height: '48px',
-        description: 'Bouton d\'allumage'
+        description: "Bouton d'allumage",
       },
       volumeUp: {
         id: 'volumeUp',
@@ -206,7 +206,7 @@ export const phoneButtonConfigs = {
         position: { side: 'right', top: '24%' },
         color: '#3b82f6',
         height: '38px',
-        description: 'Bouton volume haut'
+        description: 'Bouton volume haut',
       },
       volumeDown: {
         id: 'volumeDown',
@@ -215,10 +215,10 @@ export const phoneButtonConfigs = {
         position: { side: 'right', top: '33%' },
         color: '#06b6d4',
         height: '38px',
-        description: 'Bouton volume bas'
-      }
-    }
-  }
+        description: 'Bouton volume bas',
+      },
+    },
+  },
 };
 
 /**
@@ -235,10 +235,10 @@ export const getButtonConfig = (configId = 'samsung') => {
  * @returns {array} Liste des configurations {id, name, description}
  */
 export const getButtonConfigsList = () => {
-  return Object.values(phoneButtonConfigs).map(config => ({
+  return Object.values(phoneButtonConfigs).map((config) => ({
     id: config.id,
     name: config.name,
-    description: config.description
+    description: config.description,
   }));
 };
 

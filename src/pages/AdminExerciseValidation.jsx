@@ -6,16 +6,7 @@ import AdminTabNavigation from '../components/admin/AdminTabNavigation';
 import ExerciseStepViewer from '../components/admin/ExerciseStepViewer';
 import AdminExerciseStepEditor from '../components/admin/AdminExerciseStepEditor';
 // import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { 
-  Check, 
-  X, 
-  Eye,
-  Trash2,
-  AlertTriangle,
-  BookOpen,
-  Home,
-  Edit
-} from 'lucide-react';
+import { Check, X, Eye, Trash2, AlertTriangle, BookOpen, Home, Edit } from 'lucide-react';
 
 export default function AdminExerciseValidation() {
   const { currentUser } = useAuth();
@@ -39,7 +30,8 @@ export default function AdminExerciseValidation() {
       // Requête les versions en attente de validation avec les étapes et images
       const { data, error } = await supabase
         .from('versions')
-        .select(`
+        .select(
+          `
           *,
           task:task_id (
             id,
@@ -65,102 +57,106 @@ export default function AdminExerciseValidation() {
               name
             )
           )
-        `)
+        `
+        )
         .eq('creation_status', 'pending')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
+
       // Filtrer uniquement les exercices (pas les questionnaires)
       // Exclure les versions sans tâche associée et vérifier task_type='exercise'
-      const exerciseVersions = (data || []).filter(v => 
-        v.task !== null && (v.task.task_type === 'exercise' || v.task.task_type === null)
+      const exerciseVersions = (data || []).filter(
+        (v) => v.task !== null && (v.task.task_type === 'exercise' || v.task.task_type === null)
       );
-      
+
       // Récupérer les infos des contributeurs (propriétaires des tasks)
-      const ownerIds = [...new Set(exerciseVersions?.map(v => v.task?.owner_id).filter(Boolean))] || [];
-      
+      const ownerIds =
+        [...new Set(exerciseVersions?.map((v) => v.task?.owner_id).filter(Boolean))] || [];
+
       let profiles = {};
       if (ownerIds.length > 0) {
         const { data: profilesData } = await supabase
           .from('profiles')
           .select('id, first_name, last_name, email, role')
           .in('id', ownerIds);
-        
+
         if (profilesData) {
-          profilesData.forEach(p => {
+          profilesData.forEach((p) => {
             profiles[p.id] = p;
           });
         }
       }
-      
+
       // Mapper les données et enrichir les étapes avec les URLs des images
-      const mappedData = exerciseVersions?.map(version => {
-        const ownerProfile = profiles[version.task?.owner_id] || {};
-        
-        // Mapper les étapes avec les URLs des images
-        const stepsWithImages = version.steps?.map(step => {
-          let imageUrl = null;
-          // app_images peut être un objet ou un tableau selon la requête JOIN
-          const appImage = Array.isArray(step.app_images) ? step.app_images[0] : step.app_images;
-          const imagePath = appImage?.file_path;
-          
-          console.log('Processing step:', {
-            stepId: step.id,
-            instruction: step.instruction,
-            app_images: step.app_images,
-            appImage: appImage,
-            imagePath: imagePath,
-            target_area: step.target_area,
-            text_input_area: step.text_input_area,
-            start_area: step.start_area
-          });
-          
-          if (imagePath) {
-            // Générer l'URL publique Supabase pour l'image depuis le bucket 'images'
-            const { data: urlData } = supabase.storage
-              .from('images')
-              .getPublicUrl(imagePath);
-            imageUrl = urlData?.publicUrl || null;
-            console.log('Generated URL for path:', imagePath, '→', imageUrl);
-          }
-          
+      const mappedData =
+        exerciseVersions?.map((version) => {
+          const ownerProfile = profiles[version.task?.owner_id] || {};
+
+          // Mapper les étapes avec les URLs des images
+          const stepsWithImages =
+            version.steps?.map((step) => {
+              let imageUrl = null;
+              // app_images peut être un objet ou un tableau selon la requête JOIN
+              const appImage = Array.isArray(step.app_images)
+                ? step.app_images[0]
+                : step.app_images;
+              const imagePath = appImage?.file_path;
+
+              console.log('Processing step:', {
+                stepId: step.id,
+                instruction: step.instruction,
+                app_images: step.app_images,
+                appImage: appImage,
+                imagePath: imagePath,
+                target_area: step.target_area,
+                text_input_area: step.text_input_area,
+                start_area: step.start_area,
+              });
+
+              if (imagePath) {
+                // Générer l'URL publique Supabase pour l'image depuis le bucket 'images'
+                const { data: urlData } = supabase.storage.from('images').getPublicUrl(imagePath);
+                imageUrl = urlData?.publicUrl || null;
+                console.log('Generated URL for path:', imagePath, '→', imageUrl);
+              }
+
+              return {
+                ...step,
+                image_url: imageUrl,
+                image_path: imagePath,
+                app_image: appImage,
+                // Assurer que les zones d'action sont bien incluses
+                target_area: step.target_area,
+                text_input_area: step.text_input_area,
+                start_area: step.start_area,
+              };
+            }) || [];
+
           return {
-            ...step,
-            image_url: imageUrl,
-            image_path: imagePath,
-            app_image: appImage,
-            // Assurer que les zones d'action sont bien incluses
-            target_area: step.target_area,
-            text_input_area: step.text_input_area,
-            start_area: step.start_area
+            id: version.id,
+            version_id: version.id,
+            task_id: version.task_id,
+            exercise_name: version.task?.title || 'Exercice sans titre',
+            exercise_description: version.task?.description || 'Aucune description',
+            name: version.name,
+            difficulty_level: version.task?.creation_status?.difficulty || 'Non spécifiée',
+            status: 'pending',
+            steps: stepsWithImages,
+            images: [],
+            contributor: {
+              id: version.task?.owner_id,
+              first_name: ownerProfile.first_name || 'Utilisateur',
+              last_name: ownerProfile.last_name || 'Anonyme',
+              email: ownerProfile.email || 'N/A',
+              role: ownerProfile.role || 'contributor',
+            },
+            created_at: version.created_at,
+            task: version.task,
+            version: version,
           };
         }) || [];
-        
-        return {
-          id: version.id,
-          version_id: version.id,
-          task_id: version.task_id,
-          exercise_name: version.task?.title || 'Exercice sans titre',
-          exercise_description: version.task?.description || 'Aucune description',
-          name: version.name,
-          difficulty_level: version.task?.creation_status?.difficulty || 'Non spécifiée',
-          status: 'pending',
-          steps: stepsWithImages,
-          images: [],
-          contributor: {
-            id: version.task?.owner_id,
-            first_name: ownerProfile.first_name || 'Utilisateur',
-            last_name: ownerProfile.last_name || 'Anonyme',
-            email: ownerProfile.email || 'N/A',
-            role: ownerProfile.role || 'contributor'
-          },
-          created_at: version.created_at,
-          task: version.task,
-          version: version
-        };
-      }) || [];
-      
+
       setContributions(mappedData);
       if (mappedData.length > 0) {
         setSelectedContribution(mappedData[0]);
@@ -179,18 +175,18 @@ export default function AdminExerciseValidation() {
       // Mettre à jour le statut de la version
       const { error } = await supabase
         .from('versions')
-        .update({ 
-          creation_status: 'validated'
+        .update({
+          creation_status: 'validated',
         })
         .eq('id', contributionId);
 
       if (error) throw error;
 
       // Retirer de la liste
-      setContributions(contributions.filter(c => c.id !== contributionId));
-      
+      setContributions(contributions.filter((c) => c.id !== contributionId));
+
       if (contributions.length > 1) {
-        setSelectedContribution(contributions.find(c => c.id !== contributionId));
+        setSelectedContribution(contributions.find((c) => c.id !== contributionId));
       } else {
         setSelectedContribution(null);
       }
@@ -211,17 +207,17 @@ export default function AdminExerciseValidation() {
     setValidatingId(contributionId);
     try {
       // Trouver la contribution à rejeter pour obtenir son contributor_id
-      const contribution = contributions.find(c => c.id === contributionId);
+      const contribution = contributions.find((c) => c.id === contributionId);
       const contributorId = contribution?.task?.owner_id;
 
       // Mettre à jour le statut de la version
       const { error } = await supabase
         .from('versions')
-        .update({ 
+        .update({
           creation_status: 'rejected',
           admin_comments: reason,
           reviewer_id: currentUser?.id,
-          reviewed_at: new Date().toISOString()
+          reviewed_at: new Date().toISOString(),
         })
         .eq('id', contributionId);
 
@@ -232,11 +228,11 @@ export default function AdminExerciseValidation() {
         const { data, error: penaltyError } = await supabase.rpc('apply_rejection_penalty', {
           p_contributor_id: contributorId,
           p_version_id: contributionId,
-          p_reason: reason
+          p_reason: reason,
         });
-        
+
         if (penaltyError) {
-          console.error('Erreur lors de l\'application de la pénalité:', penaltyError);
+          console.error("Erreur lors de l'application de la pénalité:", penaltyError);
           // Ne pas bloquer le rejet si la pénalité échoue
         } else {
           console.log('Pénalité appliquée:', data);
@@ -244,10 +240,10 @@ export default function AdminExerciseValidation() {
       }
 
       // Retirer de la liste
-      setContributions(contributions.filter(c => c.id !== contributionId));
-      
+      setContributions(contributions.filter((c) => c.id !== contributionId));
+
       if (contributions.length > 1) {
-        setSelectedContribution(contributions.find(c => c.id !== contributionId));
+        setSelectedContribution(contributions.find((c) => c.id !== contributionId));
       } else {
         setSelectedContribution(null);
       }
@@ -271,21 +267,21 @@ export default function AdminExerciseValidation() {
     try {
       const { error } = await supabase
         .from('versions')
-        .update({ 
+        .update({
           creation_status: 'needs_changes',
           admin_comments: comments.trim(),
           reviewer_id: currentUser?.id,
-          reviewed_at: new Date().toISOString()
+          reviewed_at: new Date().toISOString(),
         })
         .eq('id', contributionId);
 
       if (error) throw error;
 
       // Retirer de la liste des contributions en attente
-      setContributions(contributions.filter(c => c.id !== contributionId));
-      
+      setContributions(contributions.filter((c) => c.id !== contributionId));
+
       if (contributions.length > 1) {
-        setSelectedContribution(contributions.find(c => c.id !== contributionId));
+        setSelectedContribution(contributions.find((c) => c.id !== contributionId));
       } else {
         setSelectedContribution(null);
       }
@@ -308,18 +304,15 @@ export default function AdminExerciseValidation() {
 
     setValidatingId(contributionId);
     try {
-      const { error } = await supabase
-        .from('versions')
-        .delete()
-        .eq('id', contributionId);
+      const { error } = await supabase.from('versions').delete().eq('id', contributionId);
 
       if (error) throw error;
 
       // Retirer de la liste
-      setContributions(contributions.filter(c => c.id !== contributionId));
-      
+      setContributions(contributions.filter((c) => c.id !== contributionId));
+
       if (contributions.length > 1) {
-        setSelectedContribution(contributions.find(c => c.id !== contributionId));
+        setSelectedContribution(contributions.find((c) => c.id !== contributionId));
       } else {
         setSelectedContribution(null);
       }
@@ -351,7 +344,7 @@ export default function AdminExerciseValidation() {
         <div className="bg-white rounded-lg border shadow-sm mb-6">
           <div className="flex flex-col space-y-1.5 p-6">
             <h3 className="flex items-center text-3xl font-semibold leading-none tracking-tight">
-              <Home className="mr-3 h-8 w-8 text-primary"/>
+              <Home className="mr-3 h-8 w-8 text-primary" />
               Validation des exercices
             </h3>
             <p className="text-sm text-muted-foreground">
@@ -365,7 +358,9 @@ export default function AdminExerciseValidation() {
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
           <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucune contribution à valider</h3>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            Aucune contribution à valider
+          </h3>
           <p className="text-gray-600">Toutes les contributions en attente ont été validées!</p>
         </div>
       </div>
@@ -378,7 +373,7 @@ export default function AdminExerciseValidation() {
       <div className="bg-white rounded-lg border shadow-sm mb-6">
         <div className="flex flex-col space-y-1.5 p-6">
           <h3 className="flex items-center text-3xl font-semibold leading-none tracking-tight">
-            <Home className="mr-3 h-8 w-8 text-primary"/>
+            <Home className="mr-3 h-8 w-8 text-primary" />
             Validation des exercices
           </h3>
           <p className="text-sm text-muted-foreground">
@@ -424,83 +419,105 @@ export default function AdminExerciseValidation() {
                 </div>
 
                 {/* Étapes avec visualisation */}
-                {selectedContribution.steps && Array.isArray(selectedContribution.steps) && selectedContribution.steps.length > 0 && (
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold text-gray-900">
-                        Étapes ({selectedContribution.steps.length})
-                      </h3>
-                      <button
-                        onClick={() => setEditingZones(!editingZones)}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                          editingZones
-                            ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                            : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-                        }`}
-                      >
-                        <Edit className="w-4 h-4" />
-                        {editingZones ? 'Mode aperçu' : 'Éditer zones'}
-                      </button>
+                {selectedContribution.steps &&
+                  Array.isArray(selectedContribution.steps) &&
+                  selectedContribution.steps.length > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold text-gray-900">
+                          Étapes ({selectedContribution.steps.length})
+                        </h3>
+                        <button
+                          onClick={() => setEditingZones(!editingZones)}
+                          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                            editingZones
+                              ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                              : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                          }`}
+                        >
+                          <Edit className="w-4 h-4" />
+                          {editingZones ? 'Mode aperçu' : 'Éditer zones'}
+                        </button>
+                      </div>
+
+                      {editingZones ? (
+                        <AdminExerciseStepEditor
+                          steps={selectedContribution.steps}
+                          onStepsUpdate={(updatedSteps) => {
+                            setSelectedContribution({
+                              ...selectedContribution,
+                              steps: updatedSteps,
+                            });
+                          }}
+                        />
+                      ) : (
+                        <ExerciseStepViewer steps={selectedContribution.steps} />
+                      )}
                     </div>
-                    
-                    {editingZones ? (
-                      <AdminExerciseStepEditor 
-                        steps={selectedContribution.steps}
-                        onStepsUpdate={(updatedSteps) => {
-                          setSelectedContribution({
-                            ...selectedContribution,
-                            steps: updatedSteps
-                          });
-                        }}
-                      />
-                    ) : (
-                      <ExerciseStepViewer steps={selectedContribution.steps} />
-                    )}
-                  </div>
-                )}
+                  )}
 
                 {/* Images */}
-                {selectedContribution.images && Array.isArray(selectedContribution.images) && selectedContribution.images.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-3">Images ({selectedContribution.images.length})</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      {selectedContribution.images.map((img, idx) => (
-                        <div key={idx} className="bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
-                          {img.url && (
-                            <img src={img.url} alt={`Image ${idx + 1}`} className="w-full h-40 object-cover" />
-                          )}
-                          <div className="p-2">
-                            <p className="text-xs text-gray-600">{img.name || `Image ${idx + 1}`}</p>
+                {selectedContribution.images &&
+                  Array.isArray(selectedContribution.images) &&
+                  selectedContribution.images.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-3">
+                        Images ({selectedContribution.images.length})
+                      </h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        {selectedContribution.images.map((img, idx) => (
+                          <div
+                            key={idx}
+                            className="bg-gray-50 rounded-lg overflow-hidden border border-gray-200"
+                          >
+                            {img.url && (
+                              <img
+                                src={img.url}
+                                alt={`Image ${idx + 1}`}
+                                className="w-full h-40 object-cover"
+                              />
+                            )}
+                            <div className="p-2">
+                              <p className="text-xs text-gray-600">
+                                {img.name || `Image ${idx + 1}`}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Contributeur */}
                 {selectedContribution.contributor && (
                   <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
                     <p className="text-sm text-indigo-600 font-medium">Soumis par</p>
                     <p className="text-gray-900 font-medium">
-                      {selectedContribution.contributor.first_name} {selectedContribution.contributor.last_name}
+                      {selectedContribution.contributor.first_name}{' '}
+                      {selectedContribution.contributor.last_name}
                     </p>
-                    <p className="text-sm text-gray-600">{selectedContribution.contributor.email}</p>
+                    <p className="text-sm text-gray-600">
+                      {selectedContribution.contributor.email}
+                    </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      Rôle: <span className="font-medium">{selectedContribution.contributor.role}</span>
+                      Rôle:{' '}
+                      <span className="font-medium">{selectedContribution.contributor.role}</span>
                     </p>
                   </div>
                 )}
 
                 {/* Date */}
                 <div className="text-sm text-gray-600 p-4 bg-gray-50 rounded-lg">
-                  <p>Soumis le: {new Date(selectedContribution.created_at).toLocaleDateString('fr-FR', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}</p>
+                  <p>
+                    Soumis le:{' '}
+                    {new Date(selectedContribution.created_at).toLocaleDateString('fr-FR', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
                 </div>
 
                 {/* Avertissement */}
@@ -543,7 +560,7 @@ export default function AdminExerciseValidation() {
                       <span>À corriger</span>
                     </button>
                   </div>
-                  
+
                   {/* Actions secondaires */}
                   <div className="flex gap-3">
                     <button
@@ -574,9 +591,7 @@ export default function AdminExerciseValidation() {
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full">
             <div className="p-4 border-b bg-gray-50">
-              <h3 className="font-semibold text-gray-900">
-                En attente ({contributions.length})
-              </h3>
+              <h3 className="font-semibold text-gray-900">En attente ({contributions.length})</h3>
             </div>
 
             <div className="flex-1 overflow-y-auto">
@@ -612,9 +627,7 @@ export default function AdminExerciseValidation() {
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Demander des corrections
-                </h3>
+                <h3 className="text-lg font-semibold text-gray-900">Demander des corrections</h3>
                 <button
                   onClick={() => {
                     setShowCommentsModal(false);

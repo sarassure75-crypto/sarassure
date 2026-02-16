@@ -19,12 +19,15 @@ export const getAllGlossaryTerms = async () => {
       .order('term', { ascending: true });
 
     if (error) throw error;
-    
+
     // Debug: vérifier les variantes chargées
     if (data && data.length > 0) {
-      logger.log('Termes chargés avec variantes:', data.map(t => ({ term: t.term, variants: t.variants })));
+      logger.log(
+        'Termes chargés avec variantes:',
+        data.map((t) => ({ term: t.term, variants: t.variants }))
+      );
     }
-    
+
     return data || [];
   } catch (error) {
     logger.error('Error fetching glossary terms:', error);
@@ -84,9 +87,9 @@ export const getGlossaryCategories = async () => {
       .neq('category', null);
 
     if (error) throw error;
-    
+
     // Extraire les catégories uniques
-    const categories = [...new Set(data.map(item => item.category))].sort();
+    const categories = [...new Set(data.map((item) => item.category))].sort();
     return categories;
   } catch (error) {
     logger.error('Error fetching glossary categories:', error);
@@ -97,18 +100,26 @@ export const getGlossaryCategories = async () => {
 /**
  * Créer un nouveau terme (admin seulement)
  */
-export const createGlossaryTerm = async (term, definition, category, example = null, relatedTerms = []) => {
+export const createGlossaryTerm = async (
+  term,
+  definition,
+  category,
+  example = null,
+  relatedTerms = []
+) => {
   try {
     const { data, error } = await supabase
       .from('glossary')
-      .insert([{
-        term: term.trim(),
-        definition: definition.trim(),
-        category: category.trim(),
-        example: example ? example.trim() : null,
-        related_terms: relatedTerms,
-        is_active: true
-      }])
+      .insert([
+        {
+          term: term.trim(),
+          definition: definition.trim(),
+          category: category.trim(),
+          example: example ? example.trim() : null,
+          related_terms: relatedTerms,
+          is_active: true,
+        },
+      ])
       .select()
       .single();
 
@@ -205,11 +216,9 @@ export const findGlossaryWordsInText = async (text) => {
     if (error) throw error;
 
     // Filtrer les termes qui apparaissent dans le texte
-    const foundTerms = (data || []).filter(glossaryItem => {
+    const foundTerms = (data || []).filter((glossaryItem) => {
       const glossaryTerm = glossaryItem.term.toLowerCase();
-      return words.some(word => 
-        word.includes(glossaryTerm) || glossaryTerm.includes(word)
-      );
+      return words.some((word) => word.includes(glossaryTerm) || glossaryTerm.includes(word));
     });
 
     return foundTerms;
@@ -224,9 +233,7 @@ export const findGlossaryWordsInText = async (text) => {
  */
 export const getGlossaryStats = async () => {
   try {
-    const { data: allData, error: allError } = await supabase
-      .from('glossary')
-      .select('id');
+    const { data: allData, error: allError } = await supabase.from('glossary').select('id');
 
     const { data: activeData, error: activeError } = await supabase
       .from('glossary')
@@ -246,7 +253,7 @@ export const getGlossaryStats = async () => {
       throw allError || activeError || categoryError || variantError;
     }
 
-    const categories = [...new Set((categoryData || []).map(item => item.category))];
+    const categories = [...new Set((categoryData || []).map((item) => item.category))];
 
     return {
       totalTerms: (allData || []).length,
@@ -254,7 +261,7 @@ export const getGlossaryStats = async () => {
       inactiveTerms: (allData || []).length - (activeData || []).length,
       categories: categories,
       categoryCount: categories.length,
-      totalVariants: (variantData || []).length
+      totalVariants: (variantData || []).length,
     };
   } catch (error) {
     logger.error('Error fetching glossary stats:', error);
@@ -274,7 +281,7 @@ export const getTermVariants = async (glossaryId) => {
       .order('variant_word', { ascending: true });
 
     if (error) throw error;
-    return (data || []).map(item => item.variant_word);
+    return (data || []).map((item) => item.variant_word);
   } catch (error) {
     logger.error('Error fetching term variants:', error);
     return [];
@@ -288,10 +295,12 @@ export const addTermVariant = async (glossaryId, variant) => {
   try {
     const { data, error } = await supabase
       .from('glossary_variants')
-      .insert([{
-        glossary_id: glossaryId,
-        variant_word: variant.trim().toLowerCase()
-      }])
+      .insert([
+        {
+          glossary_id: glossaryId,
+          variant_word: variant.trim().toLowerCase(),
+        },
+      ])
       .select()
       .single();
 
@@ -309,10 +318,7 @@ export const addTermVariant = async (glossaryId, variant) => {
  */
 export const deleteTermVariant = async (variantId) => {
   try {
-    const { error } = await supabase
-      .from('glossary_variants')
-      .delete()
-      .eq('id', variantId);
+    const { error } = await supabase.from('glossary_variants').delete().eq('id', variantId);
 
     if (error) throw error;
     logger.log('Term variant deleted');
@@ -370,21 +376,16 @@ export const findGlossaryTermByVariant = async (variant) => {
 export const updateTermVariants = async (glossaryId, variants) => {
   try {
     // D'abord supprimer les anciennes variantes
-    await supabase
-      .from('glossary_variants')
-      .delete()
-      .eq('glossary_id', glossaryId);
+    await supabase.from('glossary_variants').delete().eq('glossary_id', glossaryId);
 
     // Puis insérer les nouvelles
     if (variants && variants.length > 0) {
-      const { error } = await supabase
-        .from('glossary_variants')
-        .insert(
-          variants.map(variant => ({
-            glossary_id: glossaryId,
-            variant_word: variant.trim().toLowerCase()
-          }))
-        );
+      const { error } = await supabase.from('glossary_variants').insert(
+        variants.map((variant) => ({
+          glossary_id: glossaryId,
+          variant_word: variant.trim().toLowerCase(),
+        }))
+      );
 
       if (error) throw error;
     }

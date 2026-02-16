@@ -1,21 +1,21 @@
 import React, { useState } from 'react';
 import { useContributionActions } from '../../hooks/useContributions';
-import { 
-  CheckCircle, 
-  XCircle, 
-  User, 
-  Calendar, 
+import {
+  CheckCircle,
+  XCircle,
+  User,
+  Calendar,
   FileText,
   AlertTriangle,
   Edit,
   Eye,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
 } from 'lucide-react';
 
 export default function ContributionReviewCard({ contribution, onReviewed }) {
   const { approve, reject, loading } = useContributionActions();
-  
+
   const [expanded, setExpanded] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
@@ -33,12 +33,12 @@ export default function ContributionReviewCard({ contribution, onReviewed }) {
   // Formatage date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', { 
-      year: 'numeric', 
-      month: 'long', 
+    return date.toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
@@ -47,11 +47,18 @@ export default function ContributionReviewCard({ contribution, onReviewed }) {
     const suspiciousPatterns = [
       { pattern: /\b0[67]\s?\d{2}\s?\d{2}\s?\d{2}\s?\d{2}\b/, type: 'Téléphone français' },
       { pattern: /\b\+?\d{1,3}\s?\d{9,}\b/, type: 'Numéro de téléphone' },
-      { pattern: /\b[\w\.-]+@(?!exemple\.fr|example\.)(gmail|outlook|hotmail|yahoo|orange|free|wanadoo)\.com\b/i, type: 'Email réel' },
-      { pattern: /\b(rue|avenue|boulevard|chemin|place)\s+[a-zA-ZÀ-ÿ\s]+\d+/i, type: 'Adresse postale' },
+      {
+        pattern:
+          /\b[\w\.-]+@(?!exemple\.fr|example\.)(gmail|outlook|hotmail|yahoo|orange|free|wanadoo)\.com\b/i,
+        type: 'Email réel',
+      },
+      {
+        pattern: /\b(rue|avenue|boulevard|chemin|place)\s+[a-zA-ZÀ-ÿ\s]+\d+/i,
+        type: 'Adresse postale',
+      },
     ];
 
-    const allText = `${title} ${description} ${tasks.map(t => t.instruction).join(' ')}`;
+    const allText = `${title} ${description} ${tasks.map((t) => t.instruction).join(' ')}`;
     const findings = [];
 
     suspiciousPatterns.forEach(({ pattern, type }) => {
@@ -98,9 +105,11 @@ export default function ContributionReviewCard({ contribution, onReviewed }) {
 
   return (
     <>
-      <div className={`bg-white rounded-lg shadow-sm border-2 transition-all ${
-        hasWarnings ? 'border-red-300 bg-red-50' : 'border-gray-200'
-      }`}>
+      <div
+        className={`bg-white rounded-lg shadow-sm border-2 transition-all ${
+          hasWarnings ? 'border-red-300 bg-red-50' : 'border-gray-200'
+        }`}
+      >
         {/* Header */}
         <div className="p-6 border-b">
           <div className="flex items-start justify-between mb-4">
@@ -131,7 +140,9 @@ export default function ContributionReviewCard({ contribution, onReviewed }) {
             </div>
             <div className="flex items-center space-x-1">
               <FileText className="w-4 h-4" />
-              <span>{tasks.length} étape{tasks.length > 1 ? 's' : ''}</span>
+              <span>
+                {tasks.length} étape{tasks.length > 1 ? 's' : ''}
+              </span>
             </div>
             <div className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs font-medium capitalize">
               {difficulty}
@@ -144,7 +155,9 @@ export default function ContributionReviewCard({ contribution, onReviewed }) {
               <div className="flex items-start">
                 <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 mr-2 flex-shrink-0" />
                 <div className="flex-1">
-                  <h4 className="font-semibold text-red-900 mb-2">⚠️ Données personnelles détectées !</h4>
+                  <h4 className="font-semibold text-red-900 mb-2">
+                    ⚠️ Données personnelles détectées !
+                  </h4>
                   <ul className="space-y-1 text-sm text-red-800">
                     {personalDataWarnings.map((warning, i) => (
                       <li key={i}>
@@ -153,7 +166,8 @@ export default function ContributionReviewCard({ contribution, onReviewed }) {
                     ))}
                   </ul>
                   <p className="mt-2 text-xs text-red-700">
-                    ⚠️ Cette contribution doit être rejetée sauf si les données sont fictives et proviennent des ressources fournies.
+                    ⚠️ Cette contribution doit être rejetée sauf si les données sont fictives et
+                    proviennent des ressources fournies.
                   </p>
                 </div>
               </div>
@@ -175,8 +189,8 @@ export default function ContributionReviewCard({ contribution, onReviewed }) {
                     <p className="text-gray-900">{task.instruction}</p>
                     {task.image_url && (
                       <div className="mt-3">
-                        <img 
-                          src={task.image_url} 
+                        <img
+                          src={task.image_url}
                           alt={`Étape ${index + 1}`}
                           className="max-w-xs rounded border border-gray-300"
                         />
@@ -195,8 +209,12 @@ export default function ContributionReviewCard({ contribution, onReviewed }) {
                 <div className="space-y-2">
                   {content.versions.map((version, i) => (
                     <div key={i} className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                      <div className="font-medium text-purple-900">{version.name || `Version ${i + 1}`}</div>
-                      <div className="text-sm text-purple-700">{version.tasks?.length || 0} étapes</div>
+                      <div className="font-medium text-purple-900">
+                        {version.name || `Version ${i + 1}`}
+                      </div>
+                      <div className="text-sm text-purple-700">
+                        {version.tasks?.length || 0} étapes
+                      </div>
                     </div>
                   ))}
                 </div>

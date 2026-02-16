@@ -13,9 +13,9 @@ export default function QuestionnairePreviewCard({ steps = [] }) {
   const [expandedQuestions, setExpandedQuestions] = useState({});
 
   const toggleQuestion = (stepId) => {
-    setExpandedQuestions(prev => ({
+    setExpandedQuestions((prev) => ({
       ...prev,
-      [stepId]: !prev[stepId]
+      [stepId]: !prev[stepId],
     }));
   };
 
@@ -39,10 +39,7 @@ export default function QuestionnairePreviewCard({ steps = [] }) {
         return (
           <Card key={step.id} className="overflow-hidden">
             {/* En-tête de la question */}
-            <button
-              onClick={() => toggleQuestion(step.id)}
-              className="w-full text-left"
-            >
+            <button onClick={() => toggleQuestion(step.id)} className="w-full text-left">
               <CardHeader className="pb-3 cursor-pointer hover:bg-slate-50">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -50,10 +47,14 @@ export default function QuestionnairePreviewCard({ steps = [] }) {
                       <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm">
                         {idx + 1}
                       </span>
-                      <span className={cn(
-                        "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700"
-                      )}>
-                        <><FileText className="w-3 h-3" /> Mixte</>
+                      <span
+                        className={cn(
+                          'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700'
+                        )}
+                      >
+                        <>
+                          <FileText className="w-3 h-3" /> Mixte
+                        </>
                       </span>
                     </div>
                     <p className="font-semibold text-base text-gray-900">
@@ -105,10 +106,8 @@ export default function QuestionnairePreviewCard({ steps = [] }) {
                         <div
                           key={choiceId}
                           className={cn(
-                            "p-3 rounded-lg border-2 transition-colors",
-                            isCorrect
-                              ? "bg-green-50 border-green-300"
-                              : "bg-white border-gray-200"
+                            'p-3 rounded-lg border-2 transition-colors',
+                            isCorrect ? 'bg-green-50 border-green-300' : 'bg-white border-gray-200'
                           )}
                         >
                           <div className="flex items-start gap-3">
@@ -129,14 +128,10 @@ export default function QuestionnairePreviewCard({ steps = [] }) {
                             {/* Contenu de la réponse */}
                             <div className="flex-1 min-w-0">
                               {choice.text && (
-                                <p className="text-sm text-gray-700 break-words">
-                                  {choice.text}
-                                </p>
+                                <p className="text-sm text-gray-700 break-words">{choice.text}</p>
                               )}
                               {!choice.text && !choice.imageId && (
-                                <p className="text-xs text-gray-400 italic">
-                                  (Réponse vide)
-                                </p>
+                                <p className="text-xs text-gray-400 italic">(Réponse vide)</p>
                               )}
                             </div>
 
@@ -161,7 +156,8 @@ export default function QuestionnairePreviewCard({ steps = [] }) {
                   {correctAnswers.length > 0 && (
                     <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-800">
                       <p className="font-medium">
-                        {correctAnswers.length} réponse{correctAnswers.length > 1 ? 's' : ''} correcte{correctAnswers.length > 1 ? 's' : ''}
+                        {correctAnswers.length} réponse{correctAnswers.length > 1 ? 's' : ''}{' '}
+                        correcte{correctAnswers.length > 1 ? 's' : ''}
                       </p>
                     </div>
                   )}

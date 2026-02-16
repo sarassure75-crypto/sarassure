@@ -44,20 +44,21 @@ const IconLibraryMap = {
 
 const getIconComponent = (iconString) => {
   if (!iconString) return null;
-  
+
   // Support pour les icônes Iconify colorées (logos, skill-icons, devicon)
-  if (iconString.includes(':') && (
-    iconString.startsWith('logos:') || 
-    iconString.startsWith('skill-icons:') || 
-    iconString.startsWith('devicon:')
-  )) {
+  if (
+    iconString.includes(':') &&
+    (iconString.startsWith('logos:') ||
+      iconString.startsWith('skill-icons:') ||
+      iconString.startsWith('devicon:'))
+  ) {
     return (props) => <IconifyIcon icon={iconString} {...props} />;
   }
-  
+
   const [library, name] = iconString.split(':');
   const libraryData = IconLibraryMap[library];
   if (!libraryData) return null;
-  
+
   const module = libraryData.module;
   return module[name] || null;
 };
@@ -66,20 +67,15 @@ const toPascalCase = (str) => {
   if (!str) return null;
   return str
     .split(/[\s-]+/)
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join('');
 };
 
 // Composant pour un élément d'étape déplaçable
 const SortableStepItem = ({ step, index, imageArray, onEdit, onDelete, onInsertAfter }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: step.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: step.id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -87,8 +83,8 @@ const SortableStepItem = ({ step, index, imageArray, onEdit, onDelete, onInsertA
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const pictogramInfo = step.pictogram_app_image_id 
-    ? imageArray.find(img => img.id === step.pictogram_app_image_id) 
+  const pictogramInfo = step.pictogram_app_image_id
+    ? imageArray.find((img) => img.id === step.pictogram_app_image_id)
     : null;
   const IconComponent = getIconComponent(step.icon_name);
 
@@ -106,7 +102,11 @@ const SortableStepItem = ({ step, index, imageArray, onEdit, onDelete, onInsertA
           {IconComponent ? (
             <IconComponent className="h-5 w-5 text-primary" />
           ) : pictogramInfo ? (
-            <img src={pictogramInfo.publicUrl} alt={pictogramInfo.name} className="h-6 w-6 object-contain" />
+            <img
+              src={pictogramInfo.publicUrl}
+              alt={pictogramInfo.name}
+              className="h-6 w-6 object-contain"
+            />
           ) : (
             <HelpCircle className="h-5 w-5 text-muted-foreground" />
           )}
@@ -116,9 +116,9 @@ const SortableStepItem = ({ step, index, imageArray, onEdit, onDelete, onInsertA
         </span>
       </div>
       <div className="flex items-center gap-1">
-        <Button 
-          variant="ghost" 
-          size="sm" 
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => onInsertAfter(index)}
           className="opacity-0 group-hover:opacity-100 transition-opacity text-xs px-2"
           title="Insérer une étape après"
@@ -161,8 +161,8 @@ const AdminStepList = ({ version }) => {
 
     if (over && active.id !== over.id) {
       setSteps((items) => {
-        const oldIndex = items.findIndex(item => item.id === active.id);
-        const newIndex = items.findIndex(item => item.id === over.id);
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
         const reorderedSteps = arrayMove(items, oldIndex, newIndex);
         return reorderedSteps.map((s, i) => ({ ...s, step_order: i }));
       });
@@ -207,14 +207,14 @@ const AdminStepList = ({ version }) => {
         updatedSteps = [
           ...steps.slice(0, stepData.step_order),
           { ...stepData, isNew: false },
-          ...steps.slice(stepData.step_order)
+          ...steps.slice(stepData.step_order),
         ];
       } else {
         // Sinon l'ajouter à la fin
         updatedSteps = [...steps, { ...stepData, isNew: false }];
       }
     } else {
-      updatedSteps = steps.map(s => s.id === stepData.id ? stepData : s);
+      updatedSteps = steps.map((s) => (s.id === stepData.id ? stepData : s));
     }
     setSteps(updatedSteps.map((s, i) => ({ ...s, step_order: i })));
     setEditingStep(null);
@@ -223,30 +223,41 @@ const AdminStepList = ({ version }) => {
   const handleDeleteStep = async (stepId) => {
     try {
       // Get the step to check if it exists in DB
-      const stepToDelete = steps.find(s => s.id === stepId);
-      
+      const stepToDelete = steps.find((s) => s.id === stepId);
+
       // Only call deleteStep if it's not a new step (has been saved to DB)
       if (stepToDelete && !stepToDelete.isNew) {
         await deleteStep(stepId);
       }
-      
+
       // Update local state
-      setSteps(steps.filter(s => s.id !== stepId).map((s, i) => ({ ...s, step_order: i })));
+      setSteps(steps.filter((s) => s.id !== stepId).map((s, i) => ({ ...s, step_order: i })));
       if (editingStep?.id === stepId) {
         setEditingStep(null);
       }
-      toast({ title: "Étape supprimée", description: "L'étape a été supprimée." });
+      toast({ title: 'Étape supprimée', description: "L'étape a été supprimée." });
     } catch (error) {
-      toast({ title: "Erreur", description: "Impossible de supprimer l'étape.", variant: "destructive" });
+      toast({
+        title: 'Erreur',
+        description: "Impossible de supprimer l'étape.",
+        variant: 'destructive',
+      });
     }
   };
 
   const handleSaveAllSteps = async () => {
     try {
       await upsertManySteps(steps);
-      toast({ title: "Étapes enregistrées", description: "Toutes les modifications ont été enregistrées." });
+      toast({
+        title: 'Étapes enregistrées',
+        description: 'Toutes les modifications ont été enregistrées.',
+      });
     } catch (error) {
-      toast({ title: "Erreur", description: "Impossible d'enregistrer les étapes.", variant: "destructive" });
+      toast({
+        title: 'Erreur',
+        description: "Impossible d'enregistrer les étapes.",
+        variant: 'destructive',
+      });
     }
   };
 
@@ -265,7 +276,9 @@ const AdminStepList = ({ version }) => {
     <Card>
       <CardHeader>
         <CardTitle>Étapes</CardTitle>
-        <CardDescription>Gérez les étapes pour cette version. Glissez-déposez pour réorganiser.</CardDescription>
+        <CardDescription>
+          Gérez les étapes pour cette version. Glissez-déposez pour réorganiser.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <DndContext
@@ -274,10 +287,7 @@ const AdminStepList = ({ version }) => {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <SortableContext
-            items={steps.map(s => s.id)}
-            strategy={verticalListSortingStrategy}
-          >
+          <SortableContext items={steps.map((s) => s.id)} strategy={verticalListSortingStrategy}>
             <ul className="space-y-1">
               {steps && steps.length > 0 ? (
                 steps.map((step, index) => (
@@ -302,7 +312,7 @@ const AdminStepList = ({ version }) => {
             {activeId ? (
               <div className="bg-white rounded-md shadow-lg p-2 border-2 border-blue-500">
                 <span className="font-medium">
-                  {steps.find(s => s.id === activeId)?.instruction}
+                  {steps.find((s) => s.id === activeId)?.instruction}
                 </span>
               </div>
             ) : null}
@@ -313,7 +323,11 @@ const AdminStepList = ({ version }) => {
             <PlusCircle className="mr-2 h-4 w-4" /> Ajouter une Étape
           </Button>
           <Button onClick={handleSaveAllSteps} size="sm" disabled={isLoading}>
-            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+            {isLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-4 w-4" />
+            )}
             Enregistrer les Étapes
           </Button>
         </div>

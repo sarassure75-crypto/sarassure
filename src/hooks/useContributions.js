@@ -9,7 +9,7 @@ import {
   approveContribution,
   rejectContribution,
   deleteContribution,
-  countPendingContributions
+  countPendingContributions,
 } from '../data/contributions';
 
 /**
@@ -48,7 +48,7 @@ export function useContributions(userId, filters = {}) {
     contributions,
     loading,
     error,
-    refresh: fetchContributions
+    refresh: fetchContributions,
   };
 }
 
@@ -88,7 +88,7 @@ export function useContributorStats(userId) {
     stats,
     loading,
     error,
-    refresh: fetchStats
+    refresh: fetchStats,
   };
 }
 
@@ -129,7 +129,7 @@ export function usePendingContributions(filters = {}) {
     count,
     loading,
     error,
-    refresh: fetchPendingContributions
+    refresh: fetchPendingContributions,
   };
 }
 
@@ -241,7 +241,7 @@ export function useContributionActions() {
     submit,
     remove,
     approve,
-    reject
+    reject,
   };
 }
 
@@ -275,6 +275,6 @@ export function usePendingCount() {
   return {
     count,
     loading,
-    refresh: fetchCount
+    refresh: fetchCount,
   };
 }

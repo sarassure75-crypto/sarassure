@@ -1,6 +1,30 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { X, Menu, Home, BookOpen, User, LogOut, Shield, UserCog, MessageSquare, BarChart3, Bug, Mail, Users, CreditCard, ListTodo, LayoutGrid, Image as ImageIcon, CheckCircle, DollarSign, AlertTriangle, Trash, Upload, ClipboardList } from 'lucide-react';
+import {
+  X,
+  Menu,
+  Home,
+  BookOpen,
+  User,
+  LogOut,
+  Shield,
+  UserCog,
+  MessageSquare,
+  BarChart3,
+  Bug,
+  Mail,
+  Users,
+  CreditCard,
+  ListTodo,
+  LayoutGrid,
+  Image as ImageIcon,
+  CheckCircle,
+  DollarSign,
+  AlertTriangle,
+  Trash,
+  Upload,
+  ClipboardList,
+} from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,7 +33,11 @@ import { useAdminCounters } from '@/hooks/useAdminCounters';
 import { Sparkles } from 'lucide-react';
 
 const NavLink = ({ to, icon: Icon, children, onClick, count = 0 }) => (
-  <Link to={to} onClick={onClick} className="flex items-center justify-between p-3 text-lg rounded-md hover:bg-primary/10 transition-colors relative">
+  <Link
+    to={to}
+    onClick={onClick}
+    className="flex items-center justify-between p-3 text-lg rounded-md hover:bg-primary/10 transition-colors relative"
+  >
     <span className="flex items-center">
       <Icon className="mr-4 h-6 w-6 text-primary" />
       <span>{children}</span>
@@ -47,8 +75,12 @@ const AppBanner = () => {
     if (!currentUser) {
       return (
         <>
-          <NavLink to="/login" icon={UserCog} onClick={closeSheet}>Espace Pro</NavLink>
-          <NavLink to="/learner-login" icon={User} onClick={closeSheet}>Espace Apprenant</NavLink>
+          <NavLink to="/login" icon={UserCog} onClick={closeSheet}>
+            Espace Pro
+          </NavLink>
+          <NavLink to="/learner-login" icon={User} onClick={closeSheet}>
+            Espace Apprenant
+          </NavLink>
         </>
       );
     }
@@ -57,50 +89,128 @@ const AppBanner = () => {
       case USER_ROLES.ADMIN:
         return (
           <>
-            <NavLink to="/admin/dashboard" icon={ListTodo} onClick={closeSheet}>Tâches</NavLink>
-            <NavLink to="/admin/categories" icon={LayoutGrid} onClick={closeSheet}>Catégories</NavLink>
-            <NavLink to="/admin/images" icon={ImageIcon} onClick={closeSheet}>Images</NavLink>
-            <NavLink to="/admin/validation/images" icon={CheckCircle} onClick={closeSheet} count={counters.pendingImages}>Valider Images</NavLink>
-            <NavLink to="/admin/validation/exercices" icon={CheckCircle} onClick={closeSheet} count={counters.pendingContributions}>Valider Exercices</NavLink>
-            <NavLink to="/admin/revenus" icon={DollarSign} onClick={closeSheet}>Revenus</NavLink>
-            <NavLink to="/admin/users" icon={Users} onClick={closeSheet}>Utilisateurs</NavLink>
-            <NavLink to="/admin/faq" icon={MessageSquare} onClick={closeSheet} count={counters.pendingFaq}>FAQ</NavLink>
-            <NavLink to="/admin/errors" icon={AlertTriangle} onClick={closeSheet}>Rapports</NavLink>
-            <NavLink to="/admin/trash" icon={Trash} onClick={closeSheet}>Corbeille</NavLink>
-            <NavLink to="/admin/icons" icon={Sparkles} onClick={closeSheet}>Gérer Icônes</NavLink>
-            <NavLink to="/admin/contact" icon={Mail} onClick={closeSheet} count={counters.pendingMessages}>Messages</NavLink>
-            <NavLink to="/taches" icon={BookOpen} onClick={closeSheet}>Liste des Tâches</NavLink>
+            <NavLink to="/admin/dashboard" icon={ListTodo} onClick={closeSheet}>
+              Tâches
+            </NavLink>
+            <NavLink to="/admin/categories" icon={LayoutGrid} onClick={closeSheet}>
+              Catégories
+            </NavLink>
+            <NavLink to="/admin/images" icon={ImageIcon} onClick={closeSheet}>
+              Images
+            </NavLink>
+            <NavLink
+              to="/admin/validation/images"
+              icon={CheckCircle}
+              onClick={closeSheet}
+              count={counters.pendingImages}
+            >
+              Valider Images
+            </NavLink>
+            <NavLink
+              to="/admin/validation/exercices"
+              icon={CheckCircle}
+              onClick={closeSheet}
+              count={counters.pendingContributions}
+            >
+              Valider Exercices
+            </NavLink>
+            <NavLink to="/admin/revenus" icon={DollarSign} onClick={closeSheet}>
+              Revenus
+            </NavLink>
+            <NavLink to="/admin/users" icon={Users} onClick={closeSheet}>
+              Utilisateurs
+            </NavLink>
+            <NavLink
+              to="/admin/faq"
+              icon={MessageSquare}
+              onClick={closeSheet}
+              count={counters.pendingFaq}
+            >
+              FAQ
+            </NavLink>
+            <NavLink to="/admin/errors" icon={AlertTriangle} onClick={closeSheet}>
+              Rapports
+            </NavLink>
+            <NavLink to="/admin/trash" icon={Trash} onClick={closeSheet}>
+              Corbeille
+            </NavLink>
+            <NavLink to="/admin/icons" icon={Sparkles} onClick={closeSheet}>
+              Gérer Icônes
+            </NavLink>
+            <NavLink
+              to="/admin/contact"
+              icon={Mail}
+              onClick={closeSheet}
+              count={counters.pendingMessages}
+            >
+              Messages
+            </NavLink>
+            <NavLink to="/taches" icon={BookOpen} onClick={closeSheet}>
+              Liste des Tâches
+            </NavLink>
           </>
         );
       case USER_ROLES.TRAINER:
         return (
           <>
-            <NavLink to="/compte-formateur" icon={Home} onClick={closeSheet}>Dashboard Formateur</NavLink>
-            <NavLink to="/formateur/apprenants" icon={Users} onClick={closeSheet}>Apprenants</NavLink>
-            <NavLink to="/formateur/acheter-licences" icon={CreditCard} onClick={closeSheet}>Acheter des Licences</NavLink>
-            <NavLink to="/formateur/gestion-licences" icon={CreditCard} onClick={closeSheet}>Gestion Licences</NavLink>
-            <NavLink to="/formateur/faq" icon={MessageSquare} onClick={closeSheet}>FAQ Formateurs</NavLink>
-            <NavLink to="/formateur/profil" icon={UserCog} onClick={closeSheet}>Mon Profil</NavLink>
+            <NavLink to="/compte-formateur" icon={Home} onClick={closeSheet}>
+              Dashboard Formateur
+            </NavLink>
+            <NavLink to="/formateur/apprenants" icon={Users} onClick={closeSheet}>
+              Apprenants
+            </NavLink>
+            <NavLink to="/formateur/acheter-licences" icon={CreditCard} onClick={closeSheet}>
+              Acheter des Licences
+            </NavLink>
+            <NavLink to="/formateur/gestion-licences" icon={CreditCard} onClick={closeSheet}>
+              Gestion Licences
+            </NavLink>
+            <NavLink to="/formateur/faq" icon={MessageSquare} onClick={closeSheet}>
+              FAQ Formateurs
+            </NavLink>
+            <NavLink to="/formateur/profil" icon={UserCog} onClick={closeSheet}>
+              Mon Profil
+            </NavLink>
           </>
         );
       case USER_ROLES.LEARNER:
         return (
           <>
-            <NavLink to="/taches" icon={BookOpen} onClick={closeSheet}>Mes Tâches</NavLink>
-            <NavLink to="/mon-suivi" icon={BarChart3} onClick={closeSheet}>Mon Suivi</NavLink>
-            <NavLink to="/report-error" icon={Bug} onClick={closeSheet}>Signaler une erreur</NavLink>
-            <NavLink to="/compte-apprenant" icon={User} onClick={closeSheet}>Mon Compte</NavLink>
+            <NavLink to="/taches" icon={BookOpen} onClick={closeSheet}>
+              Mes Tâches
+            </NavLink>
+            <NavLink to="/mon-suivi" icon={BarChart3} onClick={closeSheet}>
+              Mon Suivi
+            </NavLink>
+            <NavLink to="/report-error" icon={Bug} onClick={closeSheet}>
+              Signaler une erreur
+            </NavLink>
+            <NavLink to="/compte-apprenant" icon={User} onClick={closeSheet}>
+              Mon Compte
+            </NavLink>
           </>
         );
       case USER_ROLES.CONTRIBUTOR:
         return (
           <>
-            <NavLink to="/contributeur" icon={Home} onClick={closeSheet}>Dashboard</NavLink>
-            <NavLink to="/contributeur/nouvelle-contribution" icon={Upload} onClick={closeSheet}>Créer un exercice</NavLink>
-            <NavLink to="/contributeur/liste-demandes" icon={ClipboardList} onClick={closeSheet}>Liste des demandes</NavLink>
-            <NavLink to="/contributeur/bibliotheque" icon={ImageIcon} onClick={closeSheet}>Bibliothèque d'images</NavLink>
-            <NavLink to="/contributeur/mes-contributions" icon={BookOpen} onClick={closeSheet}>Mes contributions</NavLink>
-            <NavLink to="/contributeur/profil" icon={UserCog} onClick={closeSheet}>Mon Profil</NavLink>
+            <NavLink to="/contributeur" icon={Home} onClick={closeSheet}>
+              Dashboard
+            </NavLink>
+            <NavLink to="/contributeur/nouvelle-contribution" icon={Upload} onClick={closeSheet}>
+              Créer un exercice
+            </NavLink>
+            <NavLink to="/contributeur/liste-demandes" icon={ClipboardList} onClick={closeSheet}>
+              Liste des demandes
+            </NavLink>
+            <NavLink to="/contributeur/bibliotheque" icon={ImageIcon} onClick={closeSheet}>
+              Bibliothèque d'images
+            </NavLink>
+            <NavLink to="/contributeur/mes-contributions" icon={BookOpen} onClick={closeSheet}>
+              Mes contributions
+            </NavLink>
+            <NavLink to="/contributeur/profil" icon={UserCog} onClick={closeSheet}>
+              Mon Profil
+            </NavLink>
           </>
         );
       default:
@@ -117,14 +227,10 @@ const AppBanner = () => {
           <div className="flex-shrink-0">
             <div className="relative w-12 h-12 rounded-full bg-white/15 backdrop-blur-sm border-1.5 border-white/40 flex items-center justify-center shadow-lg flex-shrink-0 overflow-hidden">
               {/* Logo PNG - optimized for mobile */}
-              <img 
-                src="/logo_192.png" 
-                alt="SARASSURE" 
-                className="w-full h-full object-cover"
-              />
+              <img src="/logo_192.png" alt="SARASSURE" className="w-full h-full object-cover" />
             </div>
           </div>
-          
+
           {/* Texte - Une seule ligne */}
           <div className="flex flex-col items-start gap-0 min-w-0">
             <h1 className="text-white text-sm md:text-base font-bold drop-shadow-lg leading-none truncate">
@@ -152,15 +258,22 @@ const AppBanner = () => {
                 {renderNavLinks()}
                 {currentUser && (
                   <>
-                    <button onClick={handleLogout} className="flex items-center p-3 text-lg rounded-md hover:bg-destructive/10 transition-colors text-destructive">
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center p-3 text-lg rounded-md hover:bg-destructive/10 transition-colors text-destructive"
+                    >
                       <LogOut className="mr-4 h-6 w-6" />
                       <span>Déconnexion</span>
                     </button>
-                    <NavLink to="/" icon={Home} onClick={closeSheet}>Accueil</NavLink>
+                    <NavLink to="/" icon={Home} onClick={closeSheet}>
+                      Accueil
+                    </NavLink>
                   </>
                 )}
                 {!currentUser && (
-                  <NavLink to="/" icon={Home} onClick={closeSheet}>Accueil</NavLink>
+                  <NavLink to="/" icon={Home} onClick={closeSheet}>
+                    Accueil
+                  </NavLink>
                 )}
               </nav>
             </SheetContent>

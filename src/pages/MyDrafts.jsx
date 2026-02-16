@@ -22,7 +22,7 @@ export default function MyDrafts() {
 
   const handleDelete = () => {
     if (deleteConfirm.draftId) {
-      const filtered = drafts.filter(d => d.id !== deleteConfirm.draftId);
+      const filtered = drafts.filter((d) => d.id !== deleteConfirm.draftId);
       localStorage.setItem('contributionDrafts', JSON.stringify(filtered));
       setDrafts(filtered);
     }
@@ -41,15 +41,15 @@ export default function MyDrafts() {
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    if (minutes < 1) return 'À l\'instant';
+    if (minutes < 1) return "À l'instant";
     if (minutes < 60) return `${minutes}m`;
     if (hours < 24) return `${hours}h`;
     if (days < 7) return `${days}j`;
-    
-    return date.toLocaleDateString('fr-FR', { 
-      day: 'numeric', 
+
+    return date.toLocaleDateString('fr-FR', {
+      day: 'numeric',
       month: 'short',
-      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
     });
   };
 
@@ -93,13 +93,13 @@ export default function MyDrafts() {
                   <h3 className="text-lg font-semibold text-gray-900">
                     {draft.title || '(Sans titre)'}
                   </h3>
-                  
+
                   <div className="mt-2 flex flex-wrap gap-3 text-sm text-gray-600">
                     <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
                       <span>Modifié {formatDate(draft.savedAt)}</span>
                     </div>
-                    
+
                     {draft.category && (
                       <div className="flex items-center gap-1">
                         <span className="inline-block px-2 py-1 bg-gray-200 rounded text-xs">
@@ -107,26 +107,30 @@ export default function MyDrafts() {
                         </span>
                       </div>
                     )}
-                    
+
                     <div>
                       <span className="font-medium">{draft.versions?.length || 0}</span>
                       <span> version{draft.versions?.length !== 1 ? 's' : ''}</span>
                     </div>
-                    
-                    {draft.versions?.some(v => v.steps?.length > 0) && (
+
+                    {draft.versions?.some((v) => v.steps?.length > 0) && (
                       <div>
                         <span className="font-medium">
                           {draft.versions.reduce((acc, v) => acc + (v.steps?.length || 0), 0)}
                         </span>
-                        <span> étape{draft.versions.reduce((acc, v) => acc + (v.steps?.length || 0), 0) !== 1 ? 's' : ''}</span>
+                        <span>
+                          {' '}
+                          étape
+                          {draft.versions.reduce((acc, v) => acc + (v.steps?.length || 0), 0) !== 1
+                            ? 's'
+                            : ''}
+                        </span>
                       </div>
                     )}
                   </div>
 
                   {draft.description && (
-                    <p className="mt-3 text-sm text-gray-600 line-clamp-2">
-                      {draft.description}
-                    </p>
+                    <p className="mt-3 text-sm text-gray-600 line-clamp-2">{draft.description}</p>
                   )}
                 </div>
 
@@ -140,7 +144,7 @@ export default function MyDrafts() {
                     <Edit className="w-5 h-5" />
                     <span className="hidden sm:inline text-sm font-medium">Continuer</span>
                   </button>
-                  
+
                   <button
                     onClick={() => setDeleteConfirm({ isOpen: true, draftId: draft.id })}
                     className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-1"

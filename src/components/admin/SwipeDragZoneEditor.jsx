@@ -4,32 +4,38 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { HelpCircle } from 'lucide-react';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
-const SwipeDragZoneEditor = ({ 
+const SwipeDragZoneEditor = ({
   actionType,
   startArea,
   onStartAreaChange,
   selectedImage,
-  isMobileLayout = false
+  isMobileLayout = false,
 }) => {
-  if (!['swipe_left', 'swipe_right', 'swipe_up', 'swipe_down', 'drag_and_drop', 'tap', 'long_press'].includes(actionType)) {
+  if (
+    ![
+      'swipe_left',
+      'swipe_right',
+      'swipe_up',
+      'swipe_down',
+      'drag_and_drop',
+      'tap',
+      'long_press',
+    ].includes(actionType)
+  ) {
     return null;
   }
 
   const getActionLabel = () => {
     const labels = {
-      'tap': 'Appuyer',
-      'long_press': '← Appui prolongé',
-      'swipe_left': '← Glisser vers la GAUCHE',
-      'swipe_right': 'Glisser vers la DROITE →',
-      'swipe_up': '↑ Glisser vers le HAUT',
-      'swipe_down': '↓ Glisser vers le BAS',
-      'drag_and_drop': 'Glisser en diagonal ↘',
+      tap: 'Appuyer',
+      long_press: '← Appui prolongé',
+      swipe_left: '← Glisser vers la GAUCHE',
+      swipe_right: 'Glisser vers la DROITE →',
+      swipe_up: '↑ Glisser vers le HAUT',
+      swipe_down: '↓ Glisser vers le BAS',
+      drag_and_drop: 'Glisser en diagonal ↘',
     };
     return labels[actionType] || actionType;
   };
@@ -69,10 +75,12 @@ const SwipeDragZoneEditor = ({
               max="100"
               step="1"
               value={startArea?.x_percent || 0}
-              onChange={(e) => onStartAreaChange({
-                ...startArea,
-                x_percent: parseFloat(e.target.value),
-              })}
+              onChange={(e) =>
+                onStartAreaChange({
+                  ...startArea,
+                  x_percent: parseFloat(e.target.value),
+                })
+              }
               className="text-sm h-8"
             />
           </div>
@@ -84,10 +92,12 @@ const SwipeDragZoneEditor = ({
               max="100"
               step="1"
               value={startArea?.y_percent || 0}
-              onChange={(e) => onStartAreaChange({
-                ...startArea,
-                y_percent: parseFloat(e.target.value),
-              })}
+              onChange={(e) =>
+                onStartAreaChange({
+                  ...startArea,
+                  y_percent: parseFloat(e.target.value),
+                })
+              }
               className="text-sm h-8"
             />
           </div>
@@ -99,10 +109,12 @@ const SwipeDragZoneEditor = ({
               max="100"
               step="1"
               value={startArea?.width_percent || 20}
-              onChange={(e) => onStartAreaChange({
-                ...startArea,
-                width_percent: parseFloat(e.target.value),
-              })}
+              onChange={(e) =>
+                onStartAreaChange({
+                  ...startArea,
+                  width_percent: parseFloat(e.target.value),
+                })
+              }
               className="text-sm h-8"
             />
           </div>
@@ -114,10 +126,12 @@ const SwipeDragZoneEditor = ({
               max="100"
               step="1"
               value={startArea?.height_percent || 20}
-              onChange={(e) => onStartAreaChange({
-                ...startArea,
-                height_percent: parseFloat(e.target.value),
-              })}
+              onChange={(e) =>
+                onStartAreaChange({
+                  ...startArea,
+                  height_percent: parseFloat(e.target.value),
+                })
+              }
               className="text-sm h-8"
             />
           </div>
@@ -129,18 +143,26 @@ const SwipeDragZoneEditor = ({
             <Label className="text-xs font-semibold">Affichage</Label>
             <div className="flex gap-2 items-center">
               <span className="text-xs text-green-700">
-                {startArea?.is_visible !== undefined ? (startArea.is_visible ? '👁️ Visible' : '👁️‍🗨️ Invisible') : '👁️ Visible'}
+                {startArea?.is_visible !== undefined
+                  ? startArea.is_visible
+                    ? '👁️ Visible'
+                    : '👁️‍🗨️ Invisible'
+                  : '👁️ Visible'}
               </span>
               <Switch
                 checked={startArea?.is_visible !== undefined ? startArea.is_visible : true}
-                onCheckedChange={(checked) => onStartAreaChange({
-                  ...startArea,
-                  is_visible: checked,
-                })}
+                onCheckedChange={(checked) =>
+                  onStartAreaChange({
+                    ...startArea,
+                    is_visible: checked,
+                  })
+                }
               />
             </div>
           </div>
-          <p className="text-xs text-green-600 italic">Invisible = zone déplaçable avec poignées visibles, mais sans couleur</p>
+          <p className="text-xs text-green-600 italic">
+            Invisible = zone déplaçable avec poignées visibles, mais sans couleur
+          </p>
         </div>
       </div>
     </div>

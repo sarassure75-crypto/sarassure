@@ -48,8 +48,8 @@ export default function OfflineIndicator() {
           exit={{ opacity: 0, y: -50, scale: 0.9 }}
           transition={{ type: 'spring', stiffness: 300, damping: 25 }}
           className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 backdrop-blur-md border-2 ${
-            isOnline 
-              ? 'bg-green-500/90 border-green-400 text-white' 
+            isOnline
+              ? 'bg-green-500/90 border-green-400 text-white'
               : 'bg-gradient-to-r from-orange-500 to-red-500 text-white border-orange-400'
           }`}
         >
@@ -57,13 +57,9 @@ export default function OfflineIndicator() {
             animate={{ rotate: isOnline ? 0 : [0, -10, 10, -10, 0] }}
             transition={{ duration: 0.5, repeat: isOnline ? 0 : Infinity, repeatDelay: 2 }}
           >
-            {isOnline ? (
-              <Wifi className="w-5 h-5" />
-            ) : (
-              <WifiOff className="w-5 h-5" />
-            )}
+            {isOnline ? <Wifi className="w-5 h-5" /> : <WifiOff className="w-5 h-5" />}
           </motion.div>
-          
+
           <div className="flex flex-col">
             <span className="font-bold text-sm">
               {isOnline ? 'Connexion rétablie' : 'Mode hors ligne'}
@@ -72,7 +68,7 @@ export default function OfflineIndicator() {
               {isOnline ? 'Toutes les fonctionnalités disponibles' : 'Données en cache disponibles'}
             </span>
           </div>
-          
+
           {!isOnline && (
             <motion.div
               animate={{ scale: [1, 1.2, 1] }}

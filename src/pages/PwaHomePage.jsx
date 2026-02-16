@@ -8,16 +8,15 @@ import { BookOpen, LogIn } from 'lucide-react';
 const PwaHomePage = () => {
   const navigate = useNavigate();
   const { currentUser, isAuthenticated, logout } = useAuth();
-  const LOGO_URL = "/logo-large.png";
+  const LOGO_URL = '/logo-large.png';
 
   const handleLogout = () => {
     logout();
-    navigate('/learner-login'); 
+    navigate('/learner-login');
   };
 
-
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
@@ -30,29 +29,28 @@ const PwaHomePage = () => {
 
       {isAuthenticated && currentUser ? (
         <>
-          <Button 
-            onClick={() => navigate('/taches')} 
+          <Button
+            onClick={() => navigate('/taches')}
             className="w-full max-w-sm h-20 text-2xl mb-6 bg-green-500 hover:bg-green-600 text-white shadow-xl transform hover:scale-105 transition-transform duration-200"
           >
-            <BookOpen className="mr-4 h-8 w-8" /> Mes Exercices{currentUser.first_name ? `, ${currentUser.first_name}` : ''}
+            <BookOpen className="mr-4 h-8 w-8" /> Mes Exercices
+            {currentUser.first_name ? `, ${currentUser.first_name}` : ''}
           </Button>
-          
+
           <Button onClick={handleLogout} variant="outline" className="w-full max-w-sm text-lg">
             Déconnexion
           </Button>
         </>
       ) : (
-        <Button 
-          onClick={() => navigate('/learner-login')} 
+        <Button
+          onClick={() => navigate('/learner-login')}
           className="w-full max-w-sm h-20 text-2xl mb-6 bg-primary hover:bg-primary/90 text-white shadow-xl transform hover:scale-105 transition-transform duration-200"
         >
           <LogIn className="mr-4 h-8 w-8" /> Se Connecter (Apprenant)
         </Button>
       )}
 
-      <p className="mt-12 text-sm text-gray-600">
-        Version PWA Installée - Espace Apprenant
-      </p>
+      <p className="mt-12 text-sm text-gray-600">Version PWA Installée - Espace Apprenant</p>
     </motion.div>
   );
 };

@@ -1,6 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Square, Circle, Move, Eraser, Download, Undo, Redo } from 'lucide-react';
 
 /**
@@ -22,7 +29,10 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
 
   // Log au montage du composant
   useEffect(() => {
-    console.log('📦 ImageEditor monté - Props:', { open, imageUrl: imageUrl?.substring(0, 50) + '...' });
+    console.log('📦 ImageEditor monté - Props:', {
+      open,
+      imageUrl: imageUrl?.substring(0, 50) + '...',
+    });
   }, [open, imageUrl]);
 
   // Réinitialiser isSaving quand le dialog se ferme
@@ -60,19 +70,19 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
 
   // Charger l'image dans le canvas
   useEffect(() => {
-    console.log('🔄 useEffect image loading - Conditions:', { 
-      open, 
-      hasImageUrl: !!imageUrl, 
+    console.log('🔄 useEffect image loading - Conditions:', {
+      open,
+      hasImageUrl: !!imageUrl,
       hasCanvasRef: !!canvasRef.current,
       canvasReady,
-      imageUrl: imageUrl?.substring(0, 60)
+      imageUrl: imageUrl?.substring(0, 60),
     });
-    
+
     if (!open || !imageUrl) {
       console.log('❌ Chargement annulé - open ou imageUrl manquant');
       return;
     }
-    
+
     if (!canvasRef.current || !canvasReady) {
       console.log('⏳ Attente du canvas...');
       return;
@@ -81,8 +91,8 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d', { willReadFrequently: true });
     setCtx(context);
-    
-    console.log('✅ Chargement de l\'image:', imageUrl);
+
+    console.log("✅ Chargement de l'image:", imageUrl);
 
     const loadImage = async () => {
       try {
@@ -90,105 +100,104 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
         console.log('Tentative de chargement via fetch...');
         const response = await fetch(imageUrl, {
           mode: 'cors',
-          credentials: 'omit'
+          credentials: 'omit',
         });
-        
+
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const blob = await response.blob();
         console.log('Blob reçu:', blob.size, 'bytes');
-        
+
         const img = new Image();
         const objectUrl = URL.createObjectURL(blob);
-        
+
         img.onload = () => {
           console.log('Image chargée:', img.width, 'x', img.height);
-          
+
           // Ajuster la taille du canvas
           const maxWidth = 1920;
           let width = img.width;
           let height = img.height;
-          
+
           if (width > maxWidth) {
             height = (height * maxWidth) / width;
             width = maxWidth;
           }
-          
+
           canvas.width = width;
           canvas.height = height;
-          
+
           // Dessiner l'image
           context.clearRect(0, 0, width, height);
           context.drawImage(img, 0, 0, width, height);
-          
+
           console.log('Image dessinée sur le canvas');
-          
+
           setOriginalImage(img);
           setImageLoaded(true);
-          
+
           // Sauvegarder l'état initial
           setTimeout(() => saveToHistory(), 100);
-          
+
           // Libérer l'URL object
           URL.revokeObjectURL(objectUrl);
         };
-        
+
         img.onerror = (error) => {
           console.error('Erreur img.onload:', error);
           URL.revokeObjectURL(objectUrl);
           // Essayer la méthode 2
           tryDirectLoad();
         };
-        
+
         img.src = objectUrl;
-        
       } catch (error) {
         console.error('Erreur fetch:', error);
         // Essayer la méthode 2
         tryDirectLoad();
       }
     };
-    
+
     // Méthode 2: Chargement direct (fallback)
     const tryDirectLoad = () => {
       console.log('Tentative de chargement direct...');
       const img = new Image();
       img.crossOrigin = 'anonymous';
-      
+
       img.onload = () => {
         console.log('Image chargée (direct):', img.width, 'x', img.height);
-        
+
         const maxWidth = 1920;
         let width = img.width;
         let height = img.height;
-        
+
         if (width > maxWidth) {
           height = (height * maxWidth) / width;
           width = maxWidth;
         }
-        
+
         canvas.width = width;
         canvas.height = height;
         context.clearRect(0, 0, width, height);
         context.drawImage(img, 0, 0, width, height);
-        
+
         setOriginalImage(img);
         setImageLoaded(true);
         setTimeout(() => saveToHistory(), 100);
       };
-      
+
       img.onerror = (error) => {
         console.error('Erreur chargement direct:', error);
-        alert('Impossible de charger l\'image. L\'URL peut être invalide ou inaccessible.');
+        alert("Impossible de charger l'image. L'URL peut être invalide ou inaccessible.");
       };
-      
+
       img.src = imageUrl;
     };
 
     loadImage();
-    
+
     // Cleanup
     return () => {
       setImageLoaded(false);
@@ -200,10 +209,10 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
   // Sauvegarder l'état actuel dans l'historique
   const saveToHistory = () => {
     if (!canvasRef.current) return;
-    
+
     const canvas = canvasRef.current;
     const imageData = canvas.toDataURL();
-    
+
     const newHistory = history.slice(0, historyStep + 1);
     newHistory.push(imageData);
     setHistory(newHistory);
@@ -245,7 +254,7 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
     if (!ctx || !canvasRef.current) return;
 
     const canvas = canvasRef.current;
-    
+
     // Extraire la zone à flouter
     const imageData = ctx.getImageData(x, y, width, height);
     const pixels = imageData.data;
@@ -267,7 +276,7 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
   // Dessiner un rectangle (blanc ou noir)
   const drawBox = (x, y, width, height, color) => {
     if (!ctx) return;
-    
+
     ctx.fillStyle = color;
     ctx.fillRect(x, y, width, height);
   };
@@ -275,15 +284,15 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
   // Gestion du début du dessin
   const handleMouseDown = (e) => {
     if (!imageLoaded) return;
-    
+
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    
+
     const x = (e.clientX - rect.left) * scaleX;
     const y = (e.clientY - rect.top) * scaleY;
-    
+
     setStartPos({ x, y });
     setIsDrawing(true);
   };
@@ -296,7 +305,7 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    
+
     const currentX = (e.clientX - rect.left) * scaleX;
     const currentY = (e.clientY - rect.top) * scaleY;
 
@@ -309,27 +318,22 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
     ctx.strokeStyle = tool === 'blur' ? '#3b82f6' : tool === 'whiteBox' ? '#fff' : '#000';
     ctx.lineWidth = 2;
     ctx.setLineDash([5, 5]);
-    ctx.strokeRect(
-      startPos.x,
-      startPos.y,
-      currentX - startPos.x,
-      currentY - startPos.y
-    );
+    ctx.strokeRect(startPos.x, startPos.y, currentX - startPos.x, currentY - startPos.y);
     ctx.setLineDash([]);
   };
 
   // Fin du dessin
   const handleMouseUp = (e) => {
     if (!isDrawing) return;
-    
+
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    
+
     const endX = (e.clientX - rect.left) * scaleX;
     const endY = (e.clientY - rect.top) * scaleY;
-    
+
     const x = Math.min(startPos.x, endX);
     const y = Math.min(startPos.y, endY);
     const width = Math.abs(endX - startPos.x);
@@ -350,7 +354,7 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
         } else if (tool === 'blackBox') {
           drawBox(x, y, width, height, '#000000');
         }
-        
+
         saveToHistory();
       }, 10);
     }
@@ -361,7 +365,7 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
   // Sauvegarder l'image modifiée
   const handleSave = () => {
     if (!canvasRef.current || isSaving) return;
-    
+
     setIsSaving(true);
     canvasRef.current.toBlob((blob) => {
       if (blob && onSave) {
@@ -375,7 +379,7 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
   // Télécharger l'image modifiée
   const handleDownload = () => {
     if (!canvasRef.current) return;
-    
+
     const dataUrl = canvasRef.current.toDataURL('image/png');
     const link = document.createElement('a');
     link.download = `edited-image-${Date.now()}.png`;
@@ -398,7 +402,8 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
         <DialogHeader>
           <DialogTitle>Éditeur d'image - Protéger les informations personnelles</DialogTitle>
           <DialogDescription>
-            Utilisez les outils pour flouter ou masquer les informations sensibles sur vos captures d'écran.
+            Utilisez les outils pour flouter ou masquer les informations sensibles sur vos captures
+            d'écran.
           </DialogDescription>
         </DialogHeader>
 
@@ -413,7 +418,7 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
             <Circle className="w-4 h-4" />
             Flou
           </Button>
-          
+
           <Button
             variant={tool === 'whiteBox' ? 'default' : 'outline'}
             size="sm"
@@ -423,7 +428,7 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
             <Square className="w-4 h-4" />
             Cadre blanc
           </Button>
-          
+
           <Button
             variant={tool === 'blackBox' ? 'default' : 'outline'}
             size="sm"
@@ -446,7 +451,7 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
             <Undo className="w-4 h-4" />
             Annuler
           </Button>
-          
+
           <Button
             variant="outline"
             size="sm"
@@ -490,17 +495,18 @@ export default function ImageEditor({ open, onOpenChange, imageUrl, onSave }) {
             onMouseUp={handleMouseUp}
             onMouseLeave={() => setIsDrawing(false)}
             className="cursor-crosshair bg-white shadow-lg mx-auto"
-            style={{ 
+            style={{
               imageRendering: 'crisp-edges',
               cursor: isDrawing ? 'crosshair' : 'crosshair',
-              display: imageLoaded ? 'block' : 'none'
+              display: imageLoaded ? 'block' : 'none',
             }}
           />
         </div>
 
         {/* Instructions */}
         <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
-          <strong>Instructions :</strong> Sélectionnez un outil, puis cliquez et glissez sur l'image pour créer une zone {tool === 'blur' ? 'floutée' : 'masquée'}.
+          <strong>Instructions :</strong> Sélectionnez un outil, puis cliquez et glissez sur l'image
+          pour créer une zone {tool === 'blur' ? 'floutée' : 'masquée'}.
         </div>
 
         <DialogFooter>

@@ -21,19 +21,16 @@ const AdminFaqManager = () => {
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [faqItems, imagesData] = await Promise.all([
-        getFaqData(),
-        fetchImages()
-      ]);
+      const [faqItems, imagesData] = await Promise.all([getFaqData(), fetchImages()]);
       setFaqData(faqItems || []);
       setImages(Array.isArray(imagesData) ? imagesData : []);
     } catch (error) {
-      console.error("Error loading FAQ data:", error);
+      console.error('Error loading FAQ data:', error);
       setImages([]);
       toast({
-        title: "Erreur de chargement",
-        description: "Impossible de charger les données pour la FAQ.",
-        variant: "destructive"
+        title: 'Erreur de chargement',
+        description: 'Impossible de charger les données pour la FAQ.',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -54,9 +51,9 @@ const AdminFaqManager = () => {
       await loadData();
       setIsFormVisible(false);
       setEditingFaqItem(null);
-      toast({ title: "Q&R sauvegardée avec succès !" });
+      toast({ title: 'Q&R sauvegardée avec succès !' });
     } catch (error) {
-      toast({ title: "Erreur de sauvegarde", description: error.message, variant: "destructive" });
+      toast({ title: 'Erreur de sauvegarde', description: error.message, variant: 'destructive' });
     }
   };
 
@@ -69,9 +66,9 @@ const AdminFaqManager = () => {
     try {
       await deleteFaq(itemId);
       await loadData();
-      toast({ title: "Q&R supprimée.", variant: "destructive" });
+      toast({ title: 'Q&R supprimée.', variant: 'destructive' });
     } catch (error) {
-      toast({ title: "Erreur de suppression", description: error.message, variant: "destructive" });
+      toast({ title: 'Erreur de suppression', description: error.message, variant: 'destructive' });
     }
   };
 
@@ -104,7 +101,10 @@ const AdminFaqManager = () => {
             <AdminFaqForm
               faqItem={editingFaqItem}
               onSave={handleSaveFaqItem}
-              onCancel={() => { setIsFormVisible(false); setEditingFaqItem(null); }}
+              onCancel={() => {
+                setIsFormVisible(false);
+                setEditingFaqItem(null);
+              }}
               images={images}
             />
           </motion.div>
@@ -112,16 +112,18 @@ const AdminFaqManager = () => {
       </AnimatePresence>
 
       {!isFormVisible && (
-        <Button onClick={() => { setEditingFaqItem(null); setIsFormVisible(true); }} className="w-full">
+        <Button
+          onClick={() => {
+            setEditingFaqItem(null);
+            setIsFormVisible(true);
+          }}
+          className="w-full"
+        >
           <PlusCircle className="mr-2 h-4 w-4" /> Ajouter une Q&R
         </Button>
       )}
 
-      <AdminFaqList 
-        faqData={faqData}
-        onEdit={handleEditFaqItem}
-        onDelete={handleDeleteFaqItem}
-      />
+      <AdminFaqList faqData={faqData} onEdit={handleEditFaqItem} onDelete={handleDeleteFaqItem} />
     </div>
   );
 };

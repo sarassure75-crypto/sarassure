@@ -9,7 +9,7 @@ import {
   createGlossaryTerm,
   updateGlossaryTerm,
   deleteGlossaryTerm,
-  getGlossaryStats
+  getGlossaryStats,
 } from '@/data/glossary';
 import { Plus, Trash2, Edit2, X, Save, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -34,7 +34,7 @@ export default function AdminGlossaryManager() {
     definition: '',
     category: 'general',
     example: '',
-    related_terms: ''
+    related_terms: '',
   });
 
   // Filtres et recherche
@@ -49,10 +49,7 @@ export default function AdminGlossaryManager() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [termsData, statsData] = await Promise.all([
-        getAllGlossaryTerms(),
-        getGlossaryStats()
-      ]);
+      const [termsData, statsData] = await Promise.all([getAllGlossaryTerms(), getGlossaryStats()]);
 
       setTerms(termsData);
       setStats(statsData);
@@ -62,7 +59,7 @@ export default function AdminGlossaryManager() {
       toast({
         title: 'Erreur',
         description: 'Impossible de charger les termes du lexique',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -71,20 +68,20 @@ export default function AdminGlossaryManager() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.term.trim() || !formData.definition.trim() || !formData.category.trim()) {
       toast({
         title: 'Erreur',
         description: 'Veuillez remplir les champs obligatoires',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
@@ -93,8 +90,8 @@ export default function AdminGlossaryManager() {
     try {
       const relatedTermsArray = formData.related_terms
         .split(',')
-        .map(t => t.trim())
-        .filter(t => t.length > 0);
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0);
 
       if (formMode === 'add') {
         await createGlossaryTerm(
@@ -106,7 +103,7 @@ export default function AdminGlossaryManager() {
         );
         toast({
           title: 'Succès',
-          description: `Le terme "${formData.term}" a été créé`
+          description: `Le terme "${formData.term}" a été créé`,
         });
       } else {
         await updateGlossaryTerm(editingId, {
@@ -114,11 +111,11 @@ export default function AdminGlossaryManager() {
           definition: formData.definition,
           category: formData.category,
           example: formData.example || null,
-          related_terms: relatedTermsArray
+          related_terms: relatedTermsArray,
         });
         toast({
           title: 'Succès',
-          description: `Le terme "${formData.term}" a été mis à jour`
+          description: `Le terme "${formData.term}" a été mis à jour`,
         });
       }
 
@@ -129,7 +126,7 @@ export default function AdminGlossaryManager() {
       toast({
         title: 'Erreur',
         description: 'Impossible de sauvegarder le terme',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setSaving(false);
@@ -144,7 +141,7 @@ export default function AdminGlossaryManager() {
       definition: term.definition,
       category: term.category,
       example: term.example || '',
-      related_terms: (term.related_terms || []).join(', ')
+      related_terms: (term.related_terms || []).join(', '),
     });
     window.scrollTo(0, 0);
   };
@@ -158,7 +155,7 @@ export default function AdminGlossaryManager() {
       await deleteGlossaryTerm(id);
       toast({
         title: 'Succès',
-        description: `Le terme "${termName}" a été supprimé`
+        description: `Le terme "${termName}" a été supprimé`,
       });
       fetchData();
     } catch (error) {
@@ -166,7 +163,7 @@ export default function AdminGlossaryManager() {
       toast({
         title: 'Erreur',
         description: 'Impossible de supprimer le terme',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
@@ -179,13 +176,14 @@ export default function AdminGlossaryManager() {
       definition: '',
       category: 'general',
       example: '',
-      related_terms: ''
+      related_terms: '',
     });
   };
 
-  const filteredTerms = terms.filter(term => {
-    const matchSearch = term.term.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       term.definition.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredTerms = terms.filter((term) => {
+    const matchSearch =
+      term.term.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      term.definition.toLowerCase().includes(searchTerm.toLowerCase());
     const matchCategory = filterCategory === 'all' || term.category === filterCategory;
     return matchSearch && matchCategory;
   });
@@ -203,7 +201,9 @@ export default function AdminGlossaryManager() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestion du Lexique</h1>
-        <p className="text-gray-600">Créez et gérez les termes du dictionnaire utilisés dans les exercices</p>
+        <p className="text-gray-600">
+          Créez et gérez les termes du dictionnaire utilisés dans les exercices
+        </p>
       </div>
 
       {/* Statistiques */}
@@ -305,9 +305,7 @@ export default function AdminGlossaryManager() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Exemple
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Exemple</label>
               <Input
                 type="text"
                 name="example"
@@ -383,8 +381,10 @@ export default function AdminGlossaryManager() {
               className="px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">Toutes les catégories</option>
-              {categories.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
               ))}
             </select>
           </div>
@@ -399,13 +399,11 @@ export default function AdminGlossaryManager() {
 
         {filteredTerms.length === 0 ? (
           <Card className="bg-gray-50">
-            <CardContent className="pt-6 text-center text-gray-600">
-              Aucun terme trouvé
-            </CardContent>
+            <CardContent className="pt-6 text-center text-gray-600">Aucun terme trouvé</CardContent>
           </Card>
         ) : (
           <div className="grid gap-3">
-            {filteredTerms.map(term => (
+            {filteredTerms.map((term) => (
               <Card key={term.id} className="hover:shadow-lg transition-shadow">
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between">

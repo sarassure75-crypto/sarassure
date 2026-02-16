@@ -16,7 +16,7 @@ export function useAdminCounters() {
 
   useEffect(() => {
     fetchCounters();
-    
+
     // Rafraîchir tous les 5 secondes
     const interval = setInterval(fetchCounters, 5000);
     return () => clearInterval(interval);
@@ -40,17 +40,17 @@ export function useAdminCounters() {
         .from('versions')
         .select('id, task:task_id(task_type)')
         .eq('creation_status', 'pending');
-      
+
       if (versionsError) {
         console.warn('Erreur versions:', versionsError.message);
       }
 
       // Séparer exercices et questionnaires
-      const exercisesCount = (versionsData || []).filter(v => 
-        !v.task || v.task.task_type === 'exercise'
+      const exercisesCount = (versionsData || []).filter(
+        (v) => !v.task || v.task.task_type === 'exercise'
       ).length;
-      const questionnairesCount = (versionsData || []).filter(v => 
-        v.task && v.task.task_type === 'questionnaire'
+      const questionnairesCount = (versionsData || []).filter(
+        (v) => v.task && v.task.task_type === 'questionnaire'
       ).length;
 
       // Compter les messages de contact non lus
@@ -64,9 +64,7 @@ export function useAdminCounters() {
       }
 
       // Compter tous les items FAQ
-      const { data: faqData, error: faqError } = await supabase
-        .from('faq_items')
-        .select('id');
+      const { data: faqData, error: faqError } = await supabase.from('faq_items').select('id');
 
       if (faqError) {
         console.warn('Erreur faq_items:', faqError.message);

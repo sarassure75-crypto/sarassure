@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 
 /**
  * ConfidenceBeforeModal - Modal pour demander le niveau de confiance AVANT l'exercice
- * 
+ *
  * Affiche 3 smileys:
  * 😟 (1) = Pas confiant
  * 🙂 (2) = Un peu confiant
@@ -15,9 +21,9 @@ export default function ConfidenceBeforeModal({ isOpen, onClose, onSubmit, taskT
   const [selectedConfidence, setSelectedConfidence] = useState(null);
 
   const confidenceLevels = [
-    { value: 1, emoji: '😟', label: 'Pas confiant', description: 'J\'ai peur de me tromper' },
+    { value: 1, emoji: '😟', label: 'Pas confiant', description: "J'ai peur de me tromper" },
     { value: 2, emoji: '🙂', label: 'Un peu confiant', description: 'Je vais essayer' },
-    { value: 3, emoji: '😄', label: 'Confiant', description: 'Je peux le faire' }
+    { value: 3, emoji: '😄', label: 'Confiant', description: 'Je peux le faire' },
   ];
 
   const handleSubmit = () => {
@@ -48,9 +54,10 @@ export default function ConfidenceBeforeModal({ isOpen, onClose, onSubmit, taskT
               whileTap={{ scale: 0.95 }}
               className={`
                 flex flex-col items-center justify-center p-4 rounded-lg border-2 transition-all
-                ${selectedConfidence === level.value
-                  ? 'border-green-500 bg-green-50 ring-2 ring-green-300'
-                  : 'border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50'
+                ${
+                  selectedConfidence === level.value
+                    ? 'border-green-500 bg-green-50 ring-2 ring-green-300'
+                    : 'border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50'
                 }
               `}
             >
@@ -74,7 +81,8 @@ export default function ConfidenceBeforeModal({ isOpen, onClose, onSubmit, taskT
 
         {/* Message motivant */}
         <p className="text-xs text-center text-gray-600 mt-4">
-          N'oublie pas: cet exercice est une simulation. Tu peux te tromper autant que tu veux - c'est comme ça qu'on apprend ! 💪
+          N'oublie pas: cet exercice est une simulation. Tu peux te tromper autant que tu veux -
+          c'est comme ça qu'on apprend ! 💪
         </p>
       </DialogContent>
     </Dialog>

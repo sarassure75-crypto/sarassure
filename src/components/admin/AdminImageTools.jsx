@@ -1,12 +1,26 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Crop, Minimize, ImageDown as UploadIcon, Type, Smartphone, FileText, FolderTree } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Crop,
+  Minimize,
+  ImageDown as UploadIcon,
+  Type,
+  Smartphone,
+  FileText,
+  FolderTree,
+} from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
@@ -19,7 +33,11 @@ function sanitizeSegment(seg) {
     // Normalize to decompose accents then strip combining marks
     const normalized = seg.normalize('NFKD').replace(/\p{Diacritic}/gu, '');
     // Replace any remaining non-alphanumeric (and allowed . _ -) with '-'
-    return normalized.replace(/[^a-zA-Z0-9._-]/g, '-').replace(/-+/g, '-').replace(/(^-|-$)/g, '').toLowerCase();
+    return normalized
+      .replace(/[^a-zA-Z0-9._-]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/(^-|-$)/g, '')
+      .toLowerCase();
   } catch (e) {
     return seg.replace(/[^a-zA-Z0-9._-]/g, '-').toLowerCase();
   }
@@ -33,7 +51,13 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
   const [compressionQuality, setCompressionQuality] = useState(0.8);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState(categories && categories.length > 0 ? (categories.includes('default') ? 'default' : categories[0]) : 'default');
+  const [selectedCategory, setSelectedCategory] = useState(
+    categories && categories.length > 0
+      ? categories.includes('default')
+        ? 'default'
+        : categories[0]
+      : 'default'
+  );
   const [selectedSubcategory, setSelectedSubcategory] = useState('général');
   const [availableSubcategories, setAvailableSubcategories] = useState(DEFAULT_SUBCATEGORIES);
   const [imageName, setImageName] = useState('');
@@ -67,7 +91,7 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
       // Pré-remplir le nom basé sur le nom du fichier (sans extension)
       const nameWithoutExtension = file.name.split('.').slice(0, -1).join('.');
       setImageName(nameWithoutExtension);
-      
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
@@ -79,7 +103,11 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
 
   const processAndUploadImage = async (category = 'default') => {
     if (!selectedFile || !imagePreview) {
-      toast({ title: "Aucune image", description: "Veuillez sélectionner une image.", variant: "destructive" });
+      toast({
+        title: 'Aucune image',
+        description: 'Veuillez sélectionner une image.',
+        variant: 'destructive',
+      });
       return;
     }
     setIsProcessing(true);
@@ -87,11 +115,11 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
     const img = new Image();
     img.onload = async () => {
       const canvas = document.createElement('canvas');
-      
+
       // Utiliser les dimensions originales si demandé
       let width = img.width;
       let height = img.height;
-      
+
       if (!uploadOriginalSize) {
         // Redimensionner seulement si la largeur dépasse la cible
         if (width > targetWidth) {
@@ -99,69 +127,93 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
           width = targetWidth;
         }
       }
-      
+
       canvas.width = width;
       canvas.height = height;
       const ctx = canvas.getContext('2d');
-      
+
       // Dessiner l'image redimensionnée (si nécessaire)
       ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, width, height);
 
-      canvas.toBlob(async (blob) => {
-        if (blob) {
-          const fileExtension = 'jpg'; // Always save as JPG for consistency
-          const fileName = `${uuidv4()}.${fileExtension}`;
-          const safeCategory = sanitizeSegment(category || 'default');
-          const filePath = `${safeCategory}/${fileName}`;
-          
-          const processedFile = new File([blob], fileName, {
-            type: `image/${fileExtension === 'png' ? 'png' : 'jpeg'}`,
-            lastModified: Date.now(),
-          });
+      canvas.toBlob(
+        async (blob) => {
+          if (blob) {
+            const fileExtension = 'jpg'; // Always save as JPG for consistency
+            const fileName = `${uuidv4()}.${fileExtension}`;
+            const safeCategory = sanitizeSegment(category || 'default');
+            const filePath = `${safeCategory}/${fileName}`;
 
-          try {
-            const { data: uploadData, error: uploadError } = await supabase.storage
-              .from('images')
-              .upload(filePath, processedFile, {
-                cacheControl: '3600',
-                upsert: false, 
+            const processedFile = new File([blob], fileName, {
+              type: `image/${fileExtension === 'png' ? 'png' : 'jpeg'}`,
+              lastModified: Date.now(),
+            });
+
+            try {
+              const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('images')
+                .upload(filePath, processedFile, {
+                  cacheControl: '3600',
+                  upsert: false,
+                });
+
+              if (uploadError) throw uploadError;
+
+              onImageProcessedAndUploaded(
+                filePath,
+                {
+                  originalName: selectedFile.name,
+                  customName:
+                    imageName.trim() || selectedFile.name.split('.').slice(0, -1).join('.'),
+                  customDescription:
+                    imageDescription.trim() || `Téléversé le ${new Date().toLocaleDateString()}`,
+                  androidVersion: androidVersion.trim() || 'Non spécifiée',
+                  newWidth: width,
+                  newHeight: height,
+                  quality: compressionQuality,
+                  size: processedFile.size,
+                  mimeType: processedFile.type,
+                  subcategory: selectedSubcategory,
+                },
+                category
+              );
+              toast({
+                title: 'Image traitée et téléversée',
+                description: `L'image a été ajoutée à la galerie.`,
               });
-
-            if (uploadError) throw uploadError;
-            
-            onImageProcessedAndUploaded(filePath, {
-              originalName: selectedFile.name,
-              customName: imageName.trim() || selectedFile.name.split('.').slice(0, -1).join('.'),
-              customDescription: imageDescription.trim() || `Téléversé le ${new Date().toLocaleDateString()}`,
-              androidVersion: androidVersion.trim() || 'Non spécifiée',
-              newWidth: width,
-              newHeight: height,
-              quality: compressionQuality,
-              size: processedFile.size,
-              mimeType: processedFile.type,
-              subcategory: selectedSubcategory
-            }, category);
-            toast({ title: "Image traitée et téléversée", description: `L'image a été ajoutée à la galerie.` });
-            resetState();
-
-          } catch (error) {
-             console.error("Upload error: ", error);
-             toast({ title: "Erreur de téléversement", description: error.message || "Impossible de téléverser l'image.", variant: "destructive" });
-             setIsProcessing(false);
+              resetState();
+            } catch (error) {
+              console.error('Upload error: ', error);
+              toast({
+                title: 'Erreur de téléversement',
+                description: error.message || "Impossible de téléverser l'image.",
+                variant: 'destructive',
+              });
+              setIsProcessing(false);
+            }
+          } else {
+            toast({
+              title: 'Erreur de traitement',
+              description: "Impossible de convertir l'image (blob).",
+              variant: 'destructive',
+            });
+            setIsProcessing(false);
           }
-        } else {
-          toast({ title: "Erreur de traitement", description: "Impossible de convertir l'image (blob).", variant: "destructive" });
-          setIsProcessing(false);
-        }
-      }, `image/${selectedFile.name.split('.').pop() === 'png' ? 'png' : 'jpeg'}`, compressionQuality);
+        },
+        `image/${selectedFile.name.split('.').pop() === 'png' ? 'png' : 'jpeg'}`,
+        compressionQuality
+      );
     };
     img.onerror = () => {
-        toast({ title: "Erreur de chargement", description: "Impossible de charger l'image pour traitement.", variant: "destructive" });
-        setIsProcessing(false);
+      toast({
+        title: 'Erreur de chargement',
+        description: "Impossible de charger l'image pour traitement.",
+        variant: 'destructive',
+      });
+      setIsProcessing(false);
     };
     img.src = imagePreview;
   };
-  
+
   const resetState = () => {
     setSelectedFile(null);
     setImagePreview(null);
@@ -175,14 +227,19 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
     setIsDialogOpen(false);
     setIsProcessing(false);
     if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+      fileInputRef.current.value = '';
     }
   };
 
   return (
     <>
-      <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isProcessing}>
-        <UploadIcon className="mr-2 h-4 w-4" /> {isProcessing ? "Traitement..." : "Téléverser Image"}
+      <Button
+        variant="outline"
+        onClick={() => fileInputRef.current?.click()}
+        disabled={isProcessing}
+      >
+        <UploadIcon className="mr-2 h-4 w-4" />{' '}
+        {isProcessing ? 'Traitement...' : 'Téléverser Image'}
       </Button>
       <input
         type="file"
@@ -193,7 +250,13 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
         disabled={isProcessing}
       />
 
-      <Dialog open={isDialogOpen} onOpenChange={(isOpen) => { if(!isOpen) resetState(); else setIsDialogOpen(true);}}>
+      <Dialog
+        open={isDialogOpen}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) resetState();
+          else setIsDialogOpen(true);
+        }}
+      >
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto flex flex-col">
           <DialogHeader>
             <DialogTitle>Traiter & Téléverser</DialogTitle>
@@ -208,128 +271,144 @@ const AdminImageTools = ({ onImageProcessedAndUploaded, categories = [] }) => {
               </div>
             )}
             <div className="space-y-4 px-1">
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="uploadOriginalSize"
-                checked={uploadOriginalSize}
-                onChange={(e) => setUploadOriginalSize(e.target.checked)}
-                disabled={isProcessing}
-                className="rounded"
-              />
-              <Label htmlFor="uploadOriginalSize" className="text-sm">
-                Téléverser en taille originale (sans redimensionnement)
-              </Label>
-            </div>
-            <div>
-              <Label htmlFor="targetWidth" className="flex items-center">
-                <Crop className="mr-2 h-4 w-4" /> Largeur maximale (px)
-              </Label>
-              <Input
-                id="targetWidth"
-                type="number"
-                value={targetWidth}
-                onChange={(e) => setTargetWidth(parseInt(e.target.value, 10) || 300)}
-                min="100"
-                max="4000"
-                step="50"
-                disabled={isProcessing || uploadOriginalSize}
-              />
-            </div>
-            <div>
-              <Label htmlFor="compressionQuality" className="flex items-center">
-                <Minimize className="mr-2 h-4 w-4" /> Qualité de compression
-              </Label>
               <div className="flex items-center space-x-2">
-                <Slider
-                  id="compressionQuality"
-                  min={0.1}
-                  max={1}
-                  step={0.05}
-                  value={[compressionQuality]}
-                  onValueChange={(value) => setCompressionQuality(value[0])}
+                <input
+                  type="checkbox"
+                  id="uploadOriginalSize"
+                  checked={uploadOriginalSize}
+                  onChange={(e) => setUploadOriginalSize(e.target.checked)}
+                  disabled={isProcessing}
+                  className="rounded"
+                />
+                <Label htmlFor="uploadOriginalSize" className="text-sm">
+                  Téléverser en taille originale (sans redimensionnement)
+                </Label>
+              </div>
+              <div>
+                <Label htmlFor="targetWidth" className="flex items-center">
+                  <Crop className="mr-2 h-4 w-4" /> Largeur maximale (px)
+                </Label>
+                <Input
+                  id="targetWidth"
+                  type="number"
+                  value={targetWidth}
+                  onChange={(e) => setTargetWidth(parseInt(e.target.value, 10) || 300)}
+                  min="100"
+                  max="4000"
+                  step="50"
+                  disabled={isProcessing || uploadOriginalSize}
+                />
+              </div>
+              <div>
+                <Label htmlFor="compressionQuality" className="flex items-center">
+                  <Minimize className="mr-2 h-4 w-4" /> Qualité de compression
+                </Label>
+                <div className="flex items-center space-x-2">
+                  <Slider
+                    id="compressionQuality"
+                    min={0.1}
+                    max={1}
+                    step={0.05}
+                    value={[compressionQuality]}
+                    onValueChange={(value) => setCompressionQuality(value[0])}
+                    disabled={isProcessing}
+                  />
+                  <span className="text-sm text-muted-foreground w-12 text-right">
+                    {compressionQuality.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="imageName" className="flex items-center">
+                  <Type className="mr-2 h-4 w-4" /> Nom de l'image
+                </Label>
+                <Input
+                  id="imageName"
+                  type="text"
+                  value={imageName}
+                  onChange={(e) => setImageName(e.target.value)}
+                  placeholder="Nom de l'image"
                   disabled={isProcessing}
                 />
-                <span className="text-sm text-muted-foreground w-12 text-right">{compressionQuality.toFixed(2)}</span>
               </div>
-            </div>
-            <div>
-              <Label htmlFor="imageName" className="flex items-center">
-                <Type className="mr-2 h-4 w-4" /> Nom de l'image
-              </Label>
-              <Input
-                id="imageName"
-                type="text"
-                value={imageName}
-                onChange={(e) => setImageName(e.target.value)}
-                placeholder="Nom de l'image"
-                disabled={isProcessing}
-              />
-            </div>
-            <div>
-              <Label htmlFor="imageDescription" className="flex items-center">
-                <FileText className="mr-2 h-4 w-4" /> Description
-              </Label>
-              <Textarea
-                id="imageDescription"
-                value={imageDescription}
-                onChange={(e) => setImageDescription(e.target.value)}
-                placeholder="Description de l'image..."
-                disabled={isProcessing}
-                rows={2}
-              />
-            </div>
-            <div>
-              <Label htmlFor="androidVersion" className="flex items-center">
-                <Smartphone className="mr-2 h-4 w-4" /> Version Android
-              </Label>
-              <Input
-                id="androidVersion"
-                type="text"
-                value={androidVersion}
-                onChange={(e) => setAndroidVersion(e.target.value)}
-                placeholder="Ex: 14, 13, 12..."
-                disabled={isProcessing}
-              />
-            </div>
-            <div>
-              <Label htmlFor="upload-category" className="flex items-center">Catégorie</Label>
-              <select
-                id="upload-category"
-                name="category"
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                disabled={isProcessing}
-              >
-                {(categories || []).filter(c => c !== 'all').map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <Label htmlFor="upload-subcategory" className="flex items-center">
-                <FolderTree className="mr-2 h-4 w-4" /> Sous-catégorie
-              </Label>
-              <select
-                id="upload-subcategory"
-                name="subcategory"
-                value={selectedSubcategory}
-                onChange={(e) => setSelectedSubcategory(e.target.value)}
-                className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                disabled={isProcessing}
-              >
-                {availableSubcategories.map(subcat => (
-                  <option key={subcat} value={subcat}>{subcat}</option>
-                ))}
-              </select>
-            </div>
+              <div>
+                <Label htmlFor="imageDescription" className="flex items-center">
+                  <FileText className="mr-2 h-4 w-4" /> Description
+                </Label>
+                <Textarea
+                  id="imageDescription"
+                  value={imageDescription}
+                  onChange={(e) => setImageDescription(e.target.value)}
+                  placeholder="Description de l'image..."
+                  disabled={isProcessing}
+                  rows={2}
+                />
+              </div>
+              <div>
+                <Label htmlFor="androidVersion" className="flex items-center">
+                  <Smartphone className="mr-2 h-4 w-4" /> Version Android
+                </Label>
+                <Input
+                  id="androidVersion"
+                  type="text"
+                  value={androidVersion}
+                  onChange={(e) => setAndroidVersion(e.target.value)}
+                  placeholder="Ex: 14, 13, 12..."
+                  disabled={isProcessing}
+                />
+              </div>
+              <div>
+                <Label htmlFor="upload-category" className="flex items-center">
+                  Catégorie
+                </Label>
+                <select
+                  id="upload-category"
+                  name="category"
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  disabled={isProcessing}
+                >
+                  {(categories || [])
+                    .filter((c) => c !== 'all')
+                    .map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="upload-subcategory" className="flex items-center">
+                  <FolderTree className="mr-2 h-4 w-4" /> Sous-catégorie
+                </Label>
+                <select
+                  id="upload-subcategory"
+                  name="subcategory"
+                  value={selectedSubcategory}
+                  onChange={(e) => setSelectedSubcategory(e.target.value)}
+                  className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  disabled={isProcessing}
+                >
+                  {availableSubcategories.map((subcat) => (
+                    <option key={subcat} value={subcat}>
+                      {subcat}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
           <DialogFooter className="mt-4 pt-4 border-t flex-shrink-0">
-            <Button type="button" variant="outline" onClick={resetState} disabled={isProcessing}>Annuler</Button>
-            <Button type="button" onClick={() => processAndUploadImage(selectedCategory)} disabled={isProcessing}>
-                {isProcessing ? "En cours..." : "Traiter et Téléverser"}
+            <Button type="button" variant="outline" onClick={resetState} disabled={isProcessing}>
+              Annuler
+            </Button>
+            <Button
+              type="button"
+              onClick={() => processAndUploadImage(selectedCategory)}
+              disabled={isProcessing}
+            >
+              {isProcessing ? 'En cours...' : 'Traiter et Téléverser'}
             </Button>
           </DialogFooter>
         </DialogContent>

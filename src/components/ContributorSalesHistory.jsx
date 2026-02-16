@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { 
-  getContributorExerciseSales, 
+import {
+  getContributorExerciseSales,
   getContributorImageSales,
-  formatRevenue 
+  formatRevenue,
 } from '../data/contributorRevenue';
-import { 
+import {
   Calendar,
   FileText,
   Image as ImageIcon,
   DollarSign,
   User,
   TrendingUp,
-  Download
+  Download,
 } from 'lucide-react';
 
 export default function ContributorSalesHistory() {
@@ -33,9 +33,9 @@ export default function ContributorSalesHistory() {
       setLoading(true);
       const [exercises, images] = await Promise.all([
         getContributorExerciseSales(currentUser.id, 100),
-        getContributorImageSales(currentUser.id, 100)
+        getContributorImageSales(currentUser.id, 100),
       ]);
-      
+
       setExerciseSales(exercises || []);
       setImageSales(images || []);
     } catch (error) {
@@ -47,19 +47,20 @@ export default function ContributorSalesHistory() {
 
   // Combine and sort all sales
   const allSales = [
-    ...exerciseSales.map(sale => ({ ...sale, type: 'exercise' })),
-    ...imageSales.map(sale => ({ ...sale, type: 'image' }))
+    ...exerciseSales.map((sale) => ({ ...sale, type: 'exercise' })),
+    ...imageSales.map((sale) => ({ ...sale, type: 'image' })),
   ].sort((a, b) => new Date(b.purchase_date) - new Date(a.purchase_date));
 
-  const filteredSales = filter === 'all' 
-    ? allSales 
-    : allSales.filter(sale => 
-        filter === 'exercises' ? sale.type === 'exercise' : sale.type === 'image'
-      );
+  const filteredSales =
+    filter === 'all'
+      ? allSales
+      : allSales.filter((sale) =>
+          filter === 'exercises' ? sale.type === 'exercise' : sale.type === 'image'
+        );
 
   const totalRevenue = allSales.reduce((sum, sale) => sum + sale.price_cents, 0);
   const totalSales = allSales.length;
-  const contributorEarnings = totalRevenue * 0.20; // 20% commission
+  const contributorEarnings = totalRevenue * 0.2; // 20% commission
 
   if (loading) {
     return (
@@ -152,7 +153,8 @@ export default function ContributorSalesHistory() {
           <DollarSign className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucune vente pour le moment</h3>
           <p className="text-gray-600">
-            Vos contributions n'ont pas encore été achetées. Continuez à créer du contenu de qualité !
+            Vos contributions n'ont pas encore été achetées. Continuez à créer du contenu de qualité
+            !
           </p>
         </div>
       ) : (
@@ -201,10 +203,9 @@ export default function ContributorSalesHistory() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900">
-                        {sale.type === 'exercise' 
+                        {sale.type === 'exercise'
                           ? sale.task?.title || sale.version?.name || 'Sans titre'
-                          : sale.image?.title || sale.image?.name || 'Sans titre'
-                        }
+                          : sale.image?.title || sale.image?.name || 'Sans titre'}
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -230,7 +231,7 @@ export default function ContributorSalesHistory() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm font-bold text-green-600">
-                        {formatRevenue(sale.price_cents * 0.20)}
+                        {formatRevenue(sale.price_cents * 0.2)}
                       </span>
                     </td>
                   </tr>

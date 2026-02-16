@@ -3,7 +3,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
-import { getContactMessages, markMessageAsRead, markMessageAsReplied, deleteContactMessage, getUnreadCount } from '@/data/contactMessages';
+import {
+  getContactMessages,
+  markMessageAsRead,
+  markMessageAsReplied,
+  deleteContactMessage,
+  getUnreadCount,
+} from '@/data/contactMessages';
 import { Mail, MailOpen, Reply, Trash2, RefreshCw } from 'lucide-react';
 import {
   AlertDialog,
@@ -38,7 +44,7 @@ export default function AdminContactManager() {
       toast({
         title: 'Erreur',
         description: 'Impossible de charger les messages',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -56,13 +62,13 @@ export default function AdminContactManager() {
       await loadMessages();
       await loadUnreadCount();
       toast({
-        title: 'Message marqué comme lu'
+        title: 'Message marqué comme lu',
       });
     } catch (error) {
       toast({
         title: 'Erreur',
         description: 'Impossible de marquer le message',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
@@ -73,20 +79,20 @@ export default function AdminContactManager() {
       await loadMessages();
       await loadUnreadCount();
       toast({
-        title: 'Message marqué comme répondu'
+        title: 'Message marqué comme répondu',
       });
     } catch (error) {
       toast({
         title: 'Erreur',
         description: 'Impossible de marquer le message',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
 
   const handleDelete = async () => {
     if (!selectedMessage) return;
-    
+
     try {
       await deleteContactMessage(selectedMessage.id);
       await loadMessages();
@@ -94,13 +100,13 @@ export default function AdminContactManager() {
       setShowDeleteDialog(false);
       setSelectedMessage(null);
       toast({
-        title: 'Message supprimé'
+        title: 'Message supprimé',
       });
     } catch (error) {
       toast({
         title: 'Erreur',
         description: 'Impossible de supprimer le message',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
@@ -111,7 +117,7 @@ export default function AdminContactManager() {
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
@@ -134,28 +140,19 @@ export default function AdminContactManager() {
                 Gérez les messages reçus via le formulaire de contact
               </CardDescription>
             </div>
-            <Button
-              onClick={loadMessages}
-              variant="outline"
-              size="sm"
-              disabled={loading}
-            >
+            <Button onClick={loadMessages} variant="outline" size="sm" disabled={loading}>
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
           </div>
         </CardHeader>
         <CardContent>
           {loading && messages.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              Chargement...
-            </p>
+            <p className="text-sm text-muted-foreground text-center py-8">Chargement...</p>
           ) : messages.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              Aucun message reçu
-            </p>
+            <p className="text-sm text-muted-foreground text-center py-8">Aucun message reçu</p>
           ) : (
             <div className="space-y-3">
-              {messages.map(message => (
+              {messages.map((message) => (
                 <div
                   key={message.id}
                   className={`p-4 border rounded-lg transition-colors ${
@@ -172,9 +169,7 @@ export default function AdminContactManager() {
                           <MailOpen className="w-4 h-4 text-muted-foreground" />
                         )}
                         <span className="font-medium">{message.name}</span>
-                        <span className="text-sm text-muted-foreground">
-                          ({message.email})
-                        </span>
+                        <span className="text-sm text-muted-foreground">({message.email})</span>
                         {message.replied && (
                           <Badge variant="outline" className="text-xs">
                             <Reply className="w-3 h-3 mr-1" />
@@ -185,9 +180,7 @@ export default function AdminContactManager() {
 
                       {/* Sujet */}
                       {message.subject && (
-                        <p className="font-medium text-sm">
-                          Sujet: {message.subject}
-                        </p>
+                        <p className="font-medium text-sm">Sujet: {message.subject}</p>
                       )}
 
                       {/* Message */}
@@ -254,7 +247,10 @@ export default function AdminContactManager() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground"
+            >
               Supprimer
             </AlertDialogAction>
           </AlertDialogFooter>

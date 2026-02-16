@@ -43,11 +43,29 @@ export const EMOTION_ICONS = [
  * Utilité: Questions sur les modes de communication
  */
 export const COMMUNICATION_ICONS = [
-  { id: 'fa-Phone', name: '☎ Téléphone', component: null, category: 'Communication', library: 'fa' },
+  {
+    id: 'fa-Phone',
+    name: '☎ Téléphone',
+    component: null,
+    category: 'Communication',
+    library: 'fa',
+  },
   { id: 'fa-Envelope', name: '✉ Email', component: null, category: 'Communication', library: 'fa' },
-  { id: 'fa-MessageDots', name: '💬 Chat', component: null, category: 'Communication', library: 'fa' },
+  {
+    id: 'fa-MessageDots',
+    name: '💬 Chat',
+    component: null,
+    category: 'Communication',
+    library: 'fa',
+  },
   { id: 'fa-Share', name: '↗ Partager', component: null, category: 'Communication', library: 'fa' },
-  { id: 'bi-Telephone', name: '☎ Appel', component: null, category: 'Communication', library: 'bi' },
+  {
+    id: 'bi-Telephone',
+    name: '☎ Appel',
+    component: null,
+    category: 'Communication',
+    library: 'bi',
+  },
 ];
 
 /**
@@ -57,7 +75,13 @@ export const COMMUNICATION_ICONS = [
 export const MEDICAL_ICONS = [
   { id: 'fa-HeartPulse', name: '💓 Cœur', component: null, category: 'Médical', library: 'fa' },
   { id: 'fa-Hospital', name: '🏥 Hôpital', component: null, category: 'Médical', library: 'fa' },
-  { id: 'fa-Stethoscope', name: '🩺 Stéthoscope', component: null, category: 'Médical', library: 'fa' },
+  {
+    id: 'fa-Stethoscope',
+    name: '🩺 Stéthoscope',
+    component: null,
+    category: 'Médical',
+    library: 'fa',
+  },
   { id: 'fa-Pill', name: '💊 Médicament', component: null, category: 'Médical', library: 'fa' },
   { id: 'fa-Syringe', name: '💉 Injection', component: null, category: 'Médical', library: 'fa' },
 ];
@@ -71,7 +95,13 @@ export const TRANSPORT_ICONS = [
   { id: 'fa-Bus', name: '🚌 Bus', component: null, category: 'Transport', library: 'fa' },
   { id: 'fa-Train', name: '🚂 Train', component: null, category: 'Transport', library: 'fa' },
   { id: 'fa-Plane', name: '✈ Avion', component: null, category: 'Transport', library: 'fa' },
-  { id: 'fa-MapLocation', name: '📍 Localisation', component: null, category: 'Transport', library: 'fa' },
+  {
+    id: 'fa-MapLocation',
+    name: '📍 Localisation',
+    component: null,
+    category: 'Transport',
+    library: 'fa',
+  },
 ];
 
 /**
@@ -79,7 +109,13 @@ export const TRANSPORT_ICONS = [
  * Utilité: E-commerce, shopping, paiement
  */
 export const COMMERCE_ICONS = [
-  { id: 'fa-ShoppingCart', name: '🛒 Panier', component: null, category: 'Commerce', library: 'fa' },
+  {
+    id: 'fa-ShoppingCart',
+    name: '🛒 Panier',
+    component: null,
+    category: 'Commerce',
+    library: 'fa',
+  },
   { id: 'fa-CreditCard', name: '💳 Carte', component: null, category: 'Commerce', library: 'fa' },
   { id: 'fa-DollarSign', name: '💰 Prix', component: null, category: 'Commerce', library: 'fa' },
   { id: 'fa-Barcode', name: '📦 Code barre', component: null, category: 'Commerce', library: 'fa' },
@@ -92,10 +128,22 @@ export const COMMERCE_ICONS = [
  */
 export const EDUCATION_ICONS = [
   { id: 'fa-BookOpen', name: '📖 Livre', component: null, category: 'Éducation', library: 'fa' },
-  { id: 'fa-Graduation', name: '🎓 Diplôme', component: null, category: 'Éducation', library: 'fa' },
+  {
+    id: 'fa-Graduation',
+    name: '🎓 Diplôme',
+    component: null,
+    category: 'Éducation',
+    library: 'fa',
+  },
   { id: 'fa-Pencil', name: '✏ Crayon', component: null, category: 'Éducation', library: 'fa' },
   { id: 'fa-Lightbulb', name: '💡 Idée', component: null, category: 'Éducation', library: 'fa' },
-  { id: 'fa-Brain', name: '🧠 Intelligence', component: null, category: 'Éducation', library: 'fa' },
+  {
+    id: 'fa-Brain',
+    name: '🧠 Intelligence',
+    component: null,
+    category: 'Éducation',
+    library: 'fa',
+  },
 ];
 
 /**
@@ -104,17 +152,29 @@ export const EDUCATION_ICONS = [
  */
 export const SECURITY_ICONS = [
   { id: 'fa-Lock', name: '🔒 Verrouillé', component: null, category: 'Sécurité', library: 'fa' },
-  { id: 'fa-Unlock', name: '🔓 Déverrouillé', component: null, category: 'Sécurité', library: 'fa' },
+  {
+    id: 'fa-Unlock',
+    name: '🔓 Déverrouillé',
+    component: null,
+    category: 'Sécurité',
+    library: 'fa',
+  },
   { id: 'fa-Shield', name: '🛡 Bouclier', component: null, category: 'Sécurité', library: 'fa' },
   { id: 'fa-Eye', name: '👁 Visible', component: null, category: 'Sécurité', library: 'fa' },
-  { id: 'fa-Fingerprint', name: '👆 Empreinte', component: null, category: 'Sécurité', library: 'fa' },
+  {
+    id: 'fa-Fingerprint',
+    name: '👆 Empreinte',
+    component: null,
+    category: 'Sécurité',
+    library: 'fa',
+  },
 ];
 
 // ============ HELPER POUR COMBINER ============
 
 /**
  * Combiner Lucide avec react-icons
- * Usage: 
+ * Usage:
  *   const allIcons = combineIconLibraries(LUCIDE_ICONS, EMOTION_ICONS);
  */
 export const combineIconLibraries = (...libraries) => {
@@ -127,7 +187,7 @@ export const combineIconLibraries = (...libraries) => {
  *   const emotionIcons = filterByCategory(allIcons, 'Émotions');
  */
 export const filterByCategory = (icons, category) => {
-  return icons.filter(icon => icon.category === category);
+  return icons.filter((icon) => icon.category === category);
 };
 
 /**
@@ -136,7 +196,7 @@ export const filterByCategory = (icons, category) => {
  *   const fontAwesomeIcons = filterByLibrary(allIcons, 'fa');
  */
 export const filterByLibrary = (icons, libraryId) => {
-  return icons.filter(icon => icon.library === libraryId);
+  return icons.filter((icon) => icon.library === libraryId);
 };
 
 /**
@@ -146,10 +206,12 @@ export const filterByLibrary = (icons, libraryId) => {
  */
 export const searchIcons = (icons, keyword) => {
   const lower = keyword.toLowerCase();
-  return icons.filter(icon =>
-    icon.name.toLowerCase().includes(lower) ||
-    icon.id.toLowerCase().includes(lower) ||
-    (icon.category?.toLowerCase().includes(lower) || false)
+  return icons.filter(
+    (icon) =>
+      icon.name.toLowerCase().includes(lower) ||
+      icon.id.toLowerCase().includes(lower) ||
+      icon.category?.toLowerCase().includes(lower) ||
+      false
   );
 };
 
@@ -157,14 +219,14 @@ export const searchIcons = (icons, keyword) => {
 
 /**
  * ÉTAPE 1 : Ajouter les imports dans QuestionnaireCreation.jsx
- * 
+ *
  * import * as FA from 'react-icons/fa6';
  * import { EMOTION_ICONS, COMMUNICATION_ICONS } from '@/lib/iconConfigs';
  */
 
 /**
  * ÉTAPE 2 : Créer une liste combinée
- * 
+ *
  * const ALL_ICONS = [
  *   ...LUCIDE_ICONS,
  *   ...EMOTION_ICONS.map(icon => ({
@@ -178,4 +240,3 @@ export const searchIcons = (icons, keyword) => {
  * ÉTAPE 3 : Utiliser dans le rendu des onglets icônes
  * Voir ICON_MANAGER_GUIDE.md pour les exemples complets
  */
-

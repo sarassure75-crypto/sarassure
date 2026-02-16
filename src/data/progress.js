@@ -9,15 +9,16 @@ export const getProgressForVersion = async (userId, versionId) => {
       .eq('user_id', userId)
       .eq('version_id', versionId)
       .single();
-    if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found, which is not an error here
-        throw error;
+    if (error && error.code !== 'PGRST116') {
+      // PGRST116 means no rows found, which is not an error here
+      throw error;
     }
     return data;
-  } catch(error) {
-    console.error("Error fetching progress for version:", error);
+  } catch (error) {
+    console.error('Error fetching progress for version:', error);
     return null;
   }
-}
+};
 // Alias pour compatibilité avec les imports existants
 export const getProgress = getProgressForVersion;
 
@@ -31,16 +32,15 @@ export const getAllProgressForUser = async (userId) => {
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error("Error fetching all progress for user:", error);
+    console.error('Error fetching all progress for user:', error);
     return [];
   }
-}
+};
 
 export const fetchUserProgressDetails = async (userId) => {
   if (!userId) return [];
   try {
-    const { data, error } = await supabase
-      .rpc('get_user_progress_details', { p_user_id: userId });
+    const { data, error } = await supabase.rpc('get_user_progress_details', { p_user_id: userId });
 
     if (error) {
       console.error('Error fetching user progress details:', error);
@@ -51,7 +51,6 @@ export const fetchUserProgressDetails = async (userId) => {
     return [];
   }
 };
-
 
 export const recordCompletion = async (userId, versionId, timeTakenInSeconds) => {
   if (!userId || !versionId) return { error: 'Missing userId or versionId' };
@@ -67,8 +66,13 @@ export const recordCompletion = async (userId, versionId, timeTakenInSeconds) =>
       version_id: versionId,
       attempts: (existingProgress.attempts || 0) + 1,
       last_time_seconds: Math.round(timeTakenInSeconds),
-      best_time_seconds: Math.round(Math.min(existingProgress.best_time_seconds || Infinity, timeTakenInSeconds)),
-      completed_steps_history: [...(existingProgress.completed_steps_history || []), completionEvent]
+      best_time_seconds: Math.round(
+        Math.min(existingProgress.best_time_seconds || Infinity, timeTakenInSeconds)
+      ),
+      completed_steps_history: [
+        ...(existingProgress.completed_steps_history || []),
+        completionEvent,
+      ],
     };
   } else {
     newProgressData = {
@@ -78,27 +82,27 @@ export const recordCompletion = async (userId, versionId, timeTakenInSeconds) =>
       first_time_seconds: Math.round(timeTakenInSeconds),
       last_time_seconds: Math.round(timeTakenInSeconds),
       best_time_seconds: Math.round(timeTakenInSeconds),
-      completed_steps_history: [completionEvent]
+      completed_steps_history: [completionEvent],
     };
   }
-  
+
   try {
-     const { data, error } = await supabase
-       .from('user_version_progress')
-       .upsert(newProgressData, {
-         onConflict: 'user_id,version_id'
-       })
-       .select()
-       .single();
-       
+    const { data, error } = await supabase
+      .from('user_version_progress')
+      .upsert(newProgressData, {
+        onConflict: 'user_id,version_id',
+      })
+      .select()
+      .single();
+
     if (error) {
-      console.error("recordCompletion - upsert error:", error);
+      console.error('recordCompletion - upsert error:', error);
       return { error };
     }
     // return inserted/updated row to caller so UI can react
     return { data };
   } catch (error) {
-    console.error("Error recording completion:", error);
+    console.error('Error recording completion:', error);
     return { error };
   }
 };

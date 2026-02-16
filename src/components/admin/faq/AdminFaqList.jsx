@@ -4,13 +4,22 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Edit, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+  DialogClose,
+} from '@/components/ui/dialog';
 
 const AdminFaqList = ({ faqData, onEdit, onDelete }) => {
   const [expandedCategories, setExpandedCategories] = useState({});
 
   const toggleCategory = (category) => {
-    setExpandedCategories(prev => ({ ...prev, [category]: !prev[category] }));
+    setExpandedCategories((prev) => ({ ...prev, [category]: !prev[category] }));
   };
 
   const groupedFaq = faqData.reduce((acc, item) => {
@@ -37,7 +46,11 @@ const AdminFaqList = ({ faqData, onEdit, onDelete }) => {
                 onClick={() => toggleCategory(category)}
               >
                 {category} ({items.length})
-                {expandedCategories[category] ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                {expandedCategories[category] ? (
+                  <ChevronUp className="h-5 w-5" />
+                ) : (
+                  <ChevronDown className="h-5 w-5" />
+                )}
               </h3>
               <AnimatePresence>
                 {expandedCategories[category] && (
@@ -47,7 +60,7 @@ const AdminFaqList = ({ faqData, onEdit, onDelete }) => {
                     exit={{ opacity: 0, height: 0 }}
                     className="space-y-2 mt-1 pl-3 border-l-2 border-muted"
                   >
-                    {items.map(item => (
+                    {items.map((item) => (
                       <motion.li
                         key={item.id}
                         layout
@@ -57,9 +70,16 @@ const AdminFaqList = ({ faqData, onEdit, onDelete }) => {
                         className="p-3 border rounded-md bg-background hover:shadow-md transition-shadow"
                       >
                         <div className="flex justify-between items-start">
-                          <p className="font-medium text-foreground flex-grow pr-2">{item.question}</p>
+                          <p className="font-medium text-foreground flex-grow pr-2">
+                            {item.question}
+                          </p>
                           <div className="flex space-x-1 shrink-0">
-                            <Button variant="ghost" size="icon_xs" onClick={() => onEdit(item)} title="Modifier">
+                            <Button
+                              variant="ghost"
+                              size="icon_xs"
+                              onClick={() => onEdit(item)}
+                              title="Modifier"
+                            >
                               <Edit className="h-4 w-4 text-blue-600" />
                             </Button>
                             <Dialog>
@@ -72,26 +92,43 @@ const AdminFaqList = ({ faqData, onEdit, onDelete }) => {
                                 <DialogHeader>
                                   <DialogTitle>Confirmer la suppression</DialogTitle>
                                   <DialogDescription>
-                                    Êtes-vous sûr de vouloir supprimer la Q&R : "{item.question}" ? Cette action est irréversible.
+                                    Êtes-vous sûr de vouloir supprimer la Q&R : "{item.question}" ?
+                                    Cette action est irréversible.
                                   </DialogDescription>
                                 </DialogHeader>
                                 <DialogFooter>
-                                  <DialogClose asChild><Button variant="outline">Annuler</Button></DialogClose>
-                                  <DialogClose asChild><Button variant="destructive" onClick={() => onDelete(item.id)}>Supprimer</Button></DialogClose>
+                                  <DialogClose asChild>
+                                    <Button variant="outline">Annuler</Button>
+                                  </DialogClose>
+                                  <DialogClose asChild>
+                                    <Button variant="destructive" onClick={() => onDelete(item.id)}>
+                                      Supprimer
+                                    </Button>
+                                  </DialogClose>
                                 </DialogFooter>
                               </DialogContent>
                             </Dialog>
                           </div>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">Mots-clés: {item.keywords?.join(', ') || 'N/A'}</p>
-                        {item.isUserSubmitted && <Badge variant="outline" className="mt-1 text-xs bg-yellow-100 text-yellow-700 border-yellow-300">Soumis par utilisateur</Badge>}
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Mots-clés: {item.keywords?.join(', ') || 'N/A'}
+                        </p>
+                        {item.isUserSubmitted && (
+                          <Badge
+                            variant="outline"
+                            className="mt-1 text-xs bg-yellow-100 text-yellow-700 border-yellow-300"
+                          >
+                            Soumis par utilisateur
+                          </Badge>
+                        )}
                       </motion.li>
                     ))}
                   </motion.ul>
                 )}
               </AnimatePresence>
             </div>
-          )))}
+          ))
+        )}
       </CardContent>
     </Card>
   );

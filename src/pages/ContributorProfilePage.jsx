@@ -55,7 +55,7 @@ export default function ContributorProfilePage() {
       console.error('Erreur chargement profil:', error);
       setMessage({
         type: 'error',
-        text: 'Erreur lors du chargement du profil'
+        text: 'Erreur lors du chargement du profil',
       });
     } finally {
       setLoading(false);
@@ -64,17 +64,17 @@ export default function ContributorProfilePage() {
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
-    setProfileData(prev => ({
+    setProfileData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
-    setPasswords(prev => ({
+    setPasswords((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -85,7 +85,7 @@ export default function ContributorProfilePage() {
     if (passwords.newPassword && passwords.newPassword !== passwords.confirmPassword) {
       setMessage({
         type: 'error',
-        text: 'Les mots de passe ne correspondent pas'
+        text: 'Les mots de passe ne correspondent pas',
       });
       return;
     }
@@ -109,7 +109,7 @@ export default function ContributorProfilePage() {
       // 2. Changer l'email si modifié
       if (profileData.email !== currentUser.email) {
         const { error: emailError } = await supabase.auth.updateUser({
-          email: profileData.email
+          email: profileData.email,
         });
         if (emailError) throw emailError;
       }
@@ -117,10 +117,10 @@ export default function ContributorProfilePage() {
       // 3. Changer le mot de passe si fourni
       if (passwords.newPassword) {
         const { error: passwordError } = await supabase.auth.updateUser({
-          password: passwords.newPassword
+          password: passwords.newPassword,
         });
         if (passwordError) throw passwordError;
-        
+
         // Réinitialiser les champs de mot de passe
         setPasswords({
           currentPassword: '',
@@ -131,7 +131,7 @@ export default function ContributorProfilePage() {
 
       setMessage({
         type: 'success',
-        text: '✅ Profil mis à jour avec succès'
+        text: '✅ Profil mis à jour avec succès',
       });
 
       // Recharger les données après quelques secondes
@@ -140,7 +140,7 @@ export default function ContributorProfilePage() {
       console.error('Erreur sauvegarde:', error);
       setMessage({
         type: 'error',
-        text: `❌ Erreur: ${error.message}`
+        text: `❌ Erreur: ${error.message}`,
       });
     } finally {
       setSaving(false);
@@ -164,11 +164,13 @@ export default function ContributorProfilePage() {
 
       {/* Message d'état */}
       {message && (
-        <div className={`mb-6 p-4 rounded-lg flex items-center space-x-3 ${
-          message.type === 'success' 
-            ? 'bg-green-100 text-green-700 border border-green-300' 
-            : 'bg-red-100 text-red-700 border border-red-300'
-        }`}>
+        <div
+          className={`mb-6 p-4 rounded-lg flex items-center space-x-3 ${
+            message.type === 'success'
+              ? 'bg-green-100 text-green-700 border border-green-300'
+              : 'bg-red-100 text-red-700 border border-red-300'
+          }`}
+        >
           {message.type === 'success' ? (
             <CheckCircle className="w-5 h-5 flex-shrink-0" />
           ) : (
@@ -185,9 +187,7 @@ export default function ContributorProfilePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Prénom */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Prénom
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Prénom</label>
             <input
               type="text"
               name="first_name"
@@ -200,9 +200,7 @@ export default function ContributorProfilePage() {
 
           {/* Nom */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nom
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Nom</label>
             <input
               type="text"
               name="last_name"
@@ -230,9 +228,7 @@ export default function ContributorProfilePage() {
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
             <input
               type="email"
               name="email"
@@ -284,13 +280,19 @@ export default function ContributorProfilePage() {
               />
               <button
                 type="button"
-                onClick={() => setShowPasswords(prev => ({
-                  ...prev,
-                  current: !prev.current
-                }))}
+                onClick={() =>
+                  setShowPasswords((prev) => ({
+                    ...prev,
+                    current: !prev.current,
+                  }))
+                }
                 className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
               >
-                {showPasswords.current ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPasswords.current ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
               </button>
             </div>
           </div>
@@ -311,10 +313,12 @@ export default function ContributorProfilePage() {
               />
               <button
                 type="button"
-                onClick={() => setShowPasswords(prev => ({
-                  ...prev,
-                  new: !prev.new
-                }))}
+                onClick={() =>
+                  setShowPasswords((prev) => ({
+                    ...prev,
+                    new: !prev.new,
+                  }))
+                }
                 className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
               >
                 {showPasswords.new ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -338,13 +342,19 @@ export default function ContributorProfilePage() {
               />
               <button
                 type="button"
-                onClick={() => setShowPasswords(prev => ({
-                  ...prev,
-                  confirm: !prev.confirm
-                }))}
+                onClick={() =>
+                  setShowPasswords((prev) => ({
+                    ...prev,
+                    confirm: !prev.confirm,
+                  }))
+                }
                 className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
               >
-                {showPasswords.confirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPasswords.confirm ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
               </button>
             </div>
           </div>

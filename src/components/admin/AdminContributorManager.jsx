@@ -5,16 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import { 
-  UserPlus, 
-  Trash2, 
-  Mail, 
-  User, 
+import {
+  UserPlus,
+  Trash2,
+  Mail,
+  User,
   Shield,
   CheckCircle,
   XCircle,
   Calendar,
-  FileText
+  FileText,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -26,7 +26,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 
 const AdminContributorManager = ({ onContributorCreated }) => {
   const [contributors, setContributors] = useState([]);
@@ -40,7 +40,7 @@ const AdminContributorManager = ({ onContributorCreated }) => {
   const checkCGUStatus = (contributor) => {
     const hasAcceptedCGU = contributor.cgu_accepted === true;
     const acceptanceDate = contributor.cgu_accepted_date;
-    
+
     return { hasAccepted: hasAcceptedCGU, acceptedDate: acceptanceDate };
   };
 
@@ -49,12 +49,12 @@ const AdminContributorManager = ({ onContributorCreated }) => {
     try {
       const currentStatus = checkCGUStatus(contributor);
       const newStatus = !currentStatus.hasAccepted;
-      
+
       const { error } = await supabase
         .from('profiles')
         .update({
           cgu_accepted: newStatus,
-          cgu_accepted_date: newStatus ? new Date().toISOString() : null
+          cgu_accepted_date: newStatus ? new Date().toISOString() : null,
         })
         .eq('id', contributor.id);
 
@@ -64,14 +64,14 @@ const AdminContributorManager = ({ onContributorCreated }) => {
         title: 'Statut CGU mis à jour',
         description: `CGU ${newStatus ? 'acceptées' : 'révoquées'} pour ${contributor.email}`,
       });
-      
+
       loadContributors();
     } catch (error) {
       console.error('Erreur lors de la mise à jour du statut CGU:', error);
       toast({
         title: 'Erreur',
         description: 'Impossible de mettre à jour le statut CGU',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
@@ -82,7 +82,7 @@ const AdminContributorManager = ({ onContributorCreated }) => {
     password: '',
     firstName: '',
     lastName: '',
-    username: ''
+    username: '',
   });
 
   useEffect(() => {
@@ -92,11 +92,12 @@ const AdminContributorManager = ({ onContributorCreated }) => {
   const loadContributors = async () => {
     try {
       setLoading(true);
-      
+
       // Get all users with contributor role
       const { data: profiles, error } = await supabase
         .from('profiles')
-        .select(`
+        .select(
+          `
           id,
           email,
           first_name,
@@ -105,7 +106,8 @@ const AdminContributorManager = ({ onContributorCreated }) => {
           role,
           cgu_accepted,
           cgu_accepted_date
-        `)
+        `
+        )
         .eq('role', 'contributor')
         .order('created_at', { ascending: false });
 
@@ -117,7 +119,7 @@ const AdminContributorManager = ({ onContributorCreated }) => {
       toast({
         title: 'Erreur',
         description: 'Impossible de charger les contributeurs',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -126,12 +128,12 @@ const AdminContributorManager = ({ onContributorCreated }) => {
 
   const handleCreateContributor = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.email || !formData.password) {
       toast({
         title: 'Erreur',
         description: 'Email et mot de passe sont requis',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
@@ -147,9 +149,9 @@ const AdminContributorManager = ({ onContributorCreated }) => {
           data: {
             role: 'contributor',
             first_name: formData.firstName,
-            last_name: formData.lastName
-          }
-        }
+            last_name: formData.lastName,
+          },
+        },
       });
 
       if (authError) throw authError;
@@ -164,21 +166,19 @@ const AdminContributorManager = ({ onContributorCreated }) => {
         .update({
           role: 'contributor',
           first_name: formData.firstName,
-          last_name: formData.lastName
+          last_name: formData.lastName,
         })
         .eq('id', authData.user.id);
 
       if (profileError) throw profileError;
 
       // 3. Create contributor profile
-      const { error: contributorError } = await supabase
-        .from('contributor_profiles')
-        .insert({
-          user_id: authData.user.id,
-          username: formData.username || formData.email.split('@')[0],
-          bio: '',
-          is_public: true
-        });
+      const { error: contributorError } = await supabase.from('contributor_profiles').insert({
+        user_id: authData.user.id,
+        username: formData.username || formData.email.split('@')[0],
+        bio: '',
+        is_public: true,
+      });
 
       if (contributorError) throw contributorError;
 
@@ -193,11 +193,11 @@ const AdminContributorManager = ({ onContributorCreated }) => {
         password: '',
         firstName: '',
         lastName: '',
-        username: ''
+        username: '',
       });
       setShowCreateForm(false);
       loadContributors();
-      
+
       if (onContributorCreated) {
         onContributorCreated();
       }
@@ -206,7 +206,7 @@ const AdminContributorManager = ({ onContributorCreated }) => {
       toast({
         title: 'Erreur',
         description: error.message || 'Impossible de créer le contributeur',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setCreating(false);
@@ -234,7 +234,7 @@ const AdminContributorManager = ({ onContributorCreated }) => {
       toast({
         title: 'Contributeur supprimé',
         description: `Le rôle contributeur de ${contributor.email} a été révoqué`,
-        variant: 'destructive'
+        variant: 'destructive',
       });
 
       loadContributors();
@@ -243,7 +243,7 @@ const AdminContributorManager = ({ onContributorCreated }) => {
       toast({
         title: 'Erreur',
         description: 'Impossible de supprimer le contributeur',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setDeleteConfirm(null);
@@ -273,7 +273,7 @@ const AdminContributorManager = ({ onContributorCreated }) => {
                 Créez et gérez les comptes contributeurs de la plateforme
               </CardDescription>
             </div>
-            <Button 
+            <Button
               onClick={() => setShowCreateForm(!showCreateForm)}
               className="bg-blue-600 hover:bg-blue-700"
             >
@@ -286,7 +286,10 @@ const AdminContributorManager = ({ onContributorCreated }) => {
         {/* Create Form */}
         {showCreateForm && (
           <CardContent>
-            <form onSubmit={handleCreateContributor} className="space-y-4 bg-blue-50 p-6 rounded-lg border border-blue-200">
+            <form
+              onSubmit={handleCreateContributor}
+              className="space-y-4 bg-blue-50 p-6 rounded-lg border border-blue-200"
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="email" className="flex items-center gap-2">
@@ -351,18 +354,14 @@ const AdminContributorManager = ({ onContributorCreated }) => {
               </div>
 
               <div className="flex gap-2 pt-4">
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={creating}
                   className="bg-green-600 hover:bg-green-700"
                 >
                   {creating ? 'Création...' : 'Créer le Contributeur'}
                 </Button>
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  onClick={() => setShowCreateForm(false)}
-                >
+                <Button type="button" variant="outline" onClick={() => setShowCreateForm(false)}>
                   Annuler
                 </Button>
               </div>
@@ -374,9 +373,7 @@ const AdminContributorManager = ({ onContributorCreated }) => {
       {/* Contributors List */}
       <Card>
         <CardHeader>
-          <CardTitle>
-            Contributeurs Actifs ({contributors.length})
-          </CardTitle>
+          <CardTitle>Contributeurs Actifs ({contributors.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {contributors.length === 0 ? (
@@ -388,7 +385,7 @@ const AdminContributorManager = ({ onContributorCreated }) => {
           ) : (
             <div className="space-y-3">
               {contributors.map((contributor) => (
-                <div 
+                <div
                   key={contributor.id}
                   className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
                 >
@@ -406,11 +403,11 @@ const AdminContributorManager = ({ onContributorCreated }) => {
                         <Badge variant="secondary" className="text-xs">
                           Contributeur
                         </Badge>
-                        
+
                         {/* Badge CGU conditionnel */}
                         {(() => {
                           const cguStatus = checkCGUStatus(contributor);
-                          
+
                           return cguStatus.hasAccepted ? (
                             <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded flex items-center gap-1">
                               <CheckCircle className="w-3 h-3" />
@@ -491,8 +488,8 @@ const AdminContributorManager = ({ onContributorCreated }) => {
               <strong>{deleteConfirm?.email}</strong> ?
               <br />
               <br />
-              Le profil contributeur sera supprimé et l'utilisateur redeviendra un utilisateur standard.
-              Cette action ne peut pas être annulée.
+              Le profil contributeur sera supprimé et l'utilisateur redeviendra un utilisateur
+              standard. Cette action ne peut pas être annulée.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

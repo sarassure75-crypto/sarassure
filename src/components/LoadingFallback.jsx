@@ -5,15 +5,15 @@ import { motion } from 'framer-motion';
  * Enhanced loading fallback component
  * Shows a smooth loader without blocking interaction
  */
-const LoadingFallback = ({ message = "Chargement...", showProgress = false }) => {
+const LoadingFallback = ({ message = 'Chargement...', showProgress = false }) => {
   const [progress, setProgress] = React.useState(0);
 
   React.useEffect(() => {
     if (!showProgress) return;
-    
+
     // Simulate progress loading
     const interval = setInterval(() => {
-      setProgress(p => {
+      setProgress((p) => {
         const newProgress = p + Math.random() * 30;
         return Math.min(newProgress, 90); // Cap at 90% until actual completion
       });
@@ -24,7 +24,7 @@ const LoadingFallback = ({ message = "Chargement...", showProgress = false }) =>
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-sky-50 via-indigo-50 to-purple-50">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
@@ -35,17 +35,17 @@ const LoadingFallback = ({ message = "Chargement...", showProgress = false }) =>
           {/* Outer ring */}
           <motion.div
             animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
             className="absolute inset-0 border-4 border-transparent border-t-primary border-r-primary rounded-full"
           />
-          
+
           {/* Middle ring */}
           <motion.div
             animate={{ rotate: -360 }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
             className="absolute inset-2 border-4 border-transparent border-b-indigo-400 rounded-full"
           />
-          
+
           {/* Inner circle */}
           <div className="absolute inset-4 bg-primary/10 rounded-full" />
         </div>

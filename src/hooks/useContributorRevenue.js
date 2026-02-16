@@ -39,7 +39,7 @@ export function useContributorRevenue(contributorId) {
     revenue,
     loading,
     error,
-    refresh: fetchRevenue
+    refresh: fetchRevenue,
   };
 }
 

@@ -1,10 +1,23 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useContributionActions, useContributorStats } from "../hooks/useContributions";
-import { useAuth } from "../contexts/AuthContext";
-import { useContributorRevenue } from "../hooks/useContributorRevenue";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useContributionActions, useContributorStats } from '../hooks/useContributions';
+import { useAuth } from '../contexts/AuthContext';
+import { useContributorRevenue } from '../hooks/useContributorRevenue';
 import { supabase } from '@/lib/supabaseClient';
-import { Edit, Trash2, Eye, Filter, Search, Calendar, TrendingUp, Image as ImageIcon, FileText, CheckCircle, Clock, XCircle } from 'lucide-react';
+import {
+  Edit,
+  Trash2,
+  Eye,
+  Filter,
+  Search,
+  Calendar,
+  TrendingUp,
+  Image as ImageIcon,
+  FileText,
+  CheckCircle,
+  Clock,
+  XCircle,
+} from 'lucide-react';
 
 export default function MyContributions() {
   const navigate = useNavigate();
@@ -36,7 +49,8 @@ export default function MyContributions() {
       // Fetch exercises (tasks) with their versions
       const { data: tasksData, error: tasksError } = await supabase
         .from('tasks')
-        .select(`
+        .select(
+          `
           id,
           title,
           description,
@@ -55,7 +69,8 @@ export default function MyContributions() {
             reviewed_at,
             modification_count
           )
-        `)
+        `
+        )
         .eq('owner_id', currentUser?.id)
         .order('created_at', { ascending: false });
 
@@ -64,10 +79,10 @@ export default function MyContributions() {
       // Transform tasks into individual versions (flatten)
       const allVersions = [];
       if (tasksData) {
-        tasksData.forEach(task => {
+        tasksData.forEach((task) => {
           if (task.versions && task.versions.length > 0) {
             // For each version, create a contribution entry
-            task.versions.forEach(version => {
+            task.versions.forEach((version) => {
               allVersions.push({
                 id: version.id,
                 taskId: task.id,
@@ -81,7 +96,7 @@ export default function MyContributions() {
                 reviewer_id: version.reviewer_id,
                 reviewed_at: version.reviewed_at,
                 modification_count: version.modification_count,
-                type: 'version'
+                type: 'version',
               });
             });
           } else {
@@ -95,7 +110,7 @@ export default function MyContributions() {
               status: 'draft',
               created_at: task.created_at,
               updated_at: task.updated_at || task.created_at,
-              type: 'draft'
+              type: 'draft',
             });
           }
         });
@@ -112,7 +127,7 @@ export default function MyContributions() {
 
       setExercises(allVersions || []);
       setImages(imagesData || []);
-      
+
       // Debug logs
       console.log('Tasks loaded:', tasksData?.length || 0);
       console.log('All versions:', allVersions?.length || 0);
@@ -128,22 +143,20 @@ export default function MyContributions() {
 
   // Combine exercises (versions) and images with type
   const allContributions = [
-    ...(exercises || []).map(ex => ({
+    ...(exercises || []).map((ex) => ({
       ...ex,
       type: ex.type, // 'version' or 'draft'
       status: ex.status || 'draft',
-      displayTitle: ex.versionName 
-        ? `${ex.title} - ${ex.versionName}` 
-        : ex.title,
-      date: ex.updated_at || ex.created_at
+      displayTitle: ex.versionName ? `${ex.title} - ${ex.versionName}` : ex.title,
+      date: ex.updated_at || ex.created_at,
     })),
-    ...(images || []).map(img => ({
+    ...(images || []).map((img) => ({
       ...img,
       type: 'image',
       status: img.moderation_status || 'pending',
       displayTitle: img.title || `Image ${img.id?.slice(0, 8)}`,
-      date: img.updated_at || img.created_at
-    }))
+      date: img.updated_at || img.created_at,
+    })),
   ];
 
   // Debug: Log combined contributions
@@ -163,12 +176,13 @@ export default function MyContributions() {
     imagesPending: contributorStats?.images?.pending || 0,
     imagesRejected: contributorStats?.images?.rejected || 0,
     // Total contributions (all types)
-    totalContributions: (contributorStats?.exercises?.total || 0) + (contributorStats?.images?.total || 0),
+    totalContributions:
+      (contributorStats?.exercises?.total || 0) + (contributorStats?.images?.total || 0),
   };
 
   // Filtrage et tri
   const filteredContributions = allContributions
-    ?.filter(contrib => {
+    ?.filter((contrib) => {
       // Filtre recherche
       if (searchTerm && !contrib.displayTitle?.toLowerCase().includes(searchTerm.toLowerCase())) {
         return false;
@@ -177,7 +191,11 @@ export default function MyContributions() {
       // Filtre statut
       if (statusFilter !== 'all') {
         // Map filter values to actual status values
-        if (statusFilter === 'approved' && contrib.status !== 'validated' && contrib.status !== 'approved') {
+        if (
+          statusFilter === 'approved' &&
+          contrib.status !== 'validated' &&
+          contrib.status !== 'approved'
+        ) {
           return false;
         } else if (statusFilter === 'draft' && contrib.status !== 'draft') {
           return false;
@@ -226,13 +244,13 @@ export default function MyContributions() {
         // Pour les versions, utiliser l'ID de la version
         // Pour les drafts, utiliser l'ID de la task
         // Pour les images, utiliser l'ID de l'image
-        
+
         const result = await deleteContribution(
-          contributionId, 
-          contributionType, 
+          contributionId,
+          contributionType,
           contributionType === 'image' ? currentUser?.id : null
         );
-        
+
         if (result.success) {
           // Recharger la liste
           loadContributions();
@@ -272,7 +290,9 @@ export default function MyContributions() {
     const Icon = badge.icon;
 
     return (
-      <span className={`inline-flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium ${badge.color}`}>
+      <span
+        className={`inline-flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium ${badge.color}`}
+      >
         <Icon className="w-4 h-4" />
         <span>{badge.label}</span>
       </span>
@@ -282,10 +302,10 @@ export default function MyContributions() {
   // Format date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    return date.toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     });
   };
 
@@ -317,7 +337,7 @@ export default function MyContributions() {
             ✓ {stats.exercisesApproved} | ⏱ {stats.exercisesPending}
           </div>
         </div>
-        
+
         <div className="bg-purple-50 rounded-lg p-4 shadow-sm border border-purple-200">
           <div className="text-2xl font-bold text-purple-700">{stats.imagesTotal}</div>
           <div className="text-sm text-purple-600">Images</div>
@@ -337,7 +357,9 @@ export default function MyContributions() {
         <div className="bg-emerald-50 rounded-lg p-4 shadow-sm border border-emerald-200">
           <div className="flex items-center space-x-3">
             <div>
-              <div className="text-2xl font-bold text-emerald-700">{stats.exercisesRejected + stats.imagesRejected}</div>
+              <div className="text-2xl font-bold text-emerald-700">
+                {stats.exercisesRejected + stats.imagesRejected}
+              </div>
               <div className="text-sm text-emerald-600">Rejetées</div>
             </div>
             <TrendingUp className="w-8 h-8 text-emerald-300" />
@@ -399,9 +421,9 @@ export default function MyContributions() {
           <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucune contribution</h3>
           <p className="text-gray-600 mb-6">
-            {searchTerm || statusFilter !== 'all' 
+            {searchTerm || statusFilter !== 'all'
               ? 'Aucun résultat ne correspond à vos critères.'
-              : 'Vous n\'avez pas encore créé de contribution.'}
+              : "Vous n'avez pas encore créé de contribution."}
           </p>
           <button
             onClick={() => navigate('/contributeur/nouvelle-contribution')}
@@ -413,7 +435,7 @@ export default function MyContributions() {
       ) : (
         <div className="space-y-4">
           {filteredContributions.map((contrib) => (
-            <div 
+            <div
               key={contrib.id}
               className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
             >
@@ -434,9 +456,7 @@ export default function MyContributions() {
                   </div>
 
                   {contrib.description && (
-                    <p className="text-gray-600 mb-3 line-clamp-2">
-                      {contrib.description}
-                    </p>
+                    <p className="text-gray-600 mb-3 line-clamp-2">{contrib.description}</p>
                   )}
 
                   {/* Commentaires admin pour les exercices à corriger */}
@@ -470,7 +490,11 @@ export default function MyContributions() {
                     </div>
                     <div className="flex items-center space-x-1">
                       <span className="capitalize px-2 py-1 bg-gray-100 rounded text-xs font-medium">
-                        {contrib.type === 'image' ? 'Image' : contrib.type === 'draft' ? 'Brouillon' : 'Version'}
+                        {contrib.type === 'image'
+                          ? 'Image'
+                          : contrib.type === 'draft'
+                          ? 'Brouillon'
+                          : 'Version'}
                       </span>
                     </div>
                   </div>
@@ -482,8 +506,8 @@ export default function MyContributions() {
                     <button
                       onClick={() => handleEdit(contrib)}
                       className={`p-2 rounded-lg transition-colors ${
-                        contrib.status === 'needs_changes' 
-                          ? 'text-orange-600 hover:bg-orange-50' 
+                        contrib.status === 'needs_changes'
+                          ? 'text-orange-600 hover:bg-orange-50'
                           : 'text-blue-600 hover:bg-blue-50'
                       }`}
                       title={contrib.status === 'needs_changes' ? 'Corriger' : 'Modifier'}

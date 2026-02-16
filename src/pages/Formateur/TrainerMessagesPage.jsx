@@ -38,12 +38,9 @@ export default function TrainerMessagesPage() {
 
   const markAsRead = async (id) => {
     try {
-      await supabase
-        .from('contact_messages')
-        .update({ read: true })
-        .eq('id', id);
+      await supabase.from('contact_messages').update({ read: true }).eq('id', id);
 
-      setMessages(messages.map(m => m.id === id ? { ...m, read: true } : m));
+      setMessages(messages.map((m) => (m.id === id ? { ...m, read: true } : m)));
     } catch (error) {
       console.error('Erreur:', error);
     }
@@ -52,12 +49,9 @@ export default function TrainerMessagesPage() {
   const deleteMessage = async (id) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce message?')) {
       try {
-        await supabase
-          .from('contact_messages')
-          .delete()
-          .eq('id', id);
+        await supabase.from('contact_messages').delete().eq('id', id);
 
-        setMessages(messages.filter(m => m.id !== id));
+        setMessages(messages.filter((m) => m.id !== id));
         setSelectedMessage(null);
       } catch (error) {
         console.error('Erreur:', error);
@@ -83,12 +77,8 @@ export default function TrainerMessagesPage() {
           <Card>
             <CardContent className="pt-12 pb-12 text-center">
               <Mail className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Aucun message
-              </h3>
-              <p className="text-gray-600">
-                Vous n'avez pas reçu de messages pour le moment
-              </p>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucun message</h3>
+              <p className="text-gray-600">Vous n'avez pas reçu de messages pour le moment</p>
             </CardContent>
           </Card>
         ) : (
@@ -115,12 +105,14 @@ export default function TrainerMessagesPage() {
                   <CardContent className="p-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
-                        <p className={`font-medium truncate ${!message.read ? 'text-yellow-900 font-bold' : 'text-gray-900'}`}>
+                        <p
+                          className={`font-medium truncate ${
+                            !message.read ? 'text-yellow-900 font-bold' : 'text-gray-900'
+                          }`}
+                        >
                           {message.name || message.email}
                         </p>
-                        <p className="text-xs text-gray-500 truncate">
-                          {message.subject}
-                        </p>
+                        <p className="text-xs text-gray-500 truncate">{message.subject}</p>
                       </div>
                       {!message.read && (
                         <div className="h-2 w-2 bg-yellow-500 rounded-full flex-shrink-0 mt-2"></div>
@@ -140,14 +132,19 @@ export default function TrainerMessagesPage() {
                       <div className="flex-1">
                         <CardTitle>{selectedMessage.subject}</CardTitle>
                         <CardDescription className="mt-2">
-                          <p><strong>De:</strong> {selectedMessage.name} ({selectedMessage.email})</p>
-                          <p><strong>Date:</strong> {new Date(selectedMessage.created_at).toLocaleDateString('fr-FR', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}</p>
+                          <p>
+                            <strong>De:</strong> {selectedMessage.name} ({selectedMessage.email})
+                          </p>
+                          <p>
+                            <strong>Date:</strong>{' '}
+                            {new Date(selectedMessage.created_at).toLocaleDateString('fr-FR', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </p>
                         </CardDescription>
                       </div>
                       <div className="flex gap-2">
@@ -164,9 +161,7 @@ export default function TrainerMessagesPage() {
                   </CardHeader>
                   <CardContent className="pt-6">
                     <div className="prose prose-sm max-w-none">
-                      <p className="text-gray-700 whitespace-pre-wrap">
-                        {selectedMessage.message}
-                      </p>
+                      <p className="text-gray-700 whitespace-pre-wrap">{selectedMessage.message}</p>
                     </div>
                   </CardContent>
                 </Card>

@@ -45,7 +45,7 @@ export const createLicensePurchase = async ({ packageId, trainerId }) => {
         package_id: packageId,
         quantity: packageData.quantity,
         amount_cents: packageData.price_cents,
-        status: 'pending'
+        status: 'pending',
       })
       .select()
       .single();
@@ -53,7 +53,7 @@ export const createLicensePurchase = async ({ packageId, trainerId }) => {
     if (error) throw error;
     return data;
   } catch (err) {
-    console.error('Erreur lors de la création de l\'achat:', err);
+    console.error("Erreur lors de la création de l'achat:", err);
     throw err;
   }
 };
@@ -70,7 +70,7 @@ export const updatePurchaseStatus = async (purchaseId, updateData) => {
       .from('license_purchases')
       .update({
         ...updateData,
-        completed_at: updateData.status === 'completed' ? new Date().toISOString() : null
+        completed_at: updateData.status === 'completed' ? new Date().toISOString() : null,
       })
       .eq('id', purchaseId)
       .select()
@@ -79,7 +79,7 @@ export const updatePurchaseStatus = async (purchaseId, updateData) => {
     if (error) throw error;
     return data;
   } catch (err) {
-    console.error('Erreur lors de la mise à jour de l\'achat:', err);
+    console.error("Erreur lors de la mise à jour de l'achat:", err);
     throw err;
   }
 };
@@ -93,14 +93,16 @@ export const getTrainerPurchases = async (trainerId) => {
   try {
     const { data, error } = await supabase
       .from('license_purchases')
-      .select(`
+      .select(
+        `
         *,
         license_packages (
           name,
           quantity,
           price_cents
         )
-      `)
+      `
+      )
       .eq('trainer_id', trainerId)
       .order('created_at', { ascending: false });
 
@@ -121,13 +123,15 @@ export const getAvailablePurchasedLicenses = async (trainerId) => {
   try {
     const { data, error } = await supabase
       .from('purchased_licenses')
-      .select(`
+      .select(
+        `
         *,
         task_categories (
           id,
           name
         )
-      `)
+      `
+      )
       .eq('trainer_id', trainerId)
       .eq('is_assigned', false)
       .order('created_at', { ascending: true });
@@ -153,7 +157,7 @@ export const assignPurchasedLicense = async (purchasedLicenseId, learnerId) => {
       .update({
         learner_id: learnerId,
         is_assigned: true,
-        assigned_at: new Date().toISOString()
+        assigned_at: new Date().toISOString(),
       })
       .eq('id', purchasedLicenseId)
       .select()
@@ -162,7 +166,7 @@ export const assignPurchasedLicense = async (purchasedLicenseId, learnerId) => {
     if (error) throw error;
     return data;
   } catch (err) {
-    console.error('Erreur lors de l\'assignation de la licence:', err);
+    console.error("Erreur lors de l'assignation de la licence:", err);
     throw err;
   }
 };
@@ -184,7 +188,7 @@ export const getAvailableLicensesByCategory = async (trainerId) => {
 
     // Compter par catégorie
     const counts = {};
-    (data || []).forEach(license => {
+    (data || []).forEach((license) => {
       counts[license.category_id] = (counts[license.category_id] || 0) + 1;
     });
 

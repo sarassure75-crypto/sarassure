@@ -67,16 +67,20 @@ export async function fetchExerciseRequestByCode(code) {
  */
 export async function createExerciseRequest(requestData) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
     const { data, error } = await supabase
       .from('exercise_requests')
-      .insert([{
-        ...requestData,
-        created_by: user.id,
-        status: 'pending'
-      }])
+      .insert([
+        {
+          ...requestData,
+          created_by: user.id,
+          status: 'pending',
+        },
+      ])
       .select('*')
       .single();
 
@@ -118,10 +122,7 @@ export async function updateExerciseRequest(id, updates) {
  */
 export async function deleteExerciseRequest(id) {
   try {
-    const { error } = await supabase
-      .from('exercise_requests')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from('exercise_requests').delete().eq('id', id);
 
     if (error) throw error;
     return true;
@@ -141,7 +142,7 @@ export async function linkExerciseToRequest(requestCode, taskId) {
   try {
     const { data, error } = await supabase.rpc('link_exercise_to_request', {
       p_request_code: requestCode,
-      p_task_id: taskId
+      p_task_id: taskId,
     });
 
     if (error) throw error;
@@ -160,7 +161,7 @@ export async function linkExerciseToRequest(requestCode, taskId) {
 export async function updateExerciseRequestCounters(requestCode) {
   try {
     const { data, error } = await supabase.rpc('update_exercise_request_counters', {
-      p_request_code: requestCode
+      p_request_code: requestCode,
     });
 
     if (error) throw error;
@@ -177,25 +178,23 @@ export async function updateExerciseRequestCounters(requestCode) {
  */
 export async function getExerciseRequestsStats() {
   try {
-    const { data, error } = await supabase
-      .from('exercise_requests')
-      .select('status, priority');
+    const { data, error } = await supabase.from('exercise_requests').select('status, priority');
 
     if (error) throw error;
 
     const stats = {
       total: data.length,
       by_status: {
-        pending: data.filter(r => r.status === 'pending').length,
-        in_progress: data.filter(r => r.status === 'in_progress').length,
-        completed: data.filter(r => r.status === 'completed').length,
-        cancelled: data.filter(r => r.status === 'cancelled').length
+        pending: data.filter((r) => r.status === 'pending').length,
+        in_progress: data.filter((r) => r.status === 'in_progress').length,
+        completed: data.filter((r) => r.status === 'completed').length,
+        cancelled: data.filter((r) => r.status === 'cancelled').length,
       },
       by_priority: {
-        high: data.filter(r => r.priority === 'high').length,
-        normal: data.filter(r => r.priority === 'normal').length,
-        low: data.filter(r => r.priority === 'low').length
-      }
+        high: data.filter((r) => r.priority === 'high').length,
+        normal: data.filter((r) => r.priority === 'normal').length,
+        low: data.filter((r) => r.priority === 'low').length,
+      },
     };
 
     return stats;
@@ -215,7 +214,9 @@ export async function searchExerciseRequests(searchTerm) {
     const { data, error } = await supabase
       .from('exercise_requests')
       .select('*')
-      .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%`)
+      .or(
+        `title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%`
+      )
       .order('priority', { ascending: false })
       .order('created_at', { ascending: false });
 

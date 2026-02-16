@@ -4,18 +4,14 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { HelpCircle } from 'lucide-react';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
-const InputZoneEditor = ({ 
+const InputZoneEditor = ({
   actionType,
   targetArea,
   onTargetAreaChange,
   selectedImage,
-  isMobileLayout = false
+  isMobileLayout = false,
 }) => {
   if (!['number_input', 'text_input'].includes(actionType)) {
     return null;
@@ -23,8 +19,8 @@ const InputZoneEditor = ({
 
   const getActionLabel = () => {
     const labels = {
-      'text_input': 'Saisir du texte',
-      'number_input': 'Saisir un numéro',
+      text_input: 'Saisir du texte',
+      number_input: 'Saisir un numéro',
     };
     return labels[actionType] || actionType;
   };
@@ -64,10 +60,12 @@ const InputZoneEditor = ({
               max="100"
               step="1"
               value={targetArea?.x_percent || 0}
-              onChange={(e) => onTargetAreaChange({
-                ...targetArea,
-                x_percent: parseFloat(e.target.value),
-              })}
+              onChange={(e) =>
+                onTargetAreaChange({
+                  ...targetArea,
+                  x_percent: parseFloat(e.target.value),
+                })
+              }
               className="text-sm h-8"
             />
           </div>
@@ -79,10 +77,12 @@ const InputZoneEditor = ({
               max="100"
               step="1"
               value={targetArea?.y_percent || 0}
-              onChange={(e) => onTargetAreaChange({
-                ...targetArea,
-                y_percent: parseFloat(e.target.value),
-              })}
+              onChange={(e) =>
+                onTargetAreaChange({
+                  ...targetArea,
+                  y_percent: parseFloat(e.target.value),
+                })
+              }
               className="text-sm h-8"
             />
           </div>
@@ -94,10 +94,12 @@ const InputZoneEditor = ({
               max="100"
               step="1"
               value={targetArea?.width_percent || 20}
-              onChange={(e) => onTargetAreaChange({
-                ...targetArea,
-                width_percent: parseFloat(e.target.value),
-              })}
+              onChange={(e) =>
+                onTargetAreaChange({
+                  ...targetArea,
+                  width_percent: parseFloat(e.target.value),
+                })
+              }
               className="text-sm h-8"
             />
           </div>
@@ -109,10 +111,12 @@ const InputZoneEditor = ({
               max="100"
               step="1"
               value={targetArea?.height_percent || 20}
-              onChange={(e) => onTargetAreaChange({
-                ...targetArea,
-                height_percent: parseFloat(e.target.value),
-              })}
+              onChange={(e) =>
+                onTargetAreaChange({
+                  ...targetArea,
+                  height_percent: parseFloat(e.target.value),
+                })
+              }
               className="text-sm h-8"
             />
           </div>
@@ -124,18 +128,26 @@ const InputZoneEditor = ({
             <Label className="text-xs font-semibold">Affichage</Label>
             <div className="flex gap-2 items-center">
               <span className="text-xs text-green-700">
-                {targetArea?.is_visible !== undefined ? (targetArea.is_visible ? '👁️ Visible' : '👁️‍🗨️ Invisible') : '👁️ Visible'}
+                {targetArea?.is_visible !== undefined
+                  ? targetArea.is_visible
+                    ? '👁️ Visible'
+                    : '👁️‍🗨️ Invisible'
+                  : '👁️ Visible'}
               </span>
               <Switch
                 checked={targetArea?.is_visible !== undefined ? targetArea.is_visible : true}
-                onCheckedChange={(checked) => onTargetAreaChange({
-                  ...targetArea,
-                  is_visible: checked,
-                })}
+                onCheckedChange={(checked) =>
+                  onTargetAreaChange({
+                    ...targetArea,
+                    is_visible: checked,
+                  })
+                }
               />
             </div>
           </div>
-          <p className="text-xs text-green-600 italic">Invisible = zone déplaçable avec poignées visibles, mais sans couleur</p>
+          <p className="text-xs text-green-600 italic">
+            Invisible = zone déplaçable avec poignées visibles, mais sans couleur
+          </p>
         </div>
       </div>
     </div>

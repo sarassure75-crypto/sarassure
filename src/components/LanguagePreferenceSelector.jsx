@@ -75,7 +75,7 @@ export const LanguagePreferenceSelector = () => {
       if (error) throw error;
 
       setPreferredLanguage(languageCode);
-      
+
       // Mettre à jour localStorage aussi
       try {
         localStorage.setItem('preferredLanguage', languageCode);
@@ -86,7 +86,8 @@ export const LanguagePreferenceSelector = () => {
       toast({
         title: 'Succès',
         description: `Langue de traduction définie à ${
-          availableLanguages.find(l => l.language_code === languageCode)?.language_name || languageCode.toUpperCase()
+          availableLanguages.find((l) => l.language_code === languageCode)?.language_name ||
+          languageCode.toUpperCase()
         }`,
       });
     } catch (error) {
@@ -117,8 +118,8 @@ export const LanguagePreferenceSelector = () => {
       </div>
 
       <p className="text-sm text-muted-foreground mb-4">
-        Sélectionnez votre langue préférée pour les traductions des exercices. 
-        Vous pourrez toujours basculer vers le français en cours d'exercice.
+        Sélectionnez votre langue préférée pour les traductions des exercices. Vous pourrez toujours
+        basculer vers le français en cours d'exercice.
       </p>
 
       <div className="grid grid-cols-2 gap-3">
@@ -129,9 +130,10 @@ export const LanguagePreferenceSelector = () => {
             disabled={isSaving}
             className={`
               relative p-3 rounded-lg border-2 transition-all
-              ${preferredLanguage === lang.language_code
-                ? 'border-primary bg-primary/10'
-                : 'border-border hover:border-primary'
+              ${
+                preferredLanguage === lang.language_code
+                  ? 'border-primary bg-primary/10'
+                  : 'border-border hover:border-primary'
               }
               disabled:opacity-50 disabled:cursor-not-allowed
             `}
@@ -156,7 +158,7 @@ export const LanguagePreferenceSelector = () => {
 
       <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <p className="text-sm text-blue-900">
-          💡 <strong>Astuce :</strong> Dans les exercices, cliquez sur le bouton 🌐 pour basculer 
+          💡 <strong>Astuce :</strong> Dans les exercices, cliquez sur le bouton 🌐 pour basculer
           entre le français et votre langue préférée.
         </p>
       </div>

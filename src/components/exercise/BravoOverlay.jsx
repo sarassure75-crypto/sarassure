@@ -17,8 +17,9 @@ const BravoOverlay = ({ isOpen, onClose, onReturnToTasks }) => {
       exit={{ opacity: 0 }}
       className="absolute inset-0 z-50 flex items-center justify-center"
       style={{
-        background: 'linear-gradient(135deg, rgba(240, 253, 244, 0.85) 0%, rgba(209, 250, 229, 0.85) 100%)',
-        backdropFilter: 'blur(3px)'
+        background:
+          'linear-gradient(135deg, rgba(240, 253, 244, 0.85) 0%, rgba(209, 250, 229, 0.85) 100%)',
+        backdropFilter: 'blur(3px)',
       }}
     >
       <motion.div
@@ -31,9 +32,9 @@ const BravoOverlay = ({ isOpen, onClose, onReturnToTasks }) => {
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1, rotate: [0, -10, 10, -10, 0] }}
-          transition={{ 
+          transition={{
             scale: { delay: 0.2, type: 'spring', stiffness: 200 },
-            rotate: { delay: 0.3, duration: 0.5 }
+            rotate: { delay: 0.3, duration: 0.5 },
           }}
           className="mb-6 flex justify-center"
         >

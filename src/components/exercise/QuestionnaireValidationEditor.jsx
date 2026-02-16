@@ -39,11 +39,12 @@ const normalizeExpectedInput = (rawExpected) => {
   const rawChoices = Array.isArray(expected.choices)
     ? expected.choices
     : Array.isArray(expected.answers)
-      ? expected.answers
-      : [];
+    ? expected.answers
+    : [];
 
-  const choices = rawChoices.map(choice => {
-    const iconId = choice.iconId || choice.icon?.id || (typeof choice.icon === 'string' ? choice.icon : null);
+  const choices = rawChoices.map((choice) => {
+    const iconId =
+      choice.iconId || choice.icon?.id || (typeof choice.icon === 'string' ? choice.icon : null);
 
     return {
       id: choice.id || uuidv4(),
@@ -52,19 +53,20 @@ const normalizeExpectedInput = (rawExpected) => {
       imageName: choice.imageName || '',
       iconId,
       icon: choice.icon || null,
-      isCorrect: !!choice.isCorrect
+      isCorrect: !!choice.isCorrect,
     };
   });
 
-  const correctAnswers = Array.isArray(expected.correctAnswers) && expected.correctAnswers.length > 0
-    ? expected.correctAnswers
-    : choices.filter(c => c.isCorrect).map(c => c.id);
+  const correctAnswers =
+    Array.isArray(expected.correctAnswers) && expected.correctAnswers.length > 0
+      ? expected.correctAnswers
+      : choices.filter((c) => c.isCorrect).map((c) => c.id);
 
   return {
     ...expected,
     questionType,
     choices,
-    correctAnswers
+    correctAnswers,
   };
 };
 
@@ -72,52 +74,56 @@ const normalizeExpectedInput = (rawExpected) => {
  * QuestionnaireValidationEditor
  * Affiche et permet de modifier les réponses correctes des QCM
  */
-export default function QuestionnaireValidationEditor({ steps = [], onUpdate = null, versionId = null }) {
+export default function QuestionnaireValidationEditor({
+  steps = [],
+  onUpdate = null,
+  versionId = null,
+}) {
   const [expandedQuestions, setExpandedQuestions] = useState({});
   const [editMode, setEditMode] = useState({});
   const [localChoices, setLocalChoices] = useState({});
   const [saving, setSaving] = useState(false);
 
   const toggleQuestion = (stepId) => {
-    setExpandedQuestions(prev => ({
+    setExpandedQuestions((prev) => ({
       ...prev,
-      [stepId]: !prev[stepId]
+      [stepId]: !prev[stepId],
     }));
   };
 
   const toggleEditMode = (stepId) => {
     if (!editMode[stepId]) {
       // Initialiser les choix locaux quand on rentre en mode édition
-      const step = steps.find(s => s.id === stepId);
+      const step = steps.find((s) => s.id === stepId);
       if (step) {
-        setLocalChoices(prev => ({
+        setLocalChoices((prev) => ({
           ...prev,
-          [stepId]: normalizeExpectedInput(step.expected_input)
+          [stepId]: normalizeExpectedInput(step.expected_input),
         }));
       }
     }
-    setEditMode(prev => ({
+    setEditMode((prev) => ({
       ...prev,
-      [stepId]: !prev[stepId]
+      [stepId]: !prev[stepId],
     }));
   };
 
   const toggleCorrectAnswer = (stepId, choiceId) => {
-    setLocalChoices(prev => {
-      const step = steps.find(s => s.id === stepId);
+    setLocalChoices((prev) => {
+      const step = steps.find((s) => s.id === stepId);
       const base = prev[stepId] || normalizeExpectedInput(step?.expected_input);
       const correctAnswers = base?.correctAnswers || [];
 
       const updatedAnswers = correctAnswers.includes(choiceId)
-        ? correctAnswers.filter(id => id !== choiceId)
+        ? correctAnswers.filter((id) => id !== choiceId)
         : [...correctAnswers, choiceId];
 
       return {
         ...prev,
         [stepId]: {
           ...base,
-          correctAnswers: updatedAnswers
-        }
+          correctAnswers: updatedAnswers,
+        },
       };
     });
   };
@@ -125,7 +131,7 @@ export default function QuestionnaireValidationEditor({ steps = [], onUpdate = n
   const saveChanges = async (stepId) => {
     setSaving(true);
     try {
-      const step = steps.find(s => s.id === stepId);
+      const step = steps.find((s) => s.id === stepId);
       const payload = localChoices[stepId] || normalizeExpectedInput(step?.expected_input);
 
       // Mettre à jour la base de données
@@ -143,9 +149,9 @@ export default function QuestionnaireValidationEditor({ steps = [], onUpdate = n
         onUpdate(stepId, payload);
       }
 
-      setEditMode(prev => ({
+      setEditMode((prev) => ({
         ...prev,
-        [stepId]: false
+        [stepId]: false,
       }));
     } catch (error) {
       console.error('Erreur enregistrement:', error);
@@ -169,17 +175,14 @@ export default function QuestionnaireValidationEditor({ steps = [], onUpdate = n
         const normalized = normalizeExpectedInput(step.expected_input);
         const isExpanded = expandedQuestions[step.id];
         const isEditing = editMode[step.id];
-        const currentChoices = isEditing ? (localChoices[step.id] || normalized) : normalized;
+        const currentChoices = isEditing ? localChoices[step.id] || normalized : normalized;
         const choices = currentChoices.choices || [];
         const correctAnswers = currentChoices.correctAnswers || [];
 
         return (
           <Card key={step.id} className="overflow-hidden">
             {/* En-tête */}
-            <button
-              onClick={() => toggleQuestion(step.id)}
-              className="w-full text-left"
-            >
+            <button onClick={() => toggleQuestion(step.id)} className="w-full text-left">
               <CardHeader className="pb-3 cursor-pointer hover:bg-slate-50">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -236,7 +239,11 @@ export default function QuestionnaireValidationEditor({ steps = [], onUpdate = n
                     {choices.map((choice, choiceIdx) => {
                       const choiceId = choice.id || choiceIdx;
                       const isCorrect = correctAnswers.includes(choiceId);
-                      const iconId = choice.iconId || choice.icon?.id || (typeof choice.icon === 'string' ? choice.icon : null) || (isIconReference(choice.imageId) ? choice.imageId : null);
+                      const iconId =
+                        choice.iconId ||
+                        choice.icon?.id ||
+                        (typeof choice.icon === 'string' ? choice.icon : null) ||
+                        (isIconReference(choice.imageId) ? choice.imageId : null);
                       const hasImage = choice.imageId && !isIconReference(choice.imageId);
                       const hasText = !!choice.text;
 
@@ -244,11 +251,9 @@ export default function QuestionnaireValidationEditor({ steps = [], onUpdate = n
                         <div
                           key={choiceId}
                           className={cn(
-                            "p-3 rounded-lg border-2 transition-all",
-                            isCorrect
-                              ? "bg-green-50 border-green-300"
-                              : "bg-white border-gray-200",
-                            isEditing && "cursor-pointer hover:border-blue-400"
+                            'p-3 rounded-lg border-2 transition-all',
+                            isCorrect ? 'bg-green-50 border-green-300' : 'bg-white border-gray-200',
+                            isEditing && 'cursor-pointer hover:border-blue-400'
                           )}
                           onClick={() => isEditing && toggleCorrectAnswer(step.id, choiceId)}
                         >
@@ -288,20 +293,18 @@ export default function QuestionnaireValidationEditor({ steps = [], onUpdate = n
                             {/* Contenu de la réponse */}
                             <div className="flex-1 min-w-0">
                               {hasText && (
-                                <p className="text-sm text-gray-700 break-words">
-                                  {choice.text}
-                                </p>
+                                <p className="text-sm text-gray-700 break-words">{choice.text}</p>
                               )}
                               {iconId && (
                                 <p className="text-xs text-indigo-700 font-medium flex items-center gap-2 mt-1">
-                                  <span className="px-2 py-0.5 rounded bg-indigo-50 border border-indigo-200">Icône</span>
+                                  <span className="px-2 py-0.5 rounded bg-indigo-50 border border-indigo-200">
+                                    Icône
+                                  </span>
                                   <span className="truncate">{iconId}</span>
                                 </p>
                               )}
                               {!hasText && !hasImage && !iconId && (
-                                <p className="text-xs text-gray-400 italic">
-                                  (Réponse vide)
-                                </p>
+                                <p className="text-xs text-gray-400 italic">(Réponse vide)</p>
                               )}
                             </div>
 
@@ -320,13 +323,16 @@ export default function QuestionnaireValidationEditor({ steps = [], onUpdate = n
                   {/* Informations */}
                   <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800">
                     {isEditing ? (
-                      <p className="font-medium">Cliquez sur les réponses ou cochez les cases pour marquer comme correctes</p>
+                      <p className="font-medium">
+                        Cliquez sur les réponses ou cochez les cases pour marquer comme correctes
+                      </p>
                     ) : (
                       <p className="font-medium">
-                        {correctAnswers.length > 0 
-                          ? `${correctAnswers.length} réponse${correctAnswers.length > 1 ? 's' : ''} correcte${correctAnswers.length > 1 ? 's' : ''}`
-                          : "⚠️ Aucune réponse correcte définie"
-                        }
+                        {correctAnswers.length > 0
+                          ? `${correctAnswers.length} réponse${
+                              correctAnswers.length > 1 ? 's' : ''
+                            } correcte${correctAnswers.length > 1 ? 's' : ''}`
+                          : '⚠️ Aucune réponse correcte définie'}
                       </p>
                     )}
                   </div>

@@ -58,7 +58,7 @@ export default function TrainerProfilePage() {
     e.preventDefault();
     try {
       setUpdating(true);
-      
+
       // Update profile
       const { error: profileError } = await supabase
         .from('profiles')
@@ -113,7 +113,10 @@ export default function TrainerProfilePage() {
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
       console.error('Erreur:', error);
-      setMessage({ type: 'error', text: error.message || 'Erreur lors de la mise à jour du mot de passe' });
+      setMessage({
+        type: 'error',
+        text: error.message || 'Erreur lors de la mise à jour du mot de passe',
+      });
     } finally {
       setUpdating(false);
     }
@@ -134,19 +137,31 @@ export default function TrainerProfilePage() {
           {/* Header */}
           <div className="bg-gradient-to-r from-primary to-primary/80 px-6 py-8 rounded-t-lg">
             <h1 className="text-3xl font-bold text-white mb-2">Mon Profil</h1>
-            <p className="text-white/90">Gérez vos informations personnelles et vos paramètres de sécurité</p>
+            <p className="text-white/90">
+              Gérez vos informations personnelles et vos paramètres de sécurité
+            </p>
           </div>
 
           <div className="p-6 space-y-6">
             {/* Alertes Messages */}
             {message.text && (
-              <Alert className={message.type === 'error' ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}>
+              <Alert
+                className={
+                  message.type === 'error'
+                    ? 'bg-red-50 border-red-200'
+                    : 'bg-green-50 border-green-200'
+                }
+              >
                 {message.type === 'error' ? (
-                  <AlertCircle className={message.type === 'error' ? 'text-red-600' : 'text-green-600'} />
+                  <AlertCircle
+                    className={message.type === 'error' ? 'text-red-600' : 'text-green-600'}
+                  />
                 ) : (
                   <CheckCircle2 className="text-green-600" />
                 )}
-                <AlertDescription className={message.type === 'error' ? 'text-red-800' : 'text-green-800'}>
+                <AlertDescription
+                  className={message.type === 'error' ? 'text-red-800' : 'text-green-800'}
+                >
                   {message.text}
                 </AlertDescription>
               </Alert>
@@ -173,9 +188,7 @@ export default function TrainerProfilePage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Email
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                     <input
                       type="email"
                       value={profile.email}
@@ -278,14 +291,12 @@ export default function TrainerProfilePage() {
             <Card className="border-red-200 bg-red-50">
               <CardHeader>
                 <CardTitle className="text-red-900">Session</CardTitle>
-                <CardDescription className="text-red-800">Gérez votre session actuelle</CardDescription>
+                <CardDescription className="text-red-800">
+                  Gérez votre session actuelle
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button
-                  variant="destructive"
-                  onClick={logout}
-                  className="w-full"
-                >
+                <Button variant="destructive" onClick={logout} className="w-full">
                   Se déconnecter
                 </Button>
               </CardContent>

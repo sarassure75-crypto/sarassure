@@ -39,13 +39,10 @@ export default function TrainerExercisesPage() {
   const deleteExercise = async (id) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cet exercice?')) {
       try {
-        const { error } = await supabase
-          .from('contributions')
-          .delete()
-          .eq('id', id);
+        const { error } = await supabase.from('contributions').delete().eq('id', id);
 
         if (error) throw error;
-        setExercises(exercises.filter(e => e.id !== id));
+        setExercises(exercises.filter((e) => e.id !== id));
       } catch (error) {
         console.error('Erreur:', error);
       }
@@ -92,12 +89,8 @@ export default function TrainerExercisesPage() {
           <Card>
             <CardContent className="pt-12 pb-12 text-center">
               <BookOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Aucun exercice créé
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Commencez par créer votre premier exercice
-              </p>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucun exercice créé</h3>
+              <p className="text-gray-600 mb-6">Commencez par créer votre premier exercice</p>
               <Button
                 onClick={() => navigate('/formateur/creer-exercice')}
                 className="bg-primary hover:bg-primary/90"
@@ -120,7 +113,11 @@ export default function TrainerExercisesPage() {
                         {exercise.exercise_description}
                       </p>
                       <div className="mt-4 flex items-center gap-4">
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(exercise.status)}`}>
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
+                            exercise.status
+                          )}`}
+                        >
                           {exercise.status === 'pending' && 'En attente'}
                           {exercise.status === 'approved' && 'Approuvé'}
                           {exercise.status === 'rejected' && 'Rejeté'}

@@ -2,8 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from '@/components/ui/card';
 import { Save, Trash2, XCircle, Video, PlayCircle, ListChecks, Copy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import * as LucideIcons from 'lucide-react';
@@ -29,20 +42,21 @@ const IconLibraryMap = {
 
 const getIconComponent = (iconString) => {
   if (!iconString) return LucideIcons.ListChecks;
-  
+
   // Support pour les icônes Iconify colorées (logos, skill-icons, devicon)
-  if (iconString.includes(':') && (
-    iconString.startsWith('logos:') || 
-    iconString.startsWith('skill-icons:') || 
-    iconString.startsWith('devicon:')
-  )) {
+  if (
+    iconString.includes(':') &&
+    (iconString.startsWith('logos:') ||
+      iconString.startsWith('skill-icons:') ||
+      iconString.startsWith('devicon:'))
+  ) {
     return (props) => <IconifyIcon icon={iconString} {...props} />;
   }
-  
+
   const [library, name] = iconString.split(':');
   const libraryData = IconLibraryMap[library];
   if (!libraryData) return LucideIcons.ListChecks;
-  
+
   const module = libraryData.module;
   return module[name] || LucideIcons.ListChecks;
 };
@@ -63,15 +77,15 @@ const AdminExerciseForm = ({ exercise: initialExercise, onSave, onCancel, onDele
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setExercise(prev => ({
+    setExercise((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
   };
 
   const handleSelectChange = (name, value) => {
-    const actualValue = value === "_none_" ? null : value;
-    setExercise(prev => ({ ...prev, [name]: actualValue }));
+    const actualValue = value === '_none_' ? null : value;
+    setExercise((prev) => ({ ...prev, [name]: actualValue }));
   };
 
   const handleSubmit = (e) => {
@@ -84,21 +98,21 @@ const AdminExerciseForm = ({ exercise: initialExercise, onSave, onCancel, onDele
       ...exercise,
       id: null, // Nouveau ID sera généré
       name: `${exercise.name} (Copie)`,
-      isNew: true
+      isNew: true,
     };
     onSave(duplicatedExercise);
   };
-  
-  const pictogramInfo = imagesData.find(img => img.id === exercise.pictogram_app_image_id);
+
+  const pictogramInfo = imagesData.find((img) => img.id === exercise.pictogram_app_image_id);
   const IconComponent = getIconComponent(exercise.icon_name);
 
   const handleIconSelect = (icon) => {
     const iconString = icon ? `${icon.library}:${icon.name}` : '';
-    setExercise(prev => ({ ...prev, icon_name: iconString }));
+    setExercise((prev) => ({ ...prev, icon_name: iconString }));
   };
 
   const handleIconRemove = () => {
-    setExercise(prev => ({ ...prev, icon_name: '' }));
+    setExercise((prev) => ({ ...prev, icon_name: '' }));
   };
 
   const selectedIcon = parseIconString(exercise.icon_name);
@@ -109,7 +123,9 @@ const AdminExerciseForm = ({ exercise: initialExercise, onSave, onCancel, onDele
       <form onSubmit={handleSubmit}>
         <CardHeader>
           <CardTitle>Éditer la Version</CardTitle>
-          <CardDescription>Modifiez les détails de la version et ajoutez une vidéo explicative.</CardDescription>
+          <CardDescription>
+            Modifiez les détails de la version et ajoutez une vidéo explicative.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
@@ -120,20 +136,35 @@ const AdminExerciseForm = ({ exercise: initialExercise, onSave, onCancel, onDele
             <Label htmlFor="exVersion">Version Android</Label>
             <Input id="exVersion" name="version" value={exercise.version} onChange={handleChange} />
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="exIconName">Icône</Label>
               <IconSelector
-                selectedIcon={selectedIcon ? {
-                  library: selectedIcon.library,
-                  name: selectedIcon.name,
-                  component: IconComponent,
-                  displayName: selectedIcon.name
-                } : null}
+                selectedIcon={
+                  selectedIcon
+                    ? {
+                        library: selectedIcon.library,
+                        name: selectedIcon.name,
+                        component: IconComponent,
+                        displayName: selectedIcon.name,
+                      }
+                    : null
+                }
                 onSelect={handleIconSelect}
                 onRemove={handleIconRemove}
-                libraries={['lucide', 'fa6', 'bs', 'md', 'fi', 'hi2', 'ai', 'logos', 'skill', 'devicon']}
+                libraries={[
+                  'lucide',
+                  'fa6',
+                  'bs',
+                  'md',
+                  'fi',
+                  'hi2',
+                  'ai',
+                  'logos',
+                  'skill',
+                  'devicon',
+                ]}
                 showSearch={true}
                 showLibraryTabs={true}
               />
@@ -141,18 +172,31 @@ const AdminExerciseForm = ({ exercise: initialExercise, onSave, onCancel, onDele
             <div>
               <Label htmlFor="exPictogram">Pictogramme (facultatif)</Label>
               <div className="flex items-center space-x-2">
-              {pictogramInfo && <img-replace src={pictogramInfo.publicUrl} alt={pictogramInfo.description} className="h-6 w-6 object-contain border rounded"/>}
-              <Select value={exercise.pictogram_app_image_id || "_none_"} onValueChange={(value) => handleSelectChange('pictogram_app_image_id', value)}>
+                {pictogramInfo && (
+                  <img-replace
+                    src={pictogramInfo.publicUrl}
+                    alt={pictogramInfo.description}
+                    className="h-6 w-6 object-contain border rounded"
+                  />
+                )}
+                <Select
+                  value={exercise.pictogram_app_image_id || '_none_'}
+                  onValueChange={(value) => handleSelectChange('pictogram_app_image_id', value)}
+                >
                   <SelectTrigger id="exPictogram">
-                  <SelectValue placeholder="Sélectionnez un pictogramme" />
+                    <SelectValue placeholder="Sélectionnez un pictogramme" />
                   </SelectTrigger>
                   <SelectContent>
-                  <SelectItem value="_none_">Aucun</SelectItem>
-                  {imagesData.filter(img => img.category === 'Icône' || img.category === 'Pictogramme').map(img => (
-                      <SelectItem key={img.id} value={img.id}>{img.name}</SelectItem>
-                  ))}
+                    <SelectItem value="_none_">Aucun</SelectItem>
+                    {imagesData
+                      .filter((img) => img.category === 'Icône' || img.category === 'Pictogramme')
+                      .map((img) => (
+                        <SelectItem key={img.id} value={img.id}>
+                          {img.name}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
-              </Select>
+                </Select>
               </div>
             </div>
           </div>
@@ -160,14 +204,14 @@ const AdminExerciseForm = ({ exercise: initialExercise, onSave, onCancel, onDele
           <div>
             <Label htmlFor="exVideoUrl">URL Vidéo Explicative (YouTube, Vimeo)</Label>
             <div className="flex items-center space-x-2">
-                <Video className="h-5 w-5 text-muted-foreground" />
-                <Input 
-                    id="exVideoUrl" 
-                    name="video_url" 
-                    value={exercise.video_url || ''} 
-                    onChange={handleChange} 
-                    placeholder="Ex: https://www.youtube.com/watch?v=dQw4w9WgXcQ" 
-                />
+              <Video className="h-5 w-5 text-muted-foreground" />
+              <Input
+                id="exVideoUrl"
+                name="video_url"
+                value={exercise.video_url || ''}
+                onChange={handleChange}
+                placeholder="Ex: https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+              />
             </div>
           </div>
           <div className="flex items-center space-x-2">
@@ -186,8 +230,12 @@ const AdminExerciseForm = ({ exercise: initialExercise, onSave, onCancel, onDele
         </CardContent>
         <CardFooter className="flex justify-between">
           <div>
-            <Button type="submit" size="sm"><Save className="mr-2 h-4 w-4" /> Sauvegarder</Button>
-            <Button type="button" variant="outline" size="sm" onClick={onCancel} className="ml-2"><XCircle className="mr-2 h-4 w-4" /> Annuler</Button>
+            <Button type="submit" size="sm">
+              <Save className="mr-2 h-4 w-4" /> Sauvegarder
+            </Button>
+            <Button type="button" variant="outline" size="sm" onClick={onCancel} className="ml-2">
+              <XCircle className="mr-2 h-4 w-4" /> Annuler
+            </Button>
           </div>
           <div className="flex items-center gap-2">
             {!exercise.isNew && (
@@ -196,13 +244,25 @@ const AdminExerciseForm = ({ exercise: initialExercise, onSave, onCancel, onDele
               </Button>
             )}
             {currentTaskId && (
-                <Button type="button" variant="secondary" size="sm" asChild>
-                    <Link to={`/admin/preview/tache/${currentTaskId}/version/${exercise.id}`} target="_blank" rel="noopener noreferrer">
-                        <PlayCircle className="mr-2 h-4 w-4"/>Prévisualiser
-                    </Link>
-                </Button>
+              <Button type="button" variant="secondary" size="sm" asChild>
+                <Link
+                  to={`/admin/preview/tache/${currentTaskId}/version/${exercise.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <PlayCircle className="mr-2 h-4 w-4" />
+                  Prévisualiser
+                </Link>
+              </Button>
             )}
-            <Button type="button" variant="destructive" size="sm" onClick={() => onDelete(exercise.id)}><Trash2 className="mr-2 h-4 w-4" /> Supprimer</Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={() => onDelete(exercise.id)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" /> Supprimer
+            </Button>
           </div>
         </CardFooter>
       </form>

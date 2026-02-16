@@ -1,6 +1,13 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -57,7 +64,11 @@ const LearnerAccountPage = () => {
   const handleLinkTrainer = async (e) => {
     e.preventDefault();
     if (!trainerCode.trim()) {
-      toast({ title: "Code requis", description: "Veuillez entrer le code du formateur.", variant: "destructive" });
+      toast({
+        title: 'Code requis',
+        description: 'Veuillez entrer le code du formateur.',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -72,7 +83,11 @@ const LearnerAccountPage = () => {
         .single();
 
       if (trainerError || !trainer) {
-        toast({ title: "Formateur non trouvé", description: "Aucun formateur ne correspond à ce code.", variant: "destructive" });
+        toast({
+          title: 'Formateur non trouvé',
+          description: 'Aucun formateur ne correspond à ce code.',
+          variant: 'destructive',
+        });
         return;
       }
 
@@ -87,10 +102,13 @@ const LearnerAccountPage = () => {
       setTrainerProfile(trainer);
       setTrainerCode('');
       setShowLinkForm(false);
-      toast({ title: "Succès!", description: `Vous avez été lié au formateur ${trainer.first_name}` });
+      toast({
+        title: 'Succès!',
+        description: `Vous avez été lié au formateur ${trainer.first_name}`,
+      });
     } catch (error) {
       console.error('Erreur:', error);
-      toast({ title: "Erreur de liaison", description: error.message, variant: "destructive" });
+      toast({ title: 'Erreur de liaison', description: error.message, variant: 'destructive' });
     } finally {
       setIsLinking(false);
     }
@@ -105,20 +123,28 @@ const LearnerAccountPage = () => {
 
       if (error) throw error;
       setTrainerProfile(null);
-      toast({ title: "Succès!", description: "Vous avez été délié du formateur" });
+      toast({ title: 'Succès!', description: 'Vous avez été délié du formateur' });
     } catch (error) {
       console.error('Erreur:', error);
-      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     }
   };
 
   const handleCopy = (textToCopy, fieldName) => {
-    navigator.clipboard.writeText(textToCopy)
+    navigator.clipboard
+      .writeText(textToCopy)
       .then(() => {
-        toast({ title: `${fieldName} copié !`, description: `${textToCopy} a été copié dans le presse-papiers.` });
+        toast({
+          title: `${fieldName} copié !`,
+          description: `${textToCopy} a été copié dans le presse-papiers.`,
+        });
       })
-      .catch(err => {
-        toast({ title: "Erreur de copie", description: `Impossible de copier : ${err}`, variant: "destructive" });
+      .catch((err) => {
+        toast({
+          title: 'Erreur de copie',
+          description: `Impossible de copier : ${err}`,
+          variant: 'destructive',
+        });
       });
   };
 
@@ -127,9 +153,9 @@ const LearnerAccountPage = () => {
     try {
       await logout();
       navigate('/');
-      toast({ title: "Déconnexion réussie", description: "Vous avez été déconnecté." });
+      toast({ title: 'Déconnexion réussie', description: 'Vous avez été déconnecté.' });
     } catch (error) {
-      toast({ title: "Erreur de déconnexion", description: error.message, variant: "destructive" });
+      toast({ title: 'Erreur de déconnexion', description: error.message, variant: 'destructive' });
       setIsLoggingOut(false);
     }
   };
@@ -153,25 +179,42 @@ const LearnerAccountPage = () => {
               <p className="text-sm font-medium text-muted-foreground">Votre Prénom</p>
               <p className="text-xl font-semibold">{currentUser.first_name}</p>
             </div>
-            <Button variant="ghost" size="icon" className="ml-auto" onClick={() => handleCopy(currentUser.first_name, "Prénom")}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="ml-auto"
+              onClick={() => handleCopy(currentUser.first_name, 'Prénom')}
+            >
               <Copy className="h-5 w-5" />
             </Button>
           </div>
           {/* Satisfaction survey */}
           <div className="border-t pt-6">
             <h3 className="text-lg font-semibold mb-4">Donnez votre avis</h3>
-            <p className="text-sm text-muted-foreground mb-3">Votre retour nous aide à améliorer l'application. Ce questionnaire est court et anonyme.</p>
-            <SatisfactionSurvey onSubmitted={async () => {
-              // Optionally refetch profile or show something
-            }} />
+            <p className="text-sm text-muted-foreground mb-3">
+              Votre retour nous aide à améliorer l'application. Ce questionnaire est court et
+              anonyme.
+            </p>
+            <SatisfactionSurvey
+              onSubmitted={async () => {
+                // Optionally refetch profile or show something
+              }}
+            />
           </div>
           <div className="flex items-center p-4 bg-muted/50 rounded-lg border">
             <KeyRound className="h-6 w-6 text-muted-foreground mr-4" />
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Votre Code Secret (mot de passe)</p>
+              <p className="text-sm font-medium text-muted-foreground">
+                Votre Code Secret (mot de passe)
+              </p>
               <p className="text-2xl font-bold tracking-wider">{currentUser.learner_code}</p>
             </div>
-            <Button variant="ghost" size="icon" className="ml-auto" onClick={() => handleCopy(currentUser.learner_code, "Code Secret")}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="ml-auto"
+              onClick={() => handleCopy(currentUser.learner_code, 'Code Secret')}
+            >
               <Copy className="h-5 w-5" />
             </Button>
           </div>
@@ -197,7 +240,9 @@ const LearnerAccountPage = () => {
               <div className="space-y-3">
                 <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                   <p className="text-sm text-green-700 font-medium">Vous êtes lié au formateur :</p>
-                  <p className="text-lg font-semibold text-green-900">{trainerProfile.first_name} ({trainerProfile.pseudo})</p>
+                  <p className="text-lg font-semibold text-green-900">
+                    {trainerProfile.first_name} ({trainerProfile.pseudo})
+                  </p>
                 </div>
                 <Button
                   variant="destructive"
@@ -242,11 +287,7 @@ const LearnerAccountPage = () => {
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        type="submit"
-                        disabled={isLinking}
-                        className="flex-1"
-                      >
+                      <Button type="submit" disabled={isLinking} className="flex-1">
                         {isLinking ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -278,8 +319,17 @@ const LearnerAccountPage = () => {
           </div>
         </CardContent>
         <CardFooter>
-          <Button variant="destructive" className="w-full" onClick={handleLogout} disabled={isLoggingOut}>
-            {isLoggingOut ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
+          <Button
+            variant="destructive"
+            className="w-full"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+          >
+            {isLoggingOut ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <LogOut className="mr-2 h-4 w-4" />
+            )}
             Se déconnecter
           </Button>
         </CardFooter>

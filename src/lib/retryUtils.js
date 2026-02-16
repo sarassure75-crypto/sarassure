@@ -21,36 +21,41 @@ export async function retryWithBackoff(
   onRetry = null
 ) {
   let lastError;
-  
+
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await fn();
     } catch (error) {
       lastError = error;
-      
+
       // Don't retry on client errors (4xx except 408, 429)
-      if (error.status >= 400 && error.status < 500 && error.status !== 408 && error.status !== 429) {
+      if (
+        error.status >= 400 &&
+        error.status < 500 &&
+        error.status !== 408 &&
+        error.status !== 429
+      ) {
         throw error;
       }
-      
+
       if (attempt < maxRetries) {
         // Calculate delay with exponential backoff
         const exponentialDelay = initialDelay * Math.pow(2, attempt);
         const jitter = Math.random() * 0.1 * exponentialDelay; // 10% jitter
         const delay = Math.min(exponentialDelay + jitter, maxDelay);
-        
+
         logger.warn(
           `Attempt ${attempt + 1} failed: ${error.message}. Retrying in ${Math.round(delay)}ms...`
         );
         if (typeof onRetry === 'function') {
           onRetry({ attempt, delay, error });
         }
-        
-        await new Promise(resolve => setTimeout(resolve, delay));
+
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
   }
-  
+
   throw lastError;
 }
 
@@ -61,23 +66,18 @@ export async function retryWithBackoff(
  * @returns {Promise} Query result
  */
 export async function supabaseWithRetry(queryFn, options = {}) {
-  const {
-    maxRetries = 3,
-    initialDelay = 1000,
-    maxDelay = 10000,
-    onRetry = null,
-  } = options;
+  const { maxRetries = 3, initialDelay = 1000, maxDelay = 10000, onRetry = null } = options;
 
   return retryWithBackoff(
     async () => {
       const { data, error } = await queryFn();
-      
+
       if (error) {
         const err = new Error(error.message);
         err.status = error.status;
         throw err;
       }
-      
+
       return data;
     },
     maxRetries,
@@ -109,7 +109,7 @@ export async function resilientAsync(asyncFn, cacheKey = null) {
         logger.error('Cache retrieval error:', cacheError);
       }
     }
-    
+
     throw error;
   }
 }
@@ -122,7 +122,7 @@ export async function resilientAsync(asyncFn, cacheKey = null) {
  */
 export function cacheData(key, data, ttl = 3600000) {
   if (typeof window === 'undefined') return;
-  
+
   try {
     const cacheEntry = {
       data,
@@ -142,19 +142,19 @@ export function cacheData(key, data, ttl = 3600000) {
  */
 export function getCachedData(key) {
   if (typeof window === 'undefined') return null;
-  
+
   try {
     const cached = localStorage.getItem(`cache:${key}`);
     if (!cached) return null;
-    
+
     const cacheEntry = JSON.parse(cached);
     const isExpired = Date.now() - cacheEntry.timestamp > cacheEntry.ttl;
-    
+
     if (isExpired) {
       localStorage.removeItem(`cache:${key}`);
       return null;
     }
-    
+
     return cacheEntry.data;
   } catch (error) {
     logger.warn('Failed to retrieve cached data:', error);
@@ -168,9 +168,9 @@ export function getCachedData(key) {
  */
 export async function invalidateAllCaches() {
   if (typeof window === 'undefined') return;
-  
+
   logger.info('🗑️ Invalidating ALL caches...');
-  
+
   // Clear localStorage caches
   try {
     const keysToRemove = [];
@@ -180,19 +180,17 @@ export async function invalidateAllCaches() {
         keysToRemove.push(key);
       }
     }
-    keysToRemove.forEach(key => localStorage.removeItem(key));
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
     logger.info(`✅ Cleared ${keysToRemove.length} localStorage cache entries`);
   } catch (error) {
     logger.warn('Failed to clear localStorage cache:', error);
   }
-  
+
   // Clear Service Worker caches
   if ('caches' in window) {
     try {
       const cacheNames = await caches.keys();
-      await Promise.all(
-        cacheNames.map(cacheName => caches.delete(cacheName))
-      );
+      await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
       logger.info(`✅ Cleared ${cacheNames.length} Service Worker caches`);
     } catch (error) {
       logger.warn('Failed to clear Service Worker caches:', error);
@@ -206,13 +204,13 @@ export async function invalidateAllCaches() {
  */
 export function clearCache(key = null) {
   if (typeof window === 'undefined') return;
-  
+
   try {
     if (key) {
       localStorage.removeItem(`cache:${key}`);
     } else {
-      const keys = Object.keys(localStorage).filter(k => k.startsWith('cache:'));
-      keys.forEach(k => localStorage.removeItem(k));
+      const keys = Object.keys(localStorage).filter((k) => k.startsWith('cache:'));
+      keys.forEach((k) => localStorage.removeItem(k));
     }
   } catch (error) {
     logger.warn('Failed to clear cache:', error);

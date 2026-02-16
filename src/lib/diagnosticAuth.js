@@ -8,12 +8,15 @@
 
 async function diagnoseAuth() {
   console.log('🔍 DIAGNOSTIC SUPABASE AUTH');
-  
+
   try {
     // 1. Vérifier la session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
     console.log('📍 Session:', session ? `✅ Connecté (${session.user.email})` : '❌ Non connecté');
-    
+
     if (!session) {
       console.log('⚠️  Pas de session active');
       return;
@@ -21,9 +24,10 @@ async function diagnoseAuth() {
 
     // 2. Vérifier get_user_profile RPC
     console.log('\n🔧 Test get_user_profile RPC...');
-    const { data: profileRPC, error: rpcError } = await supabase
-      .rpc('get_user_profile', { input_user_id: session.user.id });
-    
+    const { data: profileRPC, error: rpcError } = await supabase.rpc('get_user_profile', {
+      input_user_id: session.user.id,
+    });
+
     if (rpcError) {
       console.error('❌ RPC Error:', rpcError);
     } else {
@@ -37,7 +41,7 @@ async function diagnoseAuth() {
       .select('*')
       .eq('id', session.user.id)
       .single();
-    
+
     if (directError) {
       console.error('❌ Direct Query Error:', directError);
     } else {
@@ -46,9 +50,8 @@ async function diagnoseAuth() {
 
     // 4. Vérifier get_my_role
     console.log('\n👤 Test get_my_role...');
-    const { data: roleData, error: roleError } = await supabase
-      .rpc('get_my_role');
-    
+    const { data: roleData, error: roleError } = await supabase.rpc('get_my_role');
+
     if (roleError) {
       console.error('❌ get_my_role Error:', roleError);
     } else {
@@ -57,9 +60,8 @@ async function diagnoseAuth() {
 
     // 5. Vérifier current_user_id
     console.log('\n🆔 Test current_user_id...');
-    const { data: userId, error: userIdError } = await supabase
-      .rpc('current_user_id');
-    
+    const { data: userId, error: userIdError } = await supabase.rpc('current_user_id');
+
     if (userIdError) {
       console.error('❌ current_user_id Error:', userIdError);
     } else {

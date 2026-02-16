@@ -20,7 +20,7 @@ export const sendContactMessage = async ({ name, email, subject, message }) => {
       p_name: name,
       p_email: email,
       p_subject: subject || null,
-      p_message: message
+      p_message: message,
     });
 
     if (error) {
@@ -28,21 +28,21 @@ export const sendContactMessage = async ({ name, email, subject, message }) => {
         message: error.message,
         code: error.code,
         details: error.details,
-        hint: error.hint
+        hint: error.hint,
       });
-      
+
       // Message d'erreur plus spécifique
       if (error.code === '42501') {
-        throw new Error('Permission refusée. La fonction RPC n\'est pas accessible.');
+        throw new Error("Permission refusée. La fonction RPC n'est pas accessible.");
       }
-      
-      throw new Error(error.message || 'Erreur lors de l\'envoi du message');
+
+      throw new Error(error.message || "Erreur lors de l'envoi du message");
     }
 
     logger.log('✅ Message envoyé avec succès:', data);
     return data?.[0] || data;
   } catch (err) {
-    logger.error('❌ Erreur lors de l\'envoi du message:', err);
+    logger.error("❌ Erreur lors de l'envoi du message:", err);
     throw err;
   }
 };
@@ -112,10 +112,7 @@ export const markMessageAsReplied = async (messageId) => {
  * @returns {Promise<void>}
  */
 export const deleteContactMessage = async (messageId) => {
-  const { error } = await supabase
-    .from('contact_messages')
-    .delete()
-    .eq('id', messageId);
+  const { error } = await supabase.from('contact_messages').delete().eq('id', messageId);
 
   if (error) {
     logger.error('Erreur lors de la suppression du message:', error);

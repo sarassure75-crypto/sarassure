@@ -50,10 +50,10 @@ const LearnerLoginPage = () => {
         >
           {/* Logo */}
           <div className="h-32 w-32 mb-6 flex items-center justify-center">
-            <img 
-              src="/logo_large.png" 
-              alt="Logo" 
-              className="max-h-full max-w-full object-contain" 
+            <img
+              src="/logo_large.png"
+              alt="Logo"
+              className="max-h-full max-w-full object-contain"
               onError={(e) => {
                 e.target.style.display = 'none';
               }}
@@ -86,7 +86,11 @@ const LearnerLoginPage = () => {
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Se connecter'}
+                  {isSubmitting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    'Se connecter'
+                  )}
                 </Button>
               </form>
             </CardContent>

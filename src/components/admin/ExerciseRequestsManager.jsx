@@ -14,7 +14,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,21 +24,21 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Search, 
-  Filter, 
-  ListChecks, 
+} from '@/components/ui/alert-dialog';
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Search,
+  Filter,
+  ListChecks,
   AlertCircle,
   CheckCircle2,
   Clock,
   XCircle,
   ArrowUp,
   ArrowRight,
-  ArrowDown
+  ArrowDown,
 } from 'lucide-react';
 import { useAdmin } from '@/contexts/AdminContext';
 import {
@@ -46,20 +46,20 @@ import {
   createExerciseRequest,
   updateExerciseRequest,
   deleteExerciseRequest,
-  getExerciseRequestsStats
+  getExerciseRequestsStats,
 } from '@/data/exerciseRequests';
 
 const priorityConfig = {
   high: { label: 'Prioritaire', icon: ArrowUp, color: 'text-red-600 bg-red-50' },
   normal: { label: 'Normal', icon: ArrowRight, color: 'text-blue-600 bg-blue-50' },
-  low: { label: 'Optionnel', icon: ArrowDown, color: 'text-gray-600 bg-gray-50' }
+  low: { label: 'Optionnel', icon: ArrowDown, color: 'text-gray-600 bg-gray-50' },
 };
 
 const statusConfig = {
   pending: { label: 'À faire', icon: Clock, color: 'text-yellow-600 bg-yellow-50' },
   in_progress: { label: 'En cours', icon: AlertCircle, color: 'text-blue-600 bg-blue-50' },
   completed: { label: 'Terminé', icon: CheckCircle2, color: 'text-green-600 bg-green-50' },
-  cancelled: { label: 'Annulé', icon: XCircle, color: 'text-gray-600 bg-gray-50' }
+  cancelled: { label: 'Annulé', icon: XCircle, color: 'text-gray-600 bg-gray-50' },
 };
 
 function CreateEditDialog({ open, onOpenChange, request, categories, onSuccess }) {
@@ -78,7 +78,7 @@ function CreateEditDialog({ open, onOpenChange, request, categories, onSuccess }
         description: formData.get('description'),
         category_name: formData.get('category_name'),
         priority: formData.get('priority'),
-        notes: formData.get('notes')
+        notes: formData.get('notes'),
       };
 
       if (isEdit) {
@@ -87,17 +87,20 @@ function CreateEditDialog({ open, onOpenChange, request, categories, onSuccess }
         toast({ title: 'Demande mise à jour' });
       } else {
         await createExerciseRequest(data);
-        toast({ title: 'Demande créée', description: 'Un code unique a été généré automatiquement.' });
+        toast({
+          title: 'Demande créée',
+          description: 'Un code unique a été généré automatiquement.',
+        });
       }
 
       onSuccess();
       onOpenChange(false);
     } catch (error) {
       console.error('Error saving exercise request:', error);
-      toast({ 
-        title: 'Erreur', 
-        description: error.message, 
-        variant: 'destructive' 
+      toast({
+        title: 'Erreur',
+        description: error.message,
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
@@ -110,10 +113,9 @@ function CreateEditDialog({ open, onOpenChange, request, categories, onSuccess }
         <DialogHeader>
           <DialogTitle>{isEdit ? 'Modifier' : 'Créer'} une demande d'exercice</DialogTitle>
           <DialogDescription>
-            {isEdit 
-              ? 'Modifier les informations de cette demande d\'exercice.'
-              : 'Créer une nouvelle demande d\'exercice. Un code unique sera généré automatiquement.'
-            }
+            {isEdit
+              ? "Modifier les informations de cette demande d'exercice."
+              : "Créer une nouvelle demande d'exercice. Un code unique sera généré automatiquement."}
           </DialogDescription>
         </DialogHeader>
 
@@ -236,7 +238,7 @@ export default function ExerciseRequestsManager() {
     try {
       const [requestsData, statsData] = await Promise.all([
         fetchExerciseRequests(),
-        getExerciseRequestsStats()
+        getExerciseRequestsStats(),
       ]);
       setRequests(requestsData);
       setStats(statsData);
@@ -245,7 +247,7 @@ export default function ExerciseRequestsManager() {
       toast({
         title: 'Erreur de chargement',
         description: error.message,
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -257,12 +259,12 @@ export default function ExerciseRequestsManager() {
   }, []);
 
   const filteredRequests = useMemo(() => {
-    return requests.filter(req => {
-      const matchesSearch = 
+    return requests.filter((req) => {
+      const matchesSearch =
         req.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         req.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
         req.description?.toLowerCase().includes(searchTerm.toLowerCase());
-      
+
       const matchesStatus = filterStatus === 'all' || req.status === filterStatus;
       const matchesPriority = filterPriority === 'all' || req.priority === filterPriority;
 
@@ -283,7 +285,7 @@ export default function ExerciseRequestsManager() {
       toast({
         title: 'Erreur de suppression',
         description: error.message,
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
@@ -336,7 +338,9 @@ export default function ExerciseRequestsManager() {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>En cours</CardDescription>
-              <CardTitle className="text-3xl text-blue-600">{stats.by_status.in_progress}</CardTitle>
+              <CardTitle className="text-3xl text-blue-600">
+                {stats.by_status.in_progress}
+              </CardTitle>
             </CardHeader>
           </Card>
           <Card>
@@ -367,7 +371,9 @@ export default function ExerciseRequestsManager() {
         >
           <option value="all">Tous les statuts</option>
           {Object.entries(statusConfig).map(([key, config]) => (
-            <option key={key} value={key}>{config.label}</option>
+            <option key={key} value={key}>
+              {config.label}
+            </option>
           ))}
         </select>
 
@@ -378,7 +384,9 @@ export default function ExerciseRequestsManager() {
         >
           <option value="all">Toutes les priorités</option>
           {Object.entries(priorityConfig).map(([key, config]) => (
-            <option key={key} value={key}>{config.label}</option>
+            <option key={key} value={key}>
+              {config.label}
+            </option>
           ))}
         </select>
       </div>
@@ -394,13 +402,12 @@ export default function ExerciseRequestsManager() {
                 <p className="text-sm text-muted-foreground">
                   {searchTerm || filterStatus !== 'all' || filterPriority !== 'all'
                     ? 'Essayez de modifier vos filtres'
-                    : 'Créez votre première demande d\'exercice'
-                  }
+                    : "Créez votre première demande d'exercice"}
                 </p>
               </CardContent>
             </Card>
           ) : (
-            filteredRequests.map(request => {
+            filteredRequests.map((request) => {
               const StatusIcon = statusConfig[request.status].icon;
               const PriorityIcon = priorityConfig[request.priority].icon;
 
@@ -422,9 +429,7 @@ export default function ExerciseRequestsManager() {
                             {statusConfig[request.status].label}
                           </Badge>
                           {request.category_name && (
-                            <Badge variant="outline">
-                              {request.category_name}
-                            </Badge>
+                            <Badge variant="outline">{request.category_name}</Badge>
                           )}
                         </div>
                         <CardTitle className="text-xl">{request.title}</CardTitle>
@@ -456,17 +461,18 @@ export default function ExerciseRequestsManager() {
                       <div>
                         <span className="font-medium text-green-600">
                           {request.validated_versions_count || 0}
-                        </span> version(s) validée(s)
+                        </span>{' '}
+                        version(s) validée(s)
                       </div>
                       <div>
                         <span className="font-medium text-yellow-600">
                           {request.pending_versions_count || 0}
-                        </span> en attente
+                        </span>{' '}
+                        en attente
                       </div>
                       <div>
-                        <span className="font-medium">
-                          {request.linked_task_ids?.length || 0}
-                        </span> exercice(s) lié(s)
+                        <span className="font-medium">{request.linked_task_ids?.length || 0}</span>{' '}
+                        exercice(s) lié(s)
                       </div>
                       {request.creator && (
                         <div className="ml-auto">
@@ -504,18 +510,24 @@ export default function ExerciseRequestsManager() {
         onSuccess={loadData}
       />
 
-      <AlertDialog open={!!deletingRequest} onOpenChange={(open) => !open && setDeletingRequest(null)}>
+      <AlertDialog
+        open={!!deletingRequest}
+        onOpenChange={(open) => !open && setDeletingRequest(null)}
+      >
         <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle>Supprimer cette demande ?</AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action est irréversible. La demande "{deletingRequest?.title}" sera définitivement supprimée.
-              Les exercices déjà créés ne seront pas affectés.
+              Cette action est irréversible. La demande "{deletingRequest?.title}" sera
+              définitivement supprimée. Les exercices déjà créés ne seront pas affectés.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive hover:bg-destructive/90"
+            >
               Supprimer
             </AlertDialogAction>
           </AlertDialogFooter>

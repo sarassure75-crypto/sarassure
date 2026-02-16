@@ -41,10 +41,15 @@ const PwaInstallCard = ({ delay }) => {
             </Button>
           ) : isIos ? (
             <div className="text-sm text-muted-foreground bg-slate-100 p-3 rounded-lg">
-              <p>Sur iPhone/iPad, appuyez sur l'icône <Share className="inline-block h-4 w-4 mx-1" /> puis "Sur l'écran d'accueil".</p>
+              <p>
+                Sur iPhone/iPad, appuyez sur l'icône <Share className="inline-block h-4 w-4 mx-1" />{' '}
+                puis "Sur l'écran d'accueil".
+              </p>
             </div>
           ) : (
-             <p className="text-sm text-muted-foreground">L'installation n'est pas disponible sur ce navigateur.</p>
+            <p className="text-sm text-muted-foreground">
+              L'installation n'est pas disponible sur ce navigateur.
+            </p>
           )}
         </CardContent>
       </Card>

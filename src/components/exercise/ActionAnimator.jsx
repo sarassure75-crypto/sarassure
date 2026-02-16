@@ -1,15 +1,24 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const ActionAnimator = ({ 
-  actionType, 
+const ActionAnimator = ({
+  actionType,
   startArea,
   hideActionZone = false,
-  isMobileLayout = false 
+  isMobileLayout = false,
 }) => {
   // Check condition first, BEFORE hooks
-  const shouldUseZones = ['tap', 'double_tap', 'long_press', 'swipe_left', 'swipe_right', 'swipe_up', 'swipe_down', 'drag_and_drop'].includes(actionType);
-  
+  const shouldUseZones = [
+    'tap',
+    'double_tap',
+    'long_press',
+    'swipe_left',
+    'swipe_right',
+    'swipe_up',
+    'swipe_down',
+    'drag_and_drop',
+  ].includes(actionType);
+
   if (!shouldUseZones || !startArea) {
     return null;
   }
@@ -25,17 +34,25 @@ const ActionAnimator = ({
     const rgbMatch = startArea.color.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
     if (rgbMatch) {
       const [_, r, g, b] = rgbMatch;
-      bgColor = `rgba(${r}, ${g}, ${b}, ${startArea.opacity !== undefined ? startArea.opacity : 0.15})`;
+      bgColor = `rgba(${r}, ${g}, ${b}, ${
+        startArea.opacity !== undefined ? startArea.opacity : 0.15
+      })`;
     } else if (startArea.color.startsWith('#')) {
       // Si couleur hex, convertir en rgba
       const hex = startArea.color.replace('#', '');
       const r = parseInt(hex.substring(0, 2), 16);
       const g = parseInt(hex.substring(2, 4), 16);
       const b = parseInt(hex.substring(4, 6), 16);
-      bgColor = `rgba(${r}, ${g}, ${b}, ${startArea.opacity !== undefined ? startArea.opacity : 0.15})`;
+      bgColor = `rgba(${r}, ${g}, ${b}, ${
+        startArea.opacity !== undefined ? startArea.opacity : 0.15
+      })`;
     } else if (startArea.color.startsWith('rgba')) {
       // Si déjà rgba, remplacer l'opacité
-      bgColor = startArea.color.replace(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*[\d\.]+\)/, (m, r, g, b) => `rgba(${r}, ${g}, ${b}, ${startArea.opacity !== undefined ? startArea.opacity : 0.15})`);
+      bgColor = startArea.color.replace(
+        /rgba\((\d+),\s*(\d+),\s*(\d+),\s*[\d\.]+\)/,
+        (m, r, g, b) =>
+          `rgba(${r}, ${g}, ${b}, ${startArea.opacity !== undefined ? startArea.opacity : 0.15})`
+      );
     } else {
       bgColor = startArea.color;
     }
@@ -50,9 +67,9 @@ const ActionAnimator = ({
         height: startArea.height_percent ?? 0,
         color: borderColor,
         bgColor: bgColor,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
-      
+
       // Auto-clear après animation
       setTimeout(() => setClickedZone(null), 600);
     }
@@ -79,14 +96,14 @@ const ActionAnimator = ({
           pointerEvents: 'none',
         }}
         initial={{ opacity: hideActionZone ? 0.02 : 0.3, scale: 1 }}
-        animate={{ 
+        animate={{
           opacity: hideActionZone ? [0.02, 0.04, 0.02] : [0.3, 0.8, 0.3],
-          scale: hideActionZone ? 1 : [1, 1.05, 1]
+          scale: hideActionZone ? 1 : [1, 1.05, 1],
         }}
-        transition={{ 
-          duration: hideActionZone ? 3 : 1.5, 
+        transition={{
+          duration: hideActionZone ? 3 : 1.5,
           repeat: Infinity,
-          ease: 'easeInOut'
+          ease: 'easeInOut',
         }}
       />
 
@@ -110,15 +127,15 @@ const ActionAnimator = ({
                 borderRadius: '8px',
                 pointerEvents: 'none',
               }}
-              initial={{ 
+              initial={{
                 opacity: 1,
                 scale: 1,
-                boxShadow: `0 0 20px ${clickedZone.color}40`
+                boxShadow: `0 0 20px ${clickedZone.color}40`,
               }}
-              animate={{ 
+              animate={{
                 opacity: [1, 0.5],
                 scale: [1, 1.15],
-                boxShadow: `0 0 30px ${clickedZone.color}80`
+                boxShadow: `0 0 30px ${clickedZone.color}80`,
               }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
@@ -141,18 +158,18 @@ const ActionAnimator = ({
                   pointerEvents: 'none',
                   transform: 'translate(-50%, -50%)',
                 }}
-                initial={{ 
+                initial={{
                   opacity: 0.8,
                   scale: 0.8,
                 }}
-                animate={{ 
+                animate={{
                   opacity: 0,
                   scale: 2,
                 }}
-                transition={{ 
+                transition={{
                   duration: 0.6,
                   delay: i * 0.1,
-                  ease: 'easeOut'
+                  ease: 'easeOut',
                 }}
               />
             ))}

@@ -24,11 +24,11 @@ export default function TrainerLearnersProgressReport({ trainerId, learners }) {
   const loadProgressData = async () => {
     try {
       setLoading(true);
-      
+
       // Si learners n'est pas fourni, charger depuis la BD
       let learnerIds = [];
       if (learners && learners.length > 0) {
-        learnerIds = learners.map(l => l.id);
+        learnerIds = learners.map((l) => l.id);
       } else if (trainerId) {
         // Charger les apprenants du formateur
         const { data: learnersData } = await supabase
@@ -36,9 +36,9 @@ export default function TrainerLearnersProgressReport({ trainerId, learners }) {
           .select('id, first_name, email')
           .eq('assigned_trainer_id', trainerId)
           .eq('role', 'apprenant');
-        learnerIds = learnersData?.map(l => l.id) || [];
+        learnerIds = learnersData?.map((l) => l.id) || [];
       }
-      
+
       if (learnerIds.length === 0) {
         setProgressData([]);
         setStats({
@@ -54,7 +54,9 @@ export default function TrainerLearnersProgressReport({ trainerId, learners }) {
       // Récupérer la progression pour chaque apprenant
       const { data: progressList, error } = await supabase
         .from('user_version_progress')
-        .select('user_id, version_id, first_time_seconds, best_time_seconds, attempts, last_attempted_at')
+        .select(
+          'user_id, version_id, first_time_seconds, best_time_seconds, attempts, last_attempted_at'
+        )
         .in('user_id', learnerIds)
         .order('last_attempted_at', { ascending: false });
 
@@ -88,7 +90,7 @@ export default function TrainerLearnersProgressReport({ trainerId, learners }) {
 
       // Organiser les données par apprenant
       const dataByLearner = {};
-      learnersToUse.forEach(learner => {
+      learnersToUse.forEach((learner) => {
         dataByLearner[learner.id] = {
           id: learner.id,
           name: learner.first_name || 'Apprenant',
@@ -105,15 +107,17 @@ export default function TrainerLearnersProgressReport({ trainerId, learners }) {
       });
 
       // Remplir les données d'exercices
-      progressList?.forEach(progress => {
+      progressList?.forEach((progress) => {
         if (dataByLearner[progress.user_id]) {
           dataByLearner[progress.user_id].completedExercises += 1;
           dataByLearner[progress.user_id].attempts += progress.attempts || 1;
-          dataByLearner[progress.user_id].totalTime += (progress.best_time_seconds || 0);
-          
+          dataByLearner[progress.user_id].totalTime += progress.best_time_seconds || 0;
+
           const lastActivity = new Date(progress.last_attempted_at);
-          if (!dataByLearner[progress.user_id].lastActivity || 
-              lastActivity > new Date(dataByLearner[progress.user_id].lastActivity)) {
+          if (
+            !dataByLearner[progress.user_id].lastActivity ||
+            lastActivity > new Date(dataByLearner[progress.user_id].lastActivity)
+          ) {
             dataByLearner[progress.user_id].lastActivity = progress.last_attempted_at;
           }
         }
@@ -127,7 +131,7 @@ export default function TrainerLearnersProgressReport({ trainerId, learners }) {
 
       if (!qcmError && qcmList) {
         // Traiter les données QCM
-        qcmList.forEach(qcm => {
+        qcmList.forEach((qcm) => {
           if (dataByLearner[qcm.learner_id]) {
             dataByLearner[qcm.learner_id].qcmAttempts += 1;
             const percentage = qcm.best_percentage || qcm.percentage || 0;
@@ -135,18 +139,20 @@ export default function TrainerLearnersProgressReport({ trainerId, learners }) {
               dataByLearner[qcm.learner_id].qcmBestScore,
               percentage
             );
-            dataByLearner[qcm.learner_id].qcmAverageScore += (percentage || 0);
-            
+            dataByLearner[qcm.learner_id].qcmAverageScore += percentage || 0;
+
             const qcmActivity = new Date(qcm.attempted_at);
-            if (!dataByLearner[qcm.learner_id].lastActivity || 
-                qcmActivity > new Date(dataByLearner[qcm.learner_id].lastActivity)) {
+            if (
+              !dataByLearner[qcm.learner_id].lastActivity ||
+              qcmActivity > new Date(dataByLearner[qcm.learner_id].lastActivity)
+            ) {
               dataByLearner[qcm.learner_id].lastActivity = qcm.attempted_at;
             }
           }
         });
 
         // Calculer la moyenne des QCM
-        Object.keys(dataByLearner).forEach(learnerId => {
+        Object.keys(dataByLearner).forEach((learnerId) => {
           if (dataByLearner[learnerId].qcmAttempts > 0) {
             dataByLearner[learnerId].qcmAverageScore = Math.round(
               dataByLearner[learnerId].qcmAverageScore / dataByLearner[learnerId].qcmAttempts
@@ -156,24 +162,34 @@ export default function TrainerLearnersProgressReport({ trainerId, learners }) {
       }
 
       // Calculer les taux de complétion
-      const progressArray = Object.values(dataByLearner).map(learner => ({
+      const progressArray = Object.values(dataByLearner).map((learner) => ({
         ...learner,
-        completionRate: totalVersions > 0 ? Math.round((learner.completedExercises / totalVersions) * 100) : 0,
+        completionRate:
+          totalVersions > 0 ? Math.round((learner.completedExercises / totalVersions) * 100) : 0,
       }));
 
       // Calculer les stats globales
       const totalCompleted = progressArray.reduce((sum, l) => sum + l.completedExercises, 0);
-      const averageRate = progressArray.length > 0 
-        ? Math.round(progressArray.reduce((sum, l) => sum + l.completionRate, 0) / progressArray.length)
-        : 0;
+      const averageRate =
+        progressArray.length > 0
+          ? Math.round(
+              progressArray.reduce((sum, l) => sum + l.completionRate, 0) / progressArray.length
+            )
+          : 0;
       const totalTime = progressArray.reduce((sum, l) => sum + l.totalTime, 0);
-      const mostActive = progressArray.reduce((max, l) => 
-        l.completedExercises > (max?.completedExercises || 0) ? l : max, null);
+      const mostActive = progressArray.reduce(
+        (max, l) => (l.completedExercises > (max?.completedExercises || 0) ? l : max),
+        null
+      );
 
       const totalQCM = progressArray.reduce((sum, l) => sum + l.qcmAttempts, 0);
-      const averageQCMScore = progressArray.length > 0 && totalQCM > 0
-        ? Math.round(progressArray.reduce((sum, l) => sum + l.qcmAverageScore, 0) / progressArray.filter(l => l.qcmAttempts > 0).length)
-        : 0;
+      const averageQCMScore =
+        progressArray.length > 0 && totalQCM > 0
+          ? Math.round(
+              progressArray.reduce((sum, l) => sum + l.qcmAverageScore, 0) /
+                progressArray.filter((l) => l.qcmAttempts > 0).length
+            )
+          : 0;
 
       setProgressData(progressArray);
       setStats({
@@ -196,7 +212,7 @@ export default function TrainerLearnersProgressReport({ trainerId, learners }) {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = Math.floor(seconds % 60);
-    
+
     if (hours > 0) return `${hours}h ${minutes}m`;
     if (minutes > 0) return `${minutes}m ${secs}s`;
     return `${secs}s`;
@@ -205,7 +221,12 @@ export default function TrainerLearnersProgressReport({ trainerId, learners }) {
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleDateString('fr-FR', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
   const getProgressColor = (rate) => {
@@ -257,7 +278,9 @@ export default function TrainerLearnersProgressReport({ trainerId, learners }) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">{formatTime(stats.totalLearningTime)}</div>
+            <div className="text-2xl font-bold text-gray-900">
+              {formatTime(stats.totalLearningTime)}
+            </div>
             <p className="text-xs text-gray-500 mt-1">Apprentissage</p>
           </CardContent>
         </Card>
@@ -274,7 +297,9 @@ export default function TrainerLearnersProgressReport({ trainerId, learners }) {
               {stats.mostActiveLearner?.name || '-'}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              {stats.mostActiveLearner ? `${stats.mostActiveLearner.completedExercises} exercices` : 'Aucune donnée'}
+              {stats.mostActiveLearner
+                ? `${stats.mostActiveLearner.completedExercises} exercices`
+                : 'Aucune donnée'}
             </p>
           </CardContent>
         </Card>
@@ -313,12 +338,7 @@ export default function TrainerLearnersProgressReport({ trainerId, learners }) {
               <CardTitle>Rapport Détaillé par Apprenant</CardTitle>
               <CardDescription>Suivi de la progression de chaque apprenant</CardDescription>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={loadProgressData}
-              disabled={loading}
-            >
+            <Button variant="outline" size="sm" onClick={loadProgressData} disabled={loading}>
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
           </div>
@@ -340,7 +360,9 @@ export default function TrainerLearnersProgressReport({ trainerId, learners }) {
                     <th className="text-center font-semibold text-gray-700 p-3">Taux</th>
                     <th className="text-center font-semibold text-gray-700 p-3">Tentatives</th>
                     <th className="text-center font-semibold text-gray-700 p-3">Temps</th>
-                    <th className="text-center font-semibold text-gray-700 p-3">Dernière Activité</th>
+                    <th className="text-center font-semibold text-gray-700 p-3">
+                      Dernière Activité
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -349,20 +371,24 @@ export default function TrainerLearnersProgressReport({ trainerId, learners }) {
                       <td className="p-3">
                         <div>
                           <p className="font-medium text-gray-900">{learner.name}</p>
-                          <p className="text-xs text-gray-500">{learner.email || 'Pas d\'email'}</p>
+                          <p className="text-xs text-gray-500">{learner.email || "Pas d'email"}</p>
                         </div>
                       </td>
                       <td className="p-3 text-center">
-                        <span className="font-semibold text-gray-900">{learner.completedExercises}</span>
+                        <span className="font-semibold text-gray-900">
+                          {learner.completedExercises}
+                        </span>
                       </td>
                       <td className="p-3 text-center">
-                        <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${getProgressColor(learner.completionRate)}`}>
+                        <span
+                          className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${getProgressColor(
+                            learner.completionRate
+                          )}`}
+                        >
                           {learner.completionRate}%
                         </span>
                       </td>
-                      <td className="p-3 text-center text-gray-700">
-                        {learner.attempts}
-                      </td>
+                      <td className="p-3 text-center text-gray-700">{learner.attempts}</td>
                       <td className="p-3 text-center text-gray-700">
                         {formatTime(learner.totalTime)}
                       </td>

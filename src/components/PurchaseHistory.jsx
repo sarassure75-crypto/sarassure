@@ -8,14 +8,14 @@ const statusColors = {
   pending: 'bg-yellow-100 text-yellow-800',
   completed: 'bg-green-100 text-green-800',
   failed: 'bg-red-100 text-red-800',
-  refunded: 'bg-gray-100 text-gray-800'
+  refunded: 'bg-gray-100 text-gray-800',
 };
 
 const statusLabels = {
   pending: 'En attente',
   completed: 'Complété',
   failed: 'Échoué',
-  refunded: 'Remboursé'
+  refunded: 'Remboursé',
 };
 
 export default function PurchaseHistory({ trainerId }) {
@@ -65,20 +65,18 @@ export default function PurchaseHistory({ trainerId }) {
           </p>
         ) : (
           <div className="space-y-4">
-            {purchases.map(purchase => (
+            {purchases.map((purchase) => (
               <div
                 key={purchase.id}
                 className="border rounded-lg p-4 flex justify-between items-start"
               >
                 <div className="flex-1">
-                  <h4 className="font-semibold">
-                    {purchase.license_packages?.name || 'Forfait'}
-                  </h4>
+                  <h4 className="font-semibold">{purchase.license_packages?.name || 'Forfait'}</h4>
                   <p className="text-sm text-gray-600 mt-1">
                     {new Date(purchase.created_at).toLocaleDateString('fr-FR')} à{' '}
                     {new Date(purchase.created_at).toLocaleTimeString('fr-FR', {
                       hour: '2-digit',
-                      minute: '2-digit'
+                      minute: '2-digit',
                     })}
                   </p>
                   <p className="text-sm text-gray-500 mt-1">

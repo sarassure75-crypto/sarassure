@@ -1,5 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Search, X, Eye, EyeOff, Home, FileText, FolderOpen, ChevronLeft, ChevronRight, Layers, Info, Volume2, Type, Bug, Globe, Loader2 } from 'lucide-react';
+import {
+  Search,
+  X,
+  Eye,
+  EyeOff,
+  Home,
+  FileText,
+  FolderOpen,
+  ChevronLeft,
+  ChevronRight,
+  Layers,
+  Info,
+  Volume2,
+  Type,
+  Bug,
+  Globe,
+  Loader2,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { getAvailableLanguages } from '@/data/translation';
@@ -36,7 +53,7 @@ const VerticalToolbar = ({
   totalSteps,
   currentLanguage,
   onLanguageChange,
-  preferredLanguage = 'en' // La vraie langue préférée du profil utilisateur
+  preferredLanguage = 'en', // La vraie langue préférée du profil utilisateur
 }) => {
   const navigate = useNavigate();
   const [showVersionMenu, setShowVersionMenu] = useState(false);
@@ -44,15 +61,17 @@ const VerticalToolbar = ({
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [languages, setLanguages] = useState([]);
   const [loadingLanguages, setLoadingLanguages] = useState(false);
-  const iconSize = isMobileLayout ? "h-5 w-5" : "h-6 w-6";
-  const buttonClass = "w-full p-3 flex items-center justify-center text-white hover:bg-green-600 transition-colors border-b border-green-600";
-  
+  const iconSize = isMobileLayout ? 'h-5 w-5' : 'h-6 w-6';
+  const buttonClass =
+    'w-full p-3 flex items-center justify-center text-white hover:bg-green-600 transition-colors border-b border-green-600';
+
   const handleReportError = () => {
     // Passer les paramètres courants au formulaire de signalement
     const params = new URLSearchParams();
     if (taskId) params.append('taskId', taskId);
     if (versionId) params.append('versionId', versionId);
-    if (currentStepIndex !== undefined && currentStepIndex >= 0) params.append('stepIndex', currentStepIndex);
+    if (currentStepIndex !== undefined && currentStepIndex >= 0)
+      params.append('stepIndex', currentStepIndex);
     navigate(`/report-error?${params.toString()}`);
   };
 
@@ -79,8 +98,8 @@ const VerticalToolbar = ({
       <button
         onClick={onZoomToggle}
         className={buttonClass}
-        title={isZoomActive ? "Désactiver la loupe" : "Activer la loupe"}
-        aria-label={isZoomActive ? "Désactiver la loupe" : "Activer la loupe"}
+        title={isZoomActive ? 'Désactiver la loupe' : 'Activer la loupe'}
+        aria-label={isZoomActive ? 'Désactiver la loupe' : 'Activer la loupe'}
       >
         {isZoomActive ? <X className={iconSize} /> : <Search className={iconSize} />}
       </button>
@@ -89,8 +108,8 @@ const VerticalToolbar = ({
       <button
         onClick={onInstructionsToggle}
         className={buttonClass}
-        title={showInstructions ? "Masquer les instructions" : "Afficher les instructions"}
-        aria-label={showInstructions ? "Masquer les instructions" : "Afficher les instructions"}
+        title={showInstructions ? 'Masquer les instructions' : 'Afficher les instructions'}
+        aria-label={showInstructions ? 'Masquer les instructions' : 'Afficher les instructions'}
       >
         <Info className={iconSize} />
       </button>
@@ -129,8 +148,8 @@ const VerticalToolbar = ({
 
         {/* Menu déroulant zoom texte */}
         {showTextZoomMenu && (
-          <div 
-            className="fixed bg-white border-2 border-green-700 rounded-lg shadow-2xl z-50 min-w-[180px] pointer-events-auto" 
+          <div
+            className="fixed bg-white border-2 border-green-700 rounded-lg shadow-2xl z-50 min-w-[180px] pointer-events-auto"
             style={{ top: '150px', right: '20px' }}
           >
             <div className="p-2">
@@ -143,8 +162,8 @@ const VerticalToolbar = ({
                     setShowTextZoomMenu(false);
                   }}
                   className={cn(
-                    "w-full text-left px-3 py-2 text-sm rounded hover:bg-green-50 transition-colors",
-                    textZoom === zoom && "bg-green-100 font-semibold text-green-800"
+                    'w-full text-left px-3 py-2 text-sm rounded hover:bg-green-50 transition-colors',
+                    textZoom === zoom && 'bg-green-100 font-semibold text-green-800'
                   )}
                 >
                   {Math.round(zoom * 100)}%
@@ -164,12 +183,17 @@ const VerticalToolbar = ({
         >
           <Layers className={iconSize} />
         </button>
-        
+
         {/* Menu déroulant des versions - positionné en haut à droite */}
         {showVersionMenu && versions && versions.length > 0 && (
-          <div className="fixed bg-white border-2 border-green-700 rounded-lg shadow-2xl z-50 min-w-[240px] pointer-events-auto" style={{ top: '50px', right: '20px' }}>
+          <div
+            className="fixed bg-white border-2 border-green-700 rounded-lg shadow-2xl z-50 min-w-[240px] pointer-events-auto"
+            style={{ top: '50px', right: '20px' }}
+          >
             <div className="p-3">
-              <p className="text-xs font-semibold text-gray-600 mb-2 px-2">Sélectionner une version :</p>
+              <p className="text-xs font-semibold text-gray-600 mb-2 px-2">
+                Sélectionner une version :
+              </p>
               {versions.map((version) => (
                 <button
                   key={version.id}
@@ -178,8 +202,8 @@ const VerticalToolbar = ({
                     setShowVersionMenu(false);
                   }}
                   className={cn(
-                    "w-full text-left px-3 py-2 text-sm rounded hover:bg-green-50 transition-colors",
-                    version.id === currentVersionId && "bg-green-100 font-semibold text-green-800"
+                    'w-full text-left px-3 py-2 text-sm rounded hover:bg-green-50 transition-colors',
+                    version.id === currentVersionId && 'bg-green-100 font-semibold text-green-800'
                   )}
                 >
                   {version.name}
@@ -191,29 +215,17 @@ const VerticalToolbar = ({
       </div>
 
       {/* Mes notes personnelles */}
-      <button
-        onClick={onViewNotes}
-        className={buttonClass}
-        title="Consulter mes notes"
-      >
+      <button onClick={onViewNotes} className={buttonClass} title="Consulter mes notes">
         <FolderOpen className={iconSize} />
       </button>
 
       {/* Ajouter une note */}
-      <button
-        onClick={onAddNote}
-        className={buttonClass}
-        title="Ajouter une note"
-      >
+      <button onClick={onAddNote} className={buttonClass} title="Ajouter une note">
         <FileText className={iconSize} />
       </button>
 
       {/* Signaler une erreur */}
-      <button
-        onClick={handleReportError}
-        className={buttonClass}
-        title="Signaler une erreur"
-      >
+      <button onClick={handleReportError} className={buttonClass} title="Signaler une erreur">
         <Bug className={iconSize} />
       </button>
 
@@ -221,7 +233,7 @@ const VerticalToolbar = ({
       <button
         onClick={onPrev}
         disabled={isPrevDisabled}
-        className={cn(buttonClass, isPrevDisabled && "opacity-50 cursor-not-allowed")}
+        className={cn(buttonClass, isPrevDisabled && 'opacity-50 cursor-not-allowed')}
         title="Étape précédente"
       >
         <ChevronLeft className={iconSize} />
@@ -231,7 +243,7 @@ const VerticalToolbar = ({
       <button
         onClick={onNext}
         disabled={isNextDisabled}
-        className={cn(buttonClass, isNextDisabled && "opacity-50 cursor-not-allowed")}
+        className={cn(buttonClass, isNextDisabled && 'opacity-50 cursor-not-allowed')}
         title="Étape suivante"
       >
         <ChevronRight className={iconSize} />
@@ -244,7 +256,11 @@ const VerticalToolbar = ({
           onLanguageChange?.(newLang);
         }}
         className={buttonClass}
-        title={currentLanguage === 'fr' ? 'Cliquez pour voir la traduction' : 'Cliquez pour revenir au français'}
+        title={
+          currentLanguage === 'fr'
+            ? 'Cliquez pour voir la traduction'
+            : 'Cliquez pour revenir au français'
+        }
         aria-label="Changer la langue"
       >
         <div className="flex flex-col items-center justify-center w-full">
@@ -256,7 +272,7 @@ const VerticalToolbar = ({
       {/* Accueil (Tâches) */}
       <button
         onClick={onNavigateToTasks}
-        className={cn(buttonClass, "border-b-0")}
+        className={cn(buttonClass, 'border-b-0')}
         title="Retour aux tâches"
       >
         <Home className={iconSize} />

@@ -14,14 +14,14 @@ export default function ContactForm({ onSuccess }) {
     name: '',
     email: '',
     subject: '',
-    message: ''
+    message: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -32,7 +32,7 @@ export default function ContactForm({ onSuccess }) {
       toast({
         title: 'Champs requis',
         description: 'Veuillez remplir tous les champs obligatoires',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
@@ -42,31 +42,31 @@ export default function ContactForm({ onSuccess }) {
       toast({
         title: 'Email invalide',
         description: 'Veuillez entrer une adresse email valide',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
 
     try {
       setIsSubmitting(true);
-      
+
       // Sanitize all inputs before sending
       const sanitizedData = {
         name: sanitizeHTML(formData.name.trim()),
         email: formData.email.trim(),
         subject: sanitizeHTML(formData.subject.trim()),
-        message: sanitizeHTML(formData.message.trim())
+        message: sanitizeHTML(formData.message.trim()),
       };
-      
+
       const result = await sendContactMessage(sanitizedData);
-      
+
       if (!result) {
-        throw new Error('Erreur lors de l\'enregistrement du message');
+        throw new Error("Erreur lors de l'enregistrement du message");
       }
-      
+
       toast({
         title: 'Message envoyé !',
-        description: 'Nous vous répondrons dans les plus brefs délais.'
+        description: 'Nous vous répondrons dans les plus brefs délais.',
       });
 
       // Réinitialiser le formulaire
@@ -74,16 +74,16 @@ export default function ContactForm({ onSuccess }) {
         name: '',
         email: '',
         subject: '',
-        message: ''
+        message: '',
       });
 
       if (onSuccess) onSuccess();
     } catch (error) {
-      console.error('Erreur d\'envoi:', error);
+      console.error("Erreur d'envoi:", error);
       toast({
         title: 'Erreur',
-        description: error.message || 'Impossible d\'envoyer le message. Veuillez réessayer.',
-        variant: 'destructive'
+        description: error.message || "Impossible d'envoyer le message. Veuillez réessayer.",
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
@@ -158,11 +158,7 @@ export default function ContactForm({ onSuccess }) {
             />
           </div>
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isSubmitting}
-          >
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? (
               'Envoi en cours...'
             ) : (

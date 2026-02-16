@@ -2,7 +2,22 @@ import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
-import { Menu, X, User, LogOut, UserCog, LayoutDashboard, BookOpen, ListChecks, BarChart3, Download, MessageSquare as MessageSquareWarning, FileText, Image, Folder } from 'lucide-react';
+import {
+  Menu,
+  X,
+  User,
+  LogOut,
+  UserCog,
+  LayoutDashboard,
+  BookOpen,
+  ListChecks,
+  BarChart3,
+  Download,
+  MessageSquare as MessageSquareWarning,
+  FileText,
+  Image,
+  Folder,
+} from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { USER_ROLES } from '@/data/users';
 import ThemeSwitcher from '@/components/ui/ThemeSwitcher';
@@ -28,7 +43,12 @@ const Header = ({ pwaMode = false }) => {
     }`;
 
   const commonLinks = [
-    { to: '/taches', label: 'Tâches', icon: BookOpen, roles: [USER_ROLES.LEARNER, USER_ROLES.TRAINER, USER_ROLES.ADMIN] },
+    {
+      to: '/taches',
+      label: 'Tâches',
+      icon: BookOpen,
+      roles: [USER_ROLES.LEARNER, USER_ROLES.TRAINER, USER_ROLES.ADMIN],
+    },
   ];
 
   const userLinks = {
@@ -48,7 +68,7 @@ const Header = ({ pwaMode = false }) => {
     [USER_ROLES.CONTRIBUTOR]: [
       { to: '/contributeur', label: 'Dashboard', icon: LayoutDashboard },
       { to: '/contributeur/nouvelle-contribution', label: 'Créer un exercice', icon: FileText },
-      { to: '/contributeur/bibliotheque', label: 'Bibliothèque d\'images', icon: Image },
+      { to: '/contributeur/bibliotheque', label: "Bibliothèque d'images", icon: Image },
       { to: '/contributeur/mes-contributions', label: 'Mes contributions', icon: Folder },
       { to: '/contributeur/profil', label: 'Mon Profil', icon: UserCog },
     ],
@@ -63,9 +83,9 @@ const Header = ({ pwaMode = false }) => {
     console.log('🔍 Header - currentUser.role:', currentUser.role);
     console.log('🔍 Header - USER_ROLES.CONTRIBUTOR:', USER_ROLES.CONTRIBUTOR);
     console.log('🔍 Header - userLinks[currentUser.role]:', userLinks[currentUser.role]);
-    
+
     const roleLinks = userLinks[currentUser.role] || [];
-    const filteredCommonLinks = commonLinks.filter(link => link.roles.includes(currentUser.role));
+    const filteredCommonLinks = commonLinks.filter((link) => link.roles.includes(currentUser.role));
     console.log('🔍 Header - Final navLinks:', [...filteredCommonLinks, ...roleLinks]);
     return [...filteredCommonLinks, ...roleLinks];
   };
@@ -83,7 +103,15 @@ const Header = ({ pwaMode = false }) => {
           {!pwaMode && (
             <nav className="hidden md:flex items-center gap-4">
               {navLinks.map((link) => (
-                <NavLink key={link.to} to={link.to} className={({isActive}) => `text-sm font-medium transition-colors hover:text-primary ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  className={({ isActive }) =>
+                    `text-sm font-medium transition-colors hover:text-primary ${
+                      isActive ? 'text-primary' : 'text-muted-foreground'
+                    }`
+                  }
+                >
                   {link.label}
                 </NavLink>
               ))}
@@ -92,11 +120,13 @@ const Header = ({ pwaMode = false }) => {
 
           <div className="flex items-center gap-2">
             {deferredPrompt && !pwaMode && (
-                  <ThemeSwitcher />
-              <Button variant="outline" size="sm" onClick={handleInstallPrompt}>
-                <Download className="mr-2 h-4 w-4" />
-                Installer
-              </Button>
+              <>
+                <ThemeSwitcher />
+                <Button variant="outline" size="sm" onClick={handleInstallPrompt}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Installer
+                </Button>
+              </>
             )}
             {currentUser ? (
               <div className="flex items-center gap-2">
@@ -129,11 +159,11 @@ const Header = ({ pwaMode = false }) => {
               </SheetTrigger>
               <SheetContent side="right" className="w-full max-w-sm">
                 <div className="flex justify-between items-center mb-6">
-                   <SheetClose asChild>
-                     <Link to="/" className="flex items-center gap-2">
-                        <img src="/logo_192.png" alt="SARASSURE Logo" className="h-8 w-auto" />
-                     </Link>
-                   </SheetClose>
+                  <SheetClose asChild>
+                    <Link to="/" className="flex items-center gap-2">
+                      <img src="/logo_192.png" alt="SARASSURE Logo" className="h-8 w-auto" />
+                    </Link>
+                  </SheetClose>
                   <SheetClose asChild>
                     <Button variant="ghost" size="icon">
                       <X className="h-6 w-6" />
@@ -151,24 +181,31 @@ const Header = ({ pwaMode = false }) => {
                           </NavLink>
                         </SheetClose>
                       ))}
-                       <hr className="my-2"/>
-                       <SheetClose asChild>
-                         <button onClick={handleLogout} className="flex items-center px-4 py-2 text-lg font-medium rounded-md transition-colors hover:bg-muted w-full text-left">
-                            <LogOut className="mr-3 h-5 w-5 text-destructive" />
-                            Déconnexion
-                         </button>
-                       </SheetClose>
+                      <hr className="my-2" />
+                      <SheetClose asChild>
+                        <button
+                          onClick={handleLogout}
+                          className="flex items-center px-4 py-2 text-lg font-medium rounded-md transition-colors hover:bg-muted w-full text-left"
+                        >
+                          <LogOut className="mr-3 h-5 w-5 text-destructive" />
+                          Déconnexion
+                        </button>
+                      </SheetClose>
                     </>
                   ) : (
                     <>
                       <SheetClose asChild>
                         <Link to="/login">
-                          <Button className="w-full justify-center">Connexion Admin/Formateur</Button>
+                          <Button className="w-full justify-center">
+                            Connexion Admin/Formateur
+                          </Button>
                         </Link>
                       </SheetClose>
                       <SheetClose asChild>
                         <Link to="/learner-login">
-                          <Button className="w-full justify-center" variant="secondary">Accès Apprenant</Button>
+                          <Button className="w-full justify-center" variant="secondary">
+                            Accès Apprenant
+                          </Button>
                         </Link>
                       </SheetClose>
                     </>

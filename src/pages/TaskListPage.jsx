@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Loader2, AlertTriangle, Video, List, HelpCircle } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
@@ -25,7 +32,7 @@ const toPascalCase = (str) => {
   if (!str) return null;
   return str
     .split(/[\s-]+/)
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join('');
 };
 
@@ -54,20 +61,20 @@ const TaskListPage = () => {
           setCategories(cachedCategories);
           setImages(new Map(cachedImages));
           setIsLoading(false);
-          
+
           // Refresh data in background (don't await, fire and forget)
           (async () => {
             try {
               const [tasksData, categoriesData, imagesData] = await Promise.all([
                 fetchTasks(true),
                 fetchTaskCategories(true),
-                fetchImages(true)
+                fetchImages(true),
               ]);
-              
+
               setTasks(tasksData || []);
               setCategories(categoriesData || []);
               setImages(imagesData || new Map());
-              
+
               // Cache the fresh data (updated timestamp)
               cacheData('tasks', tasksData, 3600000);
               cacheData('task-categories', categoriesData, 3600000);
@@ -77,28 +84,30 @@ const TaskListPage = () => {
             }
           })();
         } else {
-          // No cache available, fetch fresh data with forceRefresh=true 
+          // No cache available, fetch fresh data with forceRefresh=true
           // to ensure we don't get stale SW results on first load if cache was deleted
           const [tasksData, categoriesData, imagesData] = await Promise.all([
             fetchTasks(true),
             fetchTaskCategories(true),
-            fetchImages(true)
+            fetchImages(true),
           ]);
-          
+
           setTasks(tasksData || []);
           setCategories(categoriesData || []);
           setImages(imagesData || new Map());
-          
+
           // Cache the data
           cacheData('tasks', tasksData, 3600000);
           cacheData('task-categories', categoriesData, 3600000);
           cacheData('images', Array.from(imagesData.entries()), 3600000);
-          
+
           setIsLoading(false);
         }
       } catch (err) {
-        console.error("Error loading task list data:", err);
-        setError("Impossible de charger les tâches. Les données en cache (si disponibles) seront utilisées.");
+        console.error('Error loading task list data:', err);
+        setError(
+          'Impossible de charger les tâches. Les données en cache (si disponibles) seront utilisées.'
+        );
         setIsLoading(false);
       }
     };
@@ -110,12 +119,12 @@ const TaskListPage = () => {
       acc[cat.name] = [];
       return acc;
     }, {});
-    
+
     if (!grouped['Autres']) {
       grouped['Autres'] = [];
     }
 
-    tasks.forEach(task => {
+    tasks.forEach((task) => {
       if (task.category && grouped[task.category]) {
         grouped[task.category].push(task);
       } else {
@@ -141,10 +150,10 @@ const TaskListPage = () => {
 
   const renderTaskCard = (task) => {
     if (!task) return null;
-    
+
     const isQuestionnaire = task.task_type === 'questionnaire';
     let IconComponent = HelpCircle;
-    
+
     try {
       if (isQuestionnaire) {
         IconComponent = HelpCircle;
@@ -161,12 +170,12 @@ const TaskListPage = () => {
           hi2: HeroiconsIcons,
           ai: AntIcons,
         };
-        
+
         const lib = libraries[library];
         if (lib && lib[name]) {
           IconComponent = lib[name];
         } else {
-          console.warn("Icon not found:", task.icon_name, "library:", library, "name:", name);
+          console.warn('Icon not found:', task.icon_name, 'library:', library, 'name:', name);
           IconComponent = List;
         }
       } else if (task.icon_name) {
@@ -177,11 +186,14 @@ const TaskListPage = () => {
         IconComponent = List;
       }
     } catch (e) {
-      console.warn("Error resolving icon for task:", task.title, e);
+      console.warn('Error resolving icon for task:', task.title, e);
       IconComponent = List;
     }
 
-    const pictogram = task.pictogram_app_image_id && images instanceof Map ? images.get(task.pictogram_app_image_id) : null;
+    const pictogram =
+      task.pictogram_app_image_id && images instanceof Map
+        ? images.get(task.pictogram_app_image_id)
+        : null;
 
     return (
       <motion.div
@@ -190,20 +202,42 @@ const TaskListPage = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <Link to={isQuestionnaire ? `/questionnaire/${task.id}` : `/tache/${task.id}`} className="block h-full">
-          <Card className={`flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-xl ${isQuestionnaire ? 'border-blue-500/50 hover:border-blue-500' : 'hover:border-primary/50'}`}>
+        <Link
+          to={isQuestionnaire ? `/questionnaire/${task.id}` : `/tache/${task.id}`}
+          className="block h-full"
+        >
+          <Card
+            className={`flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-xl ${
+              isQuestionnaire
+                ? 'border-blue-500/50 hover:border-blue-500'
+                : 'hover:border-primary/50'
+            }`}
+          >
             <CardHeader className="flex-row items-start gap-4 space-y-0 p-4">
-              <div className={`w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-lg border ${isQuestionnaire ? 'bg-blue-50 border-blue-300' : 'bg-muted'}`}>
+              <div
+                className={`w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-lg border ${
+                  isQuestionnaire ? 'bg-blue-50 border-blue-300' : 'bg-muted'
+                }`}
+              >
                 {pictogram ? (
-                  <img src={pictogram.publicUrl} alt={pictogram.name} className="w-full h-full object-contain p-1" />
+                  <img
+                    src={pictogram.publicUrl}
+                    alt={pictogram.name}
+                    className="w-full h-full object-contain p-1"
+                  />
                 ) : (
-                  <IconComponent className={`w-8 h-8 ${isQuestionnaire ? 'text-blue-600' : 'text-primary'}`} />
+                  <IconComponent
+                    className={`w-8 h-8 ${isQuestionnaire ? 'text-blue-600' : 'text-primary'}`}
+                  />
                 )}
               </div>
               <div className="flex-grow">
                 <CardTitle className="text-lg leading-tight">{task.title}</CardTitle>
                 {currentUser.role === USER_ROLES.ADMIN && (
-                  <Badge variant={task.creation_status === 'validated' ? 'default' : 'secondary'} className="mt-1">
+                  <Badge
+                    variant={task.creation_status === 'validated' ? 'default' : 'secondary'}
+                    className="mt-1"
+                  >
                     {task.creation_status === 'validated' ? 'Validé' : 'En création'}
                   </Badge>
                 )}
@@ -214,12 +248,22 @@ const TaskListPage = () => {
             </CardContent>
             <CardFooter className="p-4 pt-0 flex justify-end items-center">
               {task.video_url && (
-                <Button variant="ghost" size="icon" onClick={(e) => handleVideoClick(e, task)} className="mr-auto">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => handleVideoClick(e, task)}
+                  className="mr-auto"
+                >
                   <Video className="h-5 w-5 text-blue-500" />
                 </Button>
               )}
-              <Button variant="outline" size="sm" className={isQuestionnaire ? 'border-blue-500 text-blue-600 hover:bg-blue-50' : ''}>
-                {isQuestionnaire ? 'Faire le QCM' : 'Voir les étapes'} <ArrowRight className="ml-2 h-4 w-4" />
+              <Button
+                variant="outline"
+                size="sm"
+                className={isQuestionnaire ? 'border-blue-500 text-blue-600 hover:bg-blue-50' : ''}
+              >
+                {isQuestionnaire ? 'Faire le QCM' : 'Voir les étapes'}{' '}
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </CardFooter>
           </Card>
@@ -249,15 +293,17 @@ const TaskListPage = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold tracking-tight text-center mb-8">Liste des Tâches</h1>
-      
+
       {/* Banneau de sécurité */}
       <SafetyBanner />
-      
+
       {tasksByCategory.length > 0 ? (
         <div className="space-y-12">
           {tasksByCategory.map(([category, tasksInCategory]) => (
             <section key={category}>
-              <h2 className="text-2xl font-semibold border-b-2 border-primary pb-2 mb-6">{category}</h2>
+              <h2 className="text-2xl font-semibold border-b-2 border-primary pb-2 mb-6">
+                {category}
+              </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {tasksInCategory.map(renderTaskCard)}
               </div>
@@ -265,13 +311,18 @@ const TaskListPage = () => {
           ))}
         </div>
       ) : (
-        <p className="text-center text-muted-foreground mt-12">Aucune tâche n'est disponible pour le moment.</p>
+        <p className="text-center text-muted-foreground mt-12">
+          Aucune tâche n'est disponible pour le moment.
+        </p>
       )}
       {videoUrl && taskForVideo && (
-        <VideoPlayerModal 
+        <VideoPlayerModal
           isOpen={!!videoUrl}
-          videoUrl={videoUrl} 
-          onClose={() => { setVideoUrl(null); setTaskForVideo(null); }}
+          videoUrl={videoUrl}
+          onClose={() => {
+            setVideoUrl(null);
+            setTaskForVideo(null);
+          }}
           title={`Vidéo pour : ${taskForVideo.title}`}
         />
       )}

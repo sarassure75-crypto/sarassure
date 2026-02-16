@@ -26,11 +26,7 @@ export const fetchFaqById = async (id) => {
 };
 
 export const createFaq = async (faqData) => {
-  const { data, error } = await supabase
-    .from('faq_items')
-    .insert([faqData])
-    .select()
-    .single();
+  const { data, error } = await supabase.from('faq_items').insert([faqData]).select().single();
   if (error) {
     console.error('Error creating FAQ:', error);
     throw error;
@@ -53,10 +49,7 @@ export const updateFaq = async (id, faqData) => {
 };
 
 export const deleteFaq = async (id) => {
-  const { error } = await supabase
-    .from('faq_items')
-    .delete()
-    .eq('id', id);
+  const { error } = await supabase.from('faq_items').delete().eq('id', id);
   if (error) {
     console.error('Error deleting FAQ:', error);
     throw error;
@@ -67,13 +60,14 @@ export const deleteFaq = async (id) => {
 export const addFaqQuestion = async (questionText) => {
   const newQuestion = {
     question: questionText,
-    category: "Question Utilisateur",
+    category: 'Question Utilisateur',
     answer_steps: [
       {
-        instruction: "Cette question a été posée par un formateur. Une réponse sera ajoutée bientôt.",
+        instruction:
+          'Cette question a été posée par un formateur. Une réponse sera ajoutée bientôt.',
         image_id: null,
-        pictogram_id: null
-      }
+        pictogram_id: null,
+      },
     ],
   };
   return await createFaq(newQuestion);

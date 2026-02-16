@@ -2,14 +2,29 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAdmin } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Loader2, Trash2, Undo } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 const AdminTrash = () => {
-  const { fetchDeletedTasks, restoreTask, permanentlyDeleteTask, isLoading: contextIsLoading } = useAdmin();
+  const {
+    fetchDeletedTasks,
+    restoreTask,
+    permanentlyDeleteTask,
+    isLoading: contextIsLoading,
+  } = useAdmin();
   const { toast } = useToast();
   const [deletedTasks, setDeletedTasks] = useState([]);
   const [isLocalLoading, setIsLocalLoading] = useState(true);
@@ -28,20 +43,34 @@ const AdminTrash = () => {
   const handleRestore = async (taskId) => {
     try {
       await restoreTask(taskId);
-      toast({ title: "Tâche restaurée", description: "La tâche est de nouveau visible dans la liste principale." });
+      toast({
+        title: 'Tâche restaurée',
+        description: 'La tâche est de nouveau visible dans la liste principale.',
+      });
       loadDeletedTasks();
     } catch (error) {
-      toast({ title: "Erreur", description: "Impossible de restaurer la tâche.", variant: "destructive" });
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de restaurer la tâche.',
+        variant: 'destructive',
+      });
     }
   };
 
   const handlePermanentDelete = async (taskId) => {
     try {
       await permanentlyDeleteTask(taskId);
-      toast({ title: "Tâche supprimée définitivement", description: "La tâche a été supprimée pour de bon." });
+      toast({
+        title: 'Tâche supprimée définitivement',
+        description: 'La tâche a été supprimée pour de bon.',
+      });
       loadDeletedTasks();
     } catch (error) {
-      toast({ title: "Erreur", description: "Impossible de supprimer la tâche définitivement.", variant: "destructive" });
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de supprimer la tâche définitivement.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -51,7 +80,9 @@ const AdminTrash = () => {
     <Card>
       <CardHeader>
         <CardTitle>Corbeille</CardTitle>
-        <CardDescription>Gérez les tâches supprimées. Elles seront définitivement effacées après 30 jours.</CardDescription>
+        <CardDescription>
+          Gérez les tâches supprimées. Elles seront définitivement effacées après 30 jours.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -60,12 +91,19 @@ const AdminTrash = () => {
           </div>
         ) : deletedTasks.length > 0 ? (
           <ul className="space-y-3">
-            {deletedTasks.map(task => (
-              <li key={task.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+            {deletedTasks.map((task) => (
+              <li
+                key={task.id}
+                className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+              >
                 <div>
                   <p className="font-semibold">{task.title}</p>
                   <p className="text-sm text-muted-foreground">
-                    Supprimée {formatDistanceToNow(new Date(task.updated_at), { addSuffix: true, locale: fr })}
+                    Supprimée{' '}
+                    {formatDistanceToNow(new Date(task.updated_at), {
+                      addSuffix: true,
+                      locale: fr,
+                    })}
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -82,7 +120,8 @@ const AdminTrash = () => {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Cette action est irréversible. La tâche "{task.title}" sera supprimée définitivement.
+                          Cette action est irréversible. La tâche "{task.title}" sera supprimée
+                          définitivement.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>

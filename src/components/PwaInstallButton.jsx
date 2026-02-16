@@ -35,22 +35,22 @@ export default function PwaInstallButton() {
 
     // Attendre le choix de l'utilisateur
     const { outcome } = await deferredPrompt.userChoice;
-    
+
     console.log(`User response: ${outcome}`);
 
-      if (outcome === 'accepted') {
-        toast({
-          title: "Installation réussie !",
-          description: "L'application est maintenant disponible depuis votre écran d'accueil.",
-          variant: "default"
-        });
-      } else {
-        toast({
-          title: "Installation annulée",
-          description: "Vous pouvez installer l'application plus tard depuis le menu.",
-          variant: "destructive"
-        });
-      }
+    if (outcome === 'accepted') {
+      toast({
+        title: 'Installation réussie !',
+        description: "L'application est maintenant disponible depuis votre écran d'accueil.",
+        variant: 'default',
+      });
+    } else {
+      toast({
+        title: 'Installation annulée',
+        description: "Vous pouvez installer l'application plus tard depuis le menu.",
+        variant: 'destructive',
+      });
+    }
 
     // Réinitialiser le prompt
     setDeferredPrompt(null);
@@ -66,7 +66,7 @@ export default function PwaInstallButton() {
       onClick={handleInstallClick}
       className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-gradient-to-r from-[#3A5A40] via-[#588157] to-[#3A5A40] bg-[length:200%_100%] text-white px-6 py-3 rounded-full shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 animate-bounce-slow hover:animate-none group"
       style={{
-        animation: 'bounce-slow 3s ease-in-out infinite, shimmer 3s linear infinite'
+        animation: 'bounce-slow 3s ease-in-out infinite, shimmer 3s linear infinite',
       }}
       aria-label="Installer l'application"
     >

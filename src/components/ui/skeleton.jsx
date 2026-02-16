@@ -7,15 +7,7 @@ import { cn } from '@/lib/utils';
  */
 
 export const Skeleton = ({ className, ...props }) => {
-  return (
-    <div
-      className={cn(
-        "animate-pulse rounded-md bg-muted",
-        className
-      )}
-      {...props}
-    />
-  );
+  return <div className={cn('animate-pulse rounded-md bg-muted', className)} {...props} />;
 };
 
 /**
@@ -23,7 +15,7 @@ export const Skeleton = ({ className, ...props }) => {
  */
 
 export const ImageSkeleton = ({ className }) => (
-  <Skeleton className={cn("w-full h-64", className)} />
+  <Skeleton className={cn('w-full h-64', className)} />
 );
 
 export const CardSkeleton = () => (

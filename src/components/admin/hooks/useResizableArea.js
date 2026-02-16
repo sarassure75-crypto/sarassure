@@ -1,1 +1,3 @@
-export default function useResizableArea() { return {}; }
+export default function useResizableArea() {
+  return {};
+}

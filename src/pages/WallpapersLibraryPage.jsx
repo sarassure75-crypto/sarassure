@@ -23,21 +23,23 @@ export default function WallpapersLibraryPage() {
         if (queryError) throw queryError;
 
         // Format data for display
-        const formattedWallpapers = data.map(img => ({
+        const formattedWallpapers = data.map((img) => ({
           id: img.id,
           name: img.name,
-          category: 'Fonds d\'écran',
+          category: "Fonds d'écran",
           description: img.description || img.name,
           file: img.file_path.split('/').pop(), // Get filename from path
           file_path: img.file_path,
-          preview: supabase.storage.from('images').getPublicUrl(img.file_path).data?.publicUrl || img.file_path
+          preview:
+            supabase.storage.from('images').getPublicUrl(img.file_path).data?.publicUrl ||
+            img.file_path,
         }));
 
         setWallpapers(formattedWallpapers);
         setError(null);
       } catch (err) {
         console.error('Erreur chargement wallpapers:', err);
-        setError('Impossible de charger les fonds d\'écran. Veuillez réessayer.');
+        setError("Impossible de charger les fonds d'écran. Veuillez réessayer.");
         // Fallback to empty array
         setWallpapers([]);
       } finally {
@@ -57,13 +59,13 @@ export default function WallpapersLibraryPage() {
     document.body.removeChild(link);
   };
 
-  const categories = wallpapers.length > 0 
-    ? ['Tous', ...new Set(wallpapers.map(w => w.category))] 
-    : ['Tous'];
+  const categories =
+    wallpapers.length > 0 ? ['Tous', ...new Set(wallpapers.map((w) => w.category))] : ['Tous'];
 
-  const filteredWallpapers = selectedCategory === 'Tous' 
-    ? wallpapers 
-    : wallpapers.filter(w => w.category === selectedCategory);
+  const filteredWallpapers =
+    selectedCategory === 'Tous'
+      ? wallpapers
+      : wallpapers.filter((w) => w.category === selectedCategory);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -105,7 +107,8 @@ export default function WallpapersLibraryPage() {
                 <li>Uploadez les captures sur SARASSURE pour validation</li>
               </ol>
               <p className="text-xs text-blue-700 mt-2">
-                ⚠️ N'utilisez que ces wallpapers fournis. Pas de photos personnelles ou images protégées.
+                ⚠️ N'utilisez que ces wallpapers fournis. Pas de photos personnelles ou images
+                protégées.
               </p>
             </div>
           </div>
@@ -135,7 +138,7 @@ export default function WallpapersLibraryPage() {
       {!loading && wallpapers.length > 0 && (
         <div className="container mx-auto px-4 py-6">
           <div className="flex gap-2 flex-wrap">
-            {categories.map(cat => (
+            {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
@@ -157,8 +160,12 @@ export default function WallpapersLibraryPage() {
         <div className="container mx-auto px-4 py-12">
           <div className="text-center">
             <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucun fond d'écran disponible</h3>
-            <p className="text-gray-600">Les fonds d'écran sont en cours de chargement. Veuillez réessayer.</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Aucun fond d'écran disponible
+            </h3>
+            <p className="text-gray-600">
+              Les fonds d'écran sont en cours de chargement. Veuillez réessayer.
+            </p>
           </div>
         </div>
       )}
@@ -167,8 +174,11 @@ export default function WallpapersLibraryPage() {
       {!loading && wallpapers.length > 0 && (
         <div className="container mx-auto px-4 pb-12">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {filteredWallpapers.map(wallpaper => (
-              <div key={wallpaper.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+            {filteredWallpapers.map((wallpaper) => (
+              <div
+                key={wallpaper.id}
+                className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+              >
                 {/* Preview */}
                 <div className="aspect-[9/16] bg-gray-100 relative overflow-hidden">
                   <img
@@ -177,7 +187,8 @@ export default function WallpapersLibraryPage() {
                     className="w-full h-full object-cover"
                     loading="lazy"
                     onError={(e) => {
-                      e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f3f4f6" width="100" height="100"/%3E%3C/svg%3E';
+                      e.target.src =
+                        'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f3f4f6" width="100" height="100"/%3E%3C/svg%3E';
                     }}
                   />
                 </div>
@@ -185,10 +196,12 @@ export default function WallpapersLibraryPage() {
                 {/* Info */}
                 <div className="p-3">
                   <div className="mb-2">
-                    <h3 className="font-semibold text-sm text-gray-900 truncate">{wallpaper.name}</h3>
+                    <h3 className="font-semibold text-sm text-gray-900 truncate">
+                      {wallpaper.name}
+                    </h3>
                     <p className="text-xs text-gray-500 mt-0.5">{wallpaper.description}</p>
                   </div>
-                  
+
                   {/* Download Button */}
                   <button
                     onClick={() => handleDownload(wallpaper)}
@@ -217,24 +230,30 @@ export default function WallpapersLibraryPage() {
             <div>
               <h4 className="font-semibold text-gray-900 mb-2">📐 Format</h4>
               <p className="text-sm text-gray-600">
-                Résolution : 1080x1920px<br/>
-                Ratio : 9:16 (Portrait)<br/>
+                Résolution : 1080x1920px
+                <br />
+                Ratio : 9:16 (Portrait)
+                <br />
                 Format : PNG optimisé
               </p>
             </div>
             <div>
               <h4 className="font-semibold text-gray-900 mb-2">📄 Licence</h4>
               <p className="text-sm text-gray-600">
-                CC0 / Domaine Public<br/>
-                Usage libre pour SARASSURE<br/>
+                CC0 / Domaine Public
+                <br />
+                Usage libre pour SARASSURE
+                <br />
                 Créés spécifiquement pour contributeurs
               </p>
             </div>
             <div>
               <h4 className="font-semibold text-gray-900 mb-2">❓ Besoin d'aide ?</h4>
               <p className="text-sm text-gray-600">
-                Consultez les CGU Contributeurs<br/>
-                ou contactez l'équipe admin<br/>
+                Consultez les CGU Contributeurs
+                <br />
+                ou contactez l'équipe admin
+                <br />
                 pour plus d'informations
               </p>
             </div>
