@@ -49,6 +49,7 @@ const AdminLearnerManager = () => {
       const data = await getAllUsersByRole('apprenant');
       setLearners(data);
     } catch (error) {
+      console.error('fetchLearners error:', error);
       toast({
         title: 'Erreur de chargement',
         description: 'Impossible de récupérer la liste des apprenants.',

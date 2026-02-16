@@ -53,6 +53,7 @@ const AdminTrainerManager = ({ onTrainerCreated }) => {
       const data = await getAllUsersByRole('formateur');
       setTrainers(data);
     } catch (error) {
+      console.error('fetchTrainers error:', error);
       toast({
         title: 'Erreur de chargement',
         description: 'Impossible de récupérer la liste des formateurs.',
