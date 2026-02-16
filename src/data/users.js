@@ -10,8 +10,7 @@ export const fetchAllUsers = async () => {
   const { data, error } = await supabase
     .from('profiles')
     .select('*', { head: false, count: 'exact' })
-    .order('first_name', { foreignTable: undefined })
-    .headers({ Accept: 'application/json' });
+    .order('first_name', { foreignTable: undefined });
   if (error) throw error;
   return data;
 };
@@ -21,8 +20,7 @@ export const getAllUsersByRole = async (role) => {
     .from('profiles')
     .select('*', { head: false, count: 'exact' })
     .eq('role', role)
-    .order('first_name', { foreignTable: undefined })
-    .headers({ Accept: 'application/json' });
+    .order('first_name', { foreignTable: undefined });
   if (error) throw error;
   return data;
 };
@@ -38,8 +36,7 @@ export const getUserById = async (userId) => {
         .from('profiles')
         .select('*', { head: false, count: 'exact' })
         .eq('id', userId)
-        .maybeSingle()
-        .headers({ Accept: 'application/json' });
+        .maybeSingle();
       if (fallbackError && fallbackError.code !== 'PGRST116') {
         throw fallbackError;
       }
@@ -57,8 +54,7 @@ export const getLearnersByTrainer = async (trainerId) => {
     .from('profiles')
     .select('*', { head: false, count: 'exact' })
     .eq('assigned_trainer_id', trainerId)
-    .eq('role', USER_ROLES.LEARNER)
-    .headers({ Accept: 'application/json' });
+    .eq('role', USER_ROLES.LEARNER);
   if (error) throw error;
   return data;
 };
@@ -68,8 +64,7 @@ export const getUnassignedLearners = async () => {
     .from('profiles')
     .select('*', { head: false, count: 'exact' })
     .is('assigned_trainer_id', null)
-    .eq('role', USER_ROLES.LEARNER)
-    .headers({ Accept: 'application/json' });
+    .eq('role', USER_ROLES.LEARNER);
   if (error) throw error;
   return data;
 };
@@ -80,8 +75,7 @@ export const assignTrainerToLearner = async (learnerId, trainerId) => {
     .update({ assigned_trainer_id: trainerId })
     .eq('id', learnerId)
     .select()
-    .maybeSingle()
-    .headers({ Accept: 'application/json' });
+    .maybeSingle();
   if (error) throw error;
   return data;
 };
@@ -92,8 +86,7 @@ export const unassignTrainerFromLearner = async (learnerId) => {
     .update({ assigned_trainer_id: null })
     .eq('id', learnerId)
     .select()
-    .maybeSingle()
-    .headers({ Accept: 'application/json' });
+    .maybeSingle();
   if (error) throw error;
   return data;
 };
@@ -104,8 +97,7 @@ export const getLearnerByCode = async (code) => {
     .select('*', { head: false, count: 'exact' })
     .eq('learner_code', code)
     .eq('role', USER_ROLES.LEARNER)
-    .maybeSingle()
-    .headers({ Accept: 'application/json' });
+    .maybeSingle();
   if (error && error.code !== 'PGRST116') throw error;
   return data;
 };
@@ -117,8 +109,7 @@ export const getTrainerByPseudoAndCode = async (pseudo, code) => {
     .eq('pseudo', pseudo)
     .eq('trainer_code', code)
     .eq('role', USER_ROLES.TRAINER)
-    .maybeSingle()
-    .headers({ Accept: 'application/json' });
+    .maybeSingle();
   if (error && error.code !== 'PGRST116') throw error;
   return data;
 };
@@ -129,8 +120,7 @@ export const updateUser = async (userId, updates) => {
     .update(updates)
     .eq('id', userId)
     .select()
-    .maybeSingle()
-    .headers({ Accept: 'application/json' });
+    .maybeSingle();
   if (error) throw error;
   return data;
 };
