@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabaseClient';
+import { retryWithBackoff } from '@/lib/retryUtils';
 
 export const USER_ROLES = {
   ADMIN: 'administrateur',
@@ -159,20 +160,50 @@ export const createLearner = async (firstName) => {
   });
 
   if (signUpError) throw signUpError;
-  if (!signUpData.user) throw new Error("La création de l'utilisateur a échoué.");
+  const userId = signUpData?.user?.id;
+  if (!userId) throw new Error("La création de l'utilisateur a échoué.");
 
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('id, learner_code')
-    .eq('id', signUpData.user.id)
-    .maybeSingle();
+  // Wait for the DB trigger to create the profile row and populate learner_code
+  const profile = await retryWithBackoff(
+    async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, learner_code')
+        .eq('id', userId)
+        .maybeSingle();
 
-  if (profileError) throw profileError;
-  if (!profile || !profile.learner_code)
+      if (error) {
+        const e = new Error(error.message || 'Profile query failed');
+        e.status = error.status || 500;
+        throw e;
+      }
+
+      if (!data || !data.learner_code) {
+        const e = new Error('Profile not ready');
+        e.status = 408; // retryable
+        throw e;
+      }
+
+      return data;
+    },
+    6, // retries
+    300, // initial delay (ms)
+    5000
+  ).catch(() => null);
+
+  if (!profile || !profile.learner_code) {
+    // last-resort diagnostic fetch for logs
+    const { data: fallback, error: fallbackError } = await supabase
+      .from('profiles')
+      .select('id, learner_code')
+      .eq('id', userId)
+      .maybeSingle();
+    console.error('createLearner: profile lookup failed after retries', { userId, fallback, fallbackError });
     throw new Error('Impossible de récupérer le code apprenant après la création.');
+  }
 
   const { error: updateError } = await supabase.functions.invoke('update-user-password', {
-    body: { userId: signUpData.user.id, password: profile.learner_code },
+    body: { userId, password: profile.learner_code },
   });
 
   if (updateError) {
@@ -182,8 +213,8 @@ export const createLearner = async (firstName) => {
   const { data: fullProfile, error: fullProfileError } = await supabase
     .from('profiles')
     .select('*')
-    .eq('id', signUpData.user.id)
-    .single();
+    .eq('id', userId)
+    .maybeSingle();
   if (fullProfileError) throw fullProfileError;
 
   return fullProfile;
